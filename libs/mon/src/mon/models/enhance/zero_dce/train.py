@@ -35,8 +35,8 @@ class ZeroDCE_Trainer(Trainer):
 
     # --- Properties ---
     @override
-    def init_model(self):
-        """Initialize ``self.model`` attribute."""
+    def _init_model(self):
+        """Initialize ``self._model`` attribute."""
         config = self.config
         device = self.device
         weights = config.finetune
@@ -44,19 +44,19 @@ class ZeroDCE_Trainer(Trainer):
         model = zero_dce(**config.model | { "weights": weights})
         model = model.to(device)
         model.train()
-        self.model = model
+        self._model = model
 
     @override
-    def init_optimizer(self):
-        """Initialize ``self.optimizer`` and ``self.scheduler`` attributes."""
+    def _init_optimizer(self):
+        """Initialize ``self._optimizer`` and ``self._scheduler`` attributes."""
         config = self.config
 
-        self.optimizer = OPTIMIZERS.build(params=self.model.parameters(), **config.optimizer)
-        self.scheduler = None
+        self._optimizer = OPTIMIZERS.build(params=self.model.parameters(), **config.optimizer)
+        self._scheduler = None
 
     # --- Training ---
     @override
-    def train_epoch(self, epoch: int, pbar: Progress) -> dict:
+    def _train_epoch(self, epoch: int, pbar: Progress) -> dict:
         """Train an epoch.
 
         Args:
@@ -128,14 +128,14 @@ class ZeroDCE_Trainer(Trainer):
 
         # 4. Output
         train_outputs |= {
-            "loss": sum(losses) / len(losses),
+            "loss": torch.cat(losses).mean().item(),
         }
         return train_outputs
 
     # --- Validation ---
     @override
     @torch.no_grad()
-    def val_epoch(self, epoch: int, pbar: Progress) -> dict:
+    def _val_epoch(self, epoch: int, pbar: Progress) -> dict:
         """Validate an epoch.
 
         Args:
@@ -179,9 +179,9 @@ class ZeroDCE_Trainer(Trainer):
             enhanced = outputs["enhanced"]
 
             # 2.4. Calculate metrics
-            psnrs.append(torch.mean(psnr_metric(enhanced, target)))
-            ssims.append(torch.mean(ssim_metric(enhanced, target)))
-            ssimcs.append(torch.mean(ssimc_metric(enhanced, target)))
+            psnrs.append(psnr_metric(enhanced, target).detach().cpu())
+            ssims.append(ssim_metric(enhanced, target).detach().cpu())
+            ssimcs.append(ssimc_metric(enhanced, target).detach().cpu())
 
             # 2.5. Debug outputs
             if i == 0:
@@ -196,15 +196,15 @@ class ZeroDCE_Trainer(Trainer):
 
         # 3. Output
         val_outputs |= {
-            "psnr": sum(psnrs) / len(psnrs),
-            "ssim": sum(ssims) / len(ssims),
-            "ssimc": sum(ssimcs) / len(ssimcs),
+            "psnr": torch.cat(psnrs).mean().item(),
+            "ssim": torch.cat(ssims).mean().item(),
+            "ssimc": torch.cat(ssimcs).mean().item(),
         }
         return val_outputs
 
     # --- Utilities ---
     @override
-    def log(self, epoch: int, train_outputs: dict, val_outputs: dict):
+    def _log(self, epoch: int, train_outputs: dict, val_outputs: dict):
         """Log the training and validation results for the current epoch.
 
         Args:
@@ -228,7 +228,7 @@ class ZeroDCE_Trainer(Trainer):
             )
 
     @override
-    def save(self, epoch: int, train_outputs: dict, val_outputs: dict):
+    def _save(self, epoch: int, train_outputs: dict, val_outputs: dict):
         """Save the model checkpoint for the current epoch.
 
         Args:
@@ -239,12 +239,12 @@ class ZeroDCE_Trainer(Trainer):
         config = self.config
 
         torch.save(self.model.state_dict(), config.output_dir / "last.pt")
-        self.save_best_weights("loss", train_outputs["loss"], lower_is_better=True)
-        self.save_best_weights("psnr", val_outputs["psnr"])
-        self.save_best_weights("ssim", val_outputs["ssim"])
-        self.save_best_weights("ssimc", val_outputs["ssimc"])
+        self._save_best_weights("loss", train_outputs["loss"], lower_is_better=True)
+        self._save_best_weights("psnr", val_outputs["psnr"])
+        self._save_best_weights("ssim", val_outputs["ssim"])
+        self._save_best_weights("ssimc", val_outputs["ssimc"])
 
-    def save_debug(self, epoch: int, train_outputs: dict, val_outputs: dict):
+    def _save_debug(self, epoch: int, train_outputs: dict, val_outputs: dict):
         """Save debugging results for visualization.
 
         Args:
@@ -257,7 +257,7 @@ class ZeroDCE_Trainer(Trainer):
             "target": val_outputs["target"],
             "enhanced": val_outputs["enhanced"],
         }
-        self.save_image(epoch, debug_image)
+        self._save_image(epoch, debug_image)
 
 # endregion
 

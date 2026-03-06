@@ -57,7 +57,7 @@ class L_col(Loss):
             torch.pow(d_gb, 2),
             0.5
         )
-        return k
+        return self.reduce(k)
 
 
 class L_col_rate(Loss):
@@ -87,7 +87,7 @@ class L_col_rate(Loss):
         d_rb = torch.pow(mr_pre.int() // mb_pre.int() - mr_cur.int() // mb_cur.int(), 2).sum() / 255.0 ** 2
         d_gb = torch.pow(mg_pre.int() // mb_pre.int() - mg_cur.int() // mb_cur.int(), 2).sum() / 255.0 ** 2
         k = torch.pow(d_rg + d_rb + d_gb, 0.5)
-        return k
+        return self.reduce(k)
 
 
 class L_spa(Loss):
@@ -152,7 +152,7 @@ class L_spa(Loss):
         E = (D_left + D_right + D_up + D_down)
         # E = 25 * (D_left + D_right + D_up + D_down)
 
-        return E
+        return self.reduce(E)
 
 
 class L_exp(Loss):
@@ -190,7 +190,7 @@ class L_exp(Loss):
         """
         mean = self.pool(torch.mean(input, 1, keepdim=True))
         loss = torch.mean(torch.pow(mean - torch.FloatTensor([self.E]).to(input.device), 2))
-        return loss
+        return self.reduce(loss)
 
 
 class L_exp_paired(Loss):
@@ -231,7 +231,7 @@ class L_exp_paired(Loss):
         e_map = torch.mean(target, 1, keepdim=True)
         e_map = self.pool(e_map)
         d = F.mse_loss(mean, e_map)
-        return d
+        return self.reduce(d)
 
 
 class L_tv(Loss):

@@ -1,302 +1,272 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Training Script.
+"""Training Runners.
 
-This script provides a CLI for running CLODE training on a given dataset.
-
-References:
-    - Paper: "Continuous Exposure Learning for Low-light Image Enhancement using
-      Neural ODEs," ICLR 2025.
-    - Code: https://github.com/dgjung0220/CLODE
+This module provides training runner classes for CLODE models.
 """
 
 from __future__ import annotations
 
-__all__ = []
+__all__ = [
+    "CLODE_Trainer",
+]
 
-import numpy as np
 import pyiqa
 import torch
 from rich.progress import Progress
-from torch import nn
+from typing_extensions import override
 
-from mon import (
-    Config,
-    ConfigContext,
-    create_progress_bar,
-    log,
-    metrics,
-    MODELS,
-    pascalize,
-    Path,
-    RunMode,
-    Size,
-    sys_ctx,
-    Task,
-    to_image_array,
-)
-from mon.dataset import DataLoader
+from mon.core import log, OPTIMIZERS, Path
 from mon.models.enhance.clode import loss as L
-from mon.ops import draw_info, write_image
+from mon.runners import Trainer
+from .model import clode
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
 
 
 # ==============================================================================
-# region CONTROL
+# region TRAINER
 # ==============================================================================
 
-def train(config: Config):
-    # 1. Summarize the current run
-    if config.verbose:
-        config.log_summary()
+class CLODE_Trainer(Trainer):
+    """Trainer for CLODE models."""
 
-    # 2. Setup environment
-    device = config.device
-    sys_ctx.set_random_seed(config.seed)
+    # --- Properties ---
+    @override
+    def _init_model(self):
+        """Initialize ``self._model`` attribute."""
+        config = self.config
+        device = self.device
+        weights = config.finetune
 
-    # 3. Resolve pre-trained weights
-    weights = config.finetune
+        model = clode(**config.model | { "weights": weights})
+        model = model.to(device)
+        model.train()
+        self._model = model
 
-    # 4. Define model
-    imgsz = Size.from_value(config.eval_imgsz)
+    @override
+    def _init_optimizer(self):
+        """Initialize ``self._optimizer`` and ``self._scheduler`` attributes."""
+        config = self.config
 
-    model = MODELS.build(**config.model | { "weights": weights})
-    model = model.to(device)
-    model.train()
+        self._optimizer = OPTIMIZERS.build(params=self.model.parameters(), **config.optimizer)
+        self._scheduler = None
 
-    # 5. Run benchmark
-    if config.benchmark:
-        metrics.benchmark(model, imgsz=imgsz)
+    # --- Training ---
+    @override
+    def _train_epoch(self, epoch: int, pbar: Progress) -> dict:
+        """Train an epoch.
 
-    # 6. Define optimizer & scheduler
-    optimizer = torch.optim.Adam(
-        model.parameters(),
-        lr=config.optimizer.lr,
-        weight_decay=config.optimizer.weight_decay,
-    )
+        Args:
+            epoch (int): The current epoch number.
+            pbar (Progress): The progress bar object.
 
-    # 7. Define data
-    train_dataloader = DataLoader.from_config(config.train_dataloader)
-    val_dataloader = DataLoader.from_config(config.val_dataloader)
+        Returns:
+            dict: A dictionary containing the training loss and other results
+                for the epoch.
+        """
+        config = self.config
+        device = self.device
 
-    # 8. Training loop
-    epochs = config.epochs
-    best_loss = float("inf")
-    best_psnr = 0.0
-    best_ssim = 0.0
-    best_ssimc = 0.0
-    config.output_dir.mkdir(exist_ok=True, parents=True)
+        # 1. Define losses
+        L_spa = L.L_spa().to(device)
+        L_col = L.L_col().to(device)
+        L_exp = L.L_exp(16, config.loss.L_exp_mean).to(device)
+        # Loss weights
+        L_tv_w = config.loss.L_tv_w
+        L_spa_w = config.loss.L_spa_w
+        L_col_w = config.loss.L_col_w
+        L_exp_w = config.loss.L_exp_w
 
-    with create_progress_bar() as pbar:
-        for i in pbar.track(
-            sequence=range(epochs),
-            total=epochs,
-            description=f"[bright_yellow]Training"
-        ):
-            # 8.1. Train epoch
-            train_outputs = train_epoch(i, config, model, optimizer, train_dataloader, pbar)
-            loss = train_outputs.pop("loss")
+        # 2. Train loop
+        self.model.train()
+        grad_clip_norm = config.grad_clip_norm
+        train_outputs = {}
+        losses = []
 
-            # 8.2. Val epoch
-            val_outputs = val_epoch(i, config, model, val_dataloader, pbar)
-            psnr = val_outputs.pop("psnr")
-            ssim = val_outputs.pop("ssim")
-            ssimc = val_outputs.pop("ssimc")
+        task = pbar.add_task(
+            f"[bright_yellow]Train Epoch {epoch+1:03}",
+            total=len(self.train_dataloader)
+        )
+        for i, datapoint in enumerate(self.train_dataloader):
+            # 2.1. Prepare inputs
+            image = datapoint["image"]
+            image = image.to(device)
+            eval_time = torch.tensor([0, 3]).float().to(device)
 
-            # 8.3. Log
-            if config.verbose:
-                log(
-                    f"Epoch: {(i + 1):03} | "
-                    f"Loss: {loss:08.6f} | "
-                    f"PSNR: {psnr:08.6f} | "
-                    f"SSIM: {ssim:08.6f} | "
-                    f"SSIM-C: {ssimc:08.6f}"
-                )
+            # 2.2. Forward pass
+            outputs = self.model(image, eval_time)
 
-            # 8.4. Save
-            torch.save(model.state_dict(), config.output_dir / "last.pt")
-            if loss < best_loss:
-                best_loss = loss
-                torch.save(model.state_dict(), config.output_dir / "best_loss.pt")
-            if psnr > best_psnr:
-                best_psnr = psnr
-                torch.save(model.state_dict(), config.output_dir / "best_psnr.pt")
-            if ssim > best_ssim:
-                best_ssim = ssim
-                torch.save(model.state_dict(), config.output_dir / "best_ssim.pt")
-            if ssimc > best_ssimc:
-                best_ssimc = ssimc
-                torch.save(model.state_dict(), config.output_dir / "best_ssimc.pt")
+            # 2.3. Extract outputs
+            enhanced = outputs["enhanced"]
+            A_map = outputs["curve_map"]
+            noise_map = outputs["noise_map"]
 
-            # 8.5. Save debug
-            if config.save_debug:
-                debug = []
-                for k, v in val_outputs.items():
-                    image = to_image_array(torch.cat(list(v), dim=2).unsqueeze(0))
-                    image = draw_info(image, [f"{pascalize(k)}"])
-                    debug.append(image)
-                debug = np.vstack(debug)
-                save_path = config.output_dir / "debug" / f"debug_epoch_{i+1:03}.png"
-                write_image(debug, save_path)
+            # 2.4. Calculate loss
+            # Enhance loss
+            l_param = L_tv_w  * torch.mean(A_map)
+            l_col = L_col_w * L_col(enhanced)
+            l_spa = L_spa_w * L_spa(enhanced, image)
+            l_exp = L_exp_w * L_exp(enhanced)
+            l_noise = torch.mean(noise_map)
+            # Total loss
+            loss = l_spa + l_col + l_exp + l_param + l_noise
 
+            # 2.5. Backward pass
+            self.optimizer.zero_grad()
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(self.model.parameters(), grad_clip_norm)
+            self.optimizer.step()
+            losses.append(loss.item())
 
-def train_epoch(
-    epoch: int,
-    config: Config,
-    model: nn.Module,
-    optimizer: torch.optim.Optimizer,
-    train_dataloader: DataLoader,
-    pbar: Progress
-) -> dict:
-    device = config.device
+            pbar.update(task, advance=1)
+        pbar.remove_task(task)
 
-    # 1. Define losses
-    L_spa = L.L_spa().to(device)
-    L_col = L.L_col().to(device)
-    L_exp = L.L_exp(16, config.loss.L_exp_mean).to(device)
-    # Loss weights
-    L_tv_w = config.loss.L_tv_w
-    L_spa_w = config.loss.L_spa_w
-    L_col_w = config.loss.L_col_w
-    L_exp_w = config.loss.L_exp_w
+        # 3. Output
+        train_outputs |= {
+            "loss": torch.cat(losses).mean().item(),
+        }
+        return train_outputs
 
-    # 2. Train loop
-    model.train()
-    grad_clip_norm = config.grad_clip_norm
-    train_outputs = {}
-    losses = []
+    # --- Validation ---
+    @override
+    @torch.no_grad()
+    def _val_epoch(self, epoch: int, pbar: Progress) -> dict:
+        """Validate an epoch.
 
-    task = pbar.add_task(
-        f"[bright_yellow]Train Epoch {epoch+1:03}",
-        total=len(train_dataloader)
-    )
-    for j, datapoint in enumerate(train_dataloader):
-        image = datapoint["image"]
-        image = image.to(device)
-        eval_time = torch.tensor([0, 3]).float().to(device)
+        Args:
+            epoch (int): The current epoch number.
+            pbar (Progress): The progress bar object.
 
-        # 2.1. Forward pass
-        outputs = model(image, eval_time)
-        enhanced = outputs["enhanced"]
-        A_map = outputs["curve_map"]
-        noise_map = outputs["noise_map"]
+        Returns:
+            dict: A dictionary containing the validation metrics and other
+                results for the epoch.
+        """
+        config = self.config
+        device = self.device
 
-        # 2.2. Calculate loss
-        l_param = L_tv_w  * torch.mean(A_map)
-        l_col = L_col_w * torch.mean(L_col(enhanced))
-        l_spa = L_spa_w * torch.mean(L_spa(enhanced, image))
-        l_exp = L_exp_w * torch.mean(L_exp(enhanced))
-        l_noise = torch.mean(noise_map)
-        loss = l_spa + l_col + l_exp + l_param + l_noise
+        # 1. Define metrics
+        psnr_metric = pyiqa.create_metric("psnr", device=device)
+        ssim_metric = pyiqa.create_metric("ssim", device=device)
+        ssimc_metric = pyiqa.create_metric("ssimc", device=device)
 
-        # 2.3. Backward pass
-        optimizer.zero_grad()
-        loss.backward()
-        torch.nn.utils.clip_grad_norm_(model.parameters(), grad_clip_norm)
-        optimizer.step()
-        losses.append(loss.item())
+        # 2. Val loop
+        self.model.eval()
+        val_outputs = {}
+        psnrs = []
+        ssims = []
+        ssimcs = []
 
-        pbar.update(task, advance=1)
-    pbar.remove_task(task)
-
-    # 3. Output
-    train_outputs |= {
-        "loss": sum(losses) / len(losses),
-    }
-    return train_outputs
-
-
-def val_epoch(
-    epoch: int,
-    config: Config,
-    model: nn.Module,
-    val_dataloader: DataLoader,
-    pbar: Progress
-) -> dict:
-    device = config.device
-
-    # 1. Define metrics
-    psnr_metric = pyiqa.create_metric("psnr", device=device)
-    ssim_metric = pyiqa.create_metric("ssim", device=device)
-    ssimc_metric = pyiqa.create_metric("ssimc", device=device)
-
-    # 2. Val loop
-    model.eval()
-    val_outputs = {}
-    psnrs = []
-    ssims = []
-    ssimcs = []
-
-    task = pbar.add_task(
-        f"[bright_yellow]Val Epoch {epoch+1:03}",
-        total=len(val_dataloader)
-    )
-    for j, datapoint in enumerate(val_dataloader):
-        with torch.no_grad():
+        task = pbar.add_task(
+            f"[bright_cyan]Val Epoch {epoch+1:03}",
+            total=len(self.val_dataloader)
+        )
+        for i, datapoint in enumerate(self.val_dataloader):
+            # 2.1. Prepare inputs
             image = datapoint["image"]
             target = datapoint["target"]
             image = image.to(device)
             target = target.to(device)
             eval_time = torch.tensor([0, 3]).float().to(device)
 
-            # 2.1. Forward pass
-            outputs = model(image, eval_time, inference=True)
+            # 2.2. Forward pass
+            outputs = self.model(image, eval_time, inference=True)
+
+            # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
 
-            # 2.2. Measure metrics
-            psnr = torch.mean(psnr_metric(enhanced, target))
-            ssim = torch.mean(ssim_metric(enhanced, target))
-            ssimc = torch.mean(ssimc_metric(enhanced, target))
-            psnrs.append(psnr)
-            ssims.append(ssim)
-            ssimcs.append(ssimc)
+            # 2.4. Calculate metrics
+            psnrs.append(psnr_metric(enhanced, target).detach().cpu())
+            ssims.append(ssim_metric(enhanced, target).detach().cpu())
+            ssimcs.append(ssimc_metric(enhanced, target).detach().cpu())
 
-            # 2.3. Debug outputs
-            if j == 0:
+            # 2.5. Debug outputs
+            if i == 0:
                 val_outputs |= {
-                    "image": image.cpu(),
-                    "enhanced": enhanced.cpu(),
+                    "image": image.detach().cpu(),
+                    "target": target.detach().cpu(),
+                    "enhanced": enhanced.detach().cpu(),
                 }
 
             pbar.update(task, advance=1)
-    pbar.remove_task(task)
+        pbar.remove_task(task)
 
-    # 3. Output
-    val_outputs |= {
-        "psnr": sum(psnrs) / len(psnrs),
-        "ssim": sum(ssims) / len(ssims),
-        "ssimc": sum(ssimcs) / len(ssimcs),
-    }
-    return val_outputs
+        # 3. Output
+        val_outputs |= {
+             "psnr": torch.cat(psnrs).mean().item(),
+            "ssim": torch.cat(ssims).mean().item(),
+            "ssimc": torch.cat(ssimcs).mean().item(),
+        }
+        return val_outputs
+
+    # --- Utilities ---
+    @override
+    def _log(self, epoch: int, train_outputs: dict, val_outputs: dict):
+        """Log the training and validation results for the current epoch.
+
+        Args:
+            epoch (int): The current epoch number.
+            train_outputs (dict): The outputs from the training epoch.
+            val_outputs (dict): The outputs from the validation epoch.
+        """
+        config = self.config
+
+        if config.verbose:
+            loss = train_outputs.get("loss", float("nan"))
+            psnr = val_outputs.get("psnr", float("nan"))
+            ssim = val_outputs.get("ssim", float("nan"))
+            ssimc = val_outputs.get("ssimc", float("nan"))
+            log(
+                f"Epoch: {(epoch + 1):03} | "
+                f"Loss: {loss:08.6f} | "
+                f"PSNR: {psnr:08.6f} | "
+                f"SSIM: {ssim:08.6f} | "
+                f"SSIM-C: {ssimc:08.6f}",
+            )
+
+    @override
+    def _save(self, epoch: int, train_outputs: dict, val_outputs: dict):
+        """Save the model checkpoint for the current epoch.
+
+        Args:
+            epoch (int): The current epoch number.
+            train_outputs (dict): The outputs from the training epoch.
+            val_outputs (dict): The outputs from the validation epoch.
+        """
+        config = self.config
+
+        torch.save(self.model.state_dict(), config.output_dir / "last.pt")
+        self._save_best_weights("loss", train_outputs["loss"], lower_is_better=True)
+        self._save_best_weights("psnr", val_outputs["psnr"])
+        self._save_best_weights("ssim", val_outputs["ssim"])
+        self._save_best_weights("ssimc", val_outputs["ssimc"])
+
+    @override
+    def _save_debug(self, epoch: int, train_outputs: dict, val_outputs: dict):
+        """Save debugging results for visualization.
+
+        Args:
+            epoch (int): The current epoch number.
+            train_outputs (dict): The outputs from the training epoch.
+            val_outputs (dict): The outputs from the validation epoch.
+        """
+        debug_image = {
+            "image": val_outputs["image"],
+            "target": val_outputs["target"],
+            "enhanced": val_outputs["enhanced"],
+        }
+        self._save_image(epoch, debug_image)
 
 # endregion
 
 
 # ==============================================================================
-# region MAIN
+# region UNIT TEST
 # ==============================================================================
 
-def main():
-    # Load config
-    config_ctx = ConfigContext.from_cli(
-        root=current_dir,
-        config_file="clode_sice_me.yaml",
-        task=Task.ENHANCE,
-        mode=RunMode.TRAIN,
-        arch="clode",
-        model="clode",
-        save=True,
-        exist_ok=True,
-        verbose=True,
-    )
-    config = config_ctx.config_for(RunMode.TRAIN)
-    train(config)
-
-
 if __name__ == "__main__":
-    main()
+    pass
 
 # endregion

@@ -56,45 +56,93 @@ class Trainer(ABC):
                 parameters for training.
         """
         # Assign attributes
-        self.config = config
-
-        # Extract commonly used attributes for convenience
-        self.device = config.device
-        self.verbose = config.verbose
+        self._config = config
 
         # Allocate resources
         # We will initialize these attributes later to avoid a long
         # initialization time
-        self.model: nn.Module | None = None
-        self.optimizer: Optimizer | None = None
-        self.scheduler: LRScheduler | None = None
-        self.train_dataloader: DataLoader | None = None
-        self.val_dataloader: DataLoader | None = None
-        self.best: dict[str, float] = {
+        self._model: nn.Module | None = None
+        self._optimizer: Optimizer | None = None
+        self._scheduler: LRScheduler | None = None
+        self._train_dataloader: DataLoader | None = None
+        self._val_dataloader: DataLoader | None = None
+        self._best: dict[str, float] = {
             "loss": float("inf"),
         }
 
     # --- Properties ---
-    @abstractmethod
-    def init_model(self):
-        """Initialize ``self.model`` attribute."""
-        pass
+    @property
+    def config(self) -> Config:
+        """Return the config object."""
+        return self._config
+
+    @property
+    def device(self) -> torch.device:
+        """Return the device to use."""
+        return self.config.device
+
+    @property
+    def benchmark(self) -> bool:
+        """Return the benchmark flag."""
+        return self.config.benchmark
+
+    @property
+    def verbose(self) -> bool:
+        """Return the verbose flag."""
+        return self.config.verbose
+
+    @property
+    def model(self) -> nn.Module:
+        """Return the model object."""
+        return self._model
 
     @abstractmethod
-    def init_optimizer(self):
-        """Initialize ``self.optimizer`` and ``self.scheduler`` attributes."""
+    def _init_model(self):
+        """Initialize ``self._model`` attribute."""
         pass
 
-    def init_dataloaders(self):
-        """Initialize ``self.train_dataloader`` and ``self.val_dataloader`` attributes."""
+    @property
+    def optimizer(self) -> Optimizer:
+        """Return the optimizer object."""
+        return self._optimizer
+
+    @property
+    def scheduler(self) -> LRScheduler | None:
+        """Return the scheduler object."""
+        return self._scheduler
+
+    @abstractmethod
+    def _init_optimizer(self):
+        """Initialize ``self._optimizer`` and ``self._scheduler`` attributes."""
+        pass
+
+    @property
+    def train_dataloader(self) -> DataLoader:
+        """Return the training dataloader."""
+        return self._train_dataloader
+
+    @property
+    def val_dataloader(self) -> DataLoader | None:
+        """Return the validation dataloader."""
+        return self._val_dataloader
+
+    def _init_dataloaders(self):
+        """Initialize ``self._train_dataloader`` and ``self._val_dataloader``
+        attributes.
+        """
         train_dataloader = self.config.train_dataloader
-        self.train_dataloader = DataLoader.from_config(train_dataloader)
+        self._train_dataloader = DataLoader.from_config(train_dataloader)
 
         val_dataloader = self.config.val_dataloader
         if val_dataloader is not None:
-            self.val_dataloader = DataLoader.from_config(val_dataloader)
+            self._val_dataloader = DataLoader.from_config(val_dataloader)
         else:
-            self.val_dataloader = None
+            self._val_dataloader = None
+
+    @property
+    def best(self) -> dict[str, float]:
+        """Return the best dictionary."""
+        return self._best
 
     # --- Creation ---
     @classmethod
@@ -118,22 +166,22 @@ class Trainer(ABC):
         epochs = config.epochs
 
         # 3. Define model
-        self.init_model()
+        self._init_model()
         if self.model is None:
-            raise ValueError(f"'model' is not initialized.")
+            raise RuntimeError(f"'model' is not initialized.")
 
         # 4. Define optimizer & scheduler
-        self.init_optimizer()
+        self._init_optimizer()
         if self.optimizer is None:
-            raise ValueError(f"'optimizer' is not initialized.")
+            raise RuntimeError(f"'optimizer' is not initialized.")
 
-        # 5. Run benchmark
-        self.benchmark()
-
-        # 6. Define data
-        self.init_dataloaders()
+        # 5. Define data
+        self._init_dataloaders()
         if self.train_dataloader is None:
-            raise ValueError(f"'train_dataloader' is not initialized.")
+            raise RuntimeError(f"'train_dataloader' is not initialized.")
+
+        # 6. Run benchmark
+        self._benchmark()
 
         # 7. Main loop
         config.output_dir.mkdir(exist_ok=True, parents=True)
@@ -144,30 +192,43 @@ class Trainer(ABC):
                 description=f"[bright_yellow]Training"
             ):
                 # 7.1. Train epoch
-                train_outputs = self.train_epoch(epoch=epoch, pbar=pbar)
+                train_outputs = self._train_epoch(epoch=epoch, pbar=pbar)
                 if "loss" not in train_outputs:
                     raise ValueError(
-                        f"Expected 'loss' from 'self.train_epoch()', "
+                        f"Expected 'loss' from 'self._train_epoch()', "
                         f"but got {train_outputs.keys()}."
                     )
 
                 # 7.2. Val epoch
                 val_outputs = {}
                 if self.val_dataloader is not None:
-                    val_outputs = self.val_epoch(epoch=epoch, pbar=pbar)
+                    val_outputs = self._val_epoch(epoch=epoch, pbar=pbar)
 
                 # 7.3. Log
-                self.log(epoch=epoch,train_outputs=train_outputs, val_outputs=val_outputs)
+                self._log(
+                    epoch=epoch,
+                    train_outputs=train_outputs,
+                    val_outputs=val_outputs,
+                )
 
                 # 7.4. Save
-                self.save(epoch=epoch, train_outputs=train_outputs, val_outputs=val_outputs)
+                self._save(
+                    epoch=epoch,
+                    train_outputs=train_outputs,
+                    val_outputs=val_outputs,
+                )
 
                 # 7.5. Save debug
-                self.save_debug(epoch=epoch, train_outputs=train_outputs, val_outputs=val_outputs)
+                if config.save_debug:
+                    self._save_debug(
+                        epoch=epoch,
+                        train_outputs=train_outputs,
+                        val_outputs=val_outputs,
+                    )
 
     # --- Training ---
     @abstractmethod
-    def train_epoch(self, epoch: int, pbar: Progress) -> dict:
+    def _train_epoch(self, epoch: int, pbar: Progress) -> dict:
         """Train an epoch.
 
         Args:
@@ -182,7 +243,7 @@ class Trainer(ABC):
 
     # --- Validation ---
     @abstractmethod
-    def val_epoch(self, epoch: int, pbar: Progress) -> dict:
+    def _val_epoch(self, epoch: int, pbar: Progress) -> dict:
         """Validate an epoch.
 
         Args:
@@ -196,7 +257,7 @@ class Trainer(ABC):
         pass
 
     # --- Utilities ---
-    def benchmark(self):
+    def _benchmark(self):
         """Run the benchmark for the model."""
         config = self.config
         imgsz = Size.from_value(config.eval_imgsz)
@@ -205,7 +266,7 @@ class Trainer(ABC):
             benchmark(self.model, imgsz=imgsz)
 
     @abstractmethod
-    def log(self, epoch: int, train_outputs: dict, val_outputs: dict):
+    def _log(self, epoch: int, train_outputs: dict, val_outputs: dict):
         """Log the training and validation results for the current epoch.
 
         Args:
@@ -216,7 +277,7 @@ class Trainer(ABC):
         pass
 
     @abstractmethod
-    def save(self, epoch: int, train_outputs: dict, val_outputs: dict):
+    def _save(self, epoch: int, train_outputs: dict, val_outputs: dict):
         """Save the model checkpoint for the current epoch.
 
         Args:
@@ -226,33 +287,8 @@ class Trainer(ABC):
         """
         pass
 
-    def save_best_weights(self, key: str, value: float, lower_is_better: bool = False):
-        """Save the model checkpoint if the new value is better than the best
-        value for the given key.
-
-        Args:
-            key (str): The key to compare in the best dictionary.
-            value (float): The new value to compare against the best value.
-            lower_is_better (bool, optional): Whether a lower value is better
-                than a higher value. Defaults to False.
-        """
-        if key in self.best:
-            best = self.best[key]
-            if lower_is_better and value >= best:
-                return
-            elif not lower_is_better and value <= best:
-                return
-
-            self.best[key] = value
-            torch.save(
-                self.model.state_dict(),
-                self.config.output_dir / f"best_{key}{K.WEIGHTS_EXT}"
-            )
-        else:
-            self.best[key] = value
-
     @abstractmethod
-    def save_debug(self, epoch: int, train_outputs: dict, val_outputs: dict):
+    def _save_debug(self, epoch: int, train_outputs: dict, val_outputs: dict):
         """Save debugging results for visualization.
 
         Args:
@@ -262,25 +298,71 @@ class Trainer(ABC):
         """
         pass
 
-    def save_image(self, epoch: int, outputs: dict[str, Tensor]):
+    def _save_best_weights(
+        self,
+        key: str,
+        value: float,
+        lower_is_better: bool = False
+    ):
+        """Save the model checkpoint if the new value is better than the best
+        value for the given key.
+
+        Args:
+            key (str): The key to compare in the best dictionary.
+            value (float): The new value to compare against the best value.
+            lower_is_better (bool, optional): Whether a lower value is better
+                than a higher value. Defaults to False.
+        """
+        # If the key is not in the best dictionary, save the new value
+        if key not in self.best:
+            self.best[key] = value
+            return
+
+        # If the new value is not better than the best value, skip saving
+        if lower_is_better and value >= self.best[key]:
+            return
+        elif not lower_is_better and value <= self.best[key]:
+            return
+
+        # Otherwise, update the best value and save the model checkpoint
+        self.best[key] = value
+        torch.save(
+            self.model.state_dict(),
+            self.config.output_dir / f"best_{key}{K.WEIGHTS_EXT}"
+        )
+
+    def _save_image(
+        self,
+        epoch: int,
+        outputs: dict[str, Tensor],
+        stem: str = "debug",
+        show_info: bool = True
+    ):
         """Save a debug image for visualization.
 
         Args:
             epoch (int): The current epoch number.
-            outputs (dict[str, Tensor]): A dictionary containing the outputs
-                from the model.
+            outputs (dict): A dictionary containing the outputs from the model.
+            stem (str, optional): The stem of the output file name.
+                Defaults to "debug".
+            show_info (bool, optional): Whether to draw the keys of the outputs
+                as labels on the image. Defaults to True.
         """
         config = self.config
 
-        if config.save_debug:
-            debug = []
-            for k, v in outputs.items():
-                image = to_image_array(torch.cat(list(v), dim=2).unsqueeze(0))
+        # Create a debug image by concatenating the output tensors and
+        # drawing the keys as labels
+        images = []
+        for k, v in outputs.items():
+            image = to_image_array(torch.cat(list(v), dim=2).unsqueeze(0))
+            if show_info:
                 image = draw_info(image, [f"{pascalize(k)}"])
-                debug.append(image)
-            debug = np.vstack(debug)
-            save_path = config.output_dir / "debug" / f"debug_epoch_{epoch+1:03}.{K.IMAGE_EXT}"
-            write_image(debug, save_path)
+            images.append(image)
+        images = np.vstack(images)
+
+        # Save the image
+        save_path = config.output_dir / "debug" / f"{stem}_epoch_{epoch+1:03}.{K.IMAGE_EXT}"
+        write_image(images, save_path)
 
 # endregion
 

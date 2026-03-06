@@ -39,7 +39,7 @@ current_dir = current_file.parents[0]
 
 
 # ==============================================================================
-# region CONTROL
+# region PREDICTOR
 # ==============================================================================
 
 def predict(config: Config):
@@ -140,27 +140,10 @@ def predict(config: Config):
 
 
 # ==============================================================================
-# region MAIN
+# region UNIT TEST
 # ==============================================================================
 
-def main():
-    # Load config
-    config_ctx = ConfigContext.from_cli(
-        root=current_dir,
-        config_file="colie.yaml",
-        task=Task.ENHANCE,
-        mode=RunMode.PREDICT,
-        arch="colie",
-        model="colie",
-        save=True,
-        exist_ok=True,
-        verbose=True,
-    )
-    config = config_ctx.config_for(RunMode.PREDICT)
-    predict(config)
-
-
 if __name__ == "__main__":
-    main()
+    pass
 
 # endregion

@@ -17,6 +17,7 @@ from abc import ABC, abstractmethod
 import cv2
 from numpy import ndarray
 from rich.progress import Progress
+from sympy.printing.pytorch import torch
 from torch import nn, Tensor
 
 from mon.core import (
@@ -24,15 +25,16 @@ from mon.core import (
     ConfigContext,
     create_progress_bar,
     K,
+    log,
     Path,
     RunMode,
     Size,
+    Split,
     sys_ctx,
     TensorOrArray,
     TimeProfiler,
-    log,
 )
-from mon.dataset import transform as T
+from mon.dataset import build_dataloader, transform as T
 from mon.metrics import benchmark
 from mon.ops import to_image_array, write_image
 
@@ -56,28 +58,53 @@ class Predictor(ABC):
                 parameters for training.
         """
         # Assign attributes
-        self.config = config
-
-        # Extract commonly used attributes for convenience
-        self.device = config.device
-        self.benchmark = config.benchmark
-        self.verbose = config.verbose
+        self._config = config
 
         # Allocate resources
-        # We will initialize these attributes later to avoid a long
+        # These attributes will be initialized later to avoid a long
         # initialization time
-        self.model: nn.Module | None = None
-        self.transforms: T.Compose | None = None
+        self._model: nn.Module | None = None
+        self._transforms: T.Compose | None = None
 
     # --- Properties ---
-    @abstractmethod
-    def init_model(self):
-        """Initialize ``self.model`` attribute."""
-        pass
+    @property
+    def config(self) -> Config:
+        """Return the config object."""
+        return self._config
+
+    @property
+    def device(self) -> torch.device:
+        """Return the device to use."""
+        return self.config.device
+
+    @property
+    def benchmark(self) -> bool:
+        """Return the benchmark flag."""
+        return self.config.benchmark
+
+    @property
+    def verbose(self) -> bool:
+        """Return the verbose flag."""
+        return self.config.verbose
+
+    @property
+    def model(self) -> nn.Module:
+        """Return the model object."""
+        return self._model
 
     @abstractmethod
-    def init_transforms(self):
-        """Initialize ``self.transforms`` attribute."""
+    def _init_model(self):
+        """Initialize ``self._model`` attribute."""
+        pass
+
+    @property
+    def transforms(self) -> T.Compose | None:
+        """Return the transforms object."""
+        return self._transforms
+
+    @abstractmethod
+    def _init_transforms(self):
+        """Initialize ``self._transforms`` attribute."""
         pass
 
     # --- Creation ---
@@ -101,37 +128,36 @@ class Predictor(ABC):
         sys_ctx.set_random_seed(config.seed)
 
         # 3. Define model
-        self.init_model()
+        self._init_model()
         if self.model is None:
-            raise ValueError(f"'model' is not initialized.")
+            raise RuntimeError(f"'model' is not initialized.")
 
-        # 4. Run benchmark
-        self.benchmark()
-
-        # 5. Define transforms
-        self.init_transforms()
+        # 4. Define transforms
+        self._init_transforms()
         if self.transforms is None:
             if self.verbose:
                 log(f"'transforms' is not initialized.")
 
-        # 5. Main loop
+        # 5. Run benchmark
+        self.benchmark()
+
+        # 6. Main loop
         with create_progress_bar() as pbar:
             for data in pbar.track(
                 sequence=config.data,
                 total=len(config.data),
                 description=f"[bright_yellow]Data"
             ):
-                # 5.1. Predict data
+                # 6.1. Predict data
                 timers = TimeProfiler()
-                self.predict_data(data=data, pbar=pbar, timers=timers)
+                self._predict_data(data=data, pbar=pbar, timers=timers)
                 timers.total.tock()
 
-                # 5.2. Finish
+                # 6.2. Finish
                 timers.print()
 
     # --- Prediction ---
-    @abstractmethod
-    def predict_data(self, data: Path | str, pbar: Progress, timers: TimeProfiler):
+    def _predict_data(self, data: Path | str, pbar: Progress, timers: TimeProfiler):
         """Predict the output of the model for a single data source.
 
         Args:
@@ -140,10 +166,54 @@ class Predictor(ABC):
             timers (TimeProfiler): The time profiler to record timing information
                 during prediction.
         """
+        config = self.config
+        device = self.device
+        save_debug = config.save_debug
+
+        # 1. Build dataset
+        data_name, dataloader = build_dataloader(
+            src=data,
+            dataset_dir=config.data_dir,
+            split=Split.TEST,
+            transforms=self.transforms,
+        )
+
+        # 2. Main processing loop
+        task = pbar.add_task(
+            description=f"[bright_yellow]Predicting {data_name}",
+            total=len(dataloader),
+        )
+        for i, datapoint in enumerate(dataloader):
+            # 2.1. Predict step
+            outputs = self._predict_step(datapoint=datapoint, timers=timers)
+
+            # 2.2. Post-process
+            timers.postprocess.tick()
+            meta = datapoint["meta"]
+            self._save(outputs, meta)
+            if save_debug:
+                self._save_debug(outputs, meta)
+            timers.postprocess.tock()
+
+            pbar.update(task, advance=1)
+        pbar.remove_task(task)
+
+    @abstractmethod
+    def _predict_step(self, datapoint: dict, timers: TimeProfiler) -> dict:
+        """Predict the output of the model for a single data point.
+
+        Args:
+            datapoint (dict): The dictionary containing the data point to predict.
+            timers (TimeProfiler): The time profiler to record timing information
+                during prediction.
+
+        Returns:
+            dict: The dictionary containing the prediction results.
+        """
         pass
 
     # --- Utilities ---
-    def benchmark(self):
+    def _benchmark(self):
         """Run the benchmark for the model."""
         config = self.config
         imgsz = Size.from_value(config.eval_imgsz)
@@ -152,32 +222,32 @@ class Predictor(ABC):
             benchmark(self.model, imgsz=imgsz)
 
     @abstractmethod
-    def save(self, path: Path, outputs: dict):
+    def _save(self, outputs: dict, meta: dict):
         """Save the main prediction results to a file.
 
         Args:
-            path (Path): The source path used to determine the output file path.
             outputs (dict): The dictionary containing the main prediction results.
+            meta (dict): The dictionary containing the metadata.
         """
         pass
 
     @abstractmethod
-    def save_debug(self, path: Path, outputs: dict):
+    def _save_debug(self, outputs: dict, meta: dict):
         """Save debugging results for visualization.
 
         Args:
-            path (Path): The source path used to determine the output file path.
             outputs (dict): The dictionary containing the debugging results.
+            meta (dict): The dictionary containing the metadata.
         """
         pass
 
-    def save_image(self, path: Path, image: TensorOrArray, size: Size):
+    def _save_image(self, image: TensorOrArray, src_path: Path, size: Size):
         """Save a debug image for visualization.
 
         Args:
-            path (Path): The source path used to determine the output file path.
             image (TensorOrArray): The image to be saved, which can be a tensor
                 or an array.
+            src_path (Path): The source path, used to determine the output file path.
             size (Size): The original size of the input image, used for resizing
                 the image if necessary.
         """
@@ -198,7 +268,7 @@ class Predictor(ABC):
             image = cv2.resize(image, size.wh)
 
         # Save the image
-        save_path = config.resolve_save_file(dirname=K.PRED_DIR, src_path=path)
+        save_path = config.resolve_save_file(dirname=K.PRED_DIR, src_path=src_path)
         write_image(image=image, path=save_path)
 
 # endregion

@@ -13,152 +13,115 @@ References:
 
 from __future__ import annotations
 
-__all__ = []
+__all__ = [
+    "ZeroDCE_Predictor",
+]
 
-import cv2
 import torch
+from typing_extensions import override
 
-from mon import (
-    Config,
-    ConfigContext,
-    create_progress_bar,
-    K,
-    metrics,
-    MODELS,
-    Path,
-    RunMode,
-    Size,
-    Split,
-    sys_ctx,
-    Task,
-    TimeProfiler,
-    to_image_array,
-    transform as T,
-)
-from mon.dataset import build_dataset
-from mon.ops import write_image
+from mon.core import Path, Size, TimeProfiler
+from mon.dataset import transform as T
+from mon.runners import Predictor
+from .model import clode
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
 
 
 # ==============================================================================
-# region CONTROL
+# region PREDICTOR
 # ==============================================================================
 
-@torch.no_grad()
-def predict(config: Config):
-    # 1. Summarize the current run
-    if config.verbose:
-        config.log_summary()
+class ZeroDCE_Predictor(Predictor):
+    """Predictor for Zero-DCE models."""
 
-    # 2. Setup environment
-    device = config.device
-    sys_ctx.set_random_seed(config.seed)
+    # --- Properties ---
+    @override
+    def _init_model(self):
+        """Initialize ``self._model`` attribute."""
+        config = self.config
+        device = self.device
+        weights = config.weights or config.finetune
 
-    # 3. Resolve pre-trained weights
-    weights = config.weights or config.finetune
+        model = clode(**config.model | { "weights": weights})
+        model = model.to(device)
+        model.eval()
+        self._model = model
 
-    # 4. Define model
-    imgsz = Size.from_value(config.eval_imgsz)
-    time_eval = torch.tensor([0, config.T]).float().to(device)
+    @override
+    def _init_transforms(self):
+        """Initialize ``self._transforms`` attribute."""
+        config = self.config
+        imgsz = Size.from_value(config.eval_imgsz)
 
-    model = MODELS.build(**config.model | { "weights": weights})
-    model = model.to(device)
-    model.eval()
+        self._transforms = T.Compose([
+            T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32),
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
 
-    # 5. Run benchmark
-    if config.benchmark:
-        metrics.benchmark(model, imgsz=imgsz)
+    # --- Prediction ---
+    @override
+    def _predict_step(self, datapoint: dict, timers: TimeProfiler) -> dict:
+        """Predict the output of the model for a single data point.
 
-    # 6. Define transforms
-    transforms = T.Compose([
-        T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32),
-        T.Normalize(normalization="min_max"),
-        T.ToTensorV2(transpose_mask=True),
-    ])
+        Args:
+            datapoint (dict): The dictionary containing the data point to predict.
+            timers (TimeProfiler): The time profiler to record timing information
+                during prediction.
 
-    # 7. Prediction loop
-    for src in config.data:
-        # 7.1. Build dataset
-        data_name, dataset = build_dataset(
-            src=src,
-            dataset_dir=config.data_dir,
-            split=Split.TEST,
-            transforms=transforms,
-        )
+        Returns:
+            dict: The dictionary containing the prediction results.
+        """
+        config = self.config
+        device = self.device
 
-        # 7.2. Main processing loop
-        timers = TimeProfiler()
-        timers.total.tick()
-        with create_progress_bar() as pbar:
-            for i, datapoint in pbar.track(
-                sequence=enumerate(dataset),
-                total=len(dataset),
-                description=f"[bright_yellow]Predicting"
-            ):
-                # 7.2.1. Preprocess
-                timers.preprocess.tick()
-                meta = datapoint["meta"]
-                path = Path(meta["path"])
-                size0 = Size.from_value(meta["imgsz"])
-                image = datapoint["image"]
-                image = image.unsqueeze(0).to(device)
-                timers.preprocess.tock()
+        # 1. Prepare inputs
+        timers.preprocess.tick()
+        image = datapoint["image"]
+        image = image.to(device)
+        time_eval = torch.tensor([0, config.T]).float().to(device)
+        timers.preprocess.tock()
 
-                # 7.2.2. Inference
-                timers.infer.tick()
-                outputs = model(image, T, inference=True)
-                timers.infer.tock()
+        # 2. Inference
+        timers.infer.tick()
+        outputs = self.model(image, eval_time=time_eval, inference=True)
+        timers.infer.tock()
 
-                # 7.2.3. Postprocess
-                timers.postprocess.tick()
-                enhanced = outputs["enhanced"]
-                enhanced = to_image_array(enhanced)
-                size1 = Size.from_value(enhanced)
-                if size1 != size0:
-                    enhanced = cv2.resize(enhanced, size0.wh)
-                timers.postprocess.tock()
+        return outputs
 
-                # 7.2.4. Save
-                if config.save:
-                    # Save to: ".../pred/"
-                    save_path = config.resolve_save_file(K.PRED_DIR, src_path=path)
-                    # save_path = save_dir / f"{path.stem}{K.IMAGE_EXT}"
-                    write_image(enhanced, save_path)
+    # --- Utilities ---
+    @override
+    def _save(self, outputs: dict, meta: dict):
+        """Save the main prediction results to a file.
 
-                # 7.2.5. Save debug
-                # Do nothing
-        timers.total.tock()
+        Args:
+            outputs (dict): The dictionary containing the main prediction results.
+            meta (dict): The dictionary containing the metadata.
+        """
+        path = Path(meta["path"])
+        size = Size.from_value(meta["imgsz"])
+        self._save_image(path, outputs["enhanced"], size)
 
-        # 7.3. Finish
-        timers.print()
+    @override
+    def _save_debug(self, outputs: dict, meta: dict):
+        """Save debugging results for visualization.
+
+        Args:
+            outputs (dict): The dictionary containing the debugging results.
+            meta (dict): The dictionary containing the metadata.
+        """
+        pass
 
 # endregion
 
 
 # ==============================================================================
-# region MAIN
+# region UNIT TEST
 # ==============================================================================
 
-def main():
-    # Load config
-    config_ctx = ConfigContext.from_cli(
-        root=current_dir,
-        config_file="clode_sice_me.yaml",
-        task=Task.ENHANCE,
-        mode=RunMode.PREDICT,
-        arch="clode",
-        model="clode",
-        save=True,
-        exist_ok=True,
-        verbose=True,
-    )
-    config = config_ctx.config_for(RunMode.PREDICT)
-    predict(config)
-
-
 if __name__ == "__main__":
-    main()
+    pass
 
 # endregion
