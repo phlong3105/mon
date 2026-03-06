@@ -26,8 +26,8 @@ from mon.core import (
     Size,
     SizeLike,
     TensorOrArray,
-    to_image_array,
 )
+from mon.ops.image import to_image_array
 
 
 # ==============================================================================

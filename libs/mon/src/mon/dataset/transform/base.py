@@ -68,6 +68,7 @@ def __register_transforms(module, prefix: str = ""):
 
 
 __register_transforms(A)
+del __register_transforms
 ALBUMENTATIONS.sort()
 
 # endregion

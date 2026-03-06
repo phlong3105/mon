@@ -16,6 +16,9 @@ __all__ = [
     "Factory",
     "MODELS",
     "ModelFactory",
+    "OPTIMIZERS",
+    "OptimizerFactory",
+    "SCHEDULERS",
     "WEIGHTS",
     "WeightsFactory",
 ]
@@ -23,6 +26,8 @@ __all__ = [
 import inspect
 from collections import UserDict
 from typing import Any, Callable
+
+from torch.optim.optimizer import ParamsT, Optimizer
 
 from mon.core.console import log_error
 from mon.core.data import Weights, WeightsEnum
@@ -720,6 +725,46 @@ class WeightsFactory(Factory):
         """
         return self.find(weights_path) is not None
 
+
+class OptimizerFactory(Factory):
+    """Optimizer Factory that organizes optimizers."""
+
+    # --- Creation ---
+    def build(self, name: str, params: ParamsT, *args, **kwargs) -> Optimizer:
+        """Instantiate a registered class by name.
+
+        Args:
+            name (str): Name of the registered class to instantiate.
+            params (ParamsT): Parameters to pass to the class constructor.
+            *args: Positional arguments to forward to the class constructor.
+            **kwargs: Arguments to forward to the class constructor.
+
+        Returns:
+            Any: Instance of the requested class.
+
+        Raises:
+            ValueError: If the requested ``name`` is not found.
+        """
+        # Validate inputs
+        if not name:
+            raise ValueError(
+                f"Cannot build from an empty name in the '{self.name}' factory."
+            )
+
+        # Normalize name
+        key = depascalize(name) if self.decamelize else name
+        if key not in self:
+            # Fallback for cases where the raw name might match.
+            key = name if name in self else None
+
+        # Create the instance
+        if key is None:
+            raise ValueError(
+                f"'{name}' is not a registered name in the '{self.name}' "
+                f"factory. Available names: {list(self.keys())}."
+            )
+        return self[key](params=params, *args, **kwargs)
+
 # endregion
 
 
@@ -732,6 +777,8 @@ DATASETS: DatasetFactory = DatasetFactory(name="Datasets", decamelize=True)
 BACKBONES: ModelFactory = ModelFactory(name="Backbones", decamelize=True)
 MODELS: ModelFactory = ModelFactory(name="Models", decamelize=True)
 WEIGHTS: WeightsFactory = WeightsFactory(name="Weights", decamelize=True)
+OPTIMIZERS: OptimizerFactory = OptimizerFactory(name="Optimizers", decamelize=False)
+SCHEDULERS: Factory = Factory(name="Schedulers", decamelize=False)
 
 # endregion
 
