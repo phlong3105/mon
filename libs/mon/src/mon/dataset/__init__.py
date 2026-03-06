@@ -140,12 +140,7 @@ def build_dataloader(
         verbose=verbose,
         *args, **kwargs
     )
-
-    dataloader_ = DataLoader(
-        dataset=dataset_,
-        batch_size=batch_size,
-        *args, **kwargs
-    )
+    dataloader_ = DataLoader(dataset=dataset_, batch_size=batch_size,*args, **kwargs)
 
     return name, dataloader_
 

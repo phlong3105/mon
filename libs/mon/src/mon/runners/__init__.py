@@ -10,4 +10,5 @@ and inference.
 from __future__ import annotations
 
 from .evaluator import *
+from .predictor import *
 from .trainer import *

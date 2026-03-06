@@ -3,7 +3,7 @@
 
 """Training Runners.
 
-This module provides several metric evaluators.
+This module provides training runner classes.
 """
 
 from __future__ import annotations
@@ -17,7 +17,7 @@ from abc import ABC, abstractmethod
 import numpy as np
 import torch
 from rich.progress import Progress
-from torch import nn
+from torch import nn, Tensor
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler
 
@@ -60,11 +60,9 @@ class Trainer(ABC):
 
         # Extract commonly used attributes for convenience
         self.device = config.device
-        self.benchmark = config.benchmark
         self.verbose = config.verbose
 
         # Allocate resources
-        self.pbar = create_progress_bar()
         # We will initialize these attributes later to avoid a long
         # initialization time
         self.model: nn.Module | None = None
@@ -118,7 +116,6 @@ class Trainer(ABC):
         # 2. Setup environment
         sys_ctx.set_random_seed(config.seed)
         epochs = config.epochs
-        imgsz = Size.from_value(config.eval_imgsz)
 
         # 3. Define model
         self.init_model()
@@ -131,8 +128,7 @@ class Trainer(ABC):
             raise ValueError(f"'optimizer' is not initialized.")
 
         # 5. Run benchmark
-        if self.benchmark:
-            benchmark(self.model, imgsz=imgsz)
+        self.benchmark()
 
         # 6. Define data
         self.init_dataloaders()
@@ -158,13 +154,16 @@ class Trainer(ABC):
                 # 7.2. Val epoch
                 val_outputs = {}
                 if self.val_dataloader is not None:
-                    val_outputs |= self.val_epoch(epoch=epoch, pbar=pbar)
+                    val_outputs = self.val_epoch(epoch=epoch, pbar=pbar)
 
                 # 7.3. Log
                 self.log(epoch=epoch,train_outputs=train_outputs, val_outputs=val_outputs)
 
                 # 7.4. Save
                 self.save(epoch=epoch, train_outputs=train_outputs, val_outputs=val_outputs)
+
+                # 7.5. Save debug
+                self.save_debug(epoch=epoch, train_outputs=train_outputs, val_outputs=val_outputs)
 
     # --- Training ---
     @abstractmethod
@@ -197,6 +196,14 @@ class Trainer(ABC):
         pass
 
     # --- Utilities ---
+    def benchmark(self):
+        """Run the benchmark for the model."""
+        config = self.config
+        imgsz = Size.from_value(config.eval_imgsz)
+
+        if config.benchmark:
+            benchmark(self.model, imgsz=imgsz)
+
     @abstractmethod
     def log(self, epoch: int, train_outputs: dict, val_outputs: dict):
         """Log the training and validation results for the current epoch.
@@ -244,13 +251,24 @@ class Trainer(ABC):
         else:
             self.best[key] = value
 
-    def save_debug_image(self, epoch: int, outputs: dict[str, torch.Tensor]):
+    @abstractmethod
+    def save_debug(self, epoch: int, train_outputs: dict, val_outputs: dict):
+        """Save debugging results for visualization.
+
+        Args:
+            epoch (int): The current epoch number.
+            train_outputs (dict): The outputs from the training epoch.
+            val_outputs (dict): The outputs from the validation epoch.
+        """
+        pass
+
+    def save_image(self, epoch: int, outputs: dict[str, Tensor]):
         """Save a debug image for visualization.
 
         Args:
             epoch (int): The current epoch number.
-            outputs (dict[str, torch.Tensor]): A dictionary containing the
-                outputs from the model.
+            outputs (dict[str, Tensor]): A dictionary containing the outputs
+                from the model.
         """
         config = self.config
 
@@ -261,7 +279,7 @@ class Trainer(ABC):
                 image = draw_info(image, [f"{pascalize(k)}"])
                 debug.append(image)
             debug = np.vstack(debug)
-            save_path = config.output_dir / "debug" / f"debug_epoch_{epoch+1:03}.jpg"
+            save_path = config.output_dir / "debug" / f"debug_epoch_{epoch+1:03}.{K.IMAGE_EXT}"
             write_image(debug, save_path)
 
 # endregion

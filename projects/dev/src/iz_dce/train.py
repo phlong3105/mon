@@ -3,7 +3,7 @@
 
 """Training Runners.
 
-This module provides several metric evaluators.
+This module provides training runner classes for IZ-DCE and IZ-DCE-ODE models.
 """
 
 from __future__ import annotations
@@ -91,14 +91,14 @@ class IZDCE_Trainer(Trainer):
         # 2. Train loop
         self.model.train()
         grad_clip_norm = config.grad_clip_norm
-        outputs = {}
+        train_outputs = {}
         losses = []
 
         task = pbar.add_task(
             f"[bright_yellow]Train Epoch {epoch+1:03}",
             total=len(self.train_dataloader)
         )
-        for j, datapoint in enumerate(self.train_dataloader):
+        for i, datapoint in enumerate(self.train_dataloader):
             # 2.1. Prepare inputs
             image = datapoint["image"]
             depth = datapoint.get("depth", None)
@@ -140,10 +140,10 @@ class IZDCE_Trainer(Trainer):
             self.scheduler.step()
 
         # 4. Output
-        outputs |= {
+        train_outputs |= {
             "loss": sum(losses) / len(losses),
         }
-        return outputs
+        return train_outputs
 
     # --- Validation ---
     @override
@@ -169,7 +169,7 @@ class IZDCE_Trainer(Trainer):
 
         # 2. Val loop
         self.model.eval()
-        outputs = {}
+        val_outputs = {}
         psnrs = []
         ssims = []
         ssimcs = []
@@ -178,7 +178,7 @@ class IZDCE_Trainer(Trainer):
             f"[bright_cyan]Val Epoch {epoch+1:03}",
             total=len(self.val_dataloader)
         )
-        for j, datapoint in enumerate(self.val_dataloader):
+        for i, datapoint in enumerate(self.val_dataloader):
             # 2.1. Prepare inputs
             image = datapoint["image"]
             depth = datapoint.get("depth", None)
@@ -199,8 +199,8 @@ class IZDCE_Trainer(Trainer):
             ssimcs.append(torch.mean(ssimc_metric(enhanced, target)))
 
             # 2.5. Debug outputs
-            if j == 0:
-                outputs |= {
+            if i == 0:
+                val_outputs |= {
                     "image": image.cpu(),
                     "depth": depth.cpu() if depth is not None else None,
                     "target": target.cpu(),
@@ -211,12 +211,12 @@ class IZDCE_Trainer(Trainer):
         pbar.remove_task(task)
 
         # 3. Output
-        outputs |= {
+        val_outputs |= {
             "psnr": sum(psnrs) / len(psnrs),
             "ssim": sum(ssims) / len(ssims),
             "ssimc": sum(ssimcs) / len(ssimcs),
         }
-        return outputs
+        return val_outputs
 
     # --- Utilities ---
     @override
@@ -256,21 +256,27 @@ class IZDCE_Trainer(Trainer):
         """
         config = self.config
 
-        # Save weights
         torch.save(self.model.state_dict(), config.output_dir / "last.pt")
         self.save_best_weights("loss", train_outputs["loss"], lower_is_better=True)
         self.save_best_weights("psnr", val_outputs["psnr"])
         self.save_best_weights("ssim", val_outputs["ssim"])
         self.save_best_weights("ssimc", val_outputs["ssimc"])
 
-        # Save debug
+    def save_debug(self, epoch: int, train_outputs: dict, val_outputs: dict):
+        """Save debugging results for visualization.
+
+        Args:
+            epoch (int): The current epoch number.
+            train_outputs (dict): The outputs from the training epoch.
+            val_outputs (dict): The outputs from the validation epoch.
+        """
         debug_image = {
             "image": val_outputs["image"],
             "depth": val_outputs["depth"],
             "target": val_outputs["target"],
             "enhanced": val_outputs["enhanced"],
         }
-        self.save_debug_image(epoch, debug_image)
+        self.save_image(epoch, debug_image)
 
 
 class IZDCE_ODE_Trainer(IZDCE_Trainer):
@@ -323,14 +329,14 @@ class IZDCE_ODE_Trainer(IZDCE_Trainer):
         # 2. Train loop
         self.model.train()
         grad_clip_norm = config.grad_clip_norm
-        outputs = {}
+        train_outputs = {}
         losses = []
 
         task = pbar.add_task(
             f"[bright_yellow]Train Epoch {epoch+1:03}",
             total=len(self.train_dataloader)
         )
-        for j, datapoint in enumerate(self.train_dataloader):
+        for i, datapoint in enumerate(self.train_dataloader):
             # 2.1. Prepare inputs
             image = datapoint["image"]
             depth = datapoint.get("depth", None)
@@ -369,10 +375,10 @@ class IZDCE_ODE_Trainer(IZDCE_Trainer):
         pbar.remove_task(task)
 
         # 3. Output
-        outputs |= {
+        train_outputs |= {
             "loss": sum(losses) / len(losses),
         }
-        return outputs
+        return train_outputs
 
     # --- Validation ---
     @override
@@ -398,7 +404,7 @@ class IZDCE_ODE_Trainer(IZDCE_Trainer):
 
         # 2. Val loop
         self.model.eval()
-        outputs = {}
+        val_outputs = {}
         psnrs = []
         ssims = []
         ssimcs = []
@@ -407,7 +413,7 @@ class IZDCE_ODE_Trainer(IZDCE_Trainer):
             f"[bright_cyan]Val Epoch {epoch+1:03}",
             total=len(self.val_dataloader)
         )
-        for j, datapoint in enumerate(self.val_dataloader):
+        for i, datapoint in enumerate(self.val_dataloader):
             # 2.1. Prepare inputs
             image = datapoint["image"]
             depth = datapoint.get("depth", None)
@@ -429,8 +435,8 @@ class IZDCE_ODE_Trainer(IZDCE_Trainer):
             ssimcs.append(torch.mean(ssimc_metric(enhanced, target)))
 
             # 2.5. Debug outputs
-            if j == 0:
-                outputs |= {
+            if i == 0:
+                val_outputs |= {
                     "image": image.cpu(),
                     "depth": depth.cpu() if depth is not None else None,
                     "target": target.cpu(),
@@ -441,18 +447,18 @@ class IZDCE_ODE_Trainer(IZDCE_Trainer):
         pbar.remove_task(task)
 
         # 3. Output
-        outputs |= {
+        val_outputs |= {
             "psnr": sum(psnrs) / len(psnrs),
             "ssim": sum(ssims) / len(ssims),
             "ssimc": sum(ssimcs) / len(ssimcs),
         }
-        return outputs
+        return val_outputs
 
 # endregion
 
 
 # ==============================================================================
-# region MAIN
+# region UNIT TEST
 # ==============================================================================
 
 if __name__ == "__main__":
