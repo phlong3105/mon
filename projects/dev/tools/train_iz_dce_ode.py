@@ -37,8 +37,8 @@ from mon import (
     Task,
     to_image_array,
 )
-from mon.cv import draw_info, write_image
 from mon.dataset import DataLoader
+from mon.ops import draw_info, write_image
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]

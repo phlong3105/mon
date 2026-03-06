@@ -31,8 +31,8 @@ from mon import (
     to_image_array,
     transform as T,
 )
-from mon.cv import write_image
 from mon.dataset import build_dataset
+from mon.ops import write_image
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]

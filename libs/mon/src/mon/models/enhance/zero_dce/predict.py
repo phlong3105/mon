@@ -3,17 +3,24 @@
 
 """Prediction Script.
 
-This script provides a CLI for running CoLIE prediction on a given dataset.
+This script provides a CLI for running Zero-DCE prediction on a given dataset.
 
 References:
-    - Paper: "Fast Context-Based Low-Light Image Enhancement via Neural Implicit
-      Representations," ECCV 2024.
-    - Code: https://github.com/ctom2/colie
+    - Paper: "Zero-Reference Deep Curve Estimation for Low-Light Image
+      Enhancement," CVPR 2020.
+    - Code: https://github.com/Li-Chongyi/Zero-DCE
+
+    - Paper: "Learning to Enhance Low-Light Image via Zero-Reference Deep Curve
+      Estimation," IEEE TPAMI 2022.
+    - Code: https://github.com/Li-Chongyi/Zero-DCE_extension
 """
 
 from __future__ import annotations
 
 __all__ = []
+
+import cv2
+import torch
 
 from mon import (
     Config,
@@ -21,9 +28,10 @@ from mon import (
     create_progress_bar,
     K,
     metrics,
+    MODELS,
     Path,
-    resolve_project_root,
     RunMode,
+    Size,
     Split,
     sys_ctx,
     Task,
@@ -32,7 +40,7 @@ from mon import (
     transform as T,
 )
 from mon.dataset import build_dataset
-from mon.ops import colie, write_image
+from mon.ops import write_image
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -42,6 +50,7 @@ current_dir = current_file.parents[0]
 # region CONTROL
 # ==============================================================================
 
+@torch.no_grad()
 def predict(config: Config):
     # 1. Summarize the current run
     if config.verbose:
@@ -52,18 +61,28 @@ def predict(config: Config):
     sys_ctx.set_random_seed(config.seed)
 
     # 3. Resolve pre-trained weights
-    # weights = config.weights or config.finetune
+    weights = config.weights or config.finetune
 
     # 4. Define model
-    model = colie(device=device, **config.model)
+    imgsz = Size.from_value(config.eval_imgsz)
+    scale_factor = config.model.get("scale_factor")
+    if scale_factor:
+        imgsz = Size(
+            height=imgsz.h // scale_factor,
+            width=imgsz.w // scale_factor,
+        )
+
+    model = MODELS.build(**config.model | { "weights": weights})
     model = model.to(device)
+    model.eval()
 
     # 5. Run benchmark
     if config.benchmark:
-        metrics.benchmark(model)
+        metrics.benchmark(model, imgsz=imgsz)
 
     # 6. Define transforms
     transforms = T.Compose([
+        T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32),
         T.Normalize(normalization="min_max"),
         T.ToTensorV2(transpose_mask=True),
     ])
@@ -79,9 +98,6 @@ def predict(config: Config):
         )
 
         # 7.2. Main processing loop
-        epochs = config.epochs
-        E = config.loss.E
-
         timers = TimeProfiler()
         timers.total.tick()
         with create_progress_bar() as pbar:
@@ -94,27 +110,23 @@ def predict(config: Config):
                 timers.preprocess.tick()
                 meta = datapoint["meta"]
                 path = Path(meta["path"])
+                size0 = Size.from_value(meta["imgsz"])
                 image = datapoint["image"]
                 image = image.unsqueeze(0).to(device)
                 timers.preprocess.tock()
 
                 # 7.2.2. Inference
                 timers.infer.tick()
-                outputs = model(image, epochs=epochs, E=E, save_debug=config.save_debug)
+                outputs = model(image, save_debug=config.save_debug)
                 timers.infer.tock()
 
                 # 7.2.3. Postprocess
                 timers.postprocess.tick()
                 enhanced = outputs["enhanced"]
                 enhanced = to_image_array(enhanced)
-                debug = {}
-                if config.save_debug:
-                    debug = {
-                        "image_i": to_image_array(outputs["image_i"]),
-                        "image_i_res": to_image_array(outputs["image_i_res"]),
-                        "image_i_fixed": to_image_array(outputs["image_i_fixed"]),
-                        "image_r": to_image_array(outputs["image_r"]),
-                    }
+                size1 = Size.from_value(enhanced)
+                if size1 != size0:
+                    enhanced = cv2.resize(enhanced, size0.wh)
                 timers.postprocess.tock()
 
                 # 7.2.4. Save
@@ -125,12 +137,7 @@ def predict(config: Config):
                     write_image(enhanced, save_path)
 
                 # 7.2.5. Save debug
-                if config.save_debug:
-                    # Save to: ".../debug/"
-                    save_dir = config.resolve_save_dir(K.DEBUG_DIR, src_path=path)
-                    for k, v in debug.items():
-                        save_path = save_dir / f"{path.stem}_{k}{K.IMAGE_EXT}"
-                        write_image(v, save_path)
+                # Do nothing
         timers.total.tock()
 
         # 7.3. Finish
@@ -145,14 +152,13 @@ def predict(config: Config):
 
 def main():
     # Load config
-    root = resolve_project_root(current_dir)
     config_ctx = ConfigContext.from_cli(
-        root=root,
-        config_file="colie.yaml",
+        root=current_dir,
+        config_file="zero_dce_sice_me.yaml",
         task=Task.ENHANCE,
         mode=RunMode.PREDICT,
-        arch="colie",
-        model="colie",
+        arch="zero_dce",
+        model="zero_dce",
         save=True,
         exist_ok=True,
         verbose=True,

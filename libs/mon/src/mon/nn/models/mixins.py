@@ -93,7 +93,6 @@ class ModelRegisterMixin(ABC):
                     f"(defined locally or inherited)."
                 )
 
-
 # endregion
 
 

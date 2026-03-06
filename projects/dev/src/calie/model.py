@@ -25,7 +25,7 @@ import torch
 from torch import nn, Tensor
 
 from mon.core import log, MODELS, Path, SizeLike, Task
-from mon.cv.models.restore import ZSN2N
+from mon.models.restore import ZSN2N
 from mon.nn import loss as L, ModelRegisterMixin
 from .module import ResidualINR
 from .utils import (

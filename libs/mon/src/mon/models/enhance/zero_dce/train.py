@@ -3,11 +3,16 @@
 
 """Training Script.
 
-This script provides a CLI for running IZ-DCE training on a given dataset.
+This script provides a CLI for running Zero-DCE training on a given dataset.
 
 References:
-    - Paper: "IZ-DCE: Implicit Zero-Reference Deep Curve Estimation"
-    - Code: https://github.com/phlong3105/izdce
+    - Paper: "Zero-Reference Deep Curve Estimation for Low-Light Image
+      Enhancement," CVPR 2020.
+    - Code: https://github.com/Li-Chongyi/Zero-DCE
+
+    - Paper: "Learning to Enhance Low-Light Image via Zero-Reference Deep Curve
+      Estimation," IEEE TPAMI 2022.
+    - Code: https://github.com/Li-Chongyi/Zero-DCE_extension
 """
 
 from __future__ import annotations
@@ -19,18 +24,16 @@ import pyiqa
 import torch
 from rich.progress import Progress
 from torch import nn
-from torch.optim.lr_scheduler import CosineAnnealingLR
 
-from iz_dce import iz_dce, loss as L
 from mon import (
     Config,
     ConfigContext,
     create_progress_bar,
     log,
     metrics,
+    MODELS,
     pascalize,
     Path,
-    resolve_project_root,
     RunMode,
     Size,
     sys_ctx,
@@ -38,6 +41,7 @@ from mon import (
     to_image_array,
 )
 from mon.dataset import DataLoader
+from mon.models.enhance.zero_dce import loss as L
 from mon.ops import draw_info, write_image
 
 current_file = Path(__file__).normalize()
@@ -62,8 +66,14 @@ def train(config: Config):
 
     # 4. Define model
     imgsz = Size.from_value(config.eval_imgsz)
+    scale_factor = config.model.get("scale_factor")
+    if scale_factor:
+        imgsz = Size(
+            height=imgsz.height // scale_factor,
+            width=imgsz.width // scale_factor,
+        )
 
-    model = iz_dce(**config.model | { "weights": weights})
+    model = MODELS.build(**config.model | { "weights": weights})
     model = model.to(device)
     model.train()
 
@@ -72,19 +82,18 @@ def train(config: Config):
         metrics.benchmark(model, imgsz=imgsz)
 
     # 6. Define optimizer & scheduler
-    epochs = config.epochs
     optimizer = torch.optim.Adam(
         model.parameters(),
         lr=config.optimizer.lr,
         weight_decay=config.optimizer.weight_decay,
     )
-    scheduler = CosineAnnealingLR(optimizer, T_max=epochs, eta_min=1e-6)
 
     # 7. Define data
     train_dataloader = DataLoader.from_config(config.train_dataloader)
     val_dataloader = DataLoader.from_config(config.val_dataloader)
 
     # 8. Training loop
+    epochs = config.epochs
     best_loss = float("inf")
     best_psnr = 0.0
     best_ssim = 0.0
@@ -107,22 +116,17 @@ def train(config: Config):
             ssim = val_outputs.pop("ssim")
             ssimc = val_outputs.pop("ssimc")
 
-            # 8.3. Step the scheduler at the end of the epoch
-            scheduler.step()
-            current_lr = scheduler.get_last_lr()[0]
-
-            # 8.4. Log
+            # 8.3. Log
             if config.verbose:
                 log(
                     f"Epoch: {(i + 1):03} | "
-                    f"LR: {current_lr:08.6f} | "
                     f"Loss: {loss:08.6f} | "
                     f"PSNR: {psnr:08.6f} | "
                     f"SSIM: {ssim:08.6f} | "
                     f"SSIM-C: {ssimc:08.6f}"
                 )
 
-            # 8.5. Save
+            # 8.4. Save
             torch.save(model.state_dict(), config.output_dir / "last.pt")
             if loss < best_loss:
                 best_loss = loss
@@ -137,7 +141,7 @@ def train(config: Config):
                 best_ssimc = ssimc
                 torch.save(model.state_dict(), config.output_dir / "best_ssimc.pt")
 
-            # 8.6. Save debug
+            # 8.5. Save debug
             if config.save_debug:
                 debug = []
                 for k, v in val_outputs.items():
@@ -160,19 +164,15 @@ def train_epoch(
     device = config.device
 
     # 1. Define losses
-    L_tv_A = L.L_tv().to(device)
+    L_tv = L.L_tv().to(device)
     L_spa = L.L_spa().to(device)
     L_col = L.L_col().to(device)
-    L_col_pre = L.L_col_pre().to(device)
-    L_exp = L.L_exp(16, config.loss.E).to(device)
+    L_exp = L.L_exp(16, config.loss.L_exp_mean).to(device)
     # Loss weights
-    L_tv_A_w = config.loss.L_tv_A_w
+    L_tv_w = config.loss.L_tv_w
     L_spa_w = config.loss.L_spa_w
     L_col_w = config.loss.L_col_w
-    L_col_pre_w = config.loss.L_col_pre_w
     L_exp_w = config.loss.L_exp_w
-    L_enhance_w = config.loss.L_enhance_w
-    L_denoise_w = config.loss.L_denoise_w
 
     # 2. Train loop
     model.train()
@@ -186,27 +186,19 @@ def train_epoch(
     )
     for j, datapoint in enumerate(train_dataloader):
         image = datapoint["image"]
-        depth = datapoint.get("depth", None)
         image = image.to(device)
-        depth = depth.to(device) if depth is not None else None
 
         # 2.1. Forward pass
-        outputs = model(image, depth)
+        outputs = model(image)
         enhanced = outputs["enhanced"]
-        A = outputs["A"]
+        r = outputs["r"]
 
         # 2.2. Calculate loss
-        # Enhance loss
-        l_tv_A = L_tv_A_w * torch.mean(L_tv_A(A, depth))
-        l_spa = L_spa_w * L_spa(image, enhanced, depth)
-        l_col = L_col_w * L_col(enhanced)
-        l_col_pre = L_col_pre_w * L_col_pre(image, enhanced)
-        l_exp = L_exp_w * L_exp(enhanced)
-        l_enhance = l_tv_A + l_spa + l_col + l_col_pre + l_exp
-        # Denoise loss
-        l_denoise = torch.mean( outputs["l_denoise"])
-        # Total loss
-        loss = (L_enhance_w * l_enhance) + (L_denoise_w * l_denoise)
+        l_tv = L_tv_w * L_tv(r)
+        l_spa = L_spa_w * torch.mean(L_spa(enhanced, image))
+        l_col = L_col_w * torch.mean(L_col(enhanced))
+        l_exp = L_exp_w * torch.mean(L_exp(enhanced))
+        loss = l_tv + l_spa + l_col + l_exp
 
         # 2.3. Backward pass
         optimizer.zero_grad()
@@ -254,15 +246,12 @@ def val_epoch(
         with torch.no_grad():
             image = datapoint["image"]
             target = datapoint["target"]
-            depth = datapoint.get("depth", None)
             image = image.to(device)
             target = target.to(device)
-            depth = depth.to(device) if depth is not None else None
 
             # 2.1. Forward pass
-            outputs = model(image, depth)
+            outputs = model(image)
             enhanced = outputs["enhanced"]
-            denoised = outputs["denoised"]
 
             # 2.2. Measure metrics
             psnr = torch.mean(psnr_metric(enhanced, target))
@@ -276,7 +265,6 @@ def val_epoch(
             if j == 0:
                 val_outputs |= {
                     "image": image.cpu(),
-                    "denoised": denoised.cpu(),
                     "enhanced": enhanced.cpu(),
                 }
 
@@ -300,17 +288,15 @@ def val_epoch(
 
 def main():
     # Load config
-    root = resolve_project_root(current_dir)
     config_ctx = ConfigContext.from_cli(
-        root=root,
-        config_file="iz_dce_sice_me.yaml",
+        root=current_dir,
+        config_file="zero_dce_sice_me.yaml",
         task=Task.ENHANCE,
         mode=RunMode.TRAIN,
-        arch="iz_dce",
-        model="iz_dce",
+        arch="zero_dce",
+        model="zero_dce",
         save=True,
-        save_debug=True,
-        exist_ok=False,
+        exist_ok=True,
         verbose=True,
     )
     config = config_ctx.config_for(RunMode.TRAIN)

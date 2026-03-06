@@ -16,7 +16,14 @@ _start_time = time.time()
 
 from .core import *
 from .dataset import transform
-from . import cv, dataset, metrics, nn, tools  # This will populate all factories
+from . import (
+    dataset,
+    metrics,
+    models,
+    nn,
+    ops,
+    tools,
+)  # This will populate all factories
 
 _end_time = time.time()
 log(f"`mon` loaded in: {_end_time - _start_time:.4f} seconds.")

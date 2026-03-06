@@ -21,8 +21,8 @@ from mon import (
     create_progress_bar,
     K,
     metrics,
+    MODELS,
     Path,
-    resolve_project_root,
     RunMode,
     Split,
     sys_ctx,
@@ -32,7 +32,7 @@ from mon import (
     transform as T,
 )
 from mon.dataset import build_dataset
-from mon.ops import colie, write_image
+from mon.ops import write_image
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -55,7 +55,7 @@ def predict(config: Config):
     # weights = config.weights or config.finetune
 
     # 4. Define model
-    model = colie(device=device, **config.model)
+    model = MODELS.build(device=device, **config.model)
     model = model.to(device)
 
     # 5. Run benchmark
@@ -145,9 +145,8 @@ def predict(config: Config):
 
 def main():
     # Load config
-    root = resolve_project_root(current_dir)
     config_ctx = ConfigContext.from_cli(
-        root=root,
+        root=current_dir,
         config_file="colie.yaml",
         task=Task.ENHANCE,
         mode=RunMode.PREDICT,

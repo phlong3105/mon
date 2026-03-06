@@ -30,7 +30,7 @@ from mon.core import (
     is_valid_str,
     Loader,
 )
-from mon.cv import ImageLoader, MaskLoader
+from mon.ops import ImageLoader, MaskLoader
 
 
 # ==============================================================================
@@ -139,9 +139,9 @@ class ModalityList(IndexList[Modality]):
 # region CONCRETE IMPLEMENTATIONS
 # ==============================================================================
 
-ImageModality = partial(Modality, ext=".jpg", module=Image, loader=ImageLoader(), type=AlbumTargetType.IMAGE)
-FrameModality = partial(Modality, ext=".jpg", module=Frame, loader=None, type=AlbumTargetType.IMAGE)
-DepthModality = partial(Modality, ext=".jpg", module=Image, loader=MaskLoader(), type=AlbumTargetType.IMAGE)
+ImageModality = partial(Modality, ext=".jpg", module=Image, type=AlbumTargetType.IMAGE, loader=ImageLoader())
+FrameModality = partial(Modality, ext=".jpg", module=Frame, type=AlbumTargetType.IMAGE, loader=None)
+DepthModality = partial(Modality, ext=".jpg", module=Image, type=AlbumTargetType.IMAGE, loader=MaskLoader())
 
 # endregion
 
