@@ -19,7 +19,7 @@ model:
   hidden_dim: 32
   imgsz: 256
   chunk_size: 100000
-  tol: 0.01
+  tol: 0.001
   adjoint: True
   use_dopri5: True
   weights: "cv/enhance/iz_dce/iz_dce_ode/sice_me/iz_dce_ode_sice_me.pt"  # (str) Path to model weights.
@@ -43,7 +43,7 @@ train_dataloader:
     modalities: ~
     classes: ~
     verbose: True
-  batch_size: 8  # (int) Batch size.
+  batch_size: 16  # (int) Batch size.
   shuffle: True  # (bool) Shuffle the data each epoch.
   num_workers: 4  # (int) Number of workers for data loading.
   drop_last: False  # (bool) Drop the last incomplete batch.

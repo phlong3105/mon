@@ -722,7 +722,7 @@ class EnhanceFunctionTime(nn.Module):
 class ODEBlock(nn.Module):
 
     step_size = 0.03
-    max_num_steps = 100  # 30 # 50 # 100 # 1000
+    max_num_steps = 30  # 30 # 50 # 100 # 1000
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -789,7 +789,7 @@ class ODEBlock(nn.Module):
                 func=self.ode_func,
                 y0=x_aug,
                 t=t,
-                method="rk4", # "dopri5", "euler", "rk4"
+                method="rk4",  # "dopri5", "euler", "rk4"
                 options={
                     "step_size": self.step_size,
                 }

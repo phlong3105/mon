@@ -141,7 +141,7 @@ class IZDCE_Trainer(Trainer):
 
         # 4. Output
         train_outputs |= {
-            "loss": torch.cat(losses).mean().item(),
+            "loss": sum(losses) / len(losses),
         }
         return train_outputs
 
@@ -374,7 +374,7 @@ class IZDCE_ODE_Trainer(IZDCE_Trainer):
 
         # 3. Output
         train_outputs |= {
-            "loss": torch.cat(losses).mean().item(),
+            "loss": sum(losses) / len(losses),
         }
         return train_outputs
 

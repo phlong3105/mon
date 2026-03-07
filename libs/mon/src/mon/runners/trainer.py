@@ -361,7 +361,7 @@ class Trainer(ABC):
         images = np.vstack(images)
 
         # Save the image
-        save_path = config.output_dir / "debug" / f"{stem}_epoch_{epoch+1:03}.{K.IMAGE_EXT}"
+        save_path = config.output_dir / "debug" / f"{stem}_epoch_{epoch+1:03}{K.IMAGE_EXT}"
         write_image(images, save_path)
 
 # endregion

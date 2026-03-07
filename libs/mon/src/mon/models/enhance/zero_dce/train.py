@@ -128,7 +128,7 @@ class ZeroDCE_Trainer(Trainer):
 
         # 4. Output
         train_outputs |= {
-            "loss": torch.cat(losses).mean().item(),
+            "loss": sum(losses) / len(losses),
         }
         return train_outputs
 
