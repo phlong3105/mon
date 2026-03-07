@@ -74,7 +74,7 @@ data: ~  # (list[str]) List of data names or paths for prediction.
 epochs: 100  # (int) Number of epochs to train.
 
 optimizer:
-  name: Adam  # (str) Optimizer name.
+  name: "Adam"  # (str) Optimizer name.
   lr: 1e-5  # (float) Learning rate.
   weight_decay: 3e-4
   fused: True

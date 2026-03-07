@@ -721,6 +721,7 @@ class EnhanceFunctionTime(nn.Module):
 
 class ODEBlock(nn.Module):
 
+    step_size = 0.03
     max_num_steps = 100  # 30 # 50 # 100 # 1000
 
     # --- Lifecycle & Initialization ---
@@ -729,6 +730,7 @@ class ODEBlock(nn.Module):
         ode_func: nn.Module,
         tol: float = 1e-3,
         adjoint: bool = True,
+        use_dopri5: bool = False,
         *args, **kwargs
     ):
         """Initialize a new instance.
@@ -738,12 +740,15 @@ class ODEBlock(nn.Module):
             tol (float, optional): Tolerance for the ODE solver. Defaults to 1e-3.
             adjoint (bool, optional): Whether to use the adjoint method for
                 backpropagation. Defaults to True.
+            use_dopri5 (bool, optional): Whether to use the 'dopri5' method
+                instead of 'rk4'. Defaults to False.
         """
         super().__init__()
         # Assign attributes
         self.ode_func = ode_func
         self.tol = tol
         self.adjoint = adjoint
+        self.use_dopri5 = use_dopri5
 
     # --- Callable & Context Manager ---
     def forward(self, x: Tensor, eval_time: Tensor | None = None) -> Tensor:
@@ -767,15 +772,28 @@ class ODEBlock(nn.Module):
         self.ode_func.nfe = 0
         x_aug = x
 
-        return odeint_adjoint(
-            func=self.ode_func,
-            y0=x_aug,
-            t=t,
-            rtol=self.tol,
-            atol=self.tol,
-            method="dopri5", # "dopri5", "euler", "rk4"
-            options={"max_num_steps": self.max_num_steps}
-        )
+        if self.use_dopri5:
+            return odeint_adjoint(
+                func=self.ode_func,
+                y0=x_aug,
+                t=t,
+                rtol=self.tol,
+                atol=self.tol,
+                method="dopri5",  # "dopri5", "euler", "rk4"
+                options={
+                    "max_num_steps": self.max_num_steps,
+                }
+            )
+        else:
+            return odeint_adjoint(
+                func=self.ode_func,
+                y0=x_aug,
+                t=t,
+                method="rk4", # "dopri5", "euler", "rk4"
+                options={
+                    "step_size": self.step_size,
+                }
+            )
 
 # endregion
 

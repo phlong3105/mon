@@ -19,8 +19,9 @@ model:
   hidden_dim: 32
   imgsz: 256
   chunk_size: 100000
-  tol: 0.001
+  tol: 0.01
   adjoint: True
+  use_dopri5: True
   weights: "cv/enhance/iz_dce/iz_dce_ode/sice_me/iz_dce_ode_sice_me.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
