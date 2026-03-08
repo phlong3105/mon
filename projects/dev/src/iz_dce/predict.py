@@ -16,9 +16,8 @@ __all__ = [
 import torch
 from typing_extensions import override
 
-from mon.core import MODELS, Path, Size, TimeProfiler
+from mon.core import Path, Size, TimeProfiler
 from mon.dataset import transform as T
-from mon.metrics import benchmark
 from mon.runners import Predictor
 # noinspection PyUnusedImports
 from .model import iz_dce, iz_dce_ode
@@ -34,7 +33,7 @@ current_dir = current_file.parents[0]
 class IZDCE_Predictor(Predictor):
     """Predictor for IZ-DCE models."""
 
-    # --- Properties ---
+    # --- Lifecycle & Initialization ---
     @override
     def _init_model(self):
         """Initialize ``self._model`` attribute."""
@@ -92,7 +91,7 @@ class IZDCE_Predictor(Predictor):
 
         return outputs
 
-    # --- Utilities ---
+    # --- Output ---
     @override
     def _save(self, outputs: dict, meta: dict):
         """Save the main prediction results to a file.
@@ -119,7 +118,7 @@ class IZDCE_Predictor(Predictor):
 class IZDCE_ODE_Predictor(IZDCE_Predictor):
     """Predictor for IZ-DCE-ODE models."""
 
-    # --- Properties ---
+    # --- Lifecycle & Initialization ---
     @override
     def _init_model(self):
         """Initialize ``self._model`` attribute."""

@@ -33,7 +33,7 @@ current_dir = current_file.parents[0]
 class ZeroDCE_Predictor(Predictor):
     """Predictor for Zero-DCE models."""
 
-    # --- Properties ---
+    # --- Lifecycle & Initialization ---
     @override
     def _init_model(self):
         """Initialize ``self._model`` attribute."""
@@ -50,7 +50,7 @@ class ZeroDCE_Predictor(Predictor):
     def _init_transforms(self):
         """Initialize ``self._transforms`` attribute."""
         config = self.config
-        imgsz = Size.from_value(config.eval_imgsz)
+        imgsz = config.eval_imgsz
 
         scale_factor = config.model.get("scale_factor")
         if scale_factor:
@@ -93,20 +93,7 @@ class ZeroDCE_Predictor(Predictor):
 
         return outputs
 
-    # --- Utilities ---
-    @override
-    def _benchmark(self):
-        """Run the benchmark for the model."""
-        config = self.config
-        imgsz = Size.from_value(config.eval_imgsz)
-
-        scale_factor = config.model.get("scale_factor")
-        if scale_factor:
-            imgsz = Size(height=imgsz.h // scale_factor, width=imgsz.w // scale_factor)
-
-        if self.benchmark:
-            benchmark(self.model, imgsz=imgsz)
-
+    # --- Output ---
     @override
     def _save(self, outputs: dict, meta: dict):
         """Save the main prediction results to a file.
@@ -128,6 +115,20 @@ class ZeroDCE_Predictor(Predictor):
             meta (dict): The dictionary containing the metadata.
         """
         pass
+
+    # --- Utilities ---
+    @override
+    def benchmark(self):
+        """Run the benchmark for the model."""
+        config = self.config
+        imgsz = config.eval_imgsz
+
+        scale_factor = config.model.get("scale_factor")
+        if scale_factor:
+            imgsz = Size(height=imgsz.h // scale_factor, width=imgsz.w // scale_factor)
+
+        if self.benchmark:
+            benchmark(self.model, imgsz=imgsz)
 
 # endregion
 

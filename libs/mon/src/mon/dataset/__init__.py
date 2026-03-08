@@ -19,7 +19,16 @@ File Structure:
 
 from __future__ import annotations
 
-from mon.core import DATASETS, Path, PathLike, resolve_dataset_dir
+from box import Box
+
+from mon.core import (
+    DATASETS,
+    DictLike,
+    log_error,
+    Path,
+    PathLike,
+    resolve_dataset_dir,
+)
 from .base import *
 from .transform import (
     build_compose,
@@ -35,17 +44,19 @@ from .zoo import *
 # ==============================================================================
 
 def build_dataset(
-    src: PathLike,
+    src: DictLike | PathLike,
     dataset_dir: PathLike | None = None,
     cwd: PathLike | None = None,
     transforms: ComposeLike | None = None,
     verbose: bool = False,
     *args, **kwargs
-) -> tuple[str, Dataset]:
+) -> tuple[str | None, Dataset | None]:
     """Build a dataset from a given source.
 
     Args:
-        src (PathLike): An input data source or a dataset name.
+        src (DictLike | PathLike): The source to build the dataset from. It can
+            be either a dataset configuration dictionary or a path to the
+            dataset directory.
         dataset_dir (PathLike, optional): Specific dataset directory.
             Defaults to None.
         cwd (PathLike, optional): The current working directory to resolve the
@@ -60,6 +71,14 @@ def build_dataset(
         tuple[str, Dataset]: A tuple containing the dataset name and the
             corresponding ``Dataset`` instance.
     """
+    # 1. If src is a dataset config dict, build the Dataset instance directly
+    if isinstance(src, (Box, dict)):
+        dataset_ = Dataset.from_config(src)
+        name_ = dataset_.name
+        return name_, dataset_
+
+    # 2. Otherwise, build the dataset instance based on the source type
+    # (path or name)
     # Validate inputs
     if not isinstance(src, (Path, str)):
         raise TypeError(
@@ -70,8 +89,8 @@ def build_dataset(
     # Build the corresponding Dataset instance
     src = Path(src).normalize()
 
+    # 2.1. If src is a registered dataset name, use the corresponding class
     if src.name in DATASETS:
-        # If src is a registered dataset name, use the corresponding class
         module: Dataset = DATASETS[src.name]
         dataset_dir = resolve_dataset_dir(
             dataset_name=src.name,
@@ -83,37 +102,46 @@ def build_dataset(
             "verbose": verbose,
         }
         return src.name, module.from_config(config)
-    elif src.is_dir() or src.is_image_file():
+
+    # 2.2. If src is a directory of images, build an ImageDataset
+    if src.is_dir() or src.is_image_file():
         config = kwargs | {
             "root": src,
             "transforms": transforms,
             "verbose": verbose,
         }
         return src.name, ImageDataset.from_config(config)
-    elif src.is_video_file():
+
+    # 2.3. If src is a video file, build a VideoOnlyDataset
+    if src.is_video_file():
         config = kwargs | {
             "root": src,
             "transforms": transforms,
             "verbose": verbose,
         }
         return src.name, VideoOnlyDataset.from_config(config)
-    else:
-        raise ValueError(f"Unsupported source type: {src}.")
+
+    # 3. If neither is a dataset nor a dataloader config dict, return None
+    if verbose:
+        log_error(f"Cannot build dataset from source: {src}.")
+    # raise ValueError(f"Unsupported source type: {src}.")
+    return None, None
 
 
 def build_dataloader(
-    src: PathLike,
+    src: DictLike | PathLike,
     dataset_dir: PathLike | None = None,
     cwd: PathLike | None = None,
     transforms: ComposeLike | None = None,
     batch_size: int = 1,
     verbose: bool = False,
     *args, **kwargs
-) -> tuple[str, DataLoader]:
+) -> tuple[str | None, DataLoader | None]:
     """Build a dataloader from a given source.
 
     Args:
-        src (PathLike): An input data source or a dataset name.
+        src (DictLike | PathLike): A dataloader configuration dictionary or a
+            source path.
         dataset_dir (PathLike, optional): Specific dataset directory.
             Defaults to None.
         cwd (PathLike, optional): The current working directory to resolve the
@@ -129,19 +157,34 @@ def build_dataloader(
         tuple[str, DataLoader]: A tuple containing the dataset name and the
             corresponding ``DataLoader`` instance.
     """
-    split = kwargs.pop("split", None)
+    # 1. If src is a dataloader config dict, build the DataLoader instance directly
+    if isinstance(src, (Box, dict)):
+        dataloader_ = DataLoader.from_config(src)
+        name_ = dataloader_.name
+        return name_, dataloader_
 
-    name, dataset_ = build_dataset(
-        src=src,
-        dataset_dir=dataset_dir,
-        cwd=cwd,
-        split=split,
-        transforms=transforms,
-        verbose=verbose,
-        *args, **kwargs
-    )
-    dataloader_ = DataLoader(dataset=dataset_, batch_size=batch_size,*args, **kwargs)
+    # 2. Otherwise, build the dataset and DataLoader instances separately
+    if isinstance(src, (Path, str)):
+        split = kwargs.pop("split", None)
+        name, dataset_ = build_dataset(
+            src=src,
+            dataset_dir=dataset_dir,
+            cwd=cwd,
+            split=split,
+            transforms=transforms,
+            verbose=verbose,
+            *args, **kwargs
+        )
+        dataloader_ = DataLoader(
+            dataset=dataset_,
+            batch_size=batch_size,
+            *args, **kwargs
+        )
+        return name, dataloader_
 
-    return name, dataloader_
+    # 3. If neither is a dataset nor a dataloader config dict, return None
+    if verbose:
+        log_error(f"Cannot build dataloader from source: {src}.")
+    return None, None
 
 # endregion

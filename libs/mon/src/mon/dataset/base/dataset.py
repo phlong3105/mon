@@ -134,7 +134,7 @@ class Dataset(Dataset_, ABC):
     @override
     def __repr__(self) -> str:
         """Return the official string representation for developers."""
-        lines = [f"Dataset {self.__class__.__name__}"]
+        lines = [f"Dataset {self.name}"]
         lines += [f"Number of datapoints: {len(self)}"]
         return "\n".join(lines)
 
@@ -163,6 +163,11 @@ class Dataset(Dataset_, ABC):
             yield self[i]
 
     # --- Properties ---
+    @property
+    def name(self) -> str:
+        """Return the name of the dataset."""
+        return getattr(self, "_name", getattr(self, "name", self.__class__.__name__))
+
     @property
     def primary(self) -> tuple[str, Modality]:
         """Return the primary modality and its key."""
@@ -207,7 +212,7 @@ class Dataset(Dataset_, ABC):
         metadata: list[Metadata] = []
         with create_progress_bar(disable=self.disable_pbar) as pbar:
             paths = sorted(input_dir.rglob("*"))
-            desc = f"Listing {self.__class__.__name__} {name}(s)"
+            desc = f"Listing {self.name} {name}(s)"
             for path in pbar.track(sequence=paths, description=desc):
                 path = path.normalize()
                 if path.has_ext(ext):
@@ -253,7 +258,7 @@ class Dataset(Dataset_, ABC):
         # Retrieve the list of metadata for the current modality
         metadata: list[Metadata] = []
         with create_progress_bar(disable=self.disable_pbar) as pbar:
-            desc = f"Listing {self.__class__.__name__} {name}(s)"
+            desc = f"Listing {self.name} {name}(s)"
             for meta in pbar.track(sequence=ref_metadata, description=desc):
                 # Replace directory part
                 if input_dir:

@@ -25,6 +25,7 @@ __all__ = [
     "is_list_of",
     "is_list_of",
     "is_pascalcase",
+    "is_scalar",
     "is_snakecase",
     "is_valid_str",
     "kebabize",
@@ -43,10 +44,14 @@ __all__ = [
 
 import collections
 import itertools
+import numbers
 import re
 from collections.abc import Mapping
 from typing import Any, Callable, Iterable, Literal, Sequence
 
+import numpy as np
+from numpy import ndarray
+from torch import Tensor
 
 # ==============================================================================
 # region CONSTANTS
@@ -89,6 +94,48 @@ def is_float(value: Any) -> bool:
         return True
     except (ValueError, TypeError):
         return False
+
+
+def is_scalar(value: Any, include_string: bool = False) -> bool:
+    """Checks if the input is a single scalar value.
+
+    Safely handles standard Python types, NumPy scalars/0D arrays, and PyTorch
+    0D tensors.
+
+    Args:
+        value (Any): The object to check.
+        include_string (bool, optional): If True, treats a single string as a
+            scalar. If False (default), only treats numbers/booleans as scalars.
+            Defaults to False.
+
+    Returns:
+        bool: True if it is a scalar, False otherwise.
+    """
+    # 1. Standard Python Numbers and Booleans
+    if isinstance(value, (int, float, bool, complex, numbers.Number)):
+        return True
+
+    # 2. Strings (Optional, based on your definition of a scalar)
+    if isinstance(value, str):
+        return include_string
+
+    # 3. PyTorch Tensors
+    if isinstance(value, Tensor):
+        # A scalar tensor has 0 dimensions (e.g., torch.tensor(5))
+        # Note: torch.tensor([5]) is 1D, not a strict scalar!
+        return value.ndim == 0
+
+    # 4. NumPy Arrays and Native Scalars
+    if isinstance(value, ndarray):
+        # A 0-dimensional NumPy array acts as a scalar
+        return value.ndim == 0
+
+    # 5. Catch-all for NumPy specific scalar types (np.float32, np.int64, etc.)
+    # Note: np.isscalar returns False for 0-D arrays, which is why we checked ndim above.
+    if np.isscalar(value):
+        return True
+
+    return False
 
 
 # --- Strings ---

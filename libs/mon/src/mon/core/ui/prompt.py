@@ -41,7 +41,6 @@ from mon.core.path import Path
 from mon.core.typing import PathLike
 from mon.core.utils import is_int, is_valid_str, to_list, truncate_string
 
-
 # ==============================================================================
 # region TYPE DEFINITIONS
 # ==============================================================================

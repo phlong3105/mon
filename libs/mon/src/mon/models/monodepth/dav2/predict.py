@@ -14,145 +14,157 @@ References:
 
 from __future__ import annotations
 
-__all__ = []
+__all__ = [
+    "DAV2_Predictor",
+]
 
-import matplotlib
-import numpy as np
 import torch
+from typing_extensions import override
 
-from mon import (
-    Config,
-    ConfigContext,
-    create_progress_bar,
+from mon.core import (
+    DictLike,
     K,
-    metrics,
     MODELS,
     Path,
+    PathLike,
+    resolve_project_root,
     RunMode,
     Size,
     Split,
-    sys_ctx,
+    SplitLike,
     Task,
     TimeProfiler,
 )
-from mon.dataset import build_dataset
-from mon.ops import write_image
+from mon.dataset import build_dataset, DataLoader, Dataset, transform as T
+from mon.ops import vis_heatmap
+from mon.runners import Predictor
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
 
 
 # ==============================================================================
-# region CONTROL
+# region PREDICTOR
 # ==============================================================================
 
-@torch.no_grad()
-def predict(config: Config):
-    # 1. Summarize the current run
-    if config.verbose:
-        config.log_summary()
+class DAV2_Predictor(Predictor):
+    """Predictor for DAV2 models."""
 
-    # 2. Setup environment
-    device = config.device
-    sys_ctx.set_random_seed(config.seed)
+    # --- Lifecycle & Initialization ---
+    @override
+    def _init_model(self):
+        """Initialize ``self._model`` attribute."""
+        config = self.config
+        device = self.device
+        weights = "default"
 
-    # 3. Resolve pre-trained weights
-    # weights = config.weights or config.finetune
-    weights = "default"
+        model = MODELS.build(**config.model | { "weights": weights})
+        model = model.to(device)
+        model.eval()
+        self._model = model
 
-    # 4. Define model
-    imgsz = Size.from_value(config.eval_imgsz)
+    @override
+    def _init_transforms(self):
+        """Initialize ``self._transforms`` attribute."""
+        self._transforms = None
 
-    model = MODELS.build(device=device, **config.model | { "weights": weights})
-    model = model.to(device)
-    model.eval()
+    @override
+    def _init_data(
+        self,
+        source: DictLike | PathLike,
+        split: SplitLike = Split.TEST,
+        transforms: T.Compose | None = None,
+    ) -> tuple[str, Dataset | DataLoader]:
+        """Initialize and return a dataset or dataloader.
 
-    # 5. Run benchmark
-    if config.benchmark:
-        metrics.benchmark(model, imgsz=imgsz)
+        Args:
+            source (DictLike | PathLike): A dataset/dataloader configuration
+                dictionary or a source path.
+            split (SplitLike, optional): The data split to use.
+                Defaults to Split.TEST.
+            transforms (T.Compose, optional): The data transformations to apply.
+                Defaults to None.
 
-    # 6. Define transforms
-    '''
-    transforms = T.Compose([
-        T.ResizeDivisibleBy(height=imgsz[0], width=imgsz[1], divisor=32),
-        T.Normalize(normalization="min_max"),
-        T.ToTensorV2(transpose_mask=True),
-    ])
-    '''
-    transforms = None
-
-    # 7. Prediction loop
-    for src in config.data:
-        # 7.1. Build dataset
-        data_name, dataset = build_dataset(
-            src=src,
-            dataset_dir=config.data_dir,
-            split=Split.TEST,
+        Returns:
+            tuple[str, Dataset | DataLoader]: A tuple containing the name of the
+                dataset/dataloader and the dataset/dataloader object itself.
+        """
+        return build_dataset(
+            src=source,
+            dataset_dir=self.config.data_dir,
+            split=split,
             transforms=transforms,
         )
 
-        # 7.2. Main processing loop
-        cmap = matplotlib.colormaps.get_cmap("Spectral_r")
+    # --- Prediction ---
+    @override
+    @torch.no_grad()
+    def _predict_step(self, datapoint: dict, timers: TimeProfiler) -> dict:
+        """Predict the output of the model for a single data point.
 
-        timers = TimeProfiler()
-        timers.total.tick()
-        with create_progress_bar() as pbar:
-            for i, datapoint in pbar.track(
-                sequence=enumerate(dataset),
-                total=len(dataset),
-                description=f"[bright_yellow]Predicting"
-            ):
-                # 7.2.1. Preprocess
-                timers.preprocess.tick()
-                meta = datapoint["meta"]
-                path = Path(meta["path"])
-                image = datapoint["image"]
-                timers.preprocess.tock()
+        Args:
+            datapoint (dict): The dictionary containing the data point to predict.
+            timers (TimeProfiler): The time profiler to record timing information
+                during prediction.
 
-                # 7.2.2. Inference
-                timers.infer.tick()
-                outputs = model(image, imgsz.height)
-                timers.infer.tock()
+        Returns:
+            dict: The dictionary containing the prediction results.
+        """
+        config = self.config
+        device = self.device
+        imgsz = config.eval_imgsz
 
-                # 7.2.3. Postprocess
-                timers.postprocess.tick()
-                depth = outputs
-                depth = (
-                    (depth - depth.min()) / (depth.max() - depth.min()) * 255.0
-                ).astype("uint8")
-                depth = np.repeat(depth[..., np.newaxis], 3, axis=-1)
-                depth_c = (cmap(depth)[:, :, :3] * 255)[:, :, ::-1].astype(np.uint8)
-                timers.postprocess.tock()
+        # 1. Prepare inputs
+        timers.preprocess.tick()
+        image = datapoint["image"]
+        timers.preprocess.tock()
 
-                # 7.2.4. Save
-                if config.save:
-                    # Save to: ".../pred/"
-                    save_path = config.resolve_save_file(K.DEPTH_DIR, src_path=path)
-                    # save_path = save_dir / f"{path.stem}{K.IMAGE_EXT}"
-                    write_image(depth, save_path)
+        # 2. Inference
+        timers.infer.tick()
+        outputs = self.model(image, imgsz.h)
+        outputs = {"depth": outputs}
+        timers.infer.tock()
 
-                # 7.2.5. Save debug
-                if config.save_debug:
-                    # Save to: ".../debug/"
-                    save_path = config.resolve_save_file(K.DEBUG_DIR, src_path=path)
-                    # save_path = save_dir / f"{path.stem}{K.IMAGE_EXT}"
-                    write_image(depth_c, save_path)
-        timers.total.tock()
+        return outputs
 
-        # 7.3. Finish
-        timers.print()
+    # --- Output ---
+    @override
+    def _save(self, outputs: dict, meta: dict):
+        """Save the main prediction results to a file.
+
+        Args:
+            outputs (dict): The dictionary containing the main prediction results.
+            meta (dict): The dictionary containing the metadata.
+        """
+        path = Path(meta["path"])
+        size = Size.from_value(meta["imgsz"])
+        self._save_image(outputs["depth"], size, path)
+
+    @override
+    def _save_debug(self, outputs: dict, meta: dict):
+        """Save debugging results for visualization.
+
+        Args:
+            outputs (dict): The dictionary containing the debugging results.
+            meta (dict): The dictionary containing the metadata.
+        """
+        path = Path(meta["path"])
+        size = Size.from_value(meta["imgsz"])
+        depth_c = vis_heatmap(outputs["depth"], colormap="Spectral_r")
+        self._save_image(depth_c, size, path, dirname=K.DEBUG_DIR, stem="depth_c")
 
 # endregion
 
 
 # ==============================================================================
-# region MAIN
+# region UNIT TEST
 # ==============================================================================
 
 def main():
-    # Load config
-    config_ctx = ConfigContext.from_cli(
-        root=current_dir,
+    """Unit test for DAV2_Predictor."""
+    predictor = DAV2_Predictor.from_cli(
+        prompt=True,
+        root=resolve_project_root(current_dir),
         config_file="dav2_vitb_da2k.yaml",
         task=Task.MONODEPTH,
         mode=RunMode.PREDICT,
@@ -162,11 +174,10 @@ def main():
         exist_ok=True,
         verbose=True,
     )
-    config = config_ctx.config_for(RunMode.PREDICT)
-    predict(config)
+    predictor.predict()
 
 
 if __name__ == "__main__":
-    main()
+    pass
 
 # endregion

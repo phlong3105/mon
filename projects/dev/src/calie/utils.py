@@ -21,11 +21,11 @@ __all__ = [
 
 import numpy as np
 import torch
+from mon.cv.ops import FastGuidedFilter
 from torch import nn, Tensor
 from torch.nn import functional as F
 
 from mon.core import Size, SizeLike
-from mon.cv.ops import FastGuidedFilter
 
 
 # ==============================================================================

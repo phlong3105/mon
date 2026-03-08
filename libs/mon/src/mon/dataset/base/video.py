@@ -21,10 +21,10 @@ from mon.core import (
     build_classlist,
     ClassList,
     Frame,
-    Size,
     MetadataDictList,
     Path,
     PathLike,
+    Size,
     Split,
     SplitLike,
 )

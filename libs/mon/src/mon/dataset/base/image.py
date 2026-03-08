@@ -327,7 +327,7 @@ class ImageOnlyDataset(
         name = pm.name
         with create_progress_bar(disable=self.disable_pbar) as pbar:
             paths = sorted(paths)
-            desc = f"Listing {self.__class__.__name__} {name}(s)"
+            desc = f"Listing {self.name} {name}(s)"
             for path in pbar.track(sequence=paths, description=desc):
                 path = path.normalize()
                 if path.is_image_file():

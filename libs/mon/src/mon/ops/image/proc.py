@@ -9,6 +9,7 @@ This module provides operations for processing images.
 from __future__ import annotations
 
 __all__ = [
+    "is_image",
     "pair_downsample",
     "parse_image_shape",
     "parse_imgsz",
@@ -29,6 +30,64 @@ from mon.core import Int3, Size, TensorOrArray
 # ==============================================================================
 # region VALIDATION
 # ==============================================================================
+
+def is_image(data: TensorOrArray, strict_channels: bool = True) -> bool:
+    """Checks if the input is a structurally valid image tensor or array.
+
+    Args:
+        data (TensorOrArray): Image, formatted as a tensor of shape (B, C, H, W)
+            and values ranging from 0.0 to 1.0; or as an array of shape (H, W, C)
+            and values ranging from 0 to 255.
+        strict_channels (bool, optional): If True, enforces that the channel
+            dimension must be 1, 3, or 4. Set to False if you are using
+            hyperspectral/medical images. Defaults to True.
+
+    Returns:
+        bool: True if it is a valid image representation, False otherwise.
+    """
+    # 1. Check valid data types
+    if not isinstance(data, (ndarray, Tensor)):
+        return False
+
+    ndim = data.ndim
+    shape = data.shape
+
+    # 2. Images must be:
+    #   - 2D (H, W),
+    #   - 3D (C, H, W) / (H, W, C), or
+    #   - 4D (B, C, H, W) / (B, H, W, C)
+    if ndim not in (2, 3, 4):
+        return False
+
+    # 3. 2D images (Grayscale) are always valid
+    if ndim == 2:
+        return True
+
+    # 4. Check for valid channel dimensions (1=Gray, 3=RGB, 4=RGBA)
+    if strict_channels:
+        valid_channels = (1, 3, 4)
+
+        if ndim == 3:
+            # Check if either the first dim (PyTorch) or last dim (NumPy)
+            # is a valid channel
+            is_chw = shape[0] in valid_channels
+            is_hwc = shape[-1] in valid_channels
+            if not (is_chw or is_hwc):
+                return False
+        elif ndim == 4:
+            # Check if either the second dim (PyTorch: B, C, H, W)
+            # or last dim (NumPy: B, H, W, C) is a valid channel
+            is_bchw = shape[1] in valid_channels
+            is_bhwc = shape[-1] in valid_channels
+            if not (is_bchw or is_bhwc):
+                return False
+
+    # 5. Ensure spatial dimensions are strictly greater than 0
+    # (Catches edge cases where an empty array was initialized)
+    if 0 in shape:
+        return False
+
+    return True
 
 # endregion
 

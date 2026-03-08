@@ -13,28 +13,33 @@ __all__ = [
 ]
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 import numpy as np
 import torch
 from rich.progress import Progress
-from torch import nn, Tensor
+from torch import Tensor
 from torch.optim import Optimizer
-from torch.optim.lr_scheduler import LRScheduler
+from torch.optim.lr_scheduler import LRScheduler, ReduceLROnPlateau
+from torch.utils.tensorboard import SummaryWriter
 
 from mon.core import (
     Config,
     ConfigContext,
     create_progress_bar,
+    is_scalar,
     K,
+    log,
     pascalize,
     Path,
     RunMode,
-    Size,
+    Split,
     sys_ctx,
+    TensorOrArray,
 )
-from mon.dataset import DataLoader
-from mon.metrics import benchmark
+from mon.dataset import build_dataloader, DataLoader
 from mon.ops import draw_info, to_image_array, write_image
+from .base import Runner
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -44,7 +49,7 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-class Trainer(ABC):
+class Trainer(Runner, ABC):
     """Base class for all trainers."""
 
     # --- Lifecycle & Initialization ---
@@ -55,52 +60,53 @@ class Trainer(ABC):
             config (Config): The configuration object containing all necessary
                 parameters for training.
         """
-        # Assign attributes
-        self._config = config
-
+        super().__init__(config=config)
         # Allocate resources
         # We will initialize these attributes later to avoid a long
         # initialization time
-        self._model: nn.Module | None = None
         self._optimizer: Optimizer | None = None
         self._scheduler: LRScheduler | None = None
         self._train_dataloader: DataLoader | None = None
         self._val_dataloader: DataLoader | None = None
+        self._logger: SummaryWriter | None = None
         self._best: dict[str, float] = {
             "loss": float("inf"),
         }
 
-    # --- Properties ---
-    @property
-    def config(self) -> Config:
-        """Return the config object."""
-        return self._config
-
-    @property
-    def device(self) -> torch.device:
-        """Return the device to use."""
-        return self.config.device
-
-    @property
-    def benchmark(self) -> bool:
-        """Return the benchmark flag."""
-        return self.config.benchmark
-
-    @property
-    def verbose(self) -> bool:
-        """Return the verbose flag."""
-        return self.config.verbose
-
-    @property
-    def model(self) -> nn.Module:
-        """Return the model object."""
-        return self._model
-
     @abstractmethod
-    def _init_model(self):
-        """Initialize ``self._model`` attribute."""
+    def _init_optimizer(self):
+        """Initialize ``self._optimizer`` and ``self._scheduler`` attributes."""
         pass
 
+    def _init_train_dataloader(self):
+        """Initialize ``self._train_dataloader`` attribute."""
+        config = self.config
+        dataloader = self.config.train_dataloader
+
+        self._train_dataloader = build_dataloader(
+            src=dataloader,
+            dataset_dir=config.data_dir,
+            split=Split.TRAIN,
+        )[0]
+
+    def _init_val_dataloader(self):
+        """Initialize ``self._val_dataloader`` attribute."""
+        config = self.config
+        dataloader = self.config.val_dataloader
+
+        self._val_dataloader = build_dataloader(
+            src=dataloader,
+            dataset_dir=config.data_dir,
+            split=Split.VAL,
+        )[0]
+
+    def _init_logger(self):
+        """Initialize the logger for tracking training progress and metrics."""
+        log_dir = self.config.output_dir / "logs"
+        log_dir.mkdir(exist_ok=True, parents=True)
+        self._logger = SummaryWriter(log_dir=str(log_dir))
+
+    # --- Properties ---
     @property
     def optimizer(self) -> Optimizer:
         """Return the optimizer object."""
@@ -111,10 +117,14 @@ class Trainer(ABC):
         """Return the scheduler object."""
         return self._scheduler
 
-    @abstractmethod
-    def _init_optimizer(self):
-        """Initialize ``self._optimizer`` and ``self._scheduler`` attributes."""
-        pass
+    @property
+    def lr(self) -> float:
+        """Return the current learning rate from the optimizer."""
+        if self.optimizer is None:
+            return 0.0
+        for param_group in self.optimizer.param_groups:
+            return param_group["lr"]
+        return 0.0
 
     @property
     def train_dataloader(self) -> DataLoader:
@@ -126,19 +136,6 @@ class Trainer(ABC):
         """Return the validation dataloader."""
         return self._val_dataloader
 
-    def _init_dataloaders(self):
-        """Initialize ``self._train_dataloader`` and ``self._val_dataloader``
-        attributes.
-        """
-        train_dataloader = self.config.train_dataloader
-        self._train_dataloader = DataLoader.from_config(train_dataloader)
-
-        val_dataloader = self.config.val_dataloader
-        if val_dataloader is not None:
-            self._val_dataloader = DataLoader.from_config(val_dataloader)
-        else:
-            self._val_dataloader = None
-
     @property
     def best(self) -> dict[str, float]:
         """Return the best dictionary."""
@@ -146,10 +143,15 @@ class Trainer(ABC):
 
     # --- Creation ---
     @classmethod
-    def from_cli(cls, *args, **kwargs) -> "Trainer":
-        """Create an instance of Trainer from command-line arguments."""
+    def from_cli(cls, prompt: bool = False, *args, **kwargs) -> "Trainer":
+        """Create an instance of Trainer from command-line arguments.
+
+        Args:
+            prompt (bool, optional): Whether to prompt the user for input if
+                necessary. Defaults to False.
+        """
         config_ctx = ConfigContext.from_cli(*args, **kwargs)
-        config = config_ctx.config_for(RunMode.TRAIN)
+        config = config_ctx.config_for(RunMode.TRAIN, prompt=prompt)
         return cls(config)
 
     # --- Control ---
@@ -176,14 +178,18 @@ class Trainer(ABC):
             raise RuntimeError(f"'optimizer' is not initialized.")
 
         # 5. Define data
-        self._init_dataloaders()
+        self._init_train_dataloader()
+        self._init_val_dataloader()
         if self.train_dataloader is None:
             raise RuntimeError(f"'train_dataloader' is not initialized.")
 
-        # 6. Run benchmark
-        self._benchmark()
+        # 6. Define logger
+        self._init_logger()
 
-        # 7. Main loop
+        # 7. Run benchmark
+        self.benchmark()
+
+        # 8. Main loop
         config.output_dir.mkdir(exist_ok=True, parents=True)
         with create_progress_bar() as pbar:
             for epoch in pbar.track(
@@ -191,7 +197,8 @@ class Trainer(ABC):
                 total=epochs,
                 description=f"[bright_yellow]Training"
             ):
-                # 7.1. Train epoch
+                # 8.1. Train epoch
+                self.model.train()
                 train_outputs = self._train_epoch(epoch=epoch, pbar=pbar)
                 if "loss" not in train_outputs:
                     raise ValueError(
@@ -199,32 +206,34 @@ class Trainer(ABC):
                         f"but got {train_outputs.keys()}."
                     )
 
-                # 7.2. Val epoch
+                # 8.2. Val epoch
                 val_outputs = {}
                 if self.val_dataloader is not None:
+                    self.model.eval()
                     val_outputs = self._val_epoch(epoch=epoch, pbar=pbar)
 
-                # 7.3. Log
-                self._log(
-                    epoch=epoch,
-                    train_outputs=train_outputs,
-                    val_outputs=val_outputs,
-                )
+                # 8.3. Scheduler Step
+                if self.scheduler is not None:
+                    if isinstance(self.scheduler, ReduceLROnPlateau):
+                        # If it's a Plateau scheduler, it needs a metric (usually Val Loss)
+                        # Fallback to train loss if val loss isn't available
+                        metric = val_outputs.get("loss", train_outputs.get("loss"))
+                        self.scheduler.step(metric)
+                    else:
+                        # For all other standard schedulers (StepLR, CosineAnnealing, etc.)
+                        self.scheduler.step()
 
-                # 7.4. Save
-                self._save(
-                    epoch=epoch,
-                    train_outputs=train_outputs,
-                    val_outputs=val_outputs,
-                )
+                # 8.4. Log
+                if self.verbose:
+                    self._log(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
 
-                # 7.5. Save debug
-                if config.save_debug:
-                    self._save_debug(
-                        epoch=epoch,
-                        train_outputs=train_outputs,
-                        val_outputs=val_outputs,
-                    )
+                # 8.5. Save
+                if self.save:
+                    self._save(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
+
+                # 8.6. Save debug
+                if self.save_debug:
+                    self._save_debug(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
 
     # --- Training ---
     @abstractmethod
@@ -256,17 +265,13 @@ class Trainer(ABC):
         """
         pass
 
-    # --- Utilities ---
-    def _benchmark(self):
-        """Run the benchmark for the model."""
-        config = self.config
-        imgsz = Size.from_value(config.eval_imgsz)
-
-        if config.benchmark:
-            benchmark(self.model, imgsz=imgsz)
-
-    @abstractmethod
-    def _log(self, epoch: int, train_outputs: dict, val_outputs: dict):
+    # --- Logging ---
+    def _log(
+        self,
+        epoch: int,
+        train_outputs: dict[str, Any],
+        val_outputs: dict[str, Any]
+    ):
         """Log the training and validation results for the current epoch.
 
         Args:
@@ -274,10 +279,37 @@ class Trainer(ABC):
             train_outputs (dict): The outputs from the training epoch.
             val_outputs (dict): The outputs from the validation epoch.
         """
-        pass
+        # 1. Collect all scalars
+        log_dict = {
+            "train/lr": self.lr,
+        }
+        # Add scalars from train_outputs
+        for k, v in train_outputs.items():
+            if is_scalar(v):
+                log_dict[f"train/{k}"] = v.item() if isinstance(v, Tensor) else v
+        # Add scalars from val_outputs
+        for k, v in val_outputs.items():
+            if is_scalar(v):
+                log_dict[f"val/{k}"] = v.item() if isinstance(v, Tensor) else v
 
-    @abstractmethod
-    def _save(self, epoch: int, train_outputs: dict, val_outputs: dict):
+        # 2. Log to console
+        message = f"Epoch: {(epoch + 1):03}"
+        for k, v in log_dict.items():
+            message += f" | {k}: {v:>08.6f}"
+        log(message)
+
+        # 3. External tracker (TensorBoard, WandB, etc.)
+        for k, v in log_dict.items():
+            self._logger.add_scalar(k.capitalize(), v, epoch)
+        self._logger.flush()
+
+    # --- Output ---
+    def _save(
+        self,
+        epoch: int,
+        train_outputs: dict[str, Any],
+        val_outputs: dict[str, Any]
+    ):
         """Save the model checkpoint for the current epoch.
 
         Args:
@@ -285,10 +317,28 @@ class Trainer(ABC):
             train_outputs (dict): The outputs from the training epoch.
             val_outputs (dict): The outputs from the validation epoch.
         """
-        pass
+        config = self.config
+
+        # Save last.pt
+        save_dir = config.output_dir
+        save_dir.mkdir(exist_ok=True, parents=True)
+        torch.save(self.model.state_dict(), save_dir / "last.pt")
+
+        # Save best weights based on metrics
+        self._save_best_weights("loss", train_outputs["loss"], lower_is_better=True)
+
+        for k, v in val_outputs.items():
+            if is_scalar(v):
+                v = v.item() if isinstance(v, Tensor) else v
+                self._save_best_weights(k, v)
 
     @abstractmethod
-    def _save_debug(self, epoch: int, train_outputs: dict, val_outputs: dict):
+    def _save_debug(
+        self,
+        epoch: int,
+        train_outputs: dict[str, Any],
+        val_outputs: dict[str, Any]
+    ):
         """Save debugging results for visualization.
 
         Args:
@@ -326,15 +376,17 @@ class Trainer(ABC):
 
         # Otherwise, update the best value and save the model checkpoint
         self.best[key] = value
-        torch.save(
-            self.model.state_dict(),
-            self.config.output_dir / f"best_{key}{K.WEIGHTS_EXT}"
-        )
+
+        save_dir = self.config.output_dir
+        save_dir.mkdir(exist_ok=True, parents=True)
+        save_path = save_dir / f"best_{key}{K.WEIGHTS_EXT}"
+        torch.save(self.model.state_dict(), save_path)
 
     def _save_image(
         self,
         epoch: int,
-        outputs: dict[str, Tensor],
+        outputs: dict[str, TensorOrArray],
+        dirname: str = K.PRED_DIR,
         stem: str = "debug",
         show_info: bool = True
     ):
@@ -345,6 +397,8 @@ class Trainer(ABC):
             outputs (dict): A dictionary containing the outputs from the model.
             stem (str, optional): The stem of the output file name.
                 Defaults to "debug".
+            dirname (str, optional): The directory name for the output file.
+                Defaults to K.PRED_DIR.
             show_info (bool, optional): Whether to draw the keys of the outputs
                 as labels on the image. Defaults to True.
         """
@@ -355,13 +409,17 @@ class Trainer(ABC):
         images = []
         for k, v in outputs.items():
             image = to_image_array(torch.cat(list(v), dim=2).unsqueeze(0))
+            if image.shape[2] == 1:
+                # If the image is grayscale, repeat it to make it RGB
+                image = np.repeat(image, 3, axis=2)
             if show_info:
+                # Draw the key as a label on the image
                 image = draw_info(image, [f"{pascalize(k)}"])
             images.append(image)
         images = np.vstack(images)
 
         # Save the image
-        save_path = config.output_dir / "debug" / f"{stem}_epoch_{epoch+1:03}{K.IMAGE_EXT}"
+        save_path = config.output_dir / dirname / f"{stem}_epoch_{epoch+1:03}{K.IMAGE_EXT}"
         write_image(images, save_path)
 
 # endregion

@@ -87,7 +87,7 @@ loss:
   L_tv_A_w: 200
   L_spa_w: 1
   L_col_w: 20  # 0.8
-  L_col_pre_w: 15  # 10
+  L_col_pre_w: 20  # 10
   L_exp_w: 10
   L_enhance_w: 1
   L_denoise_w: 1  # 50

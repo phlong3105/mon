@@ -17,8 +17,8 @@ from typing import Any
 import cv2
 from box import Box
 from torch.utils.data.dataloader import DataLoader as DataLoader_
-from mon.core import DATASETS
 
+from mon.core import DATASETS
 from .dataset import Dataset
 
 cv2.setNumThreads(0)
@@ -92,6 +92,12 @@ class DataLoader(DataLoader_):
             pin_memory=pin_memory,
             *args, **kwargs
         )
+
+    # --- Properties ---
+    @property
+    def name(self) -> str:
+        """Return the underlying dataset name."""
+        return getattr(self.dataset, "name", None)
 
     # --- Creation ---
     @classmethod

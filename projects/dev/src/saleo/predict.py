@@ -14,7 +14,16 @@ __all__ = [
 
 from typing_extensions import override
 
-from mon.core import MODELS, Path, Size, TimeProfiler
+from mon.core import (
+    K,
+    MODELS,
+    Path,
+    resolve_project_root,
+    RunMode,
+    Size,
+    Task,
+    TimeProfiler,
+)
 from mon.dataset import transform as T
 from mon.runners import Predictor
 # noinspection PyUnusedImports
@@ -31,7 +40,7 @@ current_dir = current_file.parents[0]
 class SALEO_Predictor(Predictor):
     """Predictor for SALEO models."""
 
-    # --- Properties ---
+    # --- Lifecycle & Initialization ---
     @override
     def _init_model(self):
         """Initialize ``self._model`` attribute."""
@@ -93,7 +102,7 @@ class SALEO_Predictor(Predictor):
 
         return outputs
 
-    # --- Utilities ---
+    # --- Output ---
     @override
     def _save(self, outputs: dict, meta: dict):
         """Save the main prediction results to a file.
@@ -116,10 +125,14 @@ class SALEO_Predictor(Predictor):
         """
         path = Path(meta["path"])
         size = Size.from_value(meta["imgsz"])
-        self._save_image(outputs["image_i"], size, path, "image_i")
-        self._save_image(outputs["image_i_res"], size, path, "image_i_res")
-        self._save_image(outputs["image_i_fixed"], size, path, "image_i_fixed")
-        self._save_image(outputs["image_r"], size, path, "image_r")
+        debug_images = {
+            "image_i": outputs["image_i"],
+            "image_i_res": outputs["image_i_res"],
+            "image_i_fixed": outputs["image_i_fixed"],
+            "image_r": outputs["image_r"],
+        }
+        for stem, image in debug_images.items():
+            self._save_image(image, size, path, dirname=K.DEBUG_DIR, stem=stem)
 
 # endregion
 
@@ -127,6 +140,23 @@ class SALEO_Predictor(Predictor):
 # ==============================================================================
 # region UNIT TEST
 # ==============================================================================
+
+def main():
+    """Unit test for SALEO_Predictor."""
+    predictor = SALEO_Predictor.from_cli(
+        prompt=True,
+        root=resolve_project_root(current_dir),
+        config_file="saleo_ffsiren.yaml",
+        task=Task.ENHANCE,
+        mode=RunMode.PREDICT,
+        arch="saleo",
+        model="saleo_ffsiren",
+        save=True,
+        exist_ok=True,
+        verbose=True,
+    )
+    predictor.predict()
+
 
 if __name__ == "__main__":
     pass

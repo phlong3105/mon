@@ -26,7 +26,7 @@ from box import Box
 from mon.core.console import console, log, log_error, pprint_dict
 from mon.core.constants import K
 from mon.core.context import sys_ctx
-from mon.core.data import Weights
+from mon.core.data import Size, SizeLike, Weights
 from mon.core.dtype import RunMode, Task
 from mon.core.factory import DATASETS, MODELS, WEIGHTS
 from mon.core.filesystem import (
@@ -558,6 +558,16 @@ class Config:
         self._config.device = sys_ctx.get_torch_device(value)
 
     @property
+    def eval_imgsz(self) -> Size | None:
+        """Return the evaluation image size."""
+        return self._config.eval_imgsz
+
+    @eval_imgsz.setter
+    def eval_imgsz(self, value: SizeLike | None):
+        if value is not None:
+            self._config.eval_imgsz = Size.from_value(value)
+
+    @property
     def benchmark(self) -> bool:
         return self._config.benchmark
 
@@ -857,7 +867,7 @@ class Config:
 
         # 1.2. Clean, explicit, and lint-friendly!
         self._force_validation(
-            "config_file", "task", "mode", "arch", "model"
+            "config_file", "task", "mode", "arch", "model", "eval_imgsz"
         )
 
         # 1.5. Resolve device
@@ -935,7 +945,7 @@ class Config:
 
         # 1.2. Clean, explicit, and lint-friendly!
         self._force_validation(
-            "config_file", "task", "mode", "arch", "model"
+            "config_file", "task", "mode", "arch", "model", "eval_imgsz"
         )
 
         # 1.5. Resolve device

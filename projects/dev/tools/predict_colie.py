@@ -28,6 +28,7 @@ current_dir = current_file.parents[0]
 
 def main():
     predictor = CoLIE_Predictor.from_cli(
+        prompt=True,
         root=resolve_project_root(current_dir),
         config_file="colie.yaml",
         task=Task.ENHANCE,

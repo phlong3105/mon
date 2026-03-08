@@ -3,19 +3,21 @@
 
 """Prediction Script.
 
-This script provides a CLI for running CALIE prediction on a given dataset.
+This script provides a CLI for running Depth Anything V2 prediction on a given
+dataset.
 
 References:
-    - Paper: "Continuously Adjustable Low-Light Implicit Enhancement"
-    - Code: https://github.com/phlong3105/calie
+    - Paper: "Depth Anything V2. A More Capable Foundation Model for Monocular
+      Depth Estimation," NeurIPS 2024.
+    - Code: https://github.com/DepthAnything/Depth-Anything-V2
 """
 
 from __future__ import annotations
 
 __all__ = []
 
-from calie import CALIE_Predictor
 from mon.core import Path, resolve_project_root, RunMode, Task
+from mon.models.monodepth.dav2 import DAV2_Predictor
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -26,14 +28,14 @@ current_dir = current_file.parents[0]
 # ==============================================================================
 
 def main():
-    predictor = CALIE_Predictor.from_cli(
+    predictor = DAV2_Predictor.from_cli(
         prompt=True,
         root=resolve_project_root(current_dir),
-        config_file="calie_siren.yaml",
-        task=Task.ENHANCE,
+        config_file="dav2_vitb_da2k.yaml",
+        task=Task.MONODEPTH,
         mode=RunMode.PREDICT,
-        arch="calie",
-        model="calie_siren",
+        arch="dav2",
+        model="dav2_vitb",
         save=True,
         exist_ok=True,
         verbose=True,

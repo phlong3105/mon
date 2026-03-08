@@ -36,7 +36,7 @@ current_dir = current_file.parents[0]
 class CLODE_Predictor(Predictor):
     """Predictor for CLODE models."""
 
-    # --- Properties ---
+    # --- Lifecycle & Initialization ---
     @override
     def _init_model(self):
         """Initialize ``self._model`` attribute."""
@@ -53,7 +53,7 @@ class CLODE_Predictor(Predictor):
     def _init_transforms(self):
         """Initialize ``self._transforms`` attribute."""
         config = self.config
-        imgsz = Size.from_value(config.eval_imgsz)
+        imgsz = config.eval_imgsz
 
         self._transforms = T.Compose([
             T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32),
@@ -92,7 +92,7 @@ class CLODE_Predictor(Predictor):
 
         return outputs
 
-    # --- Utilities ---
+    # --- Output ---
     @override
     def _save(self, outputs: dict, meta: dict):
         """Save the main prediction results to a file.

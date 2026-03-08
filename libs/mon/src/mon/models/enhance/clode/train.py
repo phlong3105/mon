@@ -17,7 +17,7 @@ import torch
 from rich.progress import Progress
 from typing_extensions import override
 
-from mon.core import log, OPTIMIZERS, Path
+from mon.core import OPTIMIZERS, Path
 from mon.models.enhance.clode import loss as L
 from mon.runners import Trainer
 from .model import clode
@@ -81,7 +81,6 @@ class CLODE_Trainer(Trainer):
         L_exp_w = config.loss.L_exp_w
 
         # 2. Train loop
-        self.model.train()
         grad_clip_norm = config.grad_clip_norm
         train_outputs = {}
         losses = []
@@ -153,7 +152,6 @@ class CLODE_Trainer(Trainer):
         ssimc_metric = pyiqa.create_metric("ssimc", device=device)
 
         # 2. Val loop
-        self.model.eval()
         val_outputs = {}
         psnrs = []
         ssims = []
@@ -201,48 +199,7 @@ class CLODE_Trainer(Trainer):
         }
         return val_outputs
 
-    # --- Utilities ---
-    @override
-    def _log(self, epoch: int, train_outputs: dict, val_outputs: dict):
-        """Log the training and validation results for the current epoch.
-
-        Args:
-            epoch (int): The current epoch number.
-            train_outputs (dict): The outputs from the training epoch.
-            val_outputs (dict): The outputs from the validation epoch.
-        """
-        config = self.config
-
-        if config.verbose:
-            loss = train_outputs.get("loss", float("nan"))
-            psnr = val_outputs.get("psnr", float("nan"))
-            ssim = val_outputs.get("ssim", float("nan"))
-            ssimc = val_outputs.get("ssimc", float("nan"))
-            log(
-                f"Epoch: {(epoch + 1):03} | "
-                f"Loss: {loss:08.6f} | "
-                f"PSNR: {psnr:08.6f} | "
-                f"SSIM: {ssim:08.6f} | "
-                f"SSIM-C: {ssimc:08.6f}",
-            )
-
-    @override
-    def _save(self, epoch: int, train_outputs: dict, val_outputs: dict):
-        """Save the model checkpoint for the current epoch.
-
-        Args:
-            epoch (int): The current epoch number.
-            train_outputs (dict): The outputs from the training epoch.
-            val_outputs (dict): The outputs from the validation epoch.
-        """
-        config = self.config
-
-        torch.save(self.model.state_dict(), config.output_dir / "last.pt")
-        self._save_best_weights("loss", train_outputs["loss"], lower_is_better=True)
-        self._save_best_weights("psnr", val_outputs["psnr"])
-        self._save_best_weights("ssim", val_outputs["ssim"])
-        self._save_best_weights("ssimc", val_outputs["ssimc"])
-
+    # --- Output ---
     @override
     def _save_debug(self, epoch: int, train_outputs: dict, val_outputs: dict):
         """Save debugging results for visualization.

@@ -13,30 +13,33 @@ __all__ = [
 ]
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 import cv2
 from numpy import ndarray
 from rich.progress import Progress
-from sympy.printing.pytorch import torch
-from torch import nn, Tensor
+from torch import Tensor
 
 from mon.core import (
     Config,
     ConfigContext,
     create_progress_bar,
+    DictLike,
     K,
     log,
     Path,
+    PathLike,
     RunMode,
     Size,
     Split,
+    SplitLike,
     sys_ctx,
     TensorOrArray,
     TimeProfiler,
 )
-from mon.dataset import build_dataloader, transform as T
-from mon.metrics import benchmark
+from mon.dataset import build_dataloader, DataLoader, Dataset, transform as T
 from mon.ops import to_image_array, write_image
+from .base import Runner
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -46,7 +49,7 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-class Predictor(ABC):
+class Predictor(Runner, ABC):
     """Base class for all predictors."""
 
     # --- Lifecycle & Initialization ---
@@ -57,62 +60,61 @@ class Predictor(ABC):
             config (Config): The configuration object containing all necessary
                 parameters for training.
         """
-        # Assign attributes
-        self._config = config
-
+        super().__init__(config=config)
         # Allocate resources
         # These attributes will be initialized later to avoid a long
         # initialization time
-        self._model: nn.Module | None = None
         self._transforms: T.Compose | None = None
-
-    # --- Properties ---
-    @property
-    def config(self) -> Config:
-        """Return the config object."""
-        return self._config
-
-    @property
-    def device(self) -> torch.device:
-        """Return the device to use."""
-        return self.config.device
-
-    @property
-    def benchmark(self) -> bool:
-        """Return the benchmark flag."""
-        return self.config.benchmark
-
-    @property
-    def verbose(self) -> bool:
-        """Return the verbose flag."""
-        return self.config.verbose
-
-    @property
-    def model(self) -> nn.Module:
-        """Return the model object."""
-        return self._model
-
-    @abstractmethod
-    def _init_model(self):
-        """Initialize ``self._model`` attribute."""
-        pass
-
-    @property
-    def transforms(self) -> T.Compose | None:
-        """Return the transforms object."""
-        return self._transforms
 
     @abstractmethod
     def _init_transforms(self):
         """Initialize ``self._transforms`` attribute."""
         pass
 
+    def _init_data(
+        self,
+        source: DictLike | PathLike,
+        split: SplitLike = Split.TEST,
+        transforms: T.Compose | None = None,
+    ) -> tuple[str, Dataset | DataLoader]:
+        """Initialize and return a dataset or dataloader.
+
+        Args:
+            source (DictLike | PathLike): A dataset/dataloader configuration
+                dictionary or a source path.
+            split (SplitLike, optional): The data split to use.
+                Defaults to Split.TEST.
+            transforms (T.Compose, optional): The data transformations to apply.
+                Defaults to None.
+
+        Returns:
+            tuple[str, Dataset | DataLoader]: A tuple containing the name of the
+                dataset/dataloader and the dataset/dataloader object itself.
+        """
+        return build_dataloader(
+            src=source,
+            dataset_dir=self.config.data_dir,
+            split=split,
+            transforms=transforms,
+        )
+
+    # --- Properties ---
+    @property
+    def transforms(self) -> T.Compose | None:
+        """Return the transforms object."""
+        return self._transforms
+
     # --- Creation ---
     @classmethod
-    def from_cli(cls, *args, **kwargs) -> "Predictor":
-        """Create an instance of Predictor from command-line arguments."""
+    def from_cli(cls, prompt: bool = False, *args, **kwargs) -> "Predictor":
+        """Create an instance of Predictor from command-line arguments.
+
+        Args:
+            prompt (bool, optional): Whether to prompt the user for input if
+                necessary. Defaults to False.
+        """
         config_ctx = ConfigContext.from_cli(*args, **kwargs)
-        config = config_ctx.config_for(RunMode.PREDICT)
+        config = config_ctx.config_for(RunMode.PREDICT, prompt=prompt)
         return cls(config)
 
     # --- Control ---
@@ -170,11 +172,8 @@ class Predictor(ABC):
         save_debug = config.save_debug
 
         # 1. Build dataset
-        data_name, dataloader = build_dataloader(
-            src=data,
-            dataset_dir=config.data_dir,
-            split=Split.TEST,
-            transforms=self.transforms,
+        data_name, dataloader = self._init_data(
+            source=data, split=Split.TEST, transforms=self.transforms,
         )
 
         # 2. Main processing loop
@@ -198,7 +197,11 @@ class Predictor(ABC):
         pbar.remove_task(task)
 
     @abstractmethod
-    def _predict_step(self, datapoint: dict, timers: TimeProfiler) -> dict:
+    def _predict_step(
+        self,
+        datapoint: dict[str, Any],
+        timers: TimeProfiler
+    ) -> dict[str, Any]:
         """Predict the output of the model for a single data point.
 
         Args:
@@ -211,17 +214,9 @@ class Predictor(ABC):
         """
         pass
 
-    # --- Utilities ---
-    def _benchmark(self):
-        """Run the benchmark for the model."""
-        config = self.config
-        imgsz = Size.from_value(config.eval_imgsz)
-
-        if self.benchmark:
-            benchmark(self.model, imgsz=imgsz)
-
+    # --- Output ---
     @abstractmethod
-    def _save(self, outputs: dict, meta: dict):
+    def _save(self, outputs: dict[str, Any], meta: dict[str, Any]):
         """Save the main prediction results to a file.
 
         Args:
@@ -231,7 +226,7 @@ class Predictor(ABC):
         pass
 
     @abstractmethod
-    def _save_debug(self, outputs: dict, meta: dict):
+    def _save_debug(self, outputs: dict[str, Any], meta: dict[str, Any]):
         """Save debugging results for visualization.
 
         Args:
@@ -245,6 +240,7 @@ class Predictor(ABC):
         image: TensorOrArray,
         size: Size,
         src_path: Path,
+        dirname: str = K.PRED_DIR,
         stem: str | None = None
     ):
         """Save a debug image for visualization.
@@ -254,7 +250,10 @@ class Predictor(ABC):
                 or an array.
             size (Size): The original size of the input image, used for resizing
                 the image if necessary.
-            src_path (Path): The source path, used to determine the output file path.
+            src_path (Path): The source path, used to determine the output file
+                path.
+            dirname (str, optional): The directory name for the output file.
+                Defaults to K.PRED_DIR.
             stem (str, optional): An optional string to be appended to the
                 output file name for differentiation. If None, the original
                 file name will be used.
@@ -277,10 +276,10 @@ class Predictor(ABC):
 
         # Save the image
         if stem:
-            save_dir = config.resolve_save_dir(dirname=K.PRED_DIR, src_path=src_path)
+            save_dir = config.resolve_save_dir(dirname=dirname, src_path=src_path)
             save_path = save_dir / f"{src_path.stem}_{stem}{K.IMAGE_EXT}"
         else:
-            save_path = config.resolve_save_file(dirname=K.PRED_DIR, src_path=src_path)
+            save_path = config.resolve_save_file(dirname=dirname, src_path=src_path)
         write_image(image=image, path=save_path)
 
 # endregion

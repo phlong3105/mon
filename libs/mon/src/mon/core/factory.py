@@ -27,7 +27,7 @@ import inspect
 from collections import UserDict
 from typing import Any, Callable
 
-from torch.optim.optimizer import ParamsT, Optimizer
+from torch.optim.optimizer import Optimizer, ParamsT
 
 from mon.core.console import log_error
 from mon.core.data import Weights, WeightsEnum

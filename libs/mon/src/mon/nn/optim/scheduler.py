@@ -15,8 +15,8 @@ import importlib
 import inspect
 import pkgutil
 
-from torch.optim.lr_scheduler import LRScheduler
 import torch.optim as optim
+from torch.optim.lr_scheduler import LRScheduler
 
 from mon.core import SCHEDULERS
 

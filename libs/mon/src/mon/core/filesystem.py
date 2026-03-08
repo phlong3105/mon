@@ -22,8 +22,6 @@ __all__ = [
     "resolve_weights_file",
 ]
 
-import os
-
 import requests
 
 from .console import log, log_error

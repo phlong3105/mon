@@ -139,6 +139,7 @@ class IZDCE_ODE(ModelRegisterMixin, nn.Module):
         hidden_dim: int = 32,
         imgsz: int = 512,
         chunk_size: int = 100000,
+        use_dopri5: bool = False,
         tol: float = 1e-3,
         adjoint: bool = True,
         weights: WeightsLike | None = None,
@@ -155,6 +156,8 @@ class IZDCE_ODE(ModelRegisterMixin, nn.Module):
             imgsz (int, optional): Downsample the input image to this size for
                 encoding. Defaults to 512.
             chunk_size (int): Number of pixels to process at once. Defaults to 100,000.
+            use_dopri5 (bool, optional): Whether to use the Dopri5 solver.
+                Defaults to False.
             tol (float, optional): Tolerance for the ODE solver. Defaults to 1e-3.
             adjoint (bool, optional): Whether to use the adjoint method for
                 backpropagation. Defaults to False.
@@ -178,7 +181,13 @@ class IZDCE_ODE(ModelRegisterMixin, nn.Module):
             chunk_size=chunk_size,
             *args, **kwargs
         )
-        self.ode_block = ODEBlock(self.enhance_func, tol=tol, adjoint=adjoint)
+        self.ode_block = ODEBlock(
+            self.enhance_func,
+            use_dopri5=use_dopri5,
+            tol=tol,
+            adjoint=adjoint,
+            *args, **kwargs
+        )
 
         # Load weights
         if is_weights_type(weights):
@@ -277,6 +286,7 @@ def iz_dce_ode(*args, **kwargs):
     chunk_size = kwargs.pop("chunk_size", 100000)
     tol = kwargs.pop("tol", 1e-3)
     adjoint = kwargs.pop("adjoint", True)
+    use_dopri5 = kwargs.pop("use_dopri5", False)
     return IZDCE_ODE(
         name="iz_dce_ode",
         in_channels=in_channels,
@@ -284,6 +294,7 @@ def iz_dce_ode(*args, **kwargs):
         hidden_dim=hidden_dim,
         imgsz=imgsz,
         chunk_size=chunk_size,
+        use_dopri5=use_dopri5,
         tol=tol,
         adjoint=adjoint,
         *args, **kwargs

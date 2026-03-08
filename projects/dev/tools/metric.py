@@ -10,8 +10,9 @@ from __future__ import annotations
 
 __all__ = []
 
-from mon.core import Path, resolve_project_root
 from mon.tools import IQAEvaluator
+
+from mon.core import Path, resolve_project_root
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
