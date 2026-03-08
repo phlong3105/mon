@@ -189,21 +189,15 @@ class TimeProfiler:
         table = Table(show_header=True, header_style="bold magenta")
         table.add_column("Stage", style="dim")
         table.add_column("Time (s)", justify="right")
-
-        # Define the order of timers to be printed
-        timers_to_print = [
-            (self.total.name, self.total.total),
-            (self.preprocess.name, self.preprocess.total),
-            (self.infer.name, self.infer.total),
-            (self.postprocess.name, self.postprocess.total),
-            ("Process", self.process_time),
-        ]
-
-        for name, time_val in timers_to_print:
-            table.add_row(name, f"{time_val:.6f}")
-            if name == self.total.name:
-                table.add_section()
-
+        #
+        table.add_row(self.preprocess.name, f"{self.preprocess.total:.6f}")
+        table.add_row(self.infer.name, f"{self.infer.total:.6f}")
+        table.add_row(self.postprocess.name, f"{self.postprocess.total:.6f}")
+        table.add_section()
+        table.add_row("Process", f"{self.process_time:.6f}")
+        table.add_section()
+        table.add_row(self.total.name, f"{self.total.total:.6f}")
+        #
         console.log(table)
 
     def print_copy(self):
