@@ -74,7 +74,7 @@ def build_dataset(
     # 1. If src is a dataset config dict, build the Dataset instance directly
     if isinstance(src, (Box, dict)):
         dataset_ = Dataset.from_config(src)
-        name_ = dataset_.name
+        name_ = getattr(dataset_, "name", dataset_.__class__.__name__)
         return name_, dataset_
 
     # 2. Otherwise, build the dataset instance based on the source type
@@ -110,7 +110,7 @@ def build_dataset(
             "transforms": transforms,
             "verbose": verbose,
         }
-        return src.name, ImageDataset.from_config(config)
+        return src.name, ImageOnlyDataset.from_config(config)
 
     # 2.3. If src is a video file, build a VideoOnlyDataset
     if src.is_video_file():

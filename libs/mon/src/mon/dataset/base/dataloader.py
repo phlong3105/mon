@@ -97,7 +97,7 @@ class DataLoader(DataLoader_):
     @property
     def name(self) -> str:
         """Return the underlying dataset name."""
-        return getattr(self.dataset, "name", None)
+        return getattr(self.dataset, "name", self.dataset.__class__.__name__)
 
     # --- Creation ---
     @classmethod

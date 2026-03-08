@@ -200,8 +200,9 @@ class TimeProfiler:
         ]
 
         for name, time_val in timers_to_print:
-            if time_val > 0:
-                table.add_row(name, f"{time_val:.6f}")
+            table.add_row(name, f"{time_val:.6f}")
+            if name == self.total.name:
+                table.add_section()
 
         console.log(table)
 

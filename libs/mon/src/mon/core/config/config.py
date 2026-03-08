@@ -23,6 +23,7 @@ from typing import Any, Callable, TypeVar
 import torch
 from box import Box
 
+from rich.table import Table
 from mon.core.console import console, log, log_error, pprint_dict
 from mon.core.constants import K
 from mon.core.context import sys_ctx
@@ -43,7 +44,7 @@ from mon.core.typing import (
     TaskLike,
 )
 from mon.core.ui import Confirm, OptionPrompt, PathPrompt, Prompt
-from mon.core.utils import is_valid_str, merge_dicts
+from mon.core.utils import is_valid_str, merge_dicts, truncate_string
 
 # ==============================================================================
 # region CONSTANTS
@@ -1012,30 +1013,26 @@ class Config:
             full (bool, optional): If True, print the full configuration.
                 Otherwise, print a concise summary. Defaults to False.
         """
-        config = self._config.to_dict()
-
         if full:
             console.rule("[bold yellow]Full Configuration")
             # Ensure we have a standard dict for pretty printing
-            pprint_dict(config)
+            pprint_dict(self.config.to_dict())
         else:
-            exp_name = config.get("exp_name", "Unnamed Run")
-            console.rule(f"[bold red]{exp_name}")
-            summary_fields = {
-                "Machine": config.get("hostname", "local"),
-                "Device": config.get("device"),
-                "Task": config.get("task"),
-                "Mode": config.get("mode"),
-                "Data": config.get("data"),
-                "Weights": config.get("weights"),
-                "Save Dir": config.get("output_dir"),
-                "Config": config.get("config"),
-            }
-            for label, value in summary_fields.items():
-                if value:
-                    # Formatting paths to be cleaner strings
-                    display_val = str(value) if not isinstance(value, list) else f"{len(value)} files"
-                    log(f"{label:<10}: {display_val}")
+            console.rule(f"[bold red]{self.exp_name}")
+            table = Table(show_header=True, header_style="bold magenta")
+            table.add_column("Option", style="dim")
+            table.add_column("Value", justify="left")
+            #
+            table.add_row("Machine", self.config.get("hostname", "local"))
+            table.add_row("Device", str(self.device))
+            table.add_row("Task", self.task)
+            table.add_row("Mode", self.mode)
+            table.add_row("Data", "\n".join([truncate_string(d, side="left") for d in self.data]))
+            table.add_row("Weights", truncate_string(self.weights.path))
+            table.add_row("Save Dir", truncate_string(self.output_dir))
+            table.add_row("Config", truncate_string(self.config_file))
+            #
+            console.log(table)
             console.rule() # Add a closing line for visual polish
 
 # endregion

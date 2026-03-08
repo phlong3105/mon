@@ -711,6 +711,8 @@ class OptionPrompt(PromptBase[str]):
         """
         if self.choices:
             return self.process_choices_response(value)
+        elif self.multiselect:
+            return self.process_inputs_response(value)
         else:
             return value.strip() if isinstance(value, str) else value
 
@@ -744,6 +746,35 @@ class OptionPrompt(PromptBase[str]):
                 # If part is a direct choice match, return it
                 processed_values.append(part)
             elif is_valid_str(part):
+                # If part is not a valid choice, return it as-is
+                processed_values.append(part)
+
+        # Return
+        if self.multiselect:
+            # If multiselect is enabled, return a list of processed values
+            # return processed_values[0] if len(processed_values) == 1 else processed_values
+            return processed_values
+        else:
+            # If multiselect is disabled, return the first processed value
+            return processed_values[0]
+
+    def process_inputs_response(self, value: str) -> List[str]:
+        """Process response from user, convert to prompt type."""
+        value = value.strip() if isinstance(value, str) else value
+
+        # Handle empty string
+        if not value and not self.allow_empty:
+            raise InvalidResponse(self.illegal_choice_message)
+
+        # Handle multiple selections (e.g., user input = "0,1,2")
+        # Split value into individual selections
+        input_parts = to_list(value, sep=",|;")
+        processed_values = []
+
+        for part in input_parts:
+            part = part.strip() if isinstance(part, str) else part
+
+            if is_valid_str(part):
                 # If part is not a valid choice, return it as-is
                 processed_values.append(part)
 

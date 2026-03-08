@@ -174,7 +174,7 @@ class Runner(ABC):
                 Defaults to None, which means using the default size.
         """
         config = self.config
-        imgsz = Size.from_value(imgsz) or config.eval_imgsz
+        imgsz = Size.from_value(imgsz or config.eval_imgsz)
 
         if config.benchmark:
             benchmark(self.model, imgsz=imgsz)

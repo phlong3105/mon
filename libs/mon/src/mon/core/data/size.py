@@ -135,7 +135,7 @@ class Size:
             if isinstance(value, Tensor):
                 size = (int(shape[-2]), int(shape[-1]))
             else:
-                size = (int(shape[-3]), int(shape[-2]))
+                size = (int(shape[0]), int(shape[1]))
 
         if size is None:
             raise TypeError(f"Could not get size from {type(value).__name__}.")

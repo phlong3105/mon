@@ -237,7 +237,7 @@ class ImageOnlyDataset(
 
     dirname: str = ""
     subdir: str = ""
-    splits: list[Split] = [Split.PREDICT]
+    splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST, Split.PREDICT]
     modalities: ModalityList = ModalityList([
         ImageModality(name="image", dirname="image"),
     ])
@@ -294,6 +294,13 @@ class ImageOnlyDataset(
             *args, **kwargs
         )
 
+    # --- Properties ---
+    @override
+    @property
+    def base_dir(self) -> Path:
+        """Return the base directory of the dataset."""
+        return self.root
+
     # --- Discovery ---
     @override
     def list_metapoints(self):
@@ -307,10 +314,11 @@ class ImageOnlyDataset(
         # List all image files under the root
         pk, pm = self.primary
         src = self.base_dir
+
         if src.is_image_file():
             # If is a single image file, return a list with only that image
             paths = [src]
-        elif "*" in src:
+        elif "*" in str(src):
             # If is a glob pattern, list the matching files
             # Using iglob (iterator) is more memory efficient than glob.glob
             paths = [Path(p) for p in glob.iglob(str(src), recursive=True)]
@@ -327,7 +335,7 @@ class ImageOnlyDataset(
         name = pm.name
         with create_progress_bar(disable=self.disable_pbar) as pbar:
             paths = sorted(paths)
-            desc = f"Listing {self.name} {name}(s)"
+            desc = f"Listing {self.__class__.__name__} {name}(s)"
             for path in pbar.track(sequence=paths, description=desc):
                 path = path.normalize()
                 if path.is_image_file():

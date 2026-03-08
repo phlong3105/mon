@@ -26,8 +26,8 @@ __all__ = [
 import sys
 
 import torch
-from torch import nn
-
+from torch import nn, Tensor
+from numpy import ndarray
 from mon.core import (
     is_weights_type,
     K,
@@ -35,6 +35,7 @@ from mon.core import (
     MODELS,
     Path,
     Task,
+    TensorOrArray,
     WEIGHTS,
     Weights,
     WeightsEnum,
@@ -118,9 +119,8 @@ class DAV2(ModelRegisterMixin, nn.Module):
             out_channels=out_channels,
             use_bn=use_bn,
             use_clstoken=use_clstoken,
-            device=device,
-            *args, **kwargs
-        )
+            device=device,  # This is for the input image in forward()
+        ).to(device)
 
         # Load weights
         if is_weights_type(weights):
@@ -135,12 +135,20 @@ class DAV2(ModelRegisterMixin, nn.Module):
         self.model = base_model
 
     # --- Callable & Context Manager ---
-    def forward(self, *args, **kwargs):
+    def forward(self, x: TensorOrArray, *args, **kwargs):
         """Forward the input through the network.
 
         Simply delegates the call to the underlying model.
         """
-        return self.model(*args, **kwargs)
+        if isinstance(x, Tensor):
+            return self.model(x)
+        elif isinstance(x, ndarray):
+            return self.model.infer_image(x, *args, **kwargs)
+        else:
+            raise TypeError(
+                f"Expected input to be a Tensor or ndarray, "
+                f"but got {type(x).__name__}."
+            )
 
 # endregion
 

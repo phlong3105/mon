@@ -18,6 +18,7 @@ __all__ = [
     "DAV2_Predictor",
 ]
 
+import numpy as np
 import torch
 from typing_extensions import override
 
@@ -58,7 +59,7 @@ class DAV2_Predictor(Predictor):
         device = self.device
         weights = "default"
 
-        model = MODELS.build(**config.model | { "weights": weights})
+        model = MODELS.build(**config.model | { "weights": weights, "device": device})
         model = model.to(device)
         model.eval()
         self._model = model
@@ -111,7 +112,6 @@ class DAV2_Predictor(Predictor):
             dict: The dictionary containing the prediction results.
         """
         config = self.config
-        device = self.device
         imgsz = config.eval_imgsz
 
         # 1. Prepare inputs
@@ -121,8 +121,10 @@ class DAV2_Predictor(Predictor):
 
         # 2. Inference
         timers.infer.tick()
-        outputs = self.model(image, imgsz.h)
-        outputs = {"depth": outputs}
+        depth = self.model(image, imgsz.h)
+        depth = (depth - depth.min()) / (depth.max() - depth.min()) * 255.0
+        depth = depth.astype(np.uint8)
+        outputs = {"depth": depth}
         timers.infer.tock()
 
         return outputs
@@ -138,7 +140,9 @@ class DAV2_Predictor(Predictor):
         """
         path = Path(meta["path"])
         size = Size.from_value(meta["imgsz"])
-        self._save_image(outputs["depth"], size, path)
+        depth = outputs["depth"]
+        depth = np.repeat(depth[..., np.newaxis], 3, axis=-1)
+        self._save_image(depth, size, path)
 
     @override
     def _save_debug(self, outputs: dict, meta: dict):

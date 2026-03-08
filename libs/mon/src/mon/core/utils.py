@@ -297,12 +297,15 @@ def to_float(value: Any) -> float | None:
         )
 
 
-def to_str(value: Any, sep: str = ",") -> str:
+def to_str(value: Any, sep: str | tuple[str, ...] | list[str] = ",") -> str:
     """Convert ``value`` to a string.
 
     Args:
         value (Any): Input value to convert.
-        sep (str): Delimiter to use when joining collections. Defaults to ",".
+        sep (str | tuple | list): Delimiters for splitting if the input is a string.
+            If a string, it is treated as a regex pattern.
+            If a tuple/list, the items are escaped and treated as literal delimiters.
+            Defaults to ",".
     """
     if not value:
         return ""
@@ -313,37 +316,45 @@ def to_str(value: Any, sep: str = ",") -> str:
     return str(value)
 
 
-def to_list(value: Any, sep: str = ",|;|:") -> list:
+def to_list(value: Any, sep: str | tuple[str, ...] | list[str] = ",|;|:") -> list:
     """Normalize ``value`` to a list.
 
     Args:
         value (Any): Input value to convert.
-        sep (str): Delimiters for splitting if the input is a string.
-            Defaults to ",|;|:"
+        sep (str | tuple | list): Delimiters for splitting if the input is a string.
+            If a string, it is treated as a regex pattern.
+            If a tuple/list, the items are escaped and treated as literal delimiters.
+            Defaults to ",|;|:".
 
     Returns:
         list: Normalized list.
     """
     if isinstance(value, list):
         return value
-    if isinstance(value, tuple):
+    if isinstance(value, (tuple, set)):
         return list(value)
     if isinstance(value, dict):
         return list(value.values())
     if isinstance(value, str):
-        # Create a regex pattern from the separators to handle multiple delimiters.
-        pattern = "|".join(map(re.escape, sep)) if isinstance(sep, tuple) else sep
-        return [item for item in re.split(pattern, value) if item]
+        # Create a regex pattern safely
+        pattern = "|".join(map(re.escape, sep)) if isinstance(sep, (tuple, list)) else sep
+
+        # Split, strip whitespace, and ignore empty strings
+        # (e.g., "a,,b" becomes ['a', 'b'])
+        return [item.strip() for item in re.split(pattern, value) if item.strip()]
+
     return [value] if value is not None else []
 
 
-def to_int_list(value: Any, sep: str = ",|;|:") -> list[int]:
+def to_int_list(value: Any, sep: str | tuple[str, ...] | list[str] = ",|;|:") -> list[int]:
     """Convert ``value`` to a list of integers.
 
     Args:
         value (Any): Input value to normalize and convert.
-        sep (str): Delimiters for splitting if the input is a string.
-            Defaults to ",|;|:"
+        sep (str | tuple | list): Delimiters for splitting if the input is a string.
+            If a string, it is treated as a regex pattern.
+            If a tuple/list, the items are escaped and treated as literal delimiters.
+            Defaults to ",|;|:".
 
     Returns:
         list[int]: List of integers.
@@ -351,13 +362,15 @@ def to_int_list(value: Any, sep: str = ",|;|:") -> list[int]:
     return list(int(i) for i in to_list(value, sep=sep))
 
 
-def to_float_list(value: Any, sep: str = ",|;|:") -> list[float]:
+def to_float_list(value: Any, sep: str | tuple[str, ...] | list[str] = ",|;|:") -> list[float]:
     """Convert ``value`` to a list of floats.
 
     Args:
         value (Any): Input value to normalize and convert.
-        sep (str): Delimiters for splitting if the input is a string.
-            Defaults to ",|;|:"
+        sep (str | tuple | list): Delimiters for splitting if the input is a string.
+            If a string, it is treated as a regex pattern.
+            If a tuple/list, the items are escaped and treated as literal delimiters.
+            Defaults to ",|;|:".
 
     Returns:
         list[float]: List of floats.
