@@ -88,6 +88,8 @@ loss:
 
 grad_clip_norm: 0.1
 
+tensorboard_logger: True
+
 # --- Prediction ---
 eval_imgsz: 512  # (int | list[int]) Image size for evaluation.
 benchmark: False  # (bool) Benchmark the model.

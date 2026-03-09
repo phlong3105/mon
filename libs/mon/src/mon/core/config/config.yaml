@@ -74,6 +74,8 @@ lr_scheduler: ~
 
 lr_warmup_scheduler: ~
 
+tensorboard_logger: True
+
 # --- Prediction ---
 eval_imgsz: ~  # (int | list[int]) Image size for evaluation.
 benchmark: False  # (bool) Benchmark the model.

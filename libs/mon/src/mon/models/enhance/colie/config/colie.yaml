@@ -85,6 +85,8 @@ loss:
   L_exp_w: 8
   E: 0.3
 
+tensorboard_logger: True
+
 # --- Prediction ---
 eval_imgsz: 256  # (int | list[int]) Image size for evaluation.
 benchmark: False  # (bool) Benchmark the model.

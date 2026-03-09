@@ -68,7 +68,7 @@ class Trainer(Runner, ABC):
         self._scheduler: LRScheduler | None = None
         self._train_dataloader: DataLoader | None = None
         self._val_dataloader: DataLoader | None = None
-        self._logger: SummaryWriter | None = None
+        self._tb_logger: SummaryWriter | None = None
         self._best: dict[str, float] = {
             "loss": float("inf"),
         }
@@ -87,7 +87,7 @@ class Trainer(Runner, ABC):
             src=dataloader,
             dataset_dir=config.data_dir,
             split=Split.TRAIN,
-        )[0]
+        )[1]
 
     def _init_val_dataloader(self):
         """Initialize ``self._val_dataloader`` attribute."""
@@ -98,13 +98,20 @@ class Trainer(Runner, ABC):
             src=dataloader,
             dataset_dir=config.data_dir,
             split=Split.VAL,
-        )[0]
+        )[1]
 
-    def _init_logger(self):
-        """Initialize the logger for tracking training progress and metrics."""
-        log_dir = self.config.output_dir / "logs"
-        log_dir.mkdir(exist_ok=True, parents=True)
-        self._logger = SummaryWriter(log_dir=str(log_dir))
+    def _init_loggers(self):
+        """Initialize external loggers for tracking training progress and metrics.
+        """
+        config = self.config
+
+        # 1. Initialize Tensorboard logger
+        if config.tensorboard_logger:
+            log_dir = self.config.output_dir / "logs"
+            log_dir.mkdir(exist_ok=True, parents=True)
+            self._tb_logger = SummaryWriter(log_dir=str(log_dir))
+
+        # 2. Initialize other loggers here
 
     # --- Properties ---
     @property
@@ -164,6 +171,9 @@ class Trainer(Runner, ABC):
             config.log_summary()
 
         # 2. Setup environment
+        config.output_dir.mkdir(exist_ok=True, parents=True)
+        config.config_file.copy_to(config.output_dir / config.config_file.name)
+
         sys_ctx.set_random_seed(config.seed)
         epochs = config.epochs
 
@@ -183,14 +193,13 @@ class Trainer(Runner, ABC):
         if self.train_dataloader is None:
             raise RuntimeError(f"'train_dataloader' is not initialized.")
 
-        # 6. Define logger
-        self._init_logger()
+        # 6. Define loggers
+        self._init_loggers()
 
         # 7. Run benchmark
         self.benchmark()
 
         # 8. Main loop
-        config.output_dir.mkdir(exist_ok=True, parents=True)
         with create_progress_bar() as pbar:
             for epoch in pbar.track(
                 sequence=range(epochs),
@@ -298,10 +307,11 @@ class Trainer(Runner, ABC):
             message += f" | {k}: {v:>08.6f}"
         log(message)
 
-        # 3. External tracker (TensorBoard, WandB, etc.)
-        for k, v in log_dict.items():
-            self._logger.add_scalar(k.capitalize(), v, epoch)
-        self._logger.flush()
+        # 3. Log to external loggers
+        if self._tb_logger:
+            for k, v in log_dict.items():
+                self._tb_logger.add_scalar(k.capitalize(), v, epoch)
+            self._tb_logger.flush()
 
     # --- Output ---
     def _save(

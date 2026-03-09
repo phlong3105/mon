@@ -368,6 +368,7 @@ def zero_dce_pp(weights: WeightsLike = "default", *args, **kwargs):
         weights (WeightsLike, optional): Pre-trained weights to load.
             Defaults to "default".
     """
+    _ = kwargs.pop("name", "zero_dce++")
     in_channels = kwargs.pop("in_channels", 3)
     out_channels = kwargs.pop("out_channels", 3)
     hidden_dim = kwargs.pop("hidden_dim", 32)

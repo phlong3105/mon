@@ -19,7 +19,7 @@ model:
   hidden_dim: 32
   imgsz: 512
   chunk_size: 100000
-  use_dopri5: True
+  use_dopri5: False
   tol: 0.001
   adjoint: True
   weights: "cv/enhance/iz_dce/iz_dce_ode/sice_me/iz_dce_ode_sice_me.pt"  # (str) Path to model weights.
@@ -95,6 +95,8 @@ loss:
   L_denoise_w: 1  # 50
 
 grad_clip_norm: 0.1
+
+tensorboard_logger: True
 
 # --- Prediction ---
 T: 2

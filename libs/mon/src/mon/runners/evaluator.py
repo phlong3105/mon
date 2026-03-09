@@ -250,7 +250,16 @@ class IQAEvaluator:
                 description=desc,
             ):
                 image = datapoint["image"]
-                target = datapoint.get("target")
+                target = datapoint.get("target", None)
+
+                # Sometimes image and target may have different orientations
+                # (H, W) vs (W, H). We check the image and target sizes and
+                # transpose the image if needed.
+                image_sz = image.shape[-2:]
+                if target is not None:
+                    target_sz = target.shape[-2:]
+                    if image_sz[0] == target_sz[1]:
+                        image = image.transpose(2, 3)
 
                 # Move tensors to a device
                 image = image.to(device=device)

@@ -13,10 +13,19 @@ __all__ = [
     "IZDCE_ODE_Predictor",
 ]
 
+from typing import Any
+
 import torch
 from typing_extensions import override
 
-from mon.core import Path, Size, TimeProfiler
+from mon.core import (
+    Path,
+    resolve_project_root,
+    RunMode,
+    Size,
+    Task,
+    TimeProfiler,
+)
 from mon.dataset import transform as T
 from mon.runners import Predictor
 # noinspection PyUnusedImports
@@ -93,24 +102,29 @@ class IZDCE_Predictor(Predictor):
 
     # --- Output ---
     @override
-    def _save(self, outputs: dict, meta: dict):
+    def _save(self, outputs: dict[str, Any], meta: list[dict[str, Any]]):
         """Save the main prediction results to a file.
 
         Args:
             outputs (dict): The dictionary containing the main prediction results.
-            meta (dict): The dictionary containing the metadata.
+                Each key in the dictionary is a batched of prediction results.
+            meta (list[dict]): The list of dictionaries containing the metadata
+                for each data point.
         """
-        path = Path(meta["path"])
-        size = Size.from_value(meta["imgsz"])
-        self._save_image(outputs["enhanced"], size, path)
+        for i, meta_i in enumerate(meta):
+            path = Path(meta_i["path"])
+            size = Size.from_value(meta_i["imgsz"])
+            self._save_image(outputs["enhanced"][i:i+1], size, path)
 
     @override
-    def _save_debug(self, outputs: dict, meta: dict):
-        """Save debugging results for visualization.
+    def _save_debug(self, outputs: dict[str, Any], meta: list[dict[str, Any]]):
+        """Save the main prediction results to a file.
 
         Args:
-            outputs (dict): The dictionary containing the debugging results.
-            meta (dict): The dictionary containing the metadata.
+            outputs (dict): The dictionary containing the main prediction results.
+                Each key in the dictionary is a batched of prediction results.
+            meta (list[dict]): The list of dictionaries containing the metadata
+                for each data point.
         """
         pass
 
@@ -171,6 +185,23 @@ class IZDCE_ODE_Predictor(IZDCE_Predictor):
 # ==============================================================================
 # region UNIT TEST
 # ==============================================================================
+
+def main():
+    """Unit test for IZDCE_Predictor."""
+    predictor = IZDCE_Predictor.from_cli(
+        prompt=True,
+        root=resolve_project_root(current_dir),
+        config_file="iz_dce_sice_me.yaml",
+        task=Task.ENHANCE,
+        mode=RunMode.PREDICT,
+        arch="iz_dce",
+        model="iz_dce",
+        save=True,
+        save_debug=True,
+        exist_ok=True,
+        verbose=True,
+    )
+    predictor.predict()
 
 if __name__ == "__main__":
     pass

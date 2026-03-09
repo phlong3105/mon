@@ -22,9 +22,9 @@ from typing import Any, Callable, TypeVar
 
 import torch
 from box import Box
-
 from rich.table import Table
-from mon.core.console import console, log, log_error, pprint_dict
+
+from mon.core.console import console, log_error, pprint_dict
 from mon.core.constants import K
 from mon.core.context import sys_ctx
 from mon.core.data import Size, SizeLike, Weights
@@ -288,13 +288,14 @@ class Config:
         # --- Training ---
         "epochs": 100,
         "optimizer": {
-            "name": "adam",
-            "lr": 1e-4,
+            "name": None,
+            "lr": 0.0,
             "weight_decay": 0.0,
         },
         "lr_scheduler": {},
         "lr_warmup_scheduler": {},
         "loss": {},
+        "tensorboard_logger": True,
 
         # --- Prediction ---
         "eval_imgsz": None,
@@ -330,12 +331,14 @@ class Config:
         """
         # Allocate resources
         self._config: Box = copy.deepcopy(self._DEFAULT_SCHEMA)
+        self.infer_data = None
 
         # Assign attributes
         self.root = root
         self.config_file = config_file
         self.cli_kwargs = kwargs
 
+        # Update the config with the given values
         if config:
             self.update_from_dict(config)
         if self.config_file:
@@ -386,19 +389,26 @@ class Config:
         self._config[name] = value
 
     def get(self, key: str, default: Any = None) -> Any:
+        """Get a value with the given ``key`` from the configuration.
+
+        This is an alias to ``dict.get(key, default)``.
+        """
         return self._config.get(key, default)
 
     # --- Properties ---
     @property
     def config(self) -> Box:
+        """Return the internal configuration dictionary."""
         return self._config
 
     @property
     def config_file(self) -> Path | None:
+        """Return the path to the configuration file."""
         return self.config.config_file
 
     @config_file.setter
     def config_file(self, value: PathLike | None):
+        """Set the path to the configuration file."""
         # Validate inputs
         if not is_valid_str(value):
             return
@@ -418,6 +428,7 @@ class Config:
 
     @property
     def exp_name(self) -> str:
+        """Return the experiment name."""
         if self.config.exp_name:
             return self.config.exp_name
         elif self.config_file:
@@ -427,6 +438,7 @@ class Config:
 
     @exp_name.setter
     def exp_name(self, value: str):
+        """Set the experiment name."""
         self._config.exp_name = value
 
     @property
@@ -458,46 +470,56 @@ class Config:
 
     @property
     def task(self) -> Task | None:
+        """Return the task type."""
         return self._config.task
 
     @task.setter
     def task(self, value: TaskLike | None):
+        """Set the task type."""
         if value in Task:
             self._config.task = Task(value)
 
     @property
     def mode(self) -> RunMode | None:
+        """Return the run mode."""
         return self._config.mode
 
     @mode.setter
     def mode(self, value: RunModeLike | None):
+        """Set the run mode."""
         if value in RunMode:
             self._config.mode = RunMode(value)
 
     @property
     def arch(self) -> str:
+        """Return the model architecture."""
         return self._config.model.arch
 
     @arch.setter
     def arch(self, value: str | None):
+        """Set the model architecture."""
         if is_valid_str(value):
             self._config.model.arch = value
 
     @property
     def model_name(self) -> str:
+        """Return the model name."""
         return self._config.model.name
 
     @model_name.setter
     def model_name(self, value: str | None):
+        """Set the model name."""
         if is_valid_str(value):
             self._config.model.name = value
 
     @property
     def weights(self) -> Weights | None:
+        """Return the model weights."""
         return self._config.model.weights
 
     @weights.setter
     def weights(self, value: Weights | PathLike | None):
+        """Set the model weights."""
         if isinstance(value, Weights):
             # If the value is already a Weights object, set it directly
             self._config.model.weights = value
@@ -511,10 +533,12 @@ class Config:
 
     @property
     def finetune(self) -> Weights | None:
+        """Return the model weights."""
         return self._config.model.finetune
 
     @finetune.setter
     def finetune(self, value: Weights | PathLike | None):
+        """Set the model weights."""
         if isinstance(value, Weights):
             # If the value is already a Weights object, set it directly
             self._config.model.finetune = value
@@ -528,10 +552,12 @@ class Config:
 
     @property
     def data(self) -> list[PathLike]:
+        """Return the list of inference data sources."""
         return self._config.data
 
     @data.setter
     def data(self, value: list[PathLike] | PathLike | None):
+        """Set the list of inference data sources."""
         # Normalize inputs
         data = []
         if isinstance(value, (Path, str)):
@@ -552,10 +578,12 @@ class Config:
 
     @property
     def device(self) -> torch.device:
+        """Return the device to use for computation."""
         return self._config.device
 
     @device.setter
     def device(self, value: DeviceLike):
+        """Set the device to use for computation."""
         self._config.device = sys_ctx.get_torch_device(value)
 
     @property
@@ -565,63 +593,78 @@ class Config:
 
     @eval_imgsz.setter
     def eval_imgsz(self, value: SizeLike | None):
+        """Set the evaluation image size."""
         if value is not None:
             self._config.eval_imgsz = Size.from_value(value)
 
     @property
     def benchmark(self) -> bool:
+        """Return whether to run in benchmark mode."""
         return self._config.benchmark
 
     @benchmark.setter
     def benchmark(self, value: bool):
+        """Set whether to run in benchmark mode."""
         self._config.benchmark = value
 
     @property
     def save(self) -> bool:
+        """Return whether to save the output."""
         return self._config.save
 
     @save.setter
     def save(self, value: bool):
+        """Set whether to save the output."""
         self._config.save = value
 
     @property
     def save_debug(self) -> bool:
+        """Return whether to save debug information."""
         return self._config.save_debug
 
     @save_debug.setter
     def save_debug(self, value: bool):
+        """Set whether to save debug information."""
         self._config.save_debug = value
 
     @property
     def keep_subdirs(self) -> bool:
+        """Return whether to keep subdirectories in the output directory."""
         return self._config.keep_subdirs
 
     @keep_subdirs.setter
     def keep_subdirs(self, value: bool):
+        """Set whether to keep subdirectories in the output directory."""
         self._config.keep_subdirs = value
 
     @property
     def near_src(self) -> bool:
+        """Return whether to keep subdirectories in the output directory."""
         return self._config.near_src
 
     @near_src.setter
     def near_src(self, value: bool):
+        """Set whether to keep subdirectories in the output directory."""
         self._config.near_src = value
 
     @property
     def exist_ok(self) -> bool:
+        """Return whether to overwrite existing files."""
         return self._config.exist_ok
 
     @exist_ok.setter
     def exist_ok(self, value: bool):
+        """Set whether to overwrite existing files."""
         self._config.exist_ok = value
 
     @property
     def verbose(self) -> bool:
+        """Return whether to enable verbose mode."""
         return self._config.verbose
 
     @verbose.setter
     def verbose(self, value: bool):
+        """Set whether to enable verbose mode."""
         self._config.verbose = value
 
     # --- Retrieval ---
@@ -644,10 +687,12 @@ class Config:
 
     @property
     def model_dir(self) -> Path | None:
+        """Return the root directory of all models in the current project."""
         return MODELS.get_model_dir(self.model_name)
 
     @property
     def config_files(self) -> list[Path]:
+        """Return a list of all configuration files in the current project."""
         model = self.model_name
         config_dir = self.config_dir
         config_files = config_dir.files(
@@ -665,18 +710,47 @@ class Config:
 
     @property
     def weights_files(self) -> list[Path]:
+        """Return a list of all weights files in the current project."""
         model = self.model_name
         run_dir = self.run_dir
+
+        # 1. Look for weights files in the current run directory
         weights_files = run_dir.files(
-            f"*{model}*.pt", f"*{model}*.pth",
+            f"*{model}*.pt",
+            f"*{model}*.pth",
+            f"*/*{model}*/*.pt",
+            f"*/*{model}*/*.pth",
             recursive=True
         ) if run_dir else []
 
+        # 2. Look for weights files in the global zoo directory
         weights_files += K.ZOO_ROOT.files(
-            f"*{model}*.pt", f"*{model}*.pth",
+            f"*{model}*.pt",
+            f"*{model}*.pth",
             recursive=True
         ) if K.ZOO_ROOT else []
+
         return weights_files
+
+    @property
+    def infer_data(self) -> PathLike:
+        """Return the current inference data source."""
+        return self._current_data or ""
+
+    @infer_data.setter
+    def infer_data(self, value: PathLike | None):
+        """Set the current inference data source."""
+        self._current_data = Path(value).normalize() if is_valid_str(value) else None
+
+    @property
+    def infer_data_name(self) -> str:
+        """Return the current inference data source name."""
+        if self._current_data is None:
+            return ""
+        if self._current_data.is_file():
+            return self._current_data.stem
+        else:
+            return self._current_data.name
 
     def resolve_save_dir(
         self,
@@ -720,7 +794,7 @@ class Config:
             Path: Computed output directory path.
         """
         return resolve_save_dir(
-            output_dir=self.output_dir,
+            output_dir=self.output_dir / self.infer_data_name,
             dirname=dirname,
             subdirname=subdirname,
             src_path=src_path,
@@ -773,7 +847,7 @@ class Config:
         src_path = Path(src_path).normalize()
 
         save_dir = resolve_save_dir(
-            output_dir=self.output_dir,
+            output_dir=self.output_dir / self.infer_data_name,
             dirname=dirname,
             subdirname=subdirname,
             src_path=src_path,
@@ -908,7 +982,7 @@ class Config:
                 dirname="train",
                 arch=self.arch,
                 # model=self.model_name,
-                data=self.exp_name
+                data=self.exp_name,
             )
         else:
             self.output_dir = output_dir.normalize()
@@ -974,7 +1048,8 @@ class Config:
                 root=self.run_dir,
                 dirname="predict",
                 arch=self.arch,
-                model=self.model_name
+                # model=self.model_name,
+                model=self.exp_name,
             )
         else:
             self.output_dir = output_dir.normalize()
@@ -1248,6 +1323,7 @@ class ConfigContext(Config):
                 prompt=ARGUMENTS.config.prompt_text,
                 default=self.config,
                 choices=self.config_files,
+                column_first=True,
                 truncate_length=60,
                 truncate_side="middle",
                 commonpath=self.root,
@@ -1272,6 +1348,7 @@ class ConfigContext(Config):
                 prompt=ARGUMENTS.weights.prompt_text,
                 default=resolve_weights_file(self.root, self.weights.path),
                 choices=self.weights_files,
+                column_first=True,
                 truncate_length=60,
                 truncate_side="middle",
                 commonpath=self.root,
@@ -1289,14 +1366,12 @@ class ConfigContext(Config):
                     multiselect=True,
                     allow_empty=True,
                 )
-                # print(f"Data: {self.data}")
         if self._index == 7:
             # Experiment Name
             self.exp_name = Prompt.ask(
                 prompt=ARGUMENTS.exp_name.prompt_text,
                 default=self.exp_name,
             )
-            # print(f"Experiment Name: {self.exp_name}")
         if self._index == 8:
             # Device
             self.device = OptionPrompt.ask(
@@ -1304,7 +1379,6 @@ class ConfigContext(Config):
                 default=sys_ctx.get_device(self.device).name,
                 choices=ARGUMENTS.device.choices,
             )
-            # print(f"Device: {self.device}")
         if self._index == 9:
             # Benchmark
             self.benchmark = Confirm.ask(

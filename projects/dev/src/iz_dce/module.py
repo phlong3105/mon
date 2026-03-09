@@ -721,34 +721,34 @@ class EnhanceFunctionTime(nn.Module):
 
 class ODEBlock(nn.Module):
 
-    step_size = 0.03
+    step_size = 0.1
     max_num_steps = 30  # 30 # 50 # 100 # 1000
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
         ode_func: nn.Module,
+        use_dopri5: bool = False,
         tol: float = 1e-3,
         adjoint: bool = True,
-        use_dopri5: bool = False,
         *args, **kwargs
     ):
         """Initialize a new instance.
 
         Args:
             ode_func (nn.Module): The ODE function defining the dynamics.
+            use_dopri5 (bool, optional): Whether to use the 'dopri5' method
+                instead of 'rk4'. Defaults to False.
             tol (float, optional): Tolerance for the ODE solver. Defaults to 1e-3.
             adjoint (bool, optional): Whether to use the adjoint method for
                 backpropagation. Defaults to True.
-            use_dopri5 (bool, optional): Whether to use the 'dopri5' method
-                instead of 'rk4'. Defaults to False.
         """
         super().__init__()
         # Assign attributes
         self.ode_func = ode_func
+        self.use_dopri5 = use_dopri5
         self.tol = tol
         self.adjoint = adjoint
-        self.use_dopri5 = use_dopri5
 
     # --- Callable & Context Manager ---
     def forward(self, x: Tensor, eval_time: Tensor | None = None) -> Tensor:

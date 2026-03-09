@@ -61,8 +61,8 @@ class Factory(UserDict[str, Any | Callable[..., Any]]):
             name (str): Name for the factory.
             mapping (dict, optional): Initial dictionary of registered classes.
                 Defaults to None.
-            decamelize (bool, optional): If True, normalize class names to s
-                nake_case. Defaults to False.
+            decamelize (bool, optional): If True, normalize class names to
+                snake_case. Defaults to False.
             verbose (bool), optional: Verbosity mode. Defaults to False.
 
         Raises:
@@ -773,10 +773,10 @@ class OptimizerFactory(Factory):
 # ==============================================================================
 
 ALBUMENTATIONS: Factory = Factory(name="Albumentations", decamelize=False)
-DATASETS: DatasetFactory = DatasetFactory(name="Datasets", decamelize=True)
-BACKBONES: ModelFactory = ModelFactory(name="Backbones", decamelize=True)
-MODELS: ModelFactory = ModelFactory(name="Models", decamelize=True)
-WEIGHTS: WeightsFactory = WeightsFactory(name="Weights", decamelize=True)
+DATASETS: DatasetFactory = DatasetFactory(name="Datasets", decamelize=False)
+BACKBONES: ModelFactory = ModelFactory(name="Backbones", decamelize=False)
+MODELS: ModelFactory = ModelFactory(name="Models", decamelize=False)
+WEIGHTS: WeightsFactory = WeightsFactory(name="Weights", decamelize=False)
 OPTIMIZERS: OptimizerFactory = OptimizerFactory(name="Optimizers", decamelize=False)
 SCHEDULERS: Factory = Factory(name="Schedulers", decamelize=False)
 

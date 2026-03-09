@@ -127,6 +127,7 @@ class Predictor(Runner, ABC):
             config.log_summary()
 
         # 2. Setup environment
+        config.output_dir.mkdir(exist_ok=True, parents=True)
         sys_ctx.set_random_seed(config.seed)
 
         # 3. Define model
@@ -150,20 +151,26 @@ class Predictor(Runner, ABC):
                 total=len(config.data),
                 description=f"[bright_yellow]Data"
             ):
-                # 6.1. Predict data
+                # 6.1. Update config
+                config.infer_data = data
+
+                # 6.2. Predict data
                 timers = TimeProfiler()
                 self._predict_data(data=data, pbar=pbar, timers=timers)
                 timers.total.tock()
 
-                # 6.2. Finish
+                # 6.3. Clean up
+                config.infer_data = None
+
+                # 6.4. Finish
                 timers.print()
 
     # --- Prediction ---
-    def _predict_data(self, data: Path | str, pbar: Progress, timers: TimeProfiler):
+    def _predict_data(self, data: PathLike, pbar: Progress, timers: TimeProfiler):
         """Predict the output of the model for a single data source.
 
         Args:
-            data (Path | str): The path to the data point to predict.
+            data (PathLike): The path to the data point to predict.
             pbar (Progress): The progress bar to update during prediction.
             timers (TimeProfiler): The time profiler to record timing information
                 during prediction.
@@ -188,9 +195,9 @@ class Predictor(Runner, ABC):
             # 2.2. Post-process
             timers.postprocess.tick()
             meta = datapoint["meta"]
-            self._save(outputs, meta)
+            self._save(outputs=outputs, meta=meta)
             if save_debug:
-                self._save_debug(outputs, meta)
+                self._save_debug(outputs=outputs, meta=meta)
             timers.postprocess.tock()
 
             pbar.update(task, advance=1)
@@ -198,9 +205,7 @@ class Predictor(Runner, ABC):
 
     @abstractmethod
     def _predict_step(
-        self,
-        datapoint: dict[str, Any],
-        timers: TimeProfiler
+        self, datapoint: dict[str, Any], timers: TimeProfiler
     ) -> dict[str, Any]:
         """Predict the output of the model for a single data point.
 
@@ -216,22 +221,26 @@ class Predictor(Runner, ABC):
 
     # --- Output ---
     @abstractmethod
-    def _save(self, outputs: dict[str, Any], meta: dict[str, Any]):
+    def _save(self, outputs: dict[str, Any], meta: list[dict[str, Any]]):
         """Save the main prediction results to a file.
 
         Args:
             outputs (dict): The dictionary containing the main prediction results.
-            meta (dict): The dictionary containing the metadata.
+                Each key in the dictionary is a batched of prediction results.
+            meta (list[dict]): The list of dictionaries containing the metadata
+                for each data point.
         """
         pass
 
     @abstractmethod
-    def _save_debug(self, outputs: dict[str, Any], meta: dict[str, Any]):
+    def _save_debug(self, outputs: dict[str, Any], meta: list[dict[str, Any]]):
         """Save debugging results for visualization.
 
         Args:
-            outputs (dict): The dictionary containing the debugging results.
-            meta (dict): The dictionary containing the metadata.
+            outputs (dict): The dictionary containing the main prediction results.
+                Each key in the dictionary is a batched of prediction results.
+            meta (list[dict]): The list of dictionaries containing the metadata
+                for each data point.
         """
         pass
 
@@ -241,7 +250,8 @@ class Predictor(Runner, ABC):
         size: Size,
         src_path: Path,
         dirname: str = K.PRED_DIR,
-        stem: str | None = None
+        subdirname: str = "",
+        stem: str = ""
     ):
         """Save a debug image for visualization.
 
@@ -254,9 +264,12 @@ class Predictor(Runner, ABC):
                 path.
             dirname (str, optional): The directory name for the output file.
                 Defaults to K.PRED_DIR.
+            subdirname (str): Subdirectory name to append to the output path
+                (e.g., 'debug'/'mask'). Defaults to "".
             stem (str, optional): An optional string to be appended to the
-                output file name for differentiation. If None, the original
-                file name will be used.
+                output file name for differentiation. If not provided, the
+                output file name will be the same as the source file name.
+                Defaults to "".
         """
         config = self.config
 
@@ -265,8 +278,7 @@ class Predictor(Runner, ABC):
             image = to_image_array(image)
         if not isinstance(image, ndarray):
             raise TypeError(
-                f"Expected 'image' to be an array, "
-                f"but got {type(image).__name__}."
+                f"Expected 'image' to be an array, but got {type(image).__name__}."
             )
 
         # Resize the image if necessary
@@ -276,10 +288,10 @@ class Predictor(Runner, ABC):
 
         # Save the image
         if stem:
-            save_dir = config.resolve_save_dir(dirname=dirname, src_path=src_path)
+            save_dir = config.resolve_save_dir(dirname=dirname, subdirname=subdirname, src_path=src_path)
             save_path = save_dir / f"{src_path.stem}_{stem}{K.IMAGE_EXT}"
         else:
-            save_path = config.resolve_save_file(dirname=dirname, src_path=src_path)
+            save_path = config.resolve_save_file(dirname=dirname, subdirname=subdirname, src_path=src_path)
         write_image(image=image, path=save_path)
 
 # endregion

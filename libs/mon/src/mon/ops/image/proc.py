@@ -202,7 +202,7 @@ def to_image_array(image: Tensor) -> ndarray:
         ndarray: Image array of shape (H, W, C) and values ranging from 0 to 255.
 
     Raises:
-        TypeError: If ``image`` is not a 4D tensor.
+        TypeError: If ``image`` is not a 3D or 4D tensor.
 
     Notes:
         image = (tensor.squeeze().detach().cpu().clamp(0, 1).permute(1, 2, 0).numpy() * 255).round().astype("uint8")
@@ -218,9 +218,9 @@ def to_image_array(image: Tensor) -> ndarray:
             f"but got {image.ndim}D {type(image).__name__},"
         )
 
-    # Select the first image in the batch if B > 1, then move to CPU
+    # If 4D, select the first image in the batch
     # We avoid squeeze() to prevent accidentally removing C=1
-    image = image[0].detach().cpu()
+    image = image[0].detach().cpu()  # Move to CPU
     # (C, H, W) -> (H, W, C)
     image = image.permute(1, 2, 0).clamp(0, 1).mul(255).round().to(torch.uint8)
     return image.numpy()

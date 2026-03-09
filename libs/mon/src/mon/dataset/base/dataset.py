@@ -463,14 +463,14 @@ class StandardDataset(Dataset, ABC):
         if is_valid_str(self.dirname):
             # Check if the current root ends with a dataset directory; if not,
             # try to append
-            dataset_dir = root.append(self.dirname)
+            dataset_dir = root.resolve_subdir(self.dirname)
             if dataset_dir.is_dir():
                 root = dataset_dir
 
         # Append subdir if specified
         if is_valid_str(self.subdir):
             # Check if the current root ends with a subset; if not, try to append
-            subdir = root.append(self.subdir)
+            subdir = root.resolve_subdir(self.subdir)
             if subdir.is_dir():
                 root = subdir
 

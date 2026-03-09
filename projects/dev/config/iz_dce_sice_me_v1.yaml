@@ -1,5 +1,5 @@
 # --- General ---
-exp_name: "iz_dce_sice_me"  # (str) Experiment name.
+exp_name: "iz_dce_sice_me_v1"  # (str) Experiment name.
 
 root: ~  # (str) Root path of the project.
 output_dir: ~  # (str) Output directory.
@@ -87,12 +87,14 @@ loss:
   L_tv_A_w: 200
   L_spa_w: 1
   L_col_w: 20  # 0.8
-  L_col_pre_w: 20  # 10
+  L_col_pre_w: 10  # 10
   L_exp_w: 10
   L_enhance_w: 1
   L_denoise_w: 1  # 50
 
 grad_clip_norm: 0.1
+
+tensorboard_logger: True
 
 # --- Prediction ---
 eval_imgsz: 512  # (int | list[int]) Image size for evaluation.

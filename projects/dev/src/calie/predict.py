@@ -12,6 +12,8 @@ __all__ = [
     "CALIE_Predictor",
 ]
 
+from typing import Any
+
 from typing_extensions import override
 
 from mon.core import (
@@ -100,35 +102,41 @@ class CALIE_Predictor(Predictor):
 
     # --- Output ---
     @override
-    def _save(self, outputs: dict, meta: dict):
+    def _save(self, outputs: dict[str, Any], meta: list[dict[str, Any]]):
         """Save the main prediction results to a file.
 
         Args:
             outputs (dict): The dictionary containing the main prediction results.
-            meta (dict): The dictionary containing the metadata.
+                Each key in the dictionary is a batched of prediction results.
+            meta (list[dict]): The list of dictionaries containing the metadata
+                for each data point.
         """
-        path = Path(meta["path"])
-        size = Size.from_value(meta["imgsz"])
-        self._save_image(outputs["enhanced"], size, path)
+        for i, meta_i in enumerate(meta):
+            path = Path(meta_i["path"])
+            size = Size.from_value(meta_i["imgsz"])
+            self._save_image(outputs["enhanced"][i:i+1], size, path)
 
     @override
-    def _save_debug(self, outputs: dict, meta: dict):
-        """Save debugging results for visualization.
+    def _save_debug(self, outputs: dict[str, Any], meta: list[dict[str, Any]]):
+        """Save the main prediction results to a file.
 
         Args:
-            outputs (dict): The dictionary containing the debugging results.
-            meta (dict): The dictionary containing the metadata.
+            outputs (dict): The dictionary containing the main prediction results.
+                Each key in the dictionary is a batched of prediction results.
+            meta (list[dict]): The list of dictionaries containing the metadata
+                for each data point.
         """
-        path = Path(meta["path"])
-        size = Size.from_value(meta["imgsz"])
-        debug_images = {
-            "image_i": outputs["image_i"],
-            "image_i_res": outputs["image_i_res"],
-            "image_i_fixed": outputs["image_i_fixed"],
-            "image_r": outputs["image_r"],
-        }
-        for stem, image in debug_images.items():
-            self._save_image(image, size, path, dirname=K.DEBUG_DIR, stem=stem)
+        for i, meta_i in enumerate(meta):
+            path = Path(meta_i["path"])
+            size = Size.from_value(meta_i["imgsz"])
+            debug_images = {
+                "image_i": outputs["image_i"][i:i+1],
+                "image_i_res": outputs["image_i_res"][i:i+1],
+                "image_i_fixed": outputs["image_i_fixed"][i:i+1],
+                "image_r": outputs["image_r"][i:i+1],
+            }
+            for stem, image in debug_images.items():
+                self._save_image(image, size, path, dirname=K.DEBUG_DIR, stem=stem)
 
 # endregion
 

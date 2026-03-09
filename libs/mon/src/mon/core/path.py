@@ -295,9 +295,7 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
         """
         # Normalize to handle trailing slashes or mixed separators
         # We use .name instead of .stem to correctly handle folders with dots (e.g. "v1.0")
-        if self.name == dirname:
-            return self
-        elif (self / dirname).is_dir():
+        if (self / dirname).is_dir():
             return self / dirname
         return self
 
