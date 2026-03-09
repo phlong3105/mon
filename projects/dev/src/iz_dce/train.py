@@ -55,7 +55,7 @@ class IZDCE_Trainer(Trainer):
         epochs = config.epochs
 
         self._optimizer = OPTIMIZERS.build(params=self.model.parameters(), **config.optimizer)
-        self._scheduler = CosineAnnealingLR(self.optimizer, T_max=epochs, eta_min=1e-6)
+        # self._scheduler = CosineAnnealingLR(self.optimizer, T_max=epochs, eta_min=1e-6)
 
     # --- Training ---
     @override
@@ -244,6 +244,15 @@ class IZDCE_ODE_Trainer(IZDCE_Trainer):
         model = model.to(device)
         model.train()
         self._model = model
+
+    @override
+    def _init_optimizer(self):
+        """Initialize ``self._optimizer`` and ``self._scheduler`` attributes."""
+        config = self.config
+        epochs = config.epochs
+
+        self._optimizer = OPTIMIZERS.build(params=self.model.parameters(), **config.optimizer)
+        # self._scheduler = CosineAnnealingLR(self.optimizer, T_max=epochs, eta_min=1e-6)
 
     # --- Training ---
     @override

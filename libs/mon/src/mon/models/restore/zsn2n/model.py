@@ -17,10 +17,12 @@ __all__ = [
 
 import torch
 from torch import nn, Tensor
+from torch.nn import functional as F
+from torch.optim import Adam
+from torch.optim.lr_scheduler import StepLR
 
-from mon.core import MODELS, Path, Task
+from mon.core import DictLike, MODELS, OPTIMIZERS, Path, SCHEDULERS, Task
 from mon.nn import ModelRegisterMixin
-from mon.ops import pair_downsample
 from .module import DenoiseNetwork
 
 current_file = Path(__file__).normalize()
@@ -51,7 +53,8 @@ class ZSN2N(ModelRegisterMixin, nn.Module):
         self,
         in_channels: int = 3,
         hidden_dim: int = 48,
-        epochs: int = 3000,
+        fit: bool = False,
+        fit_epochs: int = 3000,
         device: torch.device = torch.device("cpu"),
         verbose: bool = True,
         *args, **kwargs
@@ -63,109 +66,194 @@ class ZSN2N(ModelRegisterMixin, nn.Module):
                 Defaults to 3.
             hidden_dim (int): Number of channels in the hidden layers.
                 Defaults to 48.
-            epochs (int, optional): Number of optimization epochs for the network.
-                Defaults to 3,000.
+            fit (bool, optional): If True, perform single-image optimization
+                Default to False.
+            fit_epochs (int, optional): Number of optimization epochs for
+                single-image optimization. Defaults to 3000.
             device (torch.device, optional): Device to use for computation.
                 Defaults to torch.device("cpu").
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         # Satisfy PyTorch's empty signature first.
         super().__init__()
-        # Initialize RegistrableMixin
-        # ModelRegisterMixin.__init__(self, name=name)
 
         # Assign attributes
         self.verbose = verbose
         self.in_channels = in_channels
         self.hidden_dim = hidden_dim
-        self.epochs = epochs
+        self.fit_enabled = fit
+        self.fit_epochs = fit_epochs
         self.device = device
 
+        # Define network
+        self.model = DenoiseNetwork(
+            in_channels=self.in_channels,
+            hidden_dim=self.hidden_dim
+        ).to(self.device)
+
+        # Save the initial state dict. Since each weight is optimized for a
+        # single image, so we need to reset the weights before each new image.
+        if self.fit_enabled:
+            self.initial_state_dict = self.model.state_dict()
+        else:
+            self.initial_state_dict = None
+
      # --- Callable & Context Manager ---
-    def forward(
+    def forward(self, image: Tensor, *args, **kwargs) -> dict:
+        """Forward the input through the network.
+
+        If ``self.fit_enabled`` is True, perform single-image optimization.
+        Otherwise, perform standard training.
+
+        Args:
+            image (Tensor): Image tensor of shape (B, 3, H, W) and values
+                ranging from 0.0 to 1.0.
+
+        Returns:
+            dict: Dictionary containing the enhanced image tensor and
+                intermediate results for debugging.
+        """
+        # 1. Scenario 1: Single-Image Optimization
+        if self.fit_enabled:
+            return self.fit(image=image, *args, **kwargs)
+
+        # 2. Scenario 2: Standard Training
+        if self.training:
+            loss = self.denoise_loss(image)
+            restored = image - self.model(image)
+            return {"restored": restored, "loss": loss}
+        else:
+            restored = torch.clamp(image - self.model(image),0,1)
+            return {"restored": restored}
+
+    def fit(
         self,
         image: Tensor,
         epochs: int | None = None,
-        save_debug: bool = False,
+        reset_weights: bool = True,
+        optimizer: DictLike | None = None,
+        scheduler: DictLike | None = None,
     ) -> dict:
-        """Forward the input through the network.
+        """Fit the model to a single image using zero-shot optimization.
 
         Args:
             image (Tensor): Image tensor of shape (B, 3, H, W) and values
                 ranging from 0.0 to 1.0.
             epochs (int, optional): Number of optimization epochs for the network.
                 Defaults to None
-            save_debug (bool, optional): If True, return intermediate results
-                for debugging. Defaults to False.
+            reset_weights (bool, optional): If True, reset the network weights
+                to the initial state before optimization. Defaults to True.
+            optimizer (DictLike, optional): Dictionary containing optimizer
+                parameters. Defaults to None.
+            scheduler (DictLike, optional): Dictionary containing scheduler
+                parameters. Defaults to None.
 
         Returns:
             dict: Dictionary containing the enhanced image tensor and
                 intermediate results for debugging.
         """
-        noisy_image = image
-        epochs = epochs or self.epochs
+        epochs = epochs or self.fit_epochs
 
-        # 1. Create the denoising network
-        model = DenoiseNetwork(
-            in_channels=self.in_channels,
-            hidden_dim=self.hidden_dim
-        ).to(self.device)
+        # 1. Reset the network weights to the initial state
+        if reset_weights and self.initial_state_dict is not None:
+            self.model.load_state_dict(self.initial_state_dict)
 
         # 2. Move inputs to the corresponding device
-        noisy_image = noisy_image.to(self.device)
+        image = image.to(self.device)
 
-        # 3. Define optimizer & losses
-        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=1000, gamma=0.5)
-        L = nn.MSELoss().to(self.device)
+        # 3. Define optimizer & schedulers
+        if optimizer is not None:
+            optimizer = OPTIMIZERS.build(params=self.model.parameters(), **optimizer)
+        else:
+            optimizer = Adam(self.model.parameters(), lr=0.001)
+        if scheduler is not None:
+            scheduler = SCHEDULERS.build(optimizer=optimizer, **scheduler)
+        else:
+            scheduler = StepLR(optimizer, step_size=1000, gamma=0.5)
 
         # 4. Optimize the network
-        noisy1 = None
-        noisy2 = None
-        pred1 = None
-        pred2 = None
-        denoised1 = None
-        denoised2 = None
-
-        model.train()
+        self.model.train()
         for i in range(epochs):
-            noisy1, noisy2 = pair_downsample(noisy_image)
-            pred1 = noisy1 - model(noisy1)
-            pred2 = noisy2 - model(noisy2)
-            l_res = 0.5 * (L(noisy1, pred2) + L(noisy2, pred1))
-
-            noisy_denoised = noisy_image - model(noisy_image)
-            denoised1, denoised2 = pair_downsample(noisy_denoised)
-            l_cons = 0.5 * (L(pred1, denoised1) + L(pred2, denoised2))
-            loss = l_res + l_cons
-
+            loss = self.denoise_loss(image)
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             scheduler.step()
 
         # 5. Final denoising step
-        model.eval()
+        self.model.eval()
         with torch.no_grad():
-            restored = torch.clamp(noisy_image - model(noisy_image),0,1)
+            restored = torch.clamp(image - self.model(image),0,1)
 
         # 6. Return final and intermediate results for debugging
         outputs = { "restored": restored }
-        if save_debug:
-            outputs |= {
-                "noisy1": noisy1,
-                "noisy2": noisy2,
-                "pred1": pred1,
-                "pred2": pred2,
-                "denoised1": denoised1,
-                "denoised2": denoised2,
-            }
         return outputs
+
+    # --- Denoise ---
+    def denoise_loss(self, noisy_image: Tensor) -> Tensor:
+        """Calculate the ZS-N2N denoising loss."""
+        mse = nn.MSELoss()
+
+        noisy1, noisy2 = self.pair_downsampler(noisy_image)
+        pred1 = noisy1 - self.model(noisy1)
+        pred2 = noisy2 - self.model(noisy2)
+        loss_res = 0.5 * (mse(noisy1, pred2) + mse(noisy2, pred1))
+
+        noisy_denoised = noisy_image - self.model(noisy_image)
+        denoised1, denoised2 = self.pair_downsampler(noisy_denoised)
+        loss_cons = 0.5 * (mse(pred1, denoised1) + mse(pred2, denoised2))
+
+        loss = loss_res + loss_cons
+
+        return loss
+
+    # --- Utilities ---
+    # noinspection PyMethodMayBeStatic
+    def pair_downsampler(self, image: Tensor) -> tuple[Tensor, Tensor]:
+        """Downsample an image tensor into a pair to half resolution.
+
+        References:
+            - Code: https://colab.research.google.com/drive/1i82nyizTdszyHkaHBuKPbWnTzao8HF9b?usp=sharing
+
+        Args:
+            image (Tensor): Image tensor of shape (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
+
+        Returns:
+            tuple[Tensor, Tensor]: Downsampled images of shape (B, C, H/2, W/2).
+
+        Raises:
+            TypeError: If ``image`` is not a 4D torch.Tensor.
+
+        Notes:
+            Averages diagonal pixels in non-overlapping patches:
+                -------------      -------------
+                | A1 | B1 | A2 | B2 |      | A1+D1/2 | A2+D2/2 |
+                | C1 | D1 | C2 | D2 |      | A3+D3/2 | A4+D4/2 |
+                -------------  =>  -------------
+                | A3 | B3 | A4 | B4 |      | B1+C1/2 | B2+C2/2 |
+                | C3 | D3 | C4 | D4 |      | B3+C3/2 | B4+C4/2 |
+                -------------      -------------
+        """
+        b, c, h, w  = image.shape
+        device, dtype = image.device, image.dtype
+
+        # Define kernels: filter_ad picks (top-left, bottom-right), filter_bc picks (top-right, bottom-left)
+        # We use .repeat(c, 1, 1, 1) for channel-wise (depthwise) convolution
+        kernel_ad = torch.tensor([[[[0.5, 0.0], [0.0, 0.5]]]], device=device, dtype=dtype)
+        kernel_ad = kernel_ad.repeat(c, 1, 1, 1)
+        kernel_bc = torch.tensor([[[[0.0, 0.5], [0.5, 0.0]]]], device=device, dtype=dtype)
+        kernel_bc = kernel_bc.repeat(c, 1, 1, 1)
+
+        # Stride=2 ensures non-overlapping 2x2 patches
+        out_ad = F.conv2d(image, kernel_ad, stride=2, groups=c)
+        out_bc = F.conv2d(image, kernel_bc, stride=2, groups=c)
+        return out_ad, out_bc
 
 # endregion
 
 
-# ==============================================================================
+# ================================================================================
 # region UNIT TEST
 # ==============================================================================
 

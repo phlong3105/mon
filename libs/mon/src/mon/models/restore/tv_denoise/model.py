@@ -53,8 +53,6 @@ class TVDenoise(ModelRegisterMixin, nn.Module):
         """
         # Satisfy PyTorch's empty signature first.
         super().__init__()
-        # Initialize RegistrableMixin
-        # ModelRegisterMixin.__init__(self, name=name)
 
         # Assign attributes
         self.verbose = verbose

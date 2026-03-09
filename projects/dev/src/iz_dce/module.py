@@ -35,6 +35,9 @@ from .utils import weights_init
 # --- Denoise ---
 
 class DenoiseNet(nn.Module):
+    """A simple CNN for estimating the noise in the input image, inspired by the
+    ZS-N2N. The network takes in a noisy image and outputs a denoised image.
+    """
 
     # --- Lifecycle & Initialization ---
     def __init__(self, in_channels: int = 3, hidden_dim: int = 48):
@@ -71,6 +74,120 @@ class DenoiseNet(nn.Module):
         y = self.act(self.conv2(y))
         y = self.conv3(y)
         return y
+
+    # --- Denoise Loss ---
+    def loss_zsn2n(self, noisy_image: Tensor) -> Tensor:
+        """Calculate the ZS-N2N denoising loss."""
+        mse = nn.MSELoss()
+
+        noisy1, noisy2 = self.pair_downsampler(noisy_image)
+        pred1 = noisy1 - self.forward(noisy1)
+        pred2 = noisy2 - self.forward(noisy2)
+        loss_res = 0.5 * (mse(noisy1, pred2) + mse(noisy2, pred1))
+
+        noisy_denoised = noisy_image - self.forward(noisy_image)
+        denoised1, denoised2 = self.pair_downsampler(noisy_denoised)
+        loss_cons = 0.5 * (mse(pred1, denoised1) + mse(pred2, denoised2))
+
+        loss = loss_res + loss_cons
+
+        return loss
+
+    def loss_p2n(self, noisy_image: Tensor) -> Tensor:
+        """Calculates the Positive2Negative consistency loss."""
+        mse = nn.MSELoss()
+
+        # 1. Initial Full-Resolution Forward Pass
+        # We get the predicted noise and the predicted clean image
+        predicted_noise = self.forward(noisy_image)
+        predicted_clean = noisy_image - predicted_noise
+
+        # 2. Re-noised Data Construction (RDC)
+        # We detach the clean image and noise so gradients don't flow in a circle
+        clean_detached = predicted_clean.detach()
+        noise_detached = predicted_noise.detach()
+
+        # To create a new noisy image, we apply a random spatial flip to the
+        # predicted noise.
+        # This breaks the spatial correlation of the sensor noise while keeping
+        # its statistical distribution.
+        if torch.rand(1) > 0.5:
+            shuffled_noise = torch.flip(noise_detached, dims=[2]) # Flip vertically
+        else:
+            shuffled_noise = torch.flip(noise_detached, dims=[3]) # Flip horizontally
+
+        # Construct the synthetic noisy image
+        renoised_image = clean_detached + shuffled_noise
+
+        # 3. Denoised Consistency Supervision (DCS)
+        # Pass the synthetic noisy image through the network again
+        predicted_noise_from_synthetic = self.forward(renoised_image)
+        predicted_clean_from_synthetic = renoised_image - predicted_noise_from_synthetic
+
+        # 4. Calculate the Consistency Loss
+        # The network should predict the exact same clean image, regardless of
+        # how the noise was shuffled
+        loss_cons = mse(predicted_clean_from_synthetic, clean_detached)
+
+        # To prevent the network from just predicting a flat gray image,
+        # we add a small regularization term to ensure the predicted noise isn't zero
+        loss_reg = torch.mean(torch.abs(predicted_clean_from_synthetic - noisy_image))
+
+        # The final P2N loss
+        loss = loss_cons + (0.1 * loss_reg)
+
+        return loss
+
+    # --- Utilities ---
+    # noinspection PyMethodMayBeStatic
+    def add_noise(self, x: Tensor, noise_level: float) -> Tensor:
+        """Add noise to the image."""
+        noisy = x + torch.normal(0, noise_level / 255, x.shape)
+        noisy = torch.clamp(noisy, 0, 1)
+        noisy = noisy.to(x.device)
+        return noisy
+
+    # noinspection PyMethodMayBeStatic
+    def pair_downsampler(self, image: Tensor) -> tuple[Tensor, Tensor]:
+        """Downsample an image tensor into a pair to half resolution.
+
+        References:
+            - Code: https://colab.research.google.com/drive/1i82nyizTdszyHkaHBuKPbWnTzao8HF9b?usp=sharing
+
+        Args:
+            image (Tensor): Image tensor of shape (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
+
+        Returns:
+            tuple[Tensor, Tensor]: Downsampled images of shape (B, C, H/2, W/2).
+
+        Raises:
+            TypeError: If ``image`` is not a 4D torch.Tensor.
+
+        Notes:
+            Averages diagonal pixels in non-overlapping patches:
+                -------------      -------------
+                | A1 | B1 | A2 | B2 |      | A1+D1/2 | A2+D2/2 |
+                | C1 | D1 | C2 | D2 |      | A3+D3/2 | A4+D4/2 |
+                -------------  =>  -------------
+                | A3 | B3 | A4 | B4 |      | B1+C1/2 | B2+C2/2 |
+                | C3 | D3 | C4 | D4 |      | B3+C3/2 | B4+C4/2 |
+                -------------      -------------
+        """
+        b, c, h, w  = image.shape
+        device, dtype = image.device, image.dtype
+
+        # Define kernels: filter_ad picks (top-left, bottom-right), filter_bc picks (top-right, bottom-left)
+        # We use .repeat(c, 1, 1, 1) for channel-wise (depthwise) convolution
+        kernel_ad = torch.tensor([[[[0.5, 0.0], [0.0, 0.5]]]], device=device, dtype=dtype)
+        kernel_ad = kernel_ad.repeat(c, 1, 1, 1)
+        kernel_bc = torch.tensor([[[[0.0, 0.5], [0.5, 0.0]]]], device=device, dtype=dtype)
+        kernel_bc = kernel_bc.repeat(c, 1, 1, 1)
+
+        # Stride=2 ensures non-overlapping 2x2 patches
+        out_ad = F.conv2d(image, kernel_ad, stride=2, groups=c)
+        out_bc = F.conv2d(image, kernel_bc, stride=2, groups=c)
+        return out_ad, out_bc
 
 
 # --- Vanilla ---
@@ -250,7 +367,8 @@ class EnhanceFunction(nn.Module):
             d = F.interpolate(d, size=size, mode="bilinear", align_corners=True) if d is not None else None
 
         # 2. Denoise
-        l_denoise = self.denoise_loss(x)
+        # l_denoise = self.denoise.loss_zsn2n(x)
+        l_denoise = self.denoise.loss_p2n(x)
         p_x = x - self.denoise(x)
 
         # 3. Fusion
@@ -279,70 +397,6 @@ class EnhanceFunction(nn.Module):
             "l_denoise": l_denoise,
         }
         return outputs
-
-    # --- Denoise ---
-    def denoise_loss(self, noisy_image: Tensor) -> Tensor:
-        """Calculate the ZS-N2N denoising loss."""
-        mse = nn.MSELoss()
-
-        noisy1, noisy2 = self.pair_downsampler(noisy_image)
-        pred1 = noisy1 - self.denoise(noisy1)
-        pred2 = noisy2 - self.denoise(noisy2)
-        loss_res = 0.5 * (mse(noisy1, pred2) + mse(noisy2, pred1))
-
-        noisy_denoised = noisy_image - self.denoise(noisy_image)
-        denoised1, denoised2 = self.pair_downsampler(noisy_denoised)
-        loss_cons = 0.5 * (mse(pred1, denoised1) + mse(pred2, denoised2))
-        loss = loss_res + loss_cons
-        return loss
-
-    def add_noise(self, x: Tensor, noise_level: float) -> Tensor:
-        """Add noise to the image."""
-        noisy = x + torch.normal(0, noise_level / 255, x.shape)
-        noisy = torch.clamp(noisy, 0, 1)
-        noisy = noisy.to(x.device)
-        return noisy
-
-    def pair_downsampler(self, image: Tensor) -> tuple[Tensor, Tensor]:
-        """Downsample an image tensor into a pair to half resolution.
-
-        References:
-            - Code: https://colab.research.google.com/drive/1i82nyizTdszyHkaHBuKPbWnTzao8HF9b?usp=sharing
-
-        Args:
-            image (Tensor): Image tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
-
-        Returns:
-            tuple[Tensor, Tensor]: Downsampled images of shape (B, C, H/2, W/2).
-
-        Raises:
-            TypeError: If ``image`` is not a 4D torch.Tensor.
-
-        Notes:
-            Averages diagonal pixels in non-overlapping patches:
-                -------------      -------------
-                | A1 | B1 | A2 | B2 |      | A1+D1/2 | A2+D2/2 |
-                | C1 | D1 | C2 | D2 |      | A3+D3/2 | A4+D4/2 |
-                -------------  =>  -------------
-                | A3 | B3 | A4 | B4 |      | B1+C1/2 | B2+C2/2 |
-                | C3 | D3 | C4 | D4 |      | B3+C3/2 | B4+C4/2 |
-                -------------      -------------
-        """
-        b, c, h, w  = image.shape
-        device, dtype = image.device, image.dtype
-
-        # Define kernels: filter_ad picks (top-left, bottom-right), filter_bc picks (top-right, bottom-left)
-        # We use .repeat(c, 1, 1, 1) for channel-wise (depthwise) convolution
-        kernel_ad = torch.tensor([[[[0.5, 0.0], [0.0, 0.5]]]], device=device, dtype=dtype)
-        kernel_ad = kernel_ad.repeat(c, 1, 1, 1)
-        kernel_bc = torch.tensor([[[[0.0, 0.5], [0.5, 0.0]]]], device=device, dtype=dtype)
-        kernel_bc = kernel_bc.repeat(c, 1, 1, 1)
-
-        # Stride=2 ensures non-overlapping 2x2 patches
-        out_ad = F.conv2d(image, kernel_ad, stride=2, groups=c)
-        out_bc = F.conv2d(image, kernel_bc, stride=2, groups=c)
-        return out_ad, out_bc
 
     # --- Curve Map ---
     def predict_curve_map(self, feat: Tensor, h: int, w: int) -> Tensor:
@@ -437,6 +491,9 @@ class Conv2dTime(nn.Conv2d):
 
 
 class EncoderTime(nn.Module):
+    """A time-conditioned encoder module that takes in the time step as an
+    additional input.
+    """
 
     # --- Lifecycle & Initialization ---
     def __init__(self, in_channels: int, hidden_dim: int = 32):
@@ -564,7 +621,7 @@ class EnhanceFunctionTime(nn.Module):
             _d = F.interpolate(_d, size=size, mode="bilinear", align_corners=True) if _d is not None else None
 
         # 2. Denoise
-        l_denoise = self.denoise_loss(_x)
+        l_denoise = self.denoise.loss_p2n(_x)
         p_x = _x - self.denoise(_x)
 
         # 3. Fusion
@@ -596,75 +653,8 @@ class EnhanceFunctionTime(nn.Module):
         # l_tv = torch.ones_like(A) * self.tv_loss(A, depth)
         l_denoise = torch.ones_like(A) * l_denoise
 
-        # Debug
-        # print(self.nfe)
-
         outputs = torch.cat([y, depth, l_denoise], dim=1)
         return outputs
-
-    # --- Denoise ---
-    def denoise_loss(self, noisy_image: Tensor) -> Tensor:
-        """Calculate the ZS-N2N denoising loss."""
-        mse = nn.MSELoss()
-
-        noisy1, noisy2 = self.pair_downsampler(noisy_image)
-        pred1 = noisy1 - self.denoise(noisy1)
-        pred2 = noisy2 - self.denoise(noisy2)
-        loss_res = 0.5 * (mse(noisy1, pred2) + mse(noisy2, pred1))
-
-        noisy_denoised = noisy_image - self.denoise(noisy_image)
-        denoised1, denoised2 = self.pair_downsampler(noisy_denoised)
-        loss_cons = 0.5 * (mse(pred1, denoised1) + mse(pred2, denoised2))
-        loss = loss_res + loss_cons
-        return loss
-
-    def add_noise(self, x: Tensor, noise_level: float) -> Tensor:
-        """Add noise to the image."""
-        noisy = x + torch.normal(0, noise_level / 255, x.shape)
-        noisy = torch.clamp(noisy, 0, 1)
-        noisy = noisy.to(x.device)
-        return noisy
-
-    def pair_downsampler(self, image: Tensor) -> tuple[Tensor, Tensor]:
-        """Downsample an image tensor into a pair to half resolution.
-
-        References:
-            - Code: https://colab.research.google.com/drive/1i82nyizTdszyHkaHBuKPbWnTzao8HF9b?usp=sharing
-
-        Args:
-            image (Tensor): Image tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
-
-        Returns:
-            tuple[Tensor, Tensor]: Downsampled images of shape (B, C, H/2, W/2).
-
-        Raises:
-            TypeError: If ``image`` is not a 4D torch.Tensor.
-
-        Notes:
-            Averages diagonal pixels in non-overlapping patches:
-                -------------      -------------
-                | A1 | B1 | A2 | B2 |      | A1+D1/2 | A2+D2/2 |
-                | C1 | D1 | C2 | D2 |      | A3+D3/2 | A4+D4/2 |
-                -------------  =>  -------------
-                | A3 | B3 | A4 | B4 |      | B1+C1/2 | B2+C2/2 |
-                | C3 | D3 | C4 | D4 |      | B3+C3/2 | B4+C4/2 |
-                -------------      -------------
-        """
-        b, c, h, w  = image.shape
-        device, dtype = image.device, image.dtype
-
-        # Define kernels: filter_ad picks (top-left, bottom-right), filter_bc picks (top-right, bottom-left)
-        # We use .repeat(c, 1, 1, 1) for channel-wise (depthwise) convolution
-        kernel_ad = torch.tensor([[[[0.5, 0.0], [0.0, 0.5]]]], device=device, dtype=dtype)
-        kernel_ad = kernel_ad.repeat(c, 1, 1, 1)
-        kernel_bc = torch.tensor([[[[0.0, 0.5], [0.5, 0.0]]]], device=device, dtype=dtype)
-        kernel_bc = kernel_bc.repeat(c, 1, 1, 1)
-
-        # Stride=2 ensures non-overlapping 2x2 patches
-        out_ad = F.conv2d(image, kernel_ad, stride=2, groups=c)
-        out_bc = F.conv2d(image, kernel_bc, stride=2, groups=c)
-        return out_ad, out_bc
 
     # --- Curve Map ---
     def predict_curve_map(self, feat: Tensor, h: int, w: int) -> Tensor:
@@ -721,16 +711,15 @@ class EnhanceFunctionTime(nn.Module):
 
 class ODEBlock(nn.Module):
 
-    step_size = 0.1
-    max_num_steps = 30  # 30 # 50 # 100 # 1000
-
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
         ode_func: nn.Module,
         use_dopri5: bool = False,
-        tol: float = 1e-3,
+        rtol: float = 1e-3,
+        atol: float = 1e-3,
         adjoint: bool = True,
+        ode_options: dict | None = None,
         *args, **kwargs
     ):
         """Initialize a new instance.
@@ -739,16 +728,23 @@ class ODEBlock(nn.Module):
             ode_func (nn.Module): The ODE function defining the dynamics.
             use_dopri5 (bool, optional): Whether to use the 'dopri5' method
                 instead of 'rk4'. Defaults to False.
-            tol (float, optional): Tolerance for the ODE solver. Defaults to 1e-3.
+            rtol (float, optional): Relative tolerance for the solver.
+                Defaults to 1e-3.
+            atol (float, optional): Absolute tolerance for the solver.
+                Defaults to 1e-3.
             adjoint (bool, optional): Whether to use the adjoint method for
                 backpropagation. Defaults to True.
+            ode_options (dict, optional): Additional options to pass to the ODE
+                solver. Defaults to None.
         """
         super().__init__()
         # Assign attributes
         self.ode_func = ode_func
         self.use_dopri5 = use_dopri5
-        self.tol = tol
+        self.rtol = rtol
+        self.atol = atol
         self.adjoint = adjoint
+        self.ode_options = ode_options or {}
 
     # --- Callable & Context Manager ---
     def forward(self, x: Tensor, eval_time: Tensor | None = None) -> Tensor:
@@ -777,12 +773,10 @@ class ODEBlock(nn.Module):
                 func=self.ode_func,
                 y0=x_aug,
                 t=t,
-                rtol=self.tol,
-                atol=self.tol,
+                rtol=self.rtol,
+                atol=self.atol,
                 method="dopri5",  # "dopri5", "euler", "rk4"
-                options={
-                    "max_num_steps": self.max_num_steps,
-                }
+                options=self.ode_options,
             )
         else:
             return odeint_adjoint(
@@ -790,9 +784,7 @@ class ODEBlock(nn.Module):
                 y0=x_aug,
                 t=t,
                 method="rk4",  # "dopri5", "euler", "rk4"
-                options={
-                    "step_size": self.step_size,
-                }
+                options=self.ode_options,
             )
 
 # endregion

@@ -28,7 +28,10 @@ def measure():
         # "calie": ["calie_siren", "calie_ffsiren"],
         # "saleo": ["saleo_ffsiren"],
         "zero_dce": ["zero_dce_sice_me",],
-        "iz_dce": ["iz_dce_sice_me",]
+        "iz_dce": [
+            # "iz_dce_sice_me_v2",
+            "iz_dce_ode_sice_me",
+        ]
     }
     datasets = [
         # "dicm", "lime", "mef", "npe", "vv",

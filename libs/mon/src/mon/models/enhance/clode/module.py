@@ -80,10 +80,10 @@ class EnhanceFunc(nn.Module):
         in_channels = 6
         out_channels = 3
         self.up_conv = Conv2dTime(in_channels, num_filters, kernel_size=3, padding=1, padding_mode="reflect")
-        self.conv_3_1 = Conv2dTime(num_filters,  num_filters, kernel_size=3, padding=3 // 2, padding_mode="reflect")
-        self.conv_5_1 = Conv2dTime(num_filters, num_filters, kernel_size=5, padding=5 // 2, padding_mode="reflect")
-        self.conv_3_2 = Conv2dTime(num_filters * 2, num_filters * 2, kernel_size=3, padding=3 // 2, padding_mode="reflect")
-        self.conv_5_2 = Conv2dTime(num_filters * 2, num_filters * 2, kernel_size=5, padding=5 // 2, padding_mode="reflect")
+        self.conv_3_1 = Conv2dTime(num_filters, num_filters, kernel_size=3, padding=3//2, padding_mode="reflect")
+        self.conv_5_1 = Conv2dTime(num_filters, num_filters, kernel_size=5, padding=5//2, padding_mode="reflect")
+        self.conv_3_2 = Conv2dTime(num_filters * 2, num_filters * 2, kernel_size=3, padding=3//2, padding_mode="reflect")
+        self.conv_5_2 = Conv2dTime(num_filters * 2, num_filters * 2, kernel_size=5, padding=5//2, padding_mode="reflect")
         self.confusion = Conv2dTime(num_filters * 4, num_filters, kernel_size=1, padding=0, padding_mode="reflect")
         self.down_conv = Conv2dTime(num_filters, out_channels, kernel_size=3, padding=1, padding_mode="reflect")
         self.norm32 = nn.GroupNorm(1, 32)

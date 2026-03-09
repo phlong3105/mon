@@ -140,8 +140,10 @@ class IZDCE_ODE(ModelRegisterMixin, nn.Module):
         imgsz: int = 512,
         chunk_size: int = 100000,
         use_dopri5: bool = False,
-        tol: float = 1e-3,
+        rtol: float = 1e-3,
+        atol: float = 1e-3,
         adjoint: bool = True,
+        ode_options: dict | None = None,
         weights: WeightsLike | None = None,
         verbose: bool = True,
         *args, **kwargs
@@ -158,9 +160,14 @@ class IZDCE_ODE(ModelRegisterMixin, nn.Module):
             chunk_size (int): Number of pixels to process at once. Defaults to 100,000.
             use_dopri5 (bool, optional): Whether to use the Dopri5 solver.
                 Defaults to False.
-            tol (float, optional): Tolerance for the ODE solver. Defaults to 1e-3.
+            rtol (float, optional): Relative tolerance for solver.
+                Defaults to 1e-3.
+            atol (float, optional): Absolute tolerance for solver.
+                Defaults to 1e-3.
             adjoint (bool, optional): Whether to use the adjoint method for
                 backpropagation. Defaults to False.
+            ode_options (dict, optional): Additional options to pass to the ODE
+                solver. Defaults to None.
             weights (WeightsLike, optional): Pre-trained weights to load.
                 Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
@@ -184,8 +191,10 @@ class IZDCE_ODE(ModelRegisterMixin, nn.Module):
         self.ode_block = ODEBlock(
             self.enhance_func,
             use_dopri5=use_dopri5,
-            tol=tol,
+            rtol=rtol,
+            atol=atol,
             adjoint=adjoint,
+            ode_options=ode_options,
             *args, **kwargs
         )
 
@@ -216,15 +225,12 @@ class IZDCE_ODE(ModelRegisterMixin, nn.Module):
                 ODE solution. If None, defaults to [0, 1]. Defaults to None.
         """
         # 1. Pre-process
-        b, c, h, w = image.shape
-        size = (self.imgsz, self.imgsz)
-
         x = torch.cat(
             [
                 image,
                 depth,
                 torch.zeros_like(image)
-            ],dim=1
+            ], dim=1
         )
 
         # 2. Forward pass
@@ -239,7 +245,6 @@ class IZDCE_ODE(ModelRegisterMixin, nn.Module):
             "A": A,
             "l_denoise": pred[:, 4:7, :, :],
         }
-
 
 # endregion
 
@@ -284,7 +289,8 @@ def iz_dce_ode(*args, **kwargs):
     hidden_dim = kwargs.pop("hidden_dim", 32)
     imgsz = kwargs.pop("imgsz", 512)
     chunk_size = kwargs.pop("chunk_size", 100000)
-    tol = kwargs.pop("tol", 1e-3)
+    rtol = kwargs.pop("rtol", 1e-3)
+    atol = kwargs.pop("atol", 1e-3)
     adjoint = kwargs.pop("adjoint", True)
     use_dopri5 = kwargs.pop("use_dopri5", False)
     return IZDCE_ODE(
@@ -295,7 +301,8 @@ def iz_dce_ode(*args, **kwargs):
         imgsz=imgsz,
         chunk_size=chunk_size,
         use_dopri5=use_dopri5,
-        tol=tol,
+        rtol=rtol,
+        atol=atol,
         adjoint=adjoint,
         *args, **kwargs
     )

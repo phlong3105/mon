@@ -15,3 +15,4 @@ References:
 from __future__ import annotations
 
 from .model import *
+from .predict import *
