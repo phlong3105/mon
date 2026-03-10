@@ -9,4 +9,4 @@ This package contains various image restoration models.
 from __future__ import annotations
 
 from .tv_denoise import *
-from .zsn2n import *
+from .zs_n2n import *

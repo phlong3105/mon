@@ -83,14 +83,14 @@ class IZDCE_Predictor(Predictor):
         """
         config = self.config
         device = self.device
-        save_debug = config.save_debug
+        use_depth = config.model.use_depth
 
         # 1. Prepare inputs
         timers.preprocess.tick()
         image = datapoint["image"]
         image = image.to(device)
         depth = datapoint.get("depth", None)
-        depth = depth.to(device) if depth is not None else None
+        depth = depth.to(device) if use_depth and depth is not None else None
         timers.preprocess.tock()
 
         # 2. Inference
@@ -161,14 +161,14 @@ class IZDCE_ODE_Predictor(IZDCE_Predictor):
         """
         config = self.config
         device = self.device
-        save_debug = config.save_debug
+        use_depth = config.model.use_depth
 
         # 1. Prepare inputs
         timers.preprocess.tick()
         image = datapoint["image"]
         image = image.to(device)
         depth = datapoint.get("depth", None)
-        depth = depth.to(device) if depth is not None else None
+        depth = depth.to(device) if use_depth and depth is not None else None
         time_eval = torch.tensor([0, config.T]).float().to(device)
         timers.preprocess.tock()
 

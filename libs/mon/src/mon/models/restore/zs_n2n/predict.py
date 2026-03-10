@@ -25,7 +25,7 @@ from mon.core import (
     TimeProfiler,
 )
 from mon.runners import Predictor
-from .model import ZSN2N
+from .model import ZS_N2N
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -45,7 +45,7 @@ class ZSN2N_Predictor(Predictor):
         config = self.config
         device = self.device
 
-        model = ZSN2N(device=device, **config.model)
+        model = ZS_N2N(device=device, **config.model)
         model = model.to(device)
         model.train()
         self._model = model

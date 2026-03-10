@@ -1,10 +1,10 @@
 # --- General ---
-exp_name: "iz_dce_ode_sice_me"  # (str) Experiment name.
+exp_name: "zs_n2n"  # (str) Experiment name.
 
 root: ~  # (str) Root path of the project.
 output_dir: ~  # (str) Output directory.
 
-task: "enhance"  # (str) Task name (e.g., detect, segment, classify).
+task: "restore"  # (str) Task name (e.g., detect, segment, classify).
 mode: "predict"  # (str) Run mode (e.g., train, predict).
 
 device: 0  # (int | str | list) device: 0 or [0,1,2,3] for CUDA, 'cpu'/'mps'
@@ -12,34 +12,25 @@ seed: 100  # (int) Random seed for reproducibility
 
 # --- Model ---
 model:
-  name: "iz_dce_ode"  # (str) Model name (e.g., resnet50, yolov8n).
-  arch: "iz_dce"  # (str) Model architecture (e.g., resnet, yolo8).
+  name: "zs_n2n"  # (str) Model name (e.g., resnet50, yolov8n).
+  arch: "zs_n2n"  # (str) Model architecture (e.g., resnet, yolo8).
   in_channels: 3
-  hidden_dim: 32
-  imgsz: 128
-  chunk_size: 100000
-  use_depth: False
-  use_anscombe: True
-  use_dopri5: True
-  rtol: 0.00001  # 1e-5
-  atol: 0.00001  # 1e-5
-  adjoint: True
-  ode_options:
-    max_num_steps: 30
-  weights: "cv/enhance/iz_dce/iz_dce_ode/sice_me/iz_dce_ode_sice_me.pt"  # (str) Path to model weights.
+  hidden_dim: 48
+  fit: True
+  fit_epochs: 3000
+  weights: ~  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---
 train_dataloader:
   dataset:
-    name: "sice_me"  # (str) Dataset name.
+    name: ~  # (str) Dataset name.
     root: ~  # (str) Root directory of the dataset.
-    dirname: "sice"  # (str) Directory name of the dataset within the root path.
-    subdir: "me"  # (str) Subdirectory name of the dataset.
+    dirname: ~  # (str) Directory name of the dataset within the root path.
+    subdir: ~  # (str) Subdirectory name of the dataset.
     split: "train"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 128, width : 128 }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
@@ -54,14 +45,13 @@ train_dataloader:
 
 val_dataloader:
   dataset:
-    name: "sice_me"  # (str) Dataset name.
+    name: ~  # (str) Dataset name.
     root: ~  # (str) Root directory of the dataset.
-    dirname: "sice"  # (str) Directory name of the dataset within the root path.
-    subdir: "me"  # (str) Subdirectory name of the dataset.
+    dirname: ~  # (str) Directory name of the dataset within the root path.
+    subdir: ~  # (str) Subdirectory name of the dataset.
     split: "val"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 128, width : 128 }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
@@ -77,33 +67,22 @@ val_dataloader:
 data: ~  # (list[str]) List of data names or paths for prediction.
 
 # --- Training ---
-epochs: 100  # (int) Number of epochs to train.
+epochs: 3000  # (int) Number of epochs to train.
 
 optimizer:
   name: "Adam"  # (str) Optimizer name.
-  lr: 0.00001  # 0.0001 (float) Learning rate.
-  # weight_decay: 0.0001
+  lr: 0.001  # (float) Learning rate.
 
-lr_scheduler: ~
+lr_scheduler:
+  name: "StepLR"  # (str) Schedular name.
+  step_size: 1000
+  gamma: 0.5
 
 lr_warmup_scheduler: ~
 
-loss:
-  E: 0.6  # (float) Default is 0.6, but the author suggests 0.5 or 0.45
-  L_tv_A_w: 200
-  L_spa_w: 1
-  L_col_w: 20  # 0.8
-  L_col_pre_w: 10
-  L_exp_w: 10
-  L_enhance_w: 1
-  L_denoise_w: 1  # 50
-
-grad_clip_norm: 0.1
-
-tensorboard_logger: True
+loss: ~
 
 # --- Prediction ---
-T: 2
 eval_imgsz: 512  # (int | list[int]) Image size for evaluation.
 benchmark: False  # (bool) Benchmark the model.
 

@@ -87,7 +87,6 @@ class CLODE(ModelRegisterMixin, nn.Module):
 
         # Assign attributes
         self.verbose = verbose
-        self.num_filters = num_filters
 
         # Define network
         self.model = NODE(num_filters=num_filters, tol=tol, adjoint=adjoint)
@@ -102,8 +101,25 @@ class CLODE(ModelRegisterMixin, nn.Module):
                 log(f"Initialized '{name}' from scratch.")
 
     # --- Callable & Context Manager ---
-    def forward(self, x: Tensor, eval_time: Tensor = None, inference: bool = False) -> dict:
-        """Forward the input through the network."""
+    def forward(
+        self,
+        x: Tensor,
+        eval_time: Tensor | None = None,
+        inference: bool = False
+    ) -> dict:
+        """Forward the input through the network.
+
+        Args:
+            x (Tensor): Input tensor of shape (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
+            eval_time (Tensor | None, optional): Evaluation time tensor of shape
+                (B,) and values ranging from 0.0 to 1.0, representing the
+                normalized exposure time for each image in the batch. If None,
+                defaults to a tensor of ones (i.e., full exposure). Defaults to None.
+            inference (bool, optional): Whether the model is being used for
+                inference. If True, the model may use a faster ODE solver or
+                other optimizations. Defaults to False.
+        """
         return self.model(x, eval_time, inference)
 
 # endregion

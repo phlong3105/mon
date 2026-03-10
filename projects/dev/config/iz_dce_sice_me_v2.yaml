@@ -15,11 +15,11 @@ model:
   name: "iz_dce"  # (str) Model name (e.g., resnet50, yolov8n).
   arch: "iz_dce"  # (str) Model architecture (e.g., resnet, yolo8).
   in_channels: 3
-  out_channels: 3
   hidden_dim: 32
   imgsz: 512
   chunk_size: 100000
-  num_iter: 8
+  use_depth: False
+  use_anscombe: True
   weights: "cv/enhance/iz_dce/iz_dce/sice_me/iz_dce_sice_me.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
@@ -87,7 +87,7 @@ loss:
   L_tv_A_w: 200
   L_spa_w: 1
   L_col_w: 20  # 0.8
-  L_col_pre_w: 20  # 10
+  L_col_pre_w: 10  # 10
   L_exp_w: 10
   L_enhance_w: 1
   L_denoise_w: 1  # 50

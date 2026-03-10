@@ -101,7 +101,6 @@ class ZeroDCE(ModelRegisterMixin, nn.Module):
         self.verbose = verbose
         self.in_channels = in_channels
         self.out_channels = out_channels
-        self.hidden_dim = hidden_dim
 
         # Define network
         self.e_conv1 = nn.Conv2d(in_channels, hidden_dim, 3, 1, 1)
@@ -221,7 +220,6 @@ class ZeroDCEPP(ModelRegisterMixin, nn.Module):
         self.verbose = verbose
         self.in_channels = in_channels
         self.out_channels = out_channels
-        self.hidden_dim = hidden_dim
         self.scale_factor = scale_factor
 
         # Define network

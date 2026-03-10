@@ -1,5 +1,5 @@
 # --- General ---
-exp_name: "zsn2n"  # (str) Experiment name.
+exp_name: "izs_n2n"  # (str) Experiment name.
 
 root: ~  # (str) Root path of the project.
 output_dir: ~  # (str) Output directory.
@@ -12,8 +12,8 @@ seed: 100  # (int) Random seed for reproducibility
 
 # --- Model ---
 model:
-  name: "zsn2n"  # (str) Model name (e.g., resnet50, yolov8n).
-  arch: "zsn2n"  # (str) Model architecture (e.g., resnet, yolo8).
+  name: "izs_n2n"  # (str) Model name (e.g., resnet50, yolov8n).
+  arch: "zs_n2n"  # (str) Model architecture (e.g., resnet, yolo8).
   in_channels: 3
   hidden_dim: 48
   fit: True

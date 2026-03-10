@@ -52,11 +52,11 @@ class IZDCE(ModelRegisterMixin, nn.Module):
         self,
         name: str,
         in_channels: int = 3,
-        out_channels: int = 3,
         hidden_dim: int = 32,
         imgsz: int = 512,
         chunk_size: int = 100000,
-        num_iter: int = 8,
+        use_depth: bool = False,
+        use_anscombe: bool = False,
         weights: WeightsLike | None = None,
         verbose: bool = True,
         *args, **kwargs
@@ -66,13 +66,17 @@ class IZDCE(ModelRegisterMixin, nn.Module):
         Args:
             name (str): Name of the model to use.
             in_channels (int, optional): Number of input channels. Defaults to 3.
-            out_channels (int, optional): Number of output channels. Defaults to 3.
             hidden_dim (int, optional): Hidden dimension. Defaults to 32.
             imgsz (int, optional): Downsample the input image to this size for
                 encoding. Defaults to 512.
-            chunk_size (int): Number of pixels to process at once. Defaults to 100,000.
+            chunk_size (int): Number of pixels to process at once.
+                Defaults to 100,000.
             num_iter (int, optional): Number of iterations for curve estimation.
                 Defaults to 8.
+            use_depth (bool, optional): Whether to use depth as an additional
+                input channel. Defaults to False.
+            use_anscombe (bool, optional): Whether to apply the Anscombe
+                transform to the input before denoising. Defaults to False.
             weights (WeightsLike, optional): Pre-trained weights to load.
                 Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
@@ -87,11 +91,11 @@ class IZDCE(ModelRegisterMixin, nn.Module):
         # Define network
         self.enhance_func = EnhanceFunction(
             in_channels=in_channels,
-            out_channels=out_channels,
             hidden_dim=hidden_dim,
             imgsz=imgsz,
             chunk_size=chunk_size,
-            num_iter=num_iter,
+            use_depth=use_depth,
+            use_anscombe=use_anscombe,
             *args, **kwargs
         )
 
@@ -135,10 +139,11 @@ class IZDCE_ODE(ModelRegisterMixin, nn.Module):
         self,
         name: str,
         in_channels: int = 3,
-        out_channels: int = 3,
         hidden_dim: int = 32,
         imgsz: int = 512,
         chunk_size: int = 100000,
+        use_depth: bool = False,
+        use_anscombe: bool = False,
         use_dopri5: bool = False,
         rtol: float = 1e-3,
         atol: float = 1e-3,
@@ -153,11 +158,15 @@ class IZDCE_ODE(ModelRegisterMixin, nn.Module):
         Args:
             name (str): Name of the model to use.
             in_channels (int, optional): Number of input channels. Defaults to 3.
-            out_channels (int, optional): Number of output channels. Defaults to 3.
             hidden_dim (int, optional): Hidden dimension. Defaults to 32.
             imgsz (int, optional): Downsample the input image to this size for
                 encoding. Defaults to 512.
-            chunk_size (int): Number of pixels to process at once. Defaults to 100,000.
+            chunk_size (int): Number of pixels to process at once.
+                Defaults to 100,000.
+            use_depth (bool, optional): Whether to use depth as input.
+                Defaults to False.
+            use_anscombe (bool, optional): Whether to apply the Anscombe
+                transform to the input before denoising. Defaults to False.
             use_dopri5 (bool, optional): Whether to use the Dopri5 solver.
                 Defaults to False.
             rtol (float, optional): Relative tolerance for solver.
@@ -182,10 +191,11 @@ class IZDCE_ODE(ModelRegisterMixin, nn.Module):
         # Define network
         self.enhance_func = EnhanceFunctionTime(
             in_channels=in_channels,
-            out_channels=out_channels,
             hidden_dim=hidden_dim,
             imgsz=imgsz,
             chunk_size=chunk_size,
+            use_depth=use_depth,
+            use_anscombe=use_anscombe,
             *args, **kwargs
         )
         self.ode_block = ODEBlock(
@@ -263,19 +273,19 @@ def iz_dce(*args, **kwargs):
     """Create a IZ-DCE model."""
     _ = kwargs.pop("name", "iz_dce")
     in_channels = kwargs.pop("in_channels", 3)
-    out_channels = kwargs.pop("out_channels", 3)
     hidden_dim = kwargs.pop("hidden_dim", 32)
     imgsz = kwargs.pop("imgsz", 512)
     chunk_size = kwargs.pop("chunk_size", 100000)
-    num_iter = kwargs.pop("num_iter", 8)
+    use_depth = kwargs.pop("use_depth", False)
+    use_anscombe = kwargs.pop("use_anscombe", False)
     return IZDCE(
         name="iz_dce",
         in_channels=in_channels,
-        out_channels=out_channels,
         hidden_dim=hidden_dim,
         imgsz=imgsz,
         chunk_size=chunk_size,
-        num_iter=num_iter,
+        use_depth=use_depth,
+        use_anscombe=use_anscombe,
         *args, **kwargs
     )
 
@@ -285,10 +295,11 @@ def iz_dce_ode(*args, **kwargs):
     """Create a IZ-DCE-ODE model."""
     _ = kwargs.pop("name", "iz_dce_ode")
     in_channels = kwargs.pop("in_channels", 3)
-    out_channels = kwargs.pop("out_channels", 3)
     hidden_dim = kwargs.pop("hidden_dim", 32)
     imgsz = kwargs.pop("imgsz", 512)
     chunk_size = kwargs.pop("chunk_size", 100000)
+    use_depth = kwargs.pop("use_depth", False)
+    use_anscombe = kwargs.pop("use_anscombe", False)
     rtol = kwargs.pop("rtol", 1e-3)
     atol = kwargs.pop("atol", 1e-3)
     adjoint = kwargs.pop("adjoint", True)
@@ -296,10 +307,11 @@ def iz_dce_ode(*args, **kwargs):
     return IZDCE_ODE(
         name="iz_dce_ode",
         in_channels=in_channels,
-        out_channels=out_channels,
         hidden_dim=hidden_dim,
         imgsz=imgsz,
         chunk_size=chunk_size,
+        use_depth=use_depth,
+        use_anscombe=use_anscombe,
         use_dopri5=use_dopri5,
         rtol=rtol,
         atol=atol,

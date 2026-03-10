@@ -46,6 +46,7 @@ from mon.core.typing import (
 from mon.core.ui import Confirm, OptionPrompt, PathPrompt, Prompt
 from mon.core.utils import is_valid_str, merge_dicts, truncate_string
 
+
 # ==============================================================================
 # region CONSTANTS
 # ==============================================================================

@@ -25,4 +25,5 @@ from .denoise import *
 from .features import *
 from .filter import *
 from .io import *
+from .noise import *
 from .proc import *

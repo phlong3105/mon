@@ -72,6 +72,7 @@ class IZDCE_Trainer(Trainer):
         """
         config = self.config
         device = self.device
+        use_depth = config.model.use_depth
 
         # 1. Define losses
         L_tv_A = L.L_tv().to(device)
@@ -79,6 +80,7 @@ class IZDCE_Trainer(Trainer):
         L_col = L.L_col().to(device)
         L_col_pre = L.L_col_pre().to(device)
         L_exp = L.L_exp(16, config.loss.E).to(device)
+        # L_exp = L.L_exp_asym(16, config.loss.E).to(device)
         # Loss weights
         L_tv_A_w = config.loss.L_tv_A_w
         L_spa_w = config.loss.L_spa_w
@@ -102,7 +104,7 @@ class IZDCE_Trainer(Trainer):
             image = datapoint["image"]
             image = image.to(device)
             depth = datapoint.get("depth", None)
-            depth = depth.to(device) if depth is not None else None
+            depth = depth.to(device) if use_depth and depth is not None else None
 
             # 2.2. Forward pass
             outputs = self.model(image, depth)
@@ -156,6 +158,7 @@ class IZDCE_Trainer(Trainer):
         """
         config = self.config
         device = self.device
+        use_depth = config.model.use_depth
 
         # 1. Define metrics
         psnr_metric = pyiqa.create_metric("psnr", device=device)
@@ -177,7 +180,7 @@ class IZDCE_Trainer(Trainer):
             image = datapoint["image"]
             image = image.to(device)
             depth = datapoint.get("depth", None)
-            depth = depth.to(device) if depth is not None else None
+            depth = depth.to(device) if use_depth and depth is not None else None
             target = datapoint["target"]
             target = target.to(device)
 

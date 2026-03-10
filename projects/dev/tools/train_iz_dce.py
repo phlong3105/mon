@@ -28,7 +28,7 @@ current_dir = current_file.parents[0]
 def main():
     trainer = IZDCE_Trainer.from_cli(
         root=resolve_project_root(current_dir),
-        config_file="iz_dce_sice_me_v1.yaml",
+        config_file="iz_dce_sice_me_v3.yaml",
         task=Task.ENHANCE,
         mode=RunMode.TRAIN,
         arch="iz_dce",

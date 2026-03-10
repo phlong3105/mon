@@ -1,5 +1,5 @@
 # --- General ---
-exp_name: "iz_dce_ode_sice_me"  # (str) Experiment name.
+exp_name: "iz_dce_sice_me_v4"  # (str) Experiment name.
 
 root: ~  # (str) Root path of the project.
 output_dir: ~  # (str) Output directory.
@@ -12,21 +12,15 @@ seed: 100  # (int) Random seed for reproducibility
 
 # --- Model ---
 model:
-  name: "iz_dce_ode"  # (str) Model name (e.g., resnet50, yolov8n).
+  name: "iz_dce"  # (str) Model name (e.g., resnet50, yolov8n).
   arch: "iz_dce"  # (str) Model architecture (e.g., resnet, yolo8).
   in_channels: 3
   hidden_dim: 32
-  imgsz: 128
+  imgsz: 512
   chunk_size: 100000
-  use_depth: False
+  use_depth: True
   use_anscombe: True
-  use_dopri5: True
-  rtol: 0.00001  # 1e-5
-  atol: 0.00001  # 1e-5
-  adjoint: True
-  ode_options:
-    max_num_steps: 30
-  weights: "cv/enhance/iz_dce/iz_dce_ode/sice_me/iz_dce_ode_sice_me.pt"  # (str) Path to model weights.
+  weights: "cv/enhance/iz_dce/iz_dce/sice_me/iz_dce_sice_me.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---
@@ -39,7 +33,7 @@ train_dataloader:
     split: "train"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 128, width : 128 }
+        - { name: "Resize", height: 512, width : 512 }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
@@ -61,7 +55,7 @@ val_dataloader:
     split: "val"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 128, width : 128 }
+        - { name: "Resize", height: 512, width : 512 }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
@@ -81,8 +75,8 @@ epochs: 100  # (int) Number of epochs to train.
 
 optimizer:
   name: "Adam"  # (str) Optimizer name.
-  lr: 0.00001  # 0.0001 (float) Learning rate.
-  # weight_decay: 0.0001
+  lr: 0.00001  # 0.00001 (float) Learning rate.
+  weight_decay: 0.00001
 
 lr_scheduler: ~
 
@@ -93,7 +87,7 @@ loss:
   L_tv_A_w: 200
   L_spa_w: 1
   L_col_w: 20  # 0.8
-  L_col_pre_w: 10
+  L_col_pre_w: 10  # 10
   L_exp_w: 10
   L_enhance_w: 1
   L_denoise_w: 1  # 50
@@ -103,7 +97,6 @@ grad_clip_norm: 0.1
 tensorboard_logger: True
 
 # --- Prediction ---
-T: 2
 eval_imgsz: 512  # (int | list[int]) Image size for evaluation.
 benchmark: False  # (bool) Benchmark the model.
 

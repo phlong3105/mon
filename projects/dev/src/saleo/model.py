@@ -26,7 +26,7 @@ import torch
 from torch import nn, Tensor
 
 from mon.core import log, MODELS, Path, SizeLike, Task
-from mon.models.restore import ZSN2N
+from mon.models.restore import ZS_N2N
 from mon.nn import loss as L, ModelRegisterMixin
 from .loss import ConfidenceGatedDepthLoss
 from .module import ResidualINR
@@ -453,7 +453,7 @@ class SALEO(ModelRegisterMixin, nn.Module):
 
         # Run ZSN2N on the resized image
         _, c, _, _ = resized.shape
-        zsn2n = ZSN2N(in_channels=c, epochs=epochs, device=self.device)
+        zsn2n = ZS_N2N(in_channels=c, epochs=epochs, device=self.device)
         outputs = zsn2n(resized)
         denoised = outputs["restored"]
 

@@ -12,6 +12,7 @@ __all__ = [
     "L_col",
     "L_col_pre",
     "L_exp",
+    "L_exp_asym",
     "L_spa",
     "L_tv",
     "L_tv_image",
@@ -124,7 +125,7 @@ class L_spa(Loss):
         self.pool = nn.AvgPool2d(4)
 
     # --- Callable & Context Manager ---
-    def forward(self, input: Tensor, pred: Tensor, depth: Tensor) -> Tensor:
+    def forward(self, input: Tensor, pred: Tensor, depth: Tensor | None = None) -> Tensor:
         """Calculate the loss between ``input`` and ``pred``.
 
         Args:
@@ -132,8 +133,8 @@ class L_spa(Loss):
                 ranging from 0.0 to 1.0.
             pred (Tensor): Predicted image tensor of shape (B, C, H, W) and
                 values ranging from 0.0 to 1.0.
-            depth (Tensor): Depth tensor of shape (B, 1, H, W) and values
-                ranging from 0.0 (far) to 1.0 (near).
+            depth (Tensor, optional): Depth tensor of shape (B, 1, H, W) and values
+                ranging from 0.0 (far) to 1.0 (near). Defaults to None.
 
         Returns:
             Tensor: Loss value.
@@ -144,7 +145,10 @@ class L_spa(Loss):
         # 1. Pool the images and the depth map to match spatial dimensions
         input_pool = self.pool(input_mean)
         pred_pool = self.pool(pred_mean)
-        depth_pool = self.pool(depth)  # [B, 1, H/4, W/4]
+        if depth is not None:
+            depth_pool = self.pool(depth)  # [B, 1, H/4, W/4]
+        else:
+            depth_pool = torch.ones_like(input_pool)
 
         # 2. Create the depth weight mask
         # Foreground (~1.0) gets high penalty, Background (~0.0) gets minimal
@@ -181,19 +185,19 @@ class L_exp(Loss):
     """
 
     # --- Lifecycle & Initialization ---
-    def __init__(self, patch_size: int, mean_val: float, reduction: str = "mean"):
+    def __init__(self, patch_size: int, E: float, reduction: str = "mean"):
         """Initialize a new instance.
 
         Args:
             patch_size (int): Size of the local patch to compute the mean.
-            mean_val (float): Target mean value for well-exposedness, typically
+            E (float): Target mean value for well-exposedness, typically
                 around 0.6.
             reduction (str, optional): Reduction method to apply to the loss.
                 One of: ["mean", "sum", "none"]. Defaults to "mean".
         """
         super().__init__(reduction=reduction)
         self.pool = nn.AvgPool2d(patch_size)
-        self.mean_val = mean_val
+        self.E = E
 
     # --- Callable & Context Manager ---
     def forward(self, input: Tensor) -> Tensor:
@@ -207,7 +211,59 @@ class L_exp(Loss):
             Tensor: Loss value.
         """
         mean = self.pool(torch.mean(input, 1, keepdim=True))
-        loss = torch.mean(torch.pow(mean - torch.FloatTensor([self.mean_val]).to(input.device), 2))
+        loss = torch.mean(torch.pow(mean - torch.FloatTensor([self.E]).to(input.device), 2))
+        return loss
+
+
+class L_exp_asym(Loss):
+    """Loss function for exposure control.
+
+    Encourage well-exposedness in the predicted image by minimizing the
+    difference between local patch means and a target mean value.
+    """
+
+    # --- Lifecycle & Initialization ---
+    def __init__(self, patch_size: int, E: float, reduction: str = "mean"):
+        """Initialize a new instance.
+
+        Args:
+            patch_size (int): Size of the local patch to compute the mean.
+            E (float): Target mean value for well-exposedness, typically
+                around 0.6.
+            reduction (str, optional): Reduction method to apply to the loss.
+                One of: ["mean", "sum", "none"]. Defaults to "mean".
+        """
+        super().__init__(reduction=reduction)
+        self.pool = nn.AvgPool2d(patch_size, stride=16)
+        self.E = E
+
+    # --- Callable & Context Manager ---
+    def forward(self, input: Tensor) -> Tensor:
+        """Calculate the loss between the ``input`` and the target exposure.
+
+        Args:
+            input (Tensor): Predicted image tensor of shape (B, C, H, W) and
+                values ranging from 0.0 to 1.0.
+
+        Returns:
+            Tensor: Loss value.
+        """
+        mean = self.pool(input)
+
+        # Standard difference from the target exposure
+        diff = mean - self.E
+
+        # NEW: Asymmetric weighting
+        # If the patch is darker than E (diff < 0), apply full weight (1.0) to pull it up.
+        # If the patch is brighter than E (diff > 0), apply a lighter weight (0.5) so the
+        # ODE solver doesn't panic and try to crush the highlights down, or push them too high.
+        weight = torch.where(
+            diff < 0,
+            torch.tensor(1.0, device=diff.device),
+            torch.tensor(0.5, device=diff.device)
+        )
+
+        loss = torch.mean(weight * torch.abs(diff))
         return loss
 
 
@@ -318,7 +374,7 @@ class L_tv_image(Loss):
         self.eps = eps
 
     # --- Callable & Context Manager ---
-    def forward(self, input: Tensor, pred: Tensor, depth: Tensor) -> Tensor:
+    def forward(self, input: Tensor, pred: Tensor, depth: Tensor | None = None) -> Tensor:
         """Calculate the loss between ``input`` and ``pred``.
 
         Args:
@@ -326,8 +382,8 @@ class L_tv_image(Loss):
                 ranging from 0.0 to 1.0.
             pred (Tensor): Predicted image tensor of shape (B, C, H, W) and
                 values ranging from 0.0 to 1.0.
-            depth (Tensor): Depth tensor of shape (B, 1, H, W) and values
-                ranging from 0.0 (far) to 1.0 (near).
+            depth (Tensor, optional): Depth tensor of shape (B, 1, H, W) and
+                values ranging from 0.0 (far) to 1.0 (near). Defaults to None.
 
         Returns:
             Tensor: Loss value.
@@ -344,6 +400,7 @@ class L_tv_image(Loss):
 
         # 3. Create the Joint Mask
         # High noise probability = originally dark (1.0 - illum) AND far away (1.0 - depth)
+        depth = depth or 0.0
         noise_prob = (1.0 - illumination) * (1.0 - depth)
 
         # The weight is strictly bounded. If it's bright OR foreground, weight approaches self.eps
