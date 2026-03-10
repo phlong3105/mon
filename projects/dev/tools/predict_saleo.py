@@ -35,6 +35,7 @@ def main():
         mode=RunMode.PREDICT,
         arch="saleo",
         model="saleo_ffsiren",
+        device="cuda:0",
         save=True,
         exist_ok=True,
         verbose=True,

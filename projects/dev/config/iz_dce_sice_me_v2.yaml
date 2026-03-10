@@ -18,6 +18,7 @@ model:
   hidden_dim: 32
   imgsz: 512
   chunk_size: 100000
+  num_iters: 8
   use_depth: False
   use_anscombe: True
   weights: "cv/enhance/iz_dce/iz_dce/sice_me/iz_dce_sice_me.pt"  # (str) Path to model weights.

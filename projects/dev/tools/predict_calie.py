@@ -34,6 +34,7 @@ def main():
         mode=RunMode.PREDICT,
         arch="calie",
         model="calie_siren",
+        device="cuda:0",
         save=True,
         exist_ok=True,
         verbose=True,

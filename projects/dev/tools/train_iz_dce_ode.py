@@ -33,7 +33,7 @@ def main():
         mode=RunMode.TRAIN,
         arch="iz_dce",
         model="iz_dce_ode",
-        device="cuda:1",
+        device="cuda:3",
         save=True,
         save_debug=True,
         exist_ok=False,

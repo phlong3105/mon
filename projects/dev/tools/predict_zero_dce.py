@@ -35,6 +35,7 @@ def main():
         mode=RunMode.PREDICT,
         arch="zero_dce",
         model="zero_dce",
+        device="cuda:0",
         save=True,
         save_debug=True,
         exist_ok=True,

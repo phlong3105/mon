@@ -55,6 +55,7 @@ class IZDCE(ModelRegisterMixin, nn.Module):
         hidden_dim: int = 32,
         imgsz: int = 512,
         chunk_size: int = 100000,
+        num_iter: int = 8,
         use_depth: bool = False,
         use_anscombe: bool = False,
         weights: WeightsLike | None = None,
@@ -94,6 +95,7 @@ class IZDCE(ModelRegisterMixin, nn.Module):
             hidden_dim=hidden_dim,
             imgsz=imgsz,
             chunk_size=chunk_size,
+            num_iter=num_iter,
             use_depth=use_depth,
             use_anscombe=use_anscombe,
             *args, **kwargs
@@ -276,6 +278,7 @@ def iz_dce(*args, **kwargs):
     hidden_dim = kwargs.pop("hidden_dim", 32)
     imgsz = kwargs.pop("imgsz", 512)
     chunk_size = kwargs.pop("chunk_size", 100000)
+    num_iter = kwargs.pop("num_iter", 8)
     use_depth = kwargs.pop("use_depth", False)
     use_anscombe = kwargs.pop("use_anscombe", False)
     return IZDCE(
@@ -284,6 +287,7 @@ def iz_dce(*args, **kwargs):
         hidden_dim=hidden_dim,
         imgsz=imgsz,
         chunk_size=chunk_size,
+        num_iter=num_iter,
         use_depth=use_depth,
         use_anscombe=use_anscombe,
         *args, **kwargs

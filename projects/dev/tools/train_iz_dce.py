@@ -28,11 +28,12 @@ current_dir = current_file.parents[0]
 def main():
     trainer = IZDCE_Trainer.from_cli(
         root=resolve_project_root(current_dir),
-        config_file="iz_dce_sice_me_v3.yaml",
+        config_file="iz_dce_sice_me_v4.yaml",
         task=Task.ENHANCE,
         mode=RunMode.TRAIN,
         arch="iz_dce",
         model="iz_dce",
+        device="cuda:3",
         save=True,
         save_debug=True,
         exist_ok=False,

@@ -326,6 +326,7 @@ class EnhanceFunction(nn.Module):
         self,
         in_channels: int,
         hidden_dim: int = 32,
+        num_iter: int = 8,
         imgsz: int = 512,
         chunk_size: int = 100000,
         use_depth: bool = False,
@@ -340,6 +341,8 @@ class EnhanceFunction(nn.Module):
             hidden_dim (int, optional): Hidden dimension. Defaults to 32.
             imgsz (int, optional): Downsample the input image to this size for
                 encoding. Defaults to 512.
+            num_iter (int, optional): Number of iterations to apply the iterative
+                enhancement. Defaults to 8.
             chunk_size (int): Number of pixels to process at once.
                 Defaults to 100,000.
             use_depth (bool, optional): Whether to use depth as an additional
@@ -353,6 +356,7 @@ class EnhanceFunction(nn.Module):
         self.out_channels = in_channels
         self.imgsz = imgsz
         self.chunk_size = chunk_size
+        self.num_iter = num_iter
 
         # Define network
         # Denoising module
