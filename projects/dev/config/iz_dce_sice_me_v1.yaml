@@ -16,7 +16,7 @@ model:
   arch: "iz_dce"  # (str) Model architecture (e.g., resnet, yolo8).
   in_channels: 3
   hidden_dim: 32
-  imgsz: 512
+  imgsz: 256
   chunk_size: 100000
   num_iters: 8
   use_depth: False
@@ -34,7 +34,7 @@ train_dataloader:
     split: "train"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 512, width : 512 }
+        - { name: "Resize", height: 256, width: 256 }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
@@ -56,7 +56,7 @@ val_dataloader:
     split: "val"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 512, width : 512 }
+        - { name: "Resize", height: 256, width: 256 }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
@@ -85,7 +85,7 @@ lr_warmup_scheduler: ~
 
 loss:
   E: 0.6  # (float) Default is 0.6, but the author suggests 0.5 or 0.45
-  L_tv_A_w: 200
+  L_tv_A_w: 1600
   L_spa_w: 1
   L_col_w: 20  # 0.8
   L_col_pre_w: 10  # 10
@@ -98,7 +98,7 @@ grad_clip_norm: 0.1
 tensorboard_logger: True
 
 # --- Prediction ---
-eval_imgsz: 512  # (int | list[int]) Image size for evaluation.
+eval_imgsz: 256  # (int | list[int]) Image size for evaluation.
 benchmark: False  # (bool) Benchmark the model.
 
 # --- Saving & Visualization ---

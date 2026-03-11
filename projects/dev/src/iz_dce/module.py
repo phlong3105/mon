@@ -20,6 +20,7 @@ from torch.nn import functional as F
 from torchdiffeq import odeint_adjoint
 
 from mon.models.restore.zs_n2n.module import ImprovedDenoiseNetwork
+from mon.nn import Conv2dTime, FourierPE, LinearTime, SineLinear, SineLinearTime
 from mon.ops import anscombe, inverse_anscombe
 from .loss import L_tv
 from .utils import weights_init
@@ -29,7 +30,7 @@ from .utils import weights_init
 # region MODULES
 # ==============================================================================
 
-# --- Denoise ---
+# --- Denoising ---
 
 class DenoiseNet(nn.Module):
     """A simple CNN for estimating the noise in the input image."""
@@ -74,29 +75,29 @@ class DenoiseNet(nn.Module):
                 - y (Tensor): The denoised image tensor of shape (B, C, H, W)
                     and values ranging from 0.0 to 1.0.
         """
-        # 1. Apply Anscombe transform if enabled.
+        # 1. Add noise to the input image.
+        # x = self.add_noise(x, 40)
+
+        # 2. Apply Anscombe transform if enabled.
         # This stabilizes the variance of Poisson noise, making it more
         # Gaussian-like and easier for the CNN to learn.
         if self.use_anscombe:
-            x_in = anscombe(x)
-        else:
-            x_in = x
+            x = anscombe(x)
 
-        # 2. Forward pass to the underlying denoising network.
-        loss = None
-        if self.training:
-            loss = self.loss_p2n(x_in)
-        noise = self.model(x_in)
-        y = x_in - noise
+        # 3. Forward pass to the underlying denoising network.
+        # loss = self.loss_n2n(x)
+        loss = self.loss_p2n(x)
+        noise = self.model(x)
+        y = x - noise
 
-        # 3. Apply inverse Anscombe transform if enabled.
+        # 4. Apply inverse Anscombe transform if enabled.
         if self.use_anscombe:
             y = inverse_anscombe(y)
 
         return loss, noise, y
 
     # --- Denoise Loss ---
-    def loss_zsn2n(self, noisy_image: Tensor) -> Tensor:
+    def loss_n2n(self, noisy_image: Tensor) -> Tensor:
         """Calculate the ZS-N2N denoising loss."""
         # L = nn.MSELoss()  # Vanilla loss function
         L = nn.SmoothL1Loss()  # Improved loss function
@@ -164,15 +165,12 @@ class DenoiseNet(nn.Module):
         return loss
 
     # --- Utilities ---
-    # noinspection PyMethodMayBeStatic
     def add_noise(self, x: Tensor, noise_level: float) -> Tensor:
         """Add noise to the image."""
-        noisy = x + torch.normal(0, noise_level / 255, x.shape)
+        noisy = x + torch.normal(0, noise_level / 255, x.shape).to(x.device)
         noisy = torch.clamp(noisy, 0, 1)
-        noisy = noisy.to(x.device)
         return noisy
 
-    # noinspection PyMethodMayBeStatic
     def pair_downsampler(self, image: Tensor) -> tuple[Tensor, Tensor]:
         """Downsample an image tensor into a pair to half resolution.
 
@@ -215,7 +213,7 @@ class DenoiseNet(nn.Module):
         return out_ad, out_bc
 
 
-# --- Vanilla ---
+# --- Encoders ---
 
 class Encoder(nn.Module):
 
@@ -268,6 +266,8 @@ class Encoder(nn.Module):
         return y
 
 
+# --- Decoders ---
+
 class Decoder(nn.Module):
 
     # --- Lifecycle & Initialization ---
@@ -318,6 +318,89 @@ class Decoder(nn.Module):
         return y
 
 
+class DecoderINR(nn.Module):
+
+    # --- Lifecycle & Initialization ---
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        hidden_dim: int = 32,
+        pos_encode: bool = False,
+        mapping_size: int = 256,
+        B: float = 20.0,
+    ):
+        """Initialize a new instance.
+
+        Args:
+            in_channels (int): Number of input channels.
+            out_channels (int): Number of output channels.
+            hidden_dim (int, optional): Number of hidden channels. Defaults to 32.
+            pos_encode (bool, optional): Whether to use positional encoding.
+                Defaults to False.
+            mapping_size (int, optional): Size of Fourier feature mapping.
+                Defaults to 256.
+            B (float, optional): Fourier feature scaling factor. Defaults to 20.0.
+        """
+        super().__init__()
+        # Assign attributes
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+
+        # Define network
+        if pos_encode:
+            self.ff = FourierPE(mapping_size=mapping_size, B=B)
+            coords_dim = self.ff.out_features
+        else:
+            self.ff = None
+            coords_dim = 2
+
+        patch_layers = [
+            SineLinear(in_channels, hidden_dim, is_first=True),
+            SineLinear(hidden_dim, hidden_dim // 2),
+        ]
+        spatial_layers = [
+            SineLinear(coords_dim, hidden_dim, is_first=True),
+            SineLinear(hidden_dim, hidden_dim // 2),
+        ]
+        output_layers = [
+            SineLinear(hidden_dim, hidden_dim),
+            SineLinear(hidden_dim, out_channels, is_last=True),
+        ]
+
+        self.patch_net = nn.Sequential(*patch_layers)
+        self.spatial_net = nn.Sequential(*spatial_layers)
+        self.output_net = nn.Sequential(*output_layers)
+
+        weight_decay = [0.1, 0.0001, 0.001]
+        self.params = []
+        self.params += [{"params": self.spatial_net.parameters(), "weight_decay": weight_decay[0]}]
+        self.params += [{"params": self.patch_net.parameters(), "weight_decay": weight_decay[1]}]
+        self.params += [{"params": self.output_net.parameters(),"weight_decay": weight_decay[2]}]
+
+    # --- Callable & Context Manager ---
+    def forward(self, feat: Tensor, coords: Tensor) -> Tensor:
+        """Forward the input through the network.
+
+        Args:
+            feat (Tensor): Input feature tensor of shape (B, N, hidden_dim) and
+                values ranging from 0.0 to 1.0.
+            coords (Tensor): Input coordinate tensor of shape (B, N, 2) and
+                values ranging from 0.0 to 1.0.
+
+        Returns:
+            Tensor: Output tensor of shape (B, N, out_channels) and values
+                ranging from 0.0 to 1.0.
+        """
+        coords = self.ff(coords) if self.ff is not None else coords
+        patch = self.patch_net(feat)
+        coords = self.spatial_net(coords)
+        A = F.tanh(self.output_net(torch.cat([patch, coords], dim=-1)))
+        return A
+
+
+# --- Main Network ---
+
 class EnhanceFunction(nn.Module):
     """A module for enhancing the input image."""
 
@@ -327,7 +410,7 @@ class EnhanceFunction(nn.Module):
         in_channels: int,
         hidden_dim: int = 32,
         num_iter: int = 8,
-        imgsz: int = 512,
+        imgsz: int = 256,
         chunk_size: int = 100000,
         use_depth: bool = False,
         use_anscombe: bool = False,
@@ -340,7 +423,7 @@ class EnhanceFunction(nn.Module):
                 Defaults to 3.
             hidden_dim (int, optional): Hidden dimension. Defaults to 32.
             imgsz (int, optional): Downsample the input image to this size for
-                encoding. Defaults to 512.
+                encoding. Defaults to 256.
             num_iter (int, optional): Number of iterations to apply the iterative
                 enhancement. Defaults to 8.
             chunk_size (int): Number of pixels to process at once.
@@ -364,12 +447,17 @@ class EnhanceFunction(nn.Module):
         # Encoder
         enc_in_channels = in_channels * 2 + 1 if use_depth else in_channels * 2
         self.encode = Encoder(enc_in_channels, hidden_dim)
-        # Implicit refiner (Siren/Continuous MLP)
-        # Input: features (32) + coordinates (2) = 34
-        self.decode = Decoder(hidden_dim + 2, self.out_channels, hidden_dim)
+        # Implicit decoder (Siren/Continuous MLP)
+        # self.decode = Decoder(hidden_dim + 2, self.out_channels, hidden_dim)  # Input: features (32) + coordinates (2) = 34
+        self.decode = DecoderINR(hidden_dim, self.out_channels, hidden_dim, True, imgsz)
 
     # --- Callable & Context Manager ---
-    def forward(self, image: Tensor, depth: Tensor | None = None) -> dict:
+    def forward(
+        self,
+        image: Tensor,
+        depth: Tensor | None = None,
+        save_debug: bool = False
+    ) -> dict:
         """Forward the input through the network.
 
         Args:
@@ -377,6 +465,8 @@ class EnhanceFunction(nn.Module):
                 ranging from 0.0 to 1.0.
             depth (Tensor, optional): Depth tensor of shape (B, 1, H, W) and
                 values ranging from 0.0 to 1.0. Defaults to None.
+            save_debug (bool, optional): Whether to save intermediate results for
+                debugging. Defaults to False.
         """
         # 1. Pre-process
         x = image
@@ -411,12 +501,14 @@ class EnhanceFunction(nn.Module):
         y = self.enhance(image, A)
 
         # 7. Return final and intermediate results for debugging
-        outputs = {
-            "enhanced": y,
-            "denoised": p_x,
-            "A": A,
-            "l_denoise": l_denoise,
-        }
+        outputs = { "enhanced": y }
+        if self.training or save_debug:
+            outputs |= {
+                "curve_map": A,
+                "denoised": p_x,
+                "noise_map": noise,
+                "l_denoise": l_denoise,
+            }
         return outputs
 
     # --- Curve Map ---
@@ -475,68 +567,23 @@ class EnhanceFunction(nn.Module):
     def enhance(self, image: Tensor, A: Tensor) -> Tensor:
         """Apply the iterative enhancement."""
         y = image
+        c = self.out_channels
         for i in range(self.num_iter):
-            # A_i = A[:, i*3:(i+1)*3, :, :]
-            y = y + A * (torch.pow(y, 2) - y)
+            if A.shape[1] == c * self.num_iter:
+                A_i = A[:, i * c:(i + 1) * c, :, :]
+            else:
+                A_i = A
+            y = y + A_i * (torch.pow(y, 2) - y)
         return y
 
-
-# --- ODE ---
-
-class Conv2dTime(nn.Conv2d):
-    """2D convolutional layer that takes in the time step as an additional input.
-    """
-
-    # --- Lifecycle & Initialization ---
-    def __init__(self, in_channels: int, *args, **kwargs):
-        """Initialize a new instance.
-
-        Args:
-            in_channels (int): Number of channels in the input image (excluding
-                the time channel).
-        """
-        super().__init__(in_channels + 1, *args, **kwargs)
-
-    # --- Callable & Context Manager ---
-    def forward(self, t: Tensor, x: Tensor) -> Tensor:
-        """Forward the input through the network.
-
-        Args:
-            t (Tensor): Time step tensor of shape (B,) or a scalar.
-            x (Tensor): Input image tensor of shape (B, C, H, W) and values
-                ranging from 0.0 to 1.0.
-        """
-        t_img = torch.ones_like(x[:, :1, :, :]) * t  # (B, 1, H, W)
-        t_and_x = torch.cat([t_img, x], 1)  # (B, C + 1, H, W)
-        return super(Conv2dTime, self).forward(t_and_x)
+# endregion
 
 
-class LinearTime(nn.Linear):
-    """Linear layer that takes in the time step as an additional input."""
+# ==============================================================================
+# region ODE MODULES
+# ==============================================================================
 
-    # --- Lifecycle & Initialization ---
-    def __init__(self, in_features: int, *args, **kwargs):
-        """Initialize a new instance.
-
-        Args:
-            in_features (int): Number of features in the input (excluding the
-                time feature).
-        """
-        super().__init__(in_features + 1, *args, **kwargs)
-
-    # --- Callable & Context Manager ---
-    def forward(self, t: Tensor, x: Tensor) -> Tensor:
-        """Forward the input through the network.
-
-        Args:
-            t (Tensor): Time step tensor of shape (B,) or a scalar.
-            x (Tensor): Input feature tensor of shape (B, N, F) and values
-                ranging from 0.0 to 1.0.
-        """
-        t_feat = torch.ones_like(x[:, :1, :]) * t  # (B, N, 1)
-        t_and_x = torch.cat([t_feat, x], dim=-1)  # (B, N, F + 1)
-        return super(LinearTime, self).forward(t_and_x)
-
+# --- Encoders ---
 
 class EncoderTime(nn.Module):
     """A time-conditioned encoder module that takes in the time step as an
@@ -593,6 +640,8 @@ class EncoderTime(nn.Module):
         return y
 
 
+# --- Decoders ---
+
 class DecoderTime(nn.Module):
     """A time-conditioned decoder module that takes in the time step as an
     additional input.
@@ -647,6 +696,90 @@ class DecoderTime(nn.Module):
         return y
 
 
+class DecoderINRTime(nn.Module):
+
+    # --- Lifecycle & Initialization ---
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        hidden_dim: int = 32,
+        pos_encode: bool = False,
+        mapping_size: int = 256,
+        B: float = 20.0,
+    ):
+        """Initialize a new instance.
+
+        Args:
+            in_channels (int): Number of input channels.
+            out_channels (int): Number of output channels.
+            hidden_dim (int, optional): Number of hidden channels. Defaults to 32.
+            pos_encode (bool, optional): Whether to use positional encoding.
+                Defaults to False.
+            mapping_size (int, optional): Size of Fourier feature mapping.
+                Defaults to 256.
+            B (float, optional): Fourier feature scaling factor. Defaults to 20.0.
+        """
+        super().__init__()
+        # Assign attributes
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+
+        # Define network
+        if pos_encode:
+            self.ff = FourierPE(mapping_size=mapping_size, B=B)
+            coords_dim = self.ff.out_features
+        else:
+            self.ff = None
+            coords_dim = 2
+
+        patch_layers = [
+            SineLinear(in_channels, hidden_dim, is_first=True),
+            SineLinear(hidden_dim, hidden_dim // 2),
+        ]
+        spatial_layers = [
+            SineLinear(coords_dim, hidden_dim, is_first=True),
+            SineLinear(hidden_dim, hidden_dim // 2),
+        ]
+        output_layers = [
+            SineLinear(hidden_dim, hidden_dim),
+            SineLinear(hidden_dim, out_channels, is_last=True),
+        ]
+
+        self.patch_net = nn.Sequential(*patch_layers)
+        self.spatial_net = nn.Sequential(*spatial_layers)
+        self.output_net = nn.Sequential(*output_layers)
+
+        weight_decay = [0.1, 0.0001, 0.001]
+        self.params = []
+        self.params += [{"params": self.spatial_net.parameters(), "weight_decay": weight_decay[0]}]
+        self.params += [{"params": self.patch_net.parameters(), "weight_decay": weight_decay[1]}]
+        self.params += [{"params": self.output_net.parameters(),"weight_decay": weight_decay[2]}]
+
+    # --- Callable & Context Manager ---
+    def forward(self, t: Tensor, feat: Tensor, coords: Tensor) -> Tensor:
+        """Forward the input through the network.
+
+        Args:
+            t (Tensor): Time step tensor of shape (B,) or a scalar.
+            feat (Tensor): Input feature tensor of shape (B, N, hidden_dim) and
+                values ranging from 0.0 to 1.0.
+            coords (Tensor): Input coordinate tensor of shape (B, N, 2) and
+                values ranging from 0.0 to 1.0.
+
+        Returns:
+            Tensor: Output tensor of shape (B, N, out_channels) and values
+                ranging from 0.0 to 1.0.
+        """
+        coords = self.ff(coords) if self.ff is not None else coords
+        patch = self.patch_net(feat)
+        coords = self.spatial_net(coords)
+        A = F.tanh(self.output_net(torch.cat([patch, coords], dim=-1)))
+        return A
+
+
+# --- Main Network ---
+
 class EnhanceFunctionTime(nn.Module):
     """A module for enhancing the input image with time conditioning."""
 
@@ -655,7 +788,7 @@ class EnhanceFunctionTime(nn.Module):
         self,
         in_channels: int,
         hidden_dim: int = 32,
-        imgsz: int = 512,
+        imgsz: int = 128,
         chunk_size: int = 100000,
         use_depth: bool = False,
         use_anscombe: bool = False,
@@ -668,7 +801,7 @@ class EnhanceFunctionTime(nn.Module):
                 Defaults to 3.
             hidden_dim (int, optional): Hidden dimension. Defaults to 32.
             imgsz (int, optional): Downsample the input image to this size for
-                encoding. Defaults to 512.
+                encoding. Defaults to 128.
             chunk_size (int): Number of pixels to process at once.
                 Defaults to 100,000.
             use_depth (bool, optional): Whether to use depth as an additional
@@ -682,6 +815,7 @@ class EnhanceFunctionTime(nn.Module):
         self.out_channels = in_channels
         self.imgsz = imgsz
         self.chunk_size = chunk_size
+        self.use_depth = use_depth
 
         # Define network
         # Denoising module
@@ -690,13 +824,15 @@ class EnhanceFunctionTime(nn.Module):
         enc_in_channels = in_channels * 2 + 1 if use_depth else in_channels * 2
         self.encode = EncoderTime(enc_in_channels, hidden_dim)
         # Implicit refiner (Siren/Continuous MLP)
-        # Input: features (32) + coordinates (2) = 34
-        self.decode = DecoderTime(hidden_dim + 2, self.out_channels, hidden_dim)
+        # self.decode = DecoderTime(hidden_dim, self.out_channels, hidden_dim)  # Input: features (32) + coordinates (2) = 34
+        self.decode = DecoderINRTime(hidden_dim, self.out_channels, hidden_dim, True, imgsz)
 
         # Allocate resources
         self.nfe = 0
         self.pred_t = []
-        self.last_A = None
+        self.last_curve_map = None
+        self.last_noise_map = None
+        self.last_denoised = None
         self.tv_loss = L_tv()
 
     # --- Callable & Context Manager ---
@@ -712,7 +848,7 @@ class EnhanceFunctionTime(nn.Module):
         self.nfe += 1
 
         image = _x = x[:, :3 , :, :]  # Image
-        depth = _d = x[:, 3:4, :, :]  # Depth map
+        depth = _d = x[:, 3:4, :, :] if self.use_depth else None  # Depth map
         b, c, h, w = x.shape
         size = (self.imgsz, self.imgsz)
 
@@ -726,12 +862,12 @@ class EnhanceFunctionTime(nn.Module):
 
         # 3. Fusion
         if _d is not None:
-            _in = torch.cat([_x, p_x, _d], dim=1)
+            _x_in = torch.cat([_x, p_x, _d], dim=1)
         else:
-            _in = torch.cat([_x, p_x], dim=1)
+            _x_in = torch.cat([_x, p_x], dim=1)
 
         # 4. Encode
-        feat = self.encode(t, _in)
+        feat = self.encode(t, _x_in)
 
         # 5. Predict curve parameters
         if (h, w) == size:
@@ -743,17 +879,19 @@ class EnhanceFunctionTime(nn.Module):
         y = A * (torch.pow(image, 2) - image)
 
         # 7. Return final and intermediate results for debugging
-        self.last_A = A
+        self.last_curve_map = A
+        self.last_noise_map = noise
+        self.last_denoised = p_x
         self.pred_t.append(t.item())
 
         # Since ODE solvers typically expect the output to be the same shape as
         # the input, we concatenate the intermediate results along the channel
         # dimension for debugging purposes. The final output will still be `y`,
         # which is the enhanced image.
-        # l_tv = torch.ones_like(A) * self.tv_loss(A, depth)
+        depth = depth if self.use_depth else torch.zeros(b, 1, h, w, device=x.device)
+        l_tv = torch.ones_like(A) * self.tv_loss(A, depth)
         l_denoise = torch.ones_like(A) * l_denoise
-
-        outputs = torch.cat([y, depth, l_denoise], dim=1)
+        outputs = torch.cat([y, depth, l_tv, l_denoise], dim=1)
         return outputs
 
     # --- Curve Map ---
@@ -815,9 +953,7 @@ class ODEBlock(nn.Module):
     def __init__(
         self,
         ode_func: nn.Module,
-        use_dopri5: bool = False,
-        rtol: float = 1e-3,
-        atol: float = 1e-3,
+        tol: float = 1e-5,
         adjoint: bool = True,
         ode_options: dict | None = None,
         *args, **kwargs
@@ -826,12 +962,7 @@ class ODEBlock(nn.Module):
 
         Args:
             ode_func (nn.Module): The ODE function defining the dynamics.
-            use_dopri5 (bool, optional): Whether to use the 'dopri5' method
-                instead of 'rk4'. Defaults to False.
-            rtol (float, optional): Relative tolerance for the solver.
-                Defaults to 1e-3.
-            atol (float, optional): Absolute tolerance for the solver.
-                Defaults to 1e-3.
+            tol (float, optional): Tolerance for the solver. Defaults to 1e-5.
             adjoint (bool, optional): Whether to use the adjoint method for
                 backpropagation. Defaults to True.
             ode_options (dict, optional): Additional options to pass to the ODE
@@ -840,9 +971,7 @@ class ODEBlock(nn.Module):
         super().__init__()
         # Assign attributes
         self.ode_func = ode_func
-        self.use_dopri5 = use_dopri5
-        self.rtol = rtol
-        self.atol = atol
+        self.tol = tol
         self.adjoint = adjoint
         self.ode_options = ode_options or {}
 
@@ -868,24 +997,15 @@ class ODEBlock(nn.Module):
         self.ode_func.nfe = 0
         x_aug = x
 
-        if self.use_dopri5:
-            return odeint_adjoint(
-                func=self.ode_func,
-                y0=x_aug,
-                t=t,
-                rtol=self.rtol,
-                atol=self.atol,
-                method="dopri5",  # "dopri5", "euler", "rk4"
-                options=self.ode_options,
-            )
-        else:
-            return odeint_adjoint(
-                func=self.ode_func,
-                y0=x_aug,
-                t=t,
-                method="rk4",  # "dopri5", "euler", "rk4"
-                options=self.ode_options,
-            )
+        return odeint_adjoint(
+            func=self.ode_func,
+            y0=x_aug,
+            t=t,
+            rtol=self.tol,
+            atol=self.tol,
+            method="dopri5",  # "dopri5", "euler", "rk4"
+            options=self.ode_options,
+        )
 
 # endregion
 

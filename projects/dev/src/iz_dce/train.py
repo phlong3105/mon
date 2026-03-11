@@ -9,17 +9,17 @@ This module provides training runner classes for IZ-DCE and IZ-DCE-ODE models.
 from __future__ import annotations
 
 __all__ = [
-    "IZDCE_ODE_Trainer",
-    "IZDCE_Trainer",
+    "IZ_DCE_ODE_Trainer",
+    "IZ_DCE_Trainer",
 ]
 
 import pyiqa
 import torch
 from rich.progress import Progress
-from torch.optim.lr_scheduler import CosineAnnealingLR
 from typing_extensions import override
 
 from mon.core import OPTIMIZERS, Path, resolve_project_root, RunMode, Task
+from mon.ops import normalize_min_max
 from mon.runners import Trainer
 from . import loss as L
 from .model import iz_dce, iz_dce_ode
@@ -32,7 +32,7 @@ current_dir = current_file.parents[0]
 # region TRAINER
 # ==============================================================================
 
-class IZDCE_Trainer(Trainer):
+class IZ_DCE_Trainer(Trainer):
     """Trainer for IZ-DCE models."""
 
     # --- Lifecycle & Initialization ---
@@ -104,18 +104,18 @@ class IZDCE_Trainer(Trainer):
             image = datapoint["image"]
             image = image.to(device)
             depth = datapoint.get("depth", None)
-            depth = depth.to(device) if use_depth and depth is not None else None
+            depth = depth.to(device) if use_depth else None
 
             # 2.2. Forward pass
             outputs = self.model(image, depth)
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
-            A = outputs["A"]
+            curve_map = outputs["curve_map"]
 
             # 2.4. Calculate loss
             # Enhance loss
-            l_tv_A = L_tv_A_w * torch.mean(L_tv_A(A, depth))
+            l_tv_A = L_tv_A_w * torch.mean(L_tv_A(curve_map, depth))
             l_spa = L_spa_w * L_spa(image, enhanced, depth)
             l_col = L_col_w * L_col(enhanced)
             l_col_pre = L_col_pre_w * L_col_pre(image, enhanced)
@@ -180,15 +180,18 @@ class IZDCE_Trainer(Trainer):
             image = datapoint["image"]
             image = image.to(device)
             depth = datapoint.get("depth", None)
-            depth = depth.to(device) if use_depth and depth is not None else None
+            depth = depth.to(device) if use_depth else None
             target = datapoint["target"]
             target = target.to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(image, depth)
+            outputs = self.model(image, depth, save_debug=True)
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
+            curve_map = outputs["curve_map"]
+            denoised = outputs["denoised"]
+            noise_map = outputs["noise_map"]
 
             # 2.4. Calculate metrics
             psnrs.append(psnr_metric(enhanced, target).detach().cpu())
@@ -201,6 +204,9 @@ class IZDCE_Trainer(Trainer):
                     "image": image.detach().cpu(),
                     "target": target.detach().cpu(),
                     "enhanced": enhanced.detach().cpu(),
+                    "curve_map": curve_map.detach().cpu(),
+                    "denoised": denoised.detach().cpu(),
+                    "noise_map": noise_map.detach().cpu(),
                 }
 
             pbar.update(task, advance=1)
@@ -228,11 +234,15 @@ class IZDCE_Trainer(Trainer):
             "image": val_outputs["image"],
             "target": val_outputs["target"],
             "enhanced": val_outputs["enhanced"],
+            "curve_map": normalize_min_max(val_outputs["curve_map"]),
+            "denoised": val_outputs["denoised"],
+            "noise_map": normalize_min_max(val_outputs["noise_map"]),
         }
-        self._save_image(epoch, debug_image)
+
+        self._save_image(epoch, debug_image, column_first=True)
 
 
-class IZDCE_ODE_Trainer(IZDCE_Trainer):
+class IZ_DCE_ODE_Trainer(IZ_DCE_Trainer):
     """Trainer for IZ-DCE-ODE models."""
 
     # --- Lifecycle & Initialization ---
@@ -272,6 +282,7 @@ class IZDCE_ODE_Trainer(IZDCE_Trainer):
         """
         config = self.config
         device = self.device
+        use_depth = config.model.use_depth
 
         # 1. Define losses
         L_tv_A = L.L_tv().to(device)
@@ -302,7 +313,7 @@ class IZDCE_ODE_Trainer(IZDCE_Trainer):
             image = datapoint["image"]
             image = image.to(device)
             depth = datapoint.get("depth", None)
-            depth = depth.to(device) if depth is not None else None
+            depth = depth.to(device) if use_depth else None
             eval_time = torch.tensor([0, 3]).float().to(device)
 
             # 2.2. Forward pass
@@ -310,11 +321,10 @@ class IZDCE_ODE_Trainer(IZDCE_Trainer):
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
-            A = outputs["A"]
 
             # 2.4. Calculate loss
             # Enhance loss
-            l_tv_A = L_tv_A_w * torch.mean(L_tv_A(A, depth))
+            l_tv_A = L_tv_A_w * torch.mean(outputs["l_tv"])
             l_spa = L_spa_w * L_spa(image, enhanced, depth)
             l_col = L_col_w * L_col(enhanced)
             l_col_pre = L_col_pre_w * L_col_pre(image, enhanced)
@@ -357,6 +367,7 @@ class IZDCE_ODE_Trainer(IZDCE_Trainer):
         """
         config = self.config
         device = self.device
+        use_depth = config.model.use_depth
 
         # 1. Define metrics
         psnr_metric = pyiqa.create_metric("psnr", device=device)
@@ -378,7 +389,7 @@ class IZDCE_ODE_Trainer(IZDCE_Trainer):
             image = datapoint["image"]
             image = image.to(device)
             depth = datapoint.get("depth", None)
-            depth = depth.to(device) if depth is not None else None
+            depth = depth.to(device) if use_depth else None
             target = datapoint["target"]
             target = target.to(device)
             eval_time = torch.tensor([0, 3]).float().to(device)
@@ -388,6 +399,9 @@ class IZDCE_ODE_Trainer(IZDCE_Trainer):
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
+            curve_map = outputs["curve_map"]
+            denoised = outputs["denoised"]
+            noise_map = outputs["noise_map"]
 
             # 2.4. Calculate metrics
             psnrs.append(psnr_metric(enhanced, target).detach().cpu())
@@ -400,6 +414,9 @@ class IZDCE_ODE_Trainer(IZDCE_Trainer):
                     "image": image.detach().cpu(),
                     "target": target.detach().cpu(),
                     "enhanced": enhanced.detach().cpu(),
+                    "curve_map": curve_map.detach().cpu(),
+                    "denoised": denoised.detach().cpu(),
+                    "noise_map": noise_map.detach().cpu(),
                 }
 
             pbar.update(task, advance=1)
@@ -422,7 +439,7 @@ class IZDCE_ODE_Trainer(IZDCE_Trainer):
 
 def main1():
     """Unit test for IZDCE_Trainer."""
-    trainer = IZDCE_Trainer.from_cli(
+    trainer = IZ_DCE_Trainer.from_cli(
         root=resolve_project_root(current_dir),
         config_file="iz_dce_sice_me.yaml",
         task=Task.ENHANCE,
@@ -438,7 +455,7 @@ def main1():
 
 
 def main2():
-    trainer = IZDCE_ODE_Trainer.from_cli(
+    trainer = IZ_DCE_ODE_Trainer.from_cli(
         root=resolve_project_root(current_dir),
         config_file="iz_dce_ode_sice_me.yaml",
         task=Task.ENHANCE,

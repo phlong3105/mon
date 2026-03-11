@@ -25,4 +25,5 @@ from .draw import *
 from .geometry import *
 from .image import *
 from .text import *
+from .utils import *
 from .video import *

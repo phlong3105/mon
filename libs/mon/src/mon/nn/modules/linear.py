@@ -11,8 +11,10 @@ from __future__ import annotations
 
 __all__ = [
     "FINERLinear",
+    "LinearTime",
     "SineLinear",
     "SineLinearBN",
+    "SineLinearTime",
 ]
 
 import numpy as np
@@ -24,7 +26,10 @@ from torch import nn, Tensor
 # region LAYERS
 # ==============================================================================
 
-# --- Basic Periodic Units ---
+# --- Linear Layers ---
+
+
+# --- Periodic Units ---
 
 class SineLinear(nn.Module):
     r"""Sine linear layer.
@@ -182,7 +187,7 @@ class SineLinearBN(nn.Module):
         return self.norm(x) if self.is_last else torch.sin(self.norm(self.w0 * x))
 
 
-# --- Advanced Spectral Tuning ---
+# --- Spectral Tuning ---
 
 class FINERLinear(nn.Module):
     r"""FINER linear layer.
@@ -294,6 +299,62 @@ class FINERLinear(nn.Module):
         x = self.linear(x)
         x = self.scale(x)
         return x if self.is_last else torch.sin(self.w0 * x)
+
+
+# --- Time-Conditioned Linear Layers ---
+
+class LinearTime(nn.Linear):
+    """Linear layer that takes in the time step as an additional input."""
+
+    # --- Lifecycle & Initialization ---
+    def __init__(self, in_features: int, *args, **kwargs):
+        """Initialize a new instance.
+
+        Args:
+            in_features (int): Number of features in the input (excluding the
+                time feature).
+        """
+        super().__init__(in_features=in_features + 1, *args, **kwargs)
+
+    # --- Callable & Context Manager ---
+    def forward(self, t: Tensor, x: Tensor) -> Tensor:
+        """Forward the input through the network.
+
+        Args:
+            t (Tensor): Time step tensor of shape (B,) or a scalar.
+            x (Tensor): Input feature tensor of shape (B, N, F) and values
+                ranging from 0.0 to 1.0.
+        """
+        t_feat = torch.ones_like(x[:, :, :1]) * t  # (B, N, 1)
+        t_and_x = torch.cat([t_feat, x], dim=-1)  # (B, N, F + 1)
+        return super(LinearTime, self).forward(t_and_x)
+
+
+class SineLinearTime(SineLinear):
+    r"""Sine linear layer with periodic activation and time step."""
+
+    # --- Lifecycle & Initialization ---
+    def __init__(self, in_features: int, *args, **kwargs):
+        """Initialize a new instance.
+
+        Args:
+            in_features (int): Number of features in the input (excluding the
+                time feature).
+        """
+        super().__init__(in_features + 1, *args, **kwargs)
+
+    # --- Callable & Context Manager ---
+    def forward(self, t: Tensor, x: Tensor) -> Tensor:
+        """Forward the input through the network.
+
+        Args:
+            t (Tensor): Time step tensor of shape (B,) or a scalar.
+            x (Tensor): Input tensor of shape (..., in_features) and values
+                ranging from 0.0 to 1.0.
+        """
+        t_feat = torch.ones_like(x[:, :, :1]) * t  # (B, N, 1)
+        t_and_x = torch.cat([t_feat, x], dim=-1)  # (B, N, F + 1)
+        return super(SineLinearTime, self).forward(t_and_x)
 
 # endregion
 

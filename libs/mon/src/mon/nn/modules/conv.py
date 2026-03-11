@@ -11,8 +11,10 @@ from __future__ import annotations
 
 __all__ = [
     "DSConv2d",
+    "Conv2dTime",
 ]
 
+import torch
 from torch import nn, Tensor
 from torch.nn.common_types import _size_2_t
 
@@ -20,6 +22,8 @@ from torch.nn.common_types import _size_2_t
 # ==============================================================================
 # region LAYERS
 # ==============================================================================
+
+# --- Depthwise Separable Convolution ---
 
 class DSConv2d(nn.Module):
     """Depthwise separable convolutional layer.
@@ -93,6 +97,36 @@ class DSConv2d(nn.Module):
                 ranging from 0.0 to 1.0.
         """
         return self.pw_conv(self.dw_conv(x))
+
+
+# --- Time-Dependent Convolution ---
+
+class Conv2dTime(nn.Conv2d):
+    """2D convolutional layer that takes in the time step as an additional input.
+    """
+
+    # --- Lifecycle & Initialization ---
+    def __init__(self, in_channels: int, *args, **kwargs):
+        """Initialize a new instance.
+
+        Args:
+            in_channels (int): Number of channels in the input image (excluding
+                the time channel).
+        """
+        super().__init__(in_channels + 1, *args, **kwargs)
+
+    # --- Callable & Context Manager ---
+    def forward(self, t: Tensor, x: Tensor) -> Tensor:
+        """Forward the input through the network.
+
+        Args:
+            t (Tensor): Time step tensor of shape (B,) or a scalar.
+            x (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+        """
+        t_img = torch.ones_like(x[:, :1, :, :]) * t  # (B, 1, H, W)
+        t_and_x = torch.cat([t_img, x], 1)  # (B, C + 1, H, W)
+        return super(Conv2dTime, self).forward(t_and_x)
 
 # endregion
 

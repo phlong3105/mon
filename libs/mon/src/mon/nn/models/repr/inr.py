@@ -113,7 +113,7 @@ class Siren(nn.Module):
         in_features: int,
         out_features: int,
         hidden_dim: int,
-        hidden_layers: int,
+        num_layers: int = 4,
         w0: float = 30.0,
         w: float = 30.0,
     ):
@@ -123,7 +123,7 @@ class Siren(nn.Module):
             in_features (int): Size of each input sample.
             out_features (int): Size of each output sample.
             hidden_dim (int): Hidden channel dimensions.
-            hidden_layers (int): Number of hidden layers.
+            num_layers (int): Number of layers in the MLP. Defaults to 4.
             w0 (float, optional): Frequency scaling factor for the first layer.
                 Defaults to 30.0.
             w (float, optional): Frequency scaling factor for the hidden layers.
@@ -131,11 +131,12 @@ class Siren(nn.Module):
         """
         super().__init__()
 
-        # First layer
+        # Define network
         net = []
+        # First layer
         net.append(SineLinear(in_features, hidden_dim, w0, is_first=True))
         # Hidden layers
-        for i in range(hidden_layers):
+        for i in range(num_layers - 2):
             net.append(SineLinear(in_features, hidden_dim, w, is_first=False))
         # Final layer
         final_linear = nn.Linear(hidden_dim, out_features)
@@ -178,7 +179,7 @@ class Finer(nn.Module):
         in_features: int,
         out_features: int,
         hidden_dim: int,
-        hidden_layers: int,
+        num_layers: int = 4,
         w0: float = 30.0,
         w: float = 30.0,
         first_bias_scale: float | None = None,
@@ -190,7 +191,7 @@ class Finer(nn.Module):
             in_features (int): Size of each input sample.
             out_features (int): Size of each output sample.
             hidden_dim (int): Hidden channel dimensions.
-            hidden_layers (int): Number of hidden layers.
+            num_layers (int): Number of layers in the MLP. Defaults to 4.
             w0 (float, optional): Frequency scaling factor for the first layer.
                 Defaults to 30.0.
             w (float, optional): Frequency scaling factor for the hidden layers.
@@ -202,8 +203,9 @@ class Finer(nn.Module):
         """
         super().__init__()
 
-        # First layer
+        # Define network
         net = []
+        # First layer
         net.append(
             FINERLinear(
                 in_features, hidden_dim, w0,
@@ -213,10 +215,8 @@ class Finer(nn.Module):
             ),
         )
         # Hidden layers
-        for i in range(hidden_layers):
-            net.append(
-                FINERLinear(hidden_dim, hidden_dim, w, scale_req_grad=scale_req_grad),
-            )
+        for i in range(num_layers - 2):
+            net.append(FINERLinear(hidden_dim, hidden_dim, w, scale_req_grad=scale_req_grad))
         # Final layer
         final_linear = nn.Linear(hidden_dim, out_features)
         with torch.no_grad():
@@ -258,7 +258,7 @@ class Finer_PP(nn.Module):
         in_features: int,
         out_features: int,
         hidden_dim: int,
-        hidden_layers: int,
+        num_layers: int = 4,
         w0: float = 30.0,
         w: float = 30.0,
         first_bias_scale: float = 5,
@@ -270,7 +270,7 @@ class Finer_PP(nn.Module):
             in_features (int): Size of each input sample.
             out_features (int): Size of each output sample.
             hidden_dim (int): Hidden channel dimensions.
-            hidden_layers (int): Number of hidden layers.
+            num_layers (int): Number of layers in the MLP. Defaults to 4.
             w0 (float, optional): Frequency scaling factor for the first layer.
                 Defaults to 30.0.
             w (float, optional): Frequency scaling factor for the hidden layers.
@@ -283,8 +283,9 @@ class Finer_PP(nn.Module):
         super().__init__()
         self.out_features = out_features
 
-        # First layer
+        # Define network
         net = []
+        # First layer
         net.append(
             FINERLinear(
                 in_features, hidden_dim, w0,
@@ -294,10 +295,8 @@ class Finer_PP(nn.Module):
             )
         )
         # Hidden layers
-        for i in range(hidden_layers):
-            net.append(
-                FINERLinear(hidden_dim, hidden_dim, w, scale_req_grad=scale_req_grad),
-            )
+        for i in range(num_layers - 2):
+            net.append(FINERLinear(hidden_dim, hidden_dim, w, scale_req_grad=scale_req_grad))
         # Final layer
         final_linear = nn.Linear(hidden_dim, out_features)
         with torch.no_grad():

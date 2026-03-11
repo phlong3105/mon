@@ -9,7 +9,7 @@ This module provides prediction runner classes for ZS-N2N models.
 from __future__ import annotations
 
 __all__ = [
-    "ZSN2N_Predictor",
+    "ZS_N2N_Predictor",
 ]
 
 from typing import Any
@@ -35,8 +35,8 @@ current_dir = current_file.parents[0]
 # region PREDICTOR
 # ==============================================================================
 
-class ZSN2N_Predictor(Predictor):
-    """Predictor for ZSN2N models."""
+class ZS_N2N_Predictor(Predictor):
+    """Predictor for ZS-N2N models."""
 
     # --- Lifecycle & Initialization ---
     @override
@@ -128,7 +128,7 @@ class ZSN2N_Predictor(Predictor):
 
 def main():
     """Unit test for ZSN2N_Predictor."""
-    predictor = ZSN2N_Predictor.from_cli(
+    predictor = ZS_N2N_Predictor.from_cli(
         prompt=True,
         root=resolve_project_root(current_dir),
         config_file="zsn2n.yaml",

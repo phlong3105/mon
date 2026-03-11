@@ -18,14 +18,12 @@ model:
   hidden_dim: 32
   imgsz: 128
   chunk_size: 100000
-  use_depth: False
+  use_depth: True
   use_anscombe: True
-  use_dopri5: True
-  rtol: 0.00001  # 1e-5
-  atol: 0.00001  # 1e-5
+  tol: 0.00001  # 1e-5
   adjoint: True
   ode_options:
-    max_num_steps: 30
+    max_num_steps: 1000
   weights: "cv/enhance/iz_dce/iz_dce_ode/sice_me/iz_dce_ode_sice_me.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
@@ -90,7 +88,7 @@ lr_warmup_scheduler: ~
 
 loss:
   E: 0.6  # (float) Default is 0.6, but the author suggests 0.5 or 0.45
-  L_tv_A_w: 200
+  L_tv_A_w: 1600
   L_spa_w: 1
   L_col_w: 20  # 0.8
   L_col_pre_w: 10
@@ -104,7 +102,7 @@ tensorboard_logger: True
 
 # --- Prediction ---
 T: 2
-eval_imgsz: 512  # (int | list[int]) Image size for evaluation.
+eval_imgsz: 128  # (int | list[int]) Image size for evaluation.
 benchmark: False  # (bool) Benchmark the model.
 
 # --- Saving & Visualization ---

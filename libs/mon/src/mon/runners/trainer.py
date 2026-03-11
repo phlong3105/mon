@@ -398,7 +398,8 @@ class Trainer(Runner, ABC):
         outputs: dict[str, TensorOrArray],
         dirname: str = K.PRED_DIR,
         stem: str = "debug",
-        show_info: bool = True
+        column_first: bool = False,
+        show_info: bool = True,
     ):
         """Save a debug image for visualization.
 
@@ -409,6 +410,8 @@ class Trainer(Runner, ABC):
                 Defaults to "debug".
             dirname (str, optional): The directory name for the output file.
                 Defaults to K.PRED_DIR.
+            column_first (bool, optional): Whether to save the image in column
+                format (i.e., stack outputs vertically). Defaults to True.
             show_info (bool, optional): Whether to draw the keys of the outputs
                 as labels on the image. Defaults to True.
         """
@@ -418,7 +421,15 @@ class Trainer(Runner, ABC):
         # drawing the keys as labels
         images = []
         for k, v in outputs.items():
-            image = to_image_array(torch.cat(list(v), dim=2).unsqueeze(0))
+            if column_first:
+                # Stack the tensors vertically (i.e., concatenate along the
+                # width dimension)
+                image = to_image_array(torch.cat(list(v), dim=1).unsqueeze(0))
+            else:
+                # Stack the tensors horizontally (i.e., concatenate along the
+                # height dimension)
+                image = to_image_array(torch.cat(list(v), dim=2).unsqueeze(0))
+
             if image.shape[2] == 1:
                 # If the image is grayscale, repeat it to make it RGB
                 image = np.repeat(image, 3, axis=2)
@@ -426,7 +437,11 @@ class Trainer(Runner, ABC):
                 # Draw the key as a label on the image
                 image = draw_info(image, [f"{pascalize(k)}"])
             images.append(image)
-        images = np.vstack(images)
+
+        if column_first:
+            images = np.hstack(images)
+        else:
+            images = np.vstack(images)
 
         # Save the image
         save_path = config.output_dir / dirname / f"{stem}_epoch_{epoch+1:03}{K.IMAGE_EXT}"

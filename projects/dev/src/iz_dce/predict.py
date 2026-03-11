@@ -9,8 +9,8 @@ This module provides prediction runner classes for IZ-DCE and IZ-DCE-ODE models.
 from __future__ import annotations
 
 __all__ = [
-    "IZDCE_Predictor",
-    "IZDCE_ODE_Predictor",
+    "IZ_DCE_Predictor",
+    "IZ_DCE_ODE_Predictor",
 ]
 
 from typing import Any
@@ -39,7 +39,7 @@ current_dir = current_file.parents[0]
 # region PREDICTOR
 # ==============================================================================
 
-class IZDCE_Predictor(Predictor):
+class IZ_DCE_Predictor(Predictor):
     """Predictor for IZ-DCE models."""
 
     # --- Lifecycle & Initialization ---
@@ -129,7 +129,7 @@ class IZDCE_Predictor(Predictor):
         pass
 
 
-class IZDCE_ODE_Predictor(IZDCE_Predictor):
+class IZ_DCE_ODE_Predictor(IZ_DCE_Predictor):
     """Predictor for IZ-DCE-ODE models."""
 
     # --- Lifecycle & Initialization ---
@@ -188,7 +188,7 @@ class IZDCE_ODE_Predictor(IZDCE_Predictor):
 
 def main():
     """Unit test for IZDCE_Predictor."""
-    predictor = IZDCE_Predictor.from_cli(
+    predictor = IZ_DCE_Predictor.from_cli(
         prompt=True,
         root=resolve_project_root(current_dir),
         config_file="iz_dce_sice_me.yaml",

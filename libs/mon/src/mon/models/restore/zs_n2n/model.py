@@ -123,11 +123,13 @@ class ZS_N2N(ModelRegisterMixin, nn.Module):
         # 2. Scenario 2: Standard Training
         if self.training:
             loss = self.denoise_loss(image)
-            restored = image - self.model(image)
-            return {"restored": restored, "loss": loss}
+            noise = self.model(image)
+            restored = image - noise
+            return {"restored": restored, "noise": noise,  "loss": loss}
         else:
-            restored = torch.clamp(image - self.model(image), 0, 1)
-            return {"restored": restored}
+            noise = self.model(image)
+            restored = torch.clamp(image - noise, 0, 1)
+            return {"restored": restored, "noise": noise,  "loss": None}
 
     def fit(
         self,
@@ -195,8 +197,8 @@ class ZS_N2N(ModelRegisterMixin, nn.Module):
     # --- Denoise ---
     def denoise_loss(self, noisy_image: Tensor) -> Tensor:
         """Calculate the ZS-N2N denoising loss."""
-        # L = nn.MSELoss()  # Vanilla loss function
-        L = nn.SmoothL1Loss()  # Improved loss function
+        L = nn.MSELoss()  # Vanilla loss function
+        # L = nn.SmoothL1Loss()  # Improved loss function
 
         # Residual loss
         noisy1, noisy2 = self.pair_downsampler(noisy_image)
@@ -349,11 +351,13 @@ class IZS_N2N(ModelRegisterMixin, nn.Module):
         # 2. Scenario 2: Standard Training
         if self.training:
             loss = self.denoise_loss(image)
-            restored = image - self.model(image)
-            return {"restored": restored, "loss": loss}
+            noise = self.model(image)
+            restored = image - noise
+            return {"restored": restored, "noise": noise,  "loss": loss}
         else:
-            restored = torch.clamp(image - self.model(image), 0, 1)
-            return {"restored": restored}
+            noise = self.model(image)
+            restored = torch.clamp(image - noise, 0, 1)
+            return {"restored": restored, "noise": noise,  "loss": None}
 
     def fit(
         self,

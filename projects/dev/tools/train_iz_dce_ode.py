@@ -14,7 +14,7 @@ from __future__ import annotations
 
 __all__ = []
 
-from iz_dce import IZDCE_ODE_Trainer
+from iz_dce import IZ_DCE_ODE_Trainer
 from mon.core import Path, resolve_project_root, RunMode, Task
 
 current_file = Path(__file__).normalize()
@@ -26,7 +26,7 @@ current_dir = current_file.parents[0]
 # ==============================================================================
 
 def main():
-    trainer = IZDCE_ODE_Trainer.from_cli(
+    trainer = IZ_DCE_ODE_Trainer.from_cli(
         root=resolve_project_root(current_dir),
         config_file="iz_dce_ode_sice_me.yaml",
         task=Task.ENHANCE,

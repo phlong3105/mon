@@ -37,7 +37,7 @@ from mon.core import (
     TimeProfiler,
 )
 from mon.dataset import build_dataset, DataLoader, Dataset, transform as T
-from mon.ops import vis_heatmap
+from mon.ops import normalize_min_max, vis_heatmap
 from mon.runners import Predictor
 
 current_file = Path(__file__).normalize()
@@ -122,7 +122,8 @@ class DAV2_Predictor(Predictor):
         # 2. Inference
         timers.infer.tick()
         depth = self.model(image, imgsz.h)
-        depth = (depth - depth.min()) / (depth.max() - depth.min()) * 255.0
+        # depth = (depth - depth.min()) / (depth.max() - depth.min()) * 255.0
+        depth = normalize_min_max(depth) * 255.0
         depth = depth.astype(np.uint8)
         outputs = {"depth": depth}
         timers.infer.tock()
