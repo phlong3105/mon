@@ -20,7 +20,15 @@ from torch.nn import functional as F
 from torchdiffeq import odeint_adjoint
 
 from mon.models.restore.zs_n2n.module import ImprovedDenoiseNetwork
-from mon.nn import Conv2dTime, FourierPE, LinearTime, SineLinear, SineLinearTime
+from mon.nn import (
+    CharbonnierLoss,
+    Conv2dTime,
+    EdgePreservingLoss,
+    FourierPE,
+    LinearTime,
+    SineLinear,
+    SineLinearTime,
+)
 from mon.ops import anscombe, inverse_anscombe
 from .loss import L_tv
 from .utils import weights_init
@@ -94,13 +102,17 @@ class DenoiseNet(nn.Module):
         if self.use_anscombe:
             y = inverse_anscombe(y)
 
+        y = torch.clamp(y, 0.0, 1.0)
+
         return loss, noise, y
 
     # --- Denoise Loss ---
     def loss_n2n(self, noisy_image: Tensor) -> Tensor:
         """Calculate the ZS-N2N denoising loss."""
         # L = nn.MSELoss()  # Vanilla loss function
-        L = nn.SmoothL1Loss()  # Improved loss function
+        # L = nn.SmoothL1Loss()  # Improved loss function
+        # L = CharbonnierLoss(eps=1e-5)
+        L = EdgePreservingLoss()
 
         # Residual loss
         noisy1, noisy2 = self.pair_downsampler(noisy_image)
@@ -121,7 +133,9 @@ class DenoiseNet(nn.Module):
     def loss_p2n(self, noisy_image: Tensor) -> Tensor:
         """Calculates the Positive2Negative consistency loss."""
         # L = nn.MSELoss()  # Vanilla loss function
-        L = nn.SmoothL1Loss()  # Improved loss function
+        # L = nn.SmoothL1Loss()  # Improved loss function
+        # L = CharbonnierLoss(eps=1e-5)
+        L = EdgePreservingLoss()
 
         # 1. Initial Full-Resolution Forward Pass
         # We get the predicted noise and the predicted clean image
@@ -733,28 +747,27 @@ class DecoderINRTime(nn.Module):
             self.ff = None
             coords_dim = 2
 
-        patch_layers = [
-            SineLinear(in_channels, hidden_dim, is_first=True),
-            SineLinear(hidden_dim, hidden_dim // 2),
-        ]
-        spatial_layers = [
-            SineLinear(coords_dim, hidden_dim, is_first=True),
-            SineLinear(hidden_dim, hidden_dim // 2),
-        ]
-        output_layers = [
-            SineLinear(hidden_dim, hidden_dim),
-            SineLinear(hidden_dim, out_channels, is_last=True),
-        ]
+        self.patch = SineLinearTime(in_channels, hidden_dim // 2, is_first=True)
+        # self.patch1 = SineLinearTime(in_channels, hidden_dim, is_first=True)
+        # self.patch2 = SineLinearTime(hidden_dim, hidden_dim // 2)
 
-        self.patch_net = nn.Sequential(*patch_layers)
-        self.spatial_net = nn.Sequential(*spatial_layers)
-        self.output_net = nn.Sequential(*output_layers)
+        self.spatial = SineLinearTime(coords_dim, hidden_dim // 2, is_first=True)
+        # self.spatial1 = SineLinearTime(coords_dim, hidden_dim, is_first=True)
+        # self.spatial2 = SineLinearTime(hidden_dim, hidden_dim // 2)
+
+        self.output1 = SineLinearTime(hidden_dim, hidden_dim)
+        self.output2 = SineLinearTime(hidden_dim, out_channels, is_last=True)
 
         weight_decay = [0.1, 0.0001, 0.001]
         self.params = []
-        self.params += [{"params": self.spatial_net.parameters(), "weight_decay": weight_decay[0]}]
-        self.params += [{"params": self.patch_net.parameters(), "weight_decay": weight_decay[1]}]
-        self.params += [{"params": self.output_net.parameters(),"weight_decay": weight_decay[2]}]
+        self.params += [{"params": self.spatial.parameters(), "weight_decay": weight_decay[0]}]
+        # self.params += [{"params": self.spatial1.parameters(), "weight_decay": weight_decay[0]}]
+        # self.params += [{"params": self.spatial2.parameters(), "weight_decay": weight_decay[0]}]
+        self.params += [{"params": self.patch.parameters(), "weight_decay": weight_decay[1]}]
+        # self.params += [{"params": self.patch1.parameters(), "weight_decay": weight_decay[1]}]
+        # self.params += [{"params": self.patch2.parameters(), "weight_decay": weight_decay[1]}]
+        self.params += [{"params": self.output1.parameters(),"weight_decay": weight_decay[2]}]
+        self.params += [{"params": self.output2.parameters(),"weight_decay": weight_decay[2]}]
 
     # --- Callable & Context Manager ---
     def forward(self, t: Tensor, feat: Tensor, coords: Tensor) -> Tensor:
@@ -772,9 +785,16 @@ class DecoderINRTime(nn.Module):
                 ranging from 0.0 to 1.0.
         """
         coords = self.ff(coords) if self.ff is not None else coords
-        patch = self.patch_net(feat)
-        coords = self.spatial_net(coords)
-        A = F.tanh(self.output_net(torch.cat([patch, coords], dim=-1)))
+        patch = self.patch(t, feat)
+        # patch = self.patch1(t, feat)
+        # patch = self.patch2(t, patch)
+        coords = self.spatial(t, coords)
+        # coords = self.spatial1(t, coords)
+        # coords = self.spatial2(t, coords)
+        concat = torch.cat([patch, coords], dim=-1)
+        output = self.output1(t, concat)
+        output = self.output2(t, output)
+        A = F.tanh(output)
         return A
 
 
@@ -824,7 +844,7 @@ class EnhanceFunctionTime(nn.Module):
         enc_in_channels = in_channels * 2 + 1 if use_depth else in_channels * 2
         self.encode = EncoderTime(enc_in_channels, hidden_dim)
         # Implicit refiner (Siren/Continuous MLP)
-        # self.decode = DecoderTime(hidden_dim, self.out_channels, hidden_dim)  # Input: features (32) + coordinates (2) = 34
+        # self.decode = DecoderTime(hidden_dim + 2, self.out_channels, hidden_dim)  # Input: features (32) + coordinates (2) = 34
         self.decode = DecoderINRTime(hidden_dim, self.out_channels, hidden_dim, True, imgsz)
 
         # Allocate resources
@@ -927,7 +947,7 @@ class EnhanceFunctionTime(nn.Module):
         total_points = h * w
         A_list = []
 
-        # 1 Chunked MLP Inference
+        # 1. Chunked MLP Inference
         # Process the points in batches of `chunk_size` to cap VRAM usage.
         for i in range(0, total_points, chunk_size):
             coords_chunk = coords[:, i:i+chunk_size, :]  # [B, chunk, 2]

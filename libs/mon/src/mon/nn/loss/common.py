@@ -29,12 +29,12 @@ class CharbonnierLoss(Loss):
     """Differentiable variant of L1 loss."""
 
     # --- Lifecycle & Initialization ---
-    def __init__(self, eps: float = 1e-6, reduction: str = "mean"):
+    def __init__(self, eps: float = 1e-3, reduction: str = "mean"):
         """Initialize a new instance.
 
         Args:
             eps (float, optional): Small constant for numerical stability.
-                Defaults to 1e-6.
+                Defaults to 1e-3.
             reduction (str, optional): Reduction method to apply to the loss.
                 One of: ["mean", "sum", "none"]. Defaults to "mean".
         """

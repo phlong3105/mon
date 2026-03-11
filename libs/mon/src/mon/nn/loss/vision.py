@@ -12,6 +12,7 @@ from __future__ import annotations
 __all__ = [
     "ColorConstancyLoss",
     "EdgeLoss",
+    "EdgePreservingLoss",
     "ExposureControlLoss",
     "ExposureValueControlLoss",
     "PSNRLoss",
@@ -283,6 +284,156 @@ class PSNRLoss(Loss):
 # region SPATIAL & STRUCTURAL LOSSES
 # ==============================================================================
 
+class EdgeLoss(Loss):
+    """Loss function for penalizing blurry boundaries.
+
+    Preserve edge details in images by computing the Laplacian edge maps and
+    penalizing differences between the input and target images.
+    """
+
+    # --- Lifecycle & Initialization ---
+    def __init__(self, reduction: str = "mean"):
+        """Initialize a new instance.
+
+        Args:
+            reduction (str, optional): Reduction method to apply to the loss.
+                One of: ["mean", "sum", "none"]. Defaults to "mean".
+        """
+        super().__init__(reduction=reduction)
+        # Create 5x5 Gaussian Kernel
+        k = Tensor([[0.05, 0.25, 0.4, 0.25, 0.05]])
+        kernel = torch.matmul(k.t(), k).unsqueeze(0).unsqueeze(0)  # [1, 1, 5, 5]
+        # Register as buffer to handle device placement automatically
+        self.register_buffer("kernel", kernel.repeat(3, 1, 1, 1))
+
+        self.charbonnier = CharbonnierLoss(eps=1e-3, reduction="none")
+
+    # --- Callable & Context Manager ---
+    def forward(self, input: Tensor, target: Tensor) -> Tensor:
+        """Calculate the loss between ``input`` and ``target``.
+
+        Args:
+            input (Tensor): Input (predictions) tensor of shape (B, C, H, W)
+                and values ranging from 0.0 to 1.0.
+            target (Tensor): Target (ground truth) tensor of shape (B, C, H, W)
+                and values ranging from 0.0 to 1.0.
+
+        Returns:
+            Tensor: Loss value.
+        """
+        # Extract edge maps
+        input_edges = self._laplacian(input)
+        target_edges = self._laplacian(target)
+
+        # Calculate Charbonnier loss on the edge maps
+        # Using your existing class preserves architectural consistency
+        loss = self.charbonnier(input_edges, target_edges)
+
+        # Apply reduction
+        loss = self.reduce(loss=loss)
+        return loss
+
+    def _laplacian(self, image: Tensor) -> Tensor:
+        """Compute the Laplacian edge map using a Gaussian pyramid.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+
+        Returns:
+            Tensor: Laplacian edge map.
+        """
+        filtered = self._gauss_conv(image)
+        # Downsample and Upsample (Stride 2)
+        down = filtered[:, :, ::2, ::2]
+        up   = torch.zeros_like(filtered)
+        up[:, :, ::2, ::2] = down * 4
+        # Second blur to smooth the upsampled grid
+        up_blurred = self._gauss_conv(up)
+        return image - up_blurred
+
+    def _gauss_conv(self, image: Tensor) -> Tensor:
+        """Apply Gaussian convolution to the ``image``.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+
+        Returns:
+            Tensor: Gaussian filtered image.
+        """
+        # TODO: Delete later
+        """
+        b, c, w, h  = self.kernel.shape
+        self.kernel = self.kernel.to(image.device)
+        image       = F.pad(image, (w // 2, h // 2, w // 2, h // 2), mode="replicate")
+        # gauss       = F.conv2d(image, self.kernel, groups=b)  # Old code
+        gauss       = F.conv2d(image, self.kernel, groups=c)  # Groups=c for channel-wise convolution
+        return gauss
+        """
+        # Replicate padding prevents edge artifacts in the laplacian map
+        x = F.pad(image, (2, 2, 2, 2), mode="replicate")
+        # groups=3 ensures each RGB channel is blurred independently
+        return F.conv2d(x, self.kernel, groups=3)
+
+
+class EdgePreservingLoss(Loss):
+    """Loss function for preserving edge details by comparing Sobel gradients.
+
+    Preserve edge details in images by computing the Sobel gradients and
+    comparing the differences between the input and target images. This is
+    particularly useful for tasks like denoising where maintaining sharp edges
+    is crucial. If the network deletes text, the predicted edges will be empty,
+    leading to a high loss and encouraging the model to retain those details.
+    """
+
+    # --- Lifecycle & Initialization ---
+    def __init__(self, reduction: str = "mean"):
+        """Initialize a new instance.
+
+        Args:
+            reduction (str, optional): Reduction method to apply to the loss.
+                One of: ["mean", "sum", "none"]. Defaults to "mean".
+        """
+        super().__init__(reduction=reduction)
+        # Sobel edge detection kernels
+        self.kernel_x = torch.tensor([[-1.0,  0.0,  1.0], [-2.0, 0.0, 2.0], [-1.0, 0.0, 1.0]]).view(1, 1, 3, 3)
+        self.kernel_y = torch.tensor([[-1.0, -2.0, -1.0], [ 0.0, 0.0, 0.0], [ 1.0, 2.0, 1.0]]).view(1, 1, 3, 3)
+
+    # --- Callable & Context Manager ---
+    def forward(self, input: Tensor, pred: Tensor) -> Tensor:
+        """Calculate the loss between ``input`` and ``pred``.
+
+        Args:
+            input (Tensor): Input tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            pred (Tensor): Prediction tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+
+        Returns:
+            Tensor: Loss value.
+        """
+        c = input.shape[1]
+        # Expand kernels to match image channels (e.g., 3 for RGB)
+        kx = self.kernel_x.expand(c, 1, 3, 3).to(input.device)
+        ky = self.kernel_y.expand(c, 1, 3, 3).to(input.device)
+
+        # Calculate edges (gradients) for the original noisy image
+        grad_x_noisy = F.conv2d(input, kx, padding=1, groups=c)
+        grad_y_noisy = F.conv2d(input, ky, padding=1, groups=c)
+
+        # Calculate edges for the predicted denoised image
+        grad_x_denoised = F.conv2d(pred, kx, padding=1, groups=c)
+        grad_y_denoised = F.conv2d(pred, ky, padding=1, groups=c)
+
+        # The loss is the difference in edges.
+        # If the network deleted text, grad_denoised will be empty here, causing a high loss.
+        loss_x = torch.mean(torch.abs(grad_x_noisy - grad_x_denoised))
+        loss_y = torch.mean(torch.abs(grad_y_noisy - grad_y_denoised))
+
+        return loss_x + loss_y
+
+
 class SpatialConsistencyLoss(Loss):
     """Loss function for maintaining local gradients (crucial for Zero-DCE
     architectures).
@@ -429,99 +580,6 @@ class TotalVariationLoss(Loss):
         # Apply reduction
         loss = self.reduce(loss=loss)
         return loss
-
-
-class EdgeLoss(Loss):
-    """Loss function for penalizing blurry boundaries.
-
-    Preserve edge details in images by computing the Laplacian edge maps and
-    penalizing differences between the input and target images.
-    """
-
-    # --- Lifecycle & Initialization ---
-    def __init__(self, reduction: str = "mean"):
-        """Initialize a new instance.
-
-        Args:
-            reduction (str, optional): Reduction method to apply to the loss.
-                One of: ["mean", "sum", "none"]. Defaults to "mean".
-        """
-        super().__init__(reduction=reduction)
-        # Create 5x5 Gaussian Kernel
-        k = Tensor([[0.05, 0.25, 0.4, 0.25, 0.05]])
-        kernel = torch.matmul(k.t(), k).unsqueeze(0).unsqueeze(0)  # [1, 1, 5, 5]
-        # Register as buffer to handle device placement automatically
-        self.register_buffer("kernel", kernel.repeat(3, 1, 1, 1))
-
-        self.charbonnier = CharbonnierLoss(eps=1e-3, reduction="none")
-
-    # --- Callable & Context Manager ---
-    def forward(self, input: Tensor, target: Tensor) -> Tensor:
-        """Calculate the loss between ``input`` and ``target``.
-
-        Args:
-            input (Tensor): Input (predictions) tensor of shape (B, C, H, W)
-                and values ranging from 0.0 to 1.0.
-            target (Tensor): Target (ground truth) tensor of shape (B, C, H, W)
-                and values ranging from 0.0 to 1.0.
-
-        Returns:
-            Tensor: Loss value.
-        """
-        # Extract edge maps
-        input_edges = self._laplacian(input)
-        target_edges = self._laplacian(target)
-
-        # Calculate Charbonnier loss on the edge maps
-        # Using your existing class preserves architectural consistency
-        loss = self.charbonnier(input_edges, target_edges)
-
-        # Apply reduction
-        loss = self.reduce(loss=loss)
-        return loss
-
-    def _laplacian(self, image: Tensor) -> Tensor:
-        """Compute the Laplacian edge map using a Gaussian pyramid.
-
-        Args:
-            image (Tensor): Input image tensor of shape (B, C, H, W) and values
-                ranging from 0.0 to 1.0.
-
-        Returns:
-            Tensor: Laplacian edge map.
-        """
-        filtered = self._gauss_conv(image)
-        # Downsample and Upsample (Stride 2)
-        down = filtered[:, :, ::2, ::2]
-        up   = torch.zeros_like(filtered)
-        up[:, :, ::2, ::2] = down * 4
-        # Second blur to smooth the upsampled grid
-        up_blurred = self._gauss_conv(up)
-        return image - up_blurred
-
-    def _gauss_conv(self, image: Tensor) -> Tensor:
-        """Apply Gaussian convolution to the ``image``.
-
-        Args:
-            image (Tensor): Input image tensor of shape (B, C, H, W) and values
-                ranging from 0.0 to 1.0.
-
-        Returns:
-            Tensor: Gaussian filtered image.
-        """
-        # TODO: Delete later
-        """
-        b, c, w, h  = self.kernel.shape
-        self.kernel = self.kernel.to(image.device)
-        image       = F.pad(image, (w // 2, h // 2, w // 2, h // 2), mode="replicate")
-        # gauss       = F.conv2d(image, self.kernel, groups=b)  # Old code
-        gauss       = F.conv2d(image, self.kernel, groups=c)  # Groups=c for channel-wise convolution
-        return gauss
-        """
-        # Replicate padding prevents edge artifacts in the laplacian map
-        x = F.pad(image, (2, 2, 2, 2), mode="replicate")
-        # groups=3 ensures each RGB channel is blurred independently
-        return F.conv2d(x, self.kernel, groups=3)
 
 # endregion
 

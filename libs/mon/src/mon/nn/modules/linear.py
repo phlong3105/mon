@@ -314,7 +314,7 @@ class LinearTime(nn.Linear):
             in_features (int): Number of features in the input (excluding the
                 time feature).
         """
-        super().__init__(in_features=in_features + 1, *args, **kwargs)
+        super().__init__(in_features + 1, *args, **kwargs)
 
     # --- Callable & Context Manager ---
     def forward(self, t: Tensor, x: Tensor) -> Tensor:
