@@ -26,10 +26,7 @@ from torch import nn, Tensor
 # region LAYERS
 # ==============================================================================
 
-# --- Linear Layers ---
-
-
-# --- Periodic Units ---
+# --- Periodic Linear ---
 
 class SineLinear(nn.Module):
     r"""Sine linear layer.
@@ -187,7 +184,7 @@ class SineLinearBN(nn.Module):
         return self.norm(x) if self.is_last else torch.sin(self.norm(self.w0 * x))
 
 
-# --- Spectral Tuning ---
+# --- Spectral Tuning Linear ---
 
 class FINERLinear(nn.Module):
     r"""FINER linear layer.
@@ -301,7 +298,7 @@ class FINERLinear(nn.Module):
         return x if self.is_last else torch.sin(self.w0 * x)
 
 
-# --- Time-Conditioned Linear Layers ---
+# --- Time-Step Linear ---
 
 class LinearTime(nn.Linear):
     """Linear layer that takes in the time step as an additional input."""
@@ -331,7 +328,9 @@ class LinearTime(nn.Linear):
 
 
 class SineLinearTime(SineLinear):
-    r"""Sine linear layer with periodic activation and time step."""
+    """Sine linear layer with periodic activation and time step as an additional
+    input.
+    """
 
     # --- Lifecycle & Initialization ---
     def __init__(self, in_features: int, *args, **kwargs):
