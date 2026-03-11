@@ -40,13 +40,13 @@ with mon.create_progress_bar() as pbar:
         ref       = mon.load_image(path=ref_file, to_tensor=True, normalize=True)
         # HVI
         hvi       = mon.RGBToHVI(requires_grad=False)
-        image_hvi = hvi.rgb_to_hvi(image)
-        ref_hvi   = hvi.rgb_to_hvi(ref)
+        image_hvi = hvi.to_hvi(image)
+        ref_hvi   = hvi.to_hvi(ref)
         print(image_file, image_hvi.shape, ref_hvi.shape)
         if image_hvi.shape != ref_hvi.shape:
             ref_hvi = mon.resize(image_hvi, (h0, w0))
         image_hvi[:, -1, :, :] = ref_hvi[:, -1, :, :].clone()
-        output    = hvi.hvi_to_rgb(image_hvi)
+        output    = hvi.to_rgb(image_hvi)
         if use_gf:
             output = kornia.filters.bilateral_blur(output, (3, 3), 0.5, (1.5, 1.5))
         # Output

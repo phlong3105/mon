@@ -17,20 +17,10 @@ from torch import nn, Tensor
 from torch.nn import functional as F
 from torchdiffeq import odeint_adjoint
 
+from mon.ops import normalize_minmax
 from .loss import L_tv
 
 MAX_NUM_STEPS = 1000  # 30  # 50  # 100
-
-
-# ==============================================================================
-# region UTILITIES
-# ==============================================================================
-
-def normalize_minmax(x: Tensor, scale: float = 1) -> Tensor:
-    x = x * scale
-    return (x - x.min()) / (x.max() - x.min())
-
-# endregion
 
 
 # ==============================================================================

@@ -22,24 +22,15 @@ import copy
 
 import torch
 from torch import nn, Tensor
+from torch.nn import functional as F
 from torch.optim import Adam
 
 from mon.core import DictLike, log, MODELS, OPTIMIZERS, Path, Task
 from mon.nn import ModelRegisterMixin
+from mon.ops import guided_filter_upsample, RgbToHsv
 from . import loss as L
 from .module import ResidualINR
-from .utils import (
-    filter_up,
-    get_coords,
-    get_h_component,
-    get_patches,
-    get_s_component,
-    get_v_component,
-    hsv2rgb_torch,
-    interpolate_image,
-    replace_v_component,
-    rgb2hsv_torch,
-)
+from .utils import get_coords, get_patches, replace_v_component
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -146,6 +137,7 @@ class CoLIE(ModelRegisterMixin, nn.Module):
         epochs = epochs or self.epochs
         window_size = self.window_size
         down_size = self.hidden_dim
+        device = self.device
 
         # 1. Reset the network weights to the initial state
         if reset_weights and self.initial_state_dict is not None:
@@ -158,22 +150,23 @@ class CoLIE(ModelRegisterMixin, nn.Module):
             optimizer = Adam(self.model.parameters(), lr=1e-5, betas=(0.9, 0.999), weight_decay=3e-4)
 
         # 3. Move inputs to the corresponding device
-        image = image.to(self.device)
+        image = image.to(device)
 
         # 4. Convert the image to HSV color space
-        image_hsv = rgb2hsv_torch(image).to(self.device)
-        image_h = get_h_component(image_hsv).to(self.device)
-        image_s = get_s_component(image_hsv).to(self.device)
-        image_i = get_v_component(image_hsv).to(self.device)
-        lr_image_i = interpolate_image(image_i, down_size, down_size).to(self.device)
+        color_func = RgbToHsv().to(device)
+        image_hsv = color_func.to_hsv(image).to(device)
+        image_h = image_hsv[:, 0:1, :, :]
+        image_s = image_hsv[:, 1:2, :, :]
+        image_i = image_hsv[:, 2:3, :, :]
+        lr_image_i = F.interpolate(image_i, (down_size, down_size)).to(device)
 
         # 5. Get coordinates and patches
-        coords = get_coords(down_size, down_size).to(self.device)
-        patches = get_patches(lr_image_i, window_size).to(self.device)
+        coords = get_coords(down_size, down_size).to(device)
+        patches = get_patches(lr_image_i, window_size).to(device)
 
         # 6. Define losses
-        L_exp = L.L_exp(16, E).to(self.device)
-        L_tv = L.L_TV().to(self.device)
+        L_exp = L.L_exp(16, E).to(device)
+        L_tv = L.L_TV().to(device)
         lr_image_i_res = None
         lr_image_i_fixed = None
         lr_image_r = None
@@ -206,9 +199,9 @@ class CoLIE(ModelRegisterMixin, nn.Module):
                 log(f"Epoch {i+1:4d}/{epochs:4d}: Loss = {loss:6.2f}")
 
         # 8. Final Retinex reconstruction
-        image_r = filter_up(lr_image_i, lr_image_r, image_i)
+        image_r = guided_filter_upsample(lr_image_r, lr_image_i, image_i)
         image_hsv_fixed = replace_v_component(image_hsv, image_r)
-        image_rgb_fixed = hsv2rgb_torch(image_hsv_fixed)
+        image_rgb_fixed = color_func.to_rgb(image_hsv_fixed)
         image_rgb_fixed = image_rgb_fixed / torch.max(image_rgb_fixed)
 
         # 9. Return final and intermediate results for debugging
@@ -218,8 +211,8 @@ class CoLIE(ModelRegisterMixin, nn.Module):
                 "image_h": image_h,
                 "image_s": image_s,
                 "image_i": image_i,
-                "image_i_res": filter_up(lr_image_i, lr_image_i_res, image_i),
-                "image_i_fixed": filter_up(lr_image_i, lr_image_i_fixed, image_i),
+                "image_i_res": guided_filter_upsample(lr_image_i_res, lr_image_i, image_i),
+                "image_i_fixed": guided_filter_upsample(lr_image_i_fixed, lr_image_i, image_i),
                 "image_r": image_r,
             }
         return outputs

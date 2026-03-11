@@ -19,7 +19,7 @@ from rich.progress import Progress
 from typing_extensions import override
 
 from mon.core import OPTIMIZERS, Path, resolve_project_root, RunMode, Task
-from mon.ops import normalize_min_max
+from mon.ops import normalize_minmax
 from mon.runners import Trainer
 from . import loss as L
 from .model import iz_dce, iz_dce_ode
@@ -234,9 +234,9 @@ class IZ_DCE_Trainer(Trainer):
             "image": val_outputs["image"],
             "target": val_outputs["target"],
             "enhanced": val_outputs["enhanced"],
-            "curve_map": normalize_min_max(val_outputs["curve_map"]),
+            "curve_map": normalize_minmax(val_outputs["curve_map"]),
             "denoised": val_outputs["denoised"],
-            "noise_map": normalize_min_max(val_outputs["noise_map"]),
+            "noise_map": normalize_minmax(val_outputs["noise_map"]),
         }
 
         self._save_image(epoch, debug_image, column_first=True)

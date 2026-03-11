@@ -9,6 +9,7 @@ This module provides operations for processing images.
 from __future__ import annotations
 
 __all__ = [
+    "guided_filter_upsample",
     "is_image",
     "pair_downsample",
     "parse_image_shape",
@@ -25,6 +26,7 @@ from torch import Tensor
 from torch.nn import functional as F
 
 from mon.core import Int3, Size, TensorOrArray
+from .filter import FastGuidedFilter
 
 
 # ==============================================================================
@@ -274,6 +276,28 @@ def to_image_tensor(image: ndarray, normalize: bool = False) -> Tensor:
 
 
 # --- Geometric ---
+
+def guided_filter_upsample(x_lr: Tensor, y_lr: Tensor, y_hr: Tensor, r: int = 1) -> Tensor:
+    """Applies the ``FastGuidedFilter`` to upscale an image.
+
+    Args:
+        x_lr (Tensor): Low-resolution upscaling image of shape (B, C, H1, W1)
+            and values ranging from 0.0 to 1.0.
+        y_lr (Tensor): Low-resolution guidance image of shape (B, C, H1, W1)
+            and values ranging from 0.0 to 1.0.
+        y_hr (Tensor): High-resolution guidance image of shape (B, C, H2, W2)
+            and values ranging from 0.0 to 1.0.
+        r (int, optional): Radius of the guided filter. Defaults to 1.
+
+    Returns:
+        Tensor: Upscaled image of shape (B, C, H2, W2) and values ranging from
+            0.0 to 1.0.
+    """
+    guided_filter = FastGuidedFilter(r=r)
+    x_hr = guided_filter(y_lr, x_lr, y_hr)
+    x_hr = x_hr.clamp(0.0, 1.0)
+    return x_hr
+
 
 def pair_downsample(image: Tensor) -> tuple[Tensor, Tensor]:
     """Downsample an image tensor into a pair to half resolution.

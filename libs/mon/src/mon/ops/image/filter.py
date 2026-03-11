@@ -77,7 +77,7 @@ def _diff_y(image: Tensor, r: int) -> Tensor:
 
 
 # ==============================================================================
-# region SOBEL FILTER
+# region BOX FILTER
 # ==============================================================================
 
 class BoxFilter(nn.Module):

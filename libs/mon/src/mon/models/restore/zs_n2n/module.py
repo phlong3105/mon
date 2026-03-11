@@ -196,7 +196,8 @@ class ImprovedDenoiseNetwork(nn.Module):
         noise = self.channel_attention(y)
 
         # Note: The network fits the noise parameter f_θ(y).
-        # To get the denoised image during inference, you subtract this from the input: x = y - f_θ(y)
+        # To get the denoised image during inference, you subtract this from
+        # the input: x = y - f_θ(y)
         return noise
 
 # endregion

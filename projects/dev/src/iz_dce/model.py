@@ -24,7 +24,8 @@ from torch import nn, Tensor
 
 from mon.core import is_weights_type, log, MODELS, Path, Task, WeightsLike
 from mon.nn import ModelRegisterMixin
-from .module import EnhanceFunction, EnhanceFunctionTime, ODEBlock
+from .module import EnhanceFunction
+from .module_ode import EnhanceFunctionTime, ODEBlock
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]

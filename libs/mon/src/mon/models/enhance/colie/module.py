@@ -4,7 +4,6 @@
 from __future__ import annotations
 
 __all__ = [
-    "ReflectanceINR",
     "ResidualINR",
     "SirenLayer",
 ]
@@ -100,11 +99,12 @@ class SirenLayer(nn.Module):
 
 class ResidualINR(nn.Module):
 
+    # --- Lifecycle & Initialization ---
     def __init__(
         self,
         patch_dim: int,
-        num_layers: int,
         hidden_dim: int,
+        num_layers: int,
         add_layer: int,
         weight_decay: list[float] | None = None
     ):
@@ -138,41 +138,13 @@ class ResidualINR(nn.Module):
         self.params += [{"params": self.patch_net.parameters(), "weight_decay": weight_decay[1]}]
         self.params += [{"params": self.output_net.parameters(),"weight_decay": weight_decay[2]}]
 
+    # --- Callable & Context Manager ---
     def forward(self, patch: Tensor, spatial: Tensor) -> Tensor:
         return self.output_net(
             torch.cat(
                 (self.patch_net(patch), self.spatial_net(spatial)), -1
             )
         )
-
-
-class ReflectanceINR(nn.Module):
-
-    def __init__(
-        self,
-        num_layers: int,
-        hidden_dim: int,
-        weight_decay: list[float] | None = None
-    ):
-        super().__init__()
-        '''
-        `add_layer` should be in range of  [1, num_layers-2]
-        '''
-        spatial_layers = [SirenLayer(2, hidden_dim, is_first=True)]
-        for _ in range(1, num_layers - 1):
-            spatial_layers.append(SirenLayer(hidden_dim, hidden_dim))
-        spatial_layers.append(SirenLayer(hidden_dim, 1, is_last=True))
-
-        self.spatial_net = nn.Sequential(*spatial_layers)
-
-        if not weight_decay:
-            weight_decay = [0.1]
-
-        self.params = []
-        self.params += [{"params": self.spatial_net.parameters(), "weight_decay": weight_decay[0]}]
-
-    def forward(self, spatial: Tensor) -> Tensor:
-        return self.spatial_net(spatial)
 
 # endregion
 
