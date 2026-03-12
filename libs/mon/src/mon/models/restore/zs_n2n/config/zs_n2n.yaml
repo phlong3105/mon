@@ -84,6 +84,7 @@ loss: ~
 
 # --- Prediction ---
 eval_imgsz: 512  # (int | list[int]) Image size for evaluation.
+eval_resize: True  # (bool) Resize the image to the evaluation size.
 benchmark: False  # (bool) Benchmark the model.
 
 # --- Saving & Visualization ---

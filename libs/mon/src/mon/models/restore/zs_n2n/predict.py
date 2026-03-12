@@ -54,10 +54,18 @@ class ZS_N2N_Predictor(Predictor):
     @override
     def _init_transforms(self):
         """Initialize ``self._transforms`` attribute."""
-        self._transforms = T.Compose([
+        config = self.config
+
+        transforms = T.Compose([
             T.Normalize(normalization="min_max"),
             T.ToTensorV2(transpose_mask=True),
         ])
+        if config.eval_resize:
+            imgsz = config.eval_imgsz
+            resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
+            transforms = resize + transforms
+
+        self._transforms = transforms
 
     # --- Prediction ---
     @override

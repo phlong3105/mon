@@ -67,6 +67,7 @@ class DAV2_Predictor(Predictor):
     @override
     def _init_transforms(self):
         """Initialize ``self._transforms`` attribute."""
+        # No transforms needed for DAV2, everything is done in the model
         self._transforms = None
 
     @override
