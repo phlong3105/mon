@@ -120,12 +120,12 @@ class ResidualINR(nn.Module):
                 values ranging from 0.0 to 1.0.
         """
         # Process each branch
-        coords_e = self.ff(coords) if self.ff is not None else coords
-        coords_f = self.coord_net(coords_e)
-        patches_f = self.patch_net(patches)
-        concat_f = torch.cat((coords_f, patches_f), dim=-1)
+        coords = self.ff(coords) if self.ff is not None else coords
+        coords = self.coord_net(coords)
+        patches = self.patch_net(patches)
+        concat = torch.cat((coords, patches), dim=-1)
         # Final output
-        output = self.output_net(concat_f)
+        output = self.output_net(concat)
         return output
 
 

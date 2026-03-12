@@ -14,18 +14,17 @@ from __future__ import annotations
 
 __all__ = [
     "IZ_DCE",
-    "IZ_DCE_ODE",
     "iz_dce",
-    "iz_dce_ode",
 ]
 
 import torch
 from torch import nn, Tensor
+from torch.nn import functional as F
+from torchdiffeq import odeint
 
 from mon.core import is_weights_type, log, MODELS, Path, Task, WeightsLike
 from mon.nn import ModelRegisterMixin
-from .module import EnhanceFunction
-from .module_ode import EnhanceFunctionTime, ODEBlock
+from .module import DecoderSIREN, Denoiser, Encoder, EnhancementCurveODE
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -47,6 +46,11 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
     name: str = "iz_dce"
     tasks: list[Task] = [Task.ENHANCE]
     model_dir: Path = current_dir
+    methods = [
+        "iter8", "dopri8", "dopri5", "bosh3", "fehlberg2", "adaptive_heun",
+        "euler", "midpoint", "heun2", "heun3", "rk4", "explicit_adams",
+        "implicit_adams", "fixed_adams", "scipy_solver"
+    ]
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -56,7 +60,9 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
         hidden_dim: int = 32,
         imgsz: int = 256,
         chunk_size: int = 100000,
-        num_iter: int = 8,
+        method: str = "dopri5",
+        tol: float = 1e-5,
+        ode_options: dict | None = None,
         use_depth: bool = False,
         use_anscombe: bool = False,
         weights: WeightsLike | None = None,
@@ -73,8 +79,10 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
                 encoding. Defaults to 256.
             chunk_size (int): Number of pixels to process at once.
                 Defaults to 100,000.
-            num_iter (int, optional): Number of iterations for curve estimation.
-                Defaults to 8.
+            method (str, optional): ODE solver method. Defaults to "dopri5".
+            tol (float, optional): Tolerance for solver. Defaults to 1e-5.
+            ode_options (dict, optional): Additional options to pass to the ODE
+                solver. Defaults to None.
             use_depth (bool, optional): Whether to use depth as an additional
                 input channel. Defaults to False.
             use_anscombe (bool, optional): Whether to apply the Anscombe
@@ -83,118 +91,48 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
                 Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
-        # Satisfy PyTorch's empty signature first.
         super().__init__(name=name)
+        # Validate inputs
+        if method not in self.methods:
+            raise ValueError(
+                f"Invalid ODE solver method: '{method}'. "
+                f"Must be one of {self.methods}."
+            )
 
         # Assign attributes
         self.verbose = verbose
+        self.in_channels = in_channels
+        self.out_channels = in_channels
         self.imgsz = imgsz
+        self.chunk_size = chunk_size
+        self.method = method
+        self.tol = tol
+        self.ode_options = ode_options
 
         # Define network
-        self.enhance_func = EnhanceFunction(
+        self.denoiser = Denoiser(
             in_channels=in_channels,
-            hidden_dim=hidden_dim,
-            imgsz=imgsz,
-            chunk_size=chunk_size,
-            num_iter=num_iter,
-            use_depth=use_depth,
             use_anscombe=use_anscombe,
-            *args, **kwargs
         )
-
-        # Load weights
-        if is_weights_type(weights):
-            self.load_state_dict(weights.state_dict())
-            if self.verbose:
-                log(f"Initialized '{name}' from weights: '{weights.path}'.")
-        else:
-            if self.verbose:
-                log(f"Initialized '{name}' from scratch.")
-
-    # --- Callable & Context Manager ---
-    def forward(self, image: Tensor, depth: Tensor | None = None, *args, **kwargs) -> dict:
-        """Forward the input through the network.
-
-        Args:
-            image (Tensor): Image tensor of shape (B, 3, H, W) and values
-                ranging from 0.0 to 1.0.
-            depth (Tensor, optional): Depth tensor of shape (B, 1, H, W) and
-                values ranging from 0.0 to 1.0. Defaults to None.
-        """
-        return self.enhance_func(image, depth, *args, **kwargs)
-
-
-class IZ_DCE_ODE(ModelRegisterMixin, nn.Module):
-    """IZ-DCE-ODE model.
-
-    References:
-        - Paper: "IZ-DCE: Implicit Zero-Reference Deep Curve Estimation"
-        - Code: https://github.com/phlong3105/izdce
-    """
-
-    arch: str = "iz_dce"
-    name: str = "iz_dce_ode"
-    tasks: list[Task] = [Task.ENHANCE]
-    model_dir: Path = current_dir
-
-    # --- Lifecycle & Initialization ---
-    def __init__(
-        self,
-        name: str,
-        in_channels: int = 3,
-        hidden_dim: int = 32,
-        imgsz: int = 128,
-        chunk_size: int = 100000,
-        use_depth: bool = False,
-        use_anscombe: bool = False,
-        tol: float = 1e-5,
-        adjoint: bool = True,
-        ode_options: dict | None = None,
-        weights: WeightsLike | None = None,
-        verbose: bool = True,
-        *args, **kwargs
-    ):
-        """Initialize a new instance.
-
-        Args:
-            name (str): Name of the model to use.
-            in_channels (int, optional): Number of input channels. Defaults to 3.
-            hidden_dim (int, optional): Hidden dimension. Defaults to 32.
-            imgsz (int, optional): Downsample the input image to this size for
-                encoding. Defaults to 128.
-            chunk_size (int): Number of pixels to process at once.
-                Defaults to 100,000.
-            use_depth (bool, optional): Whether to use depth as input.
-                Defaults to False.
-            use_anscombe (bool, optional): Whether to apply the Anscombe
-                transform to the input before denoising. Defaults to False.
-            tol (float, optional): Tolerance for solver. Defaults to 1e-5.
-            adjoint (bool, optional): Whether to use the adjoint method for
-                backpropagation. Defaults to False.
-            ode_options (dict, optional): Additional options to pass to the ODE
-                solver. Defaults to None.
-            weights (WeightsLike, optional): Pre-trained weights to load.
-                Defaults to None.
-            verbose (bool, optional): Verbosity mode. Defaults to True.
-        """
-        # Satisfy PyTorch's empty signature first.
-        super().__init__(name=name)
-
-        # Assign attributes
-        self.verbose = verbose
-        self.imgsz = imgsz
-
-        # Define network
-        self.enhance_func = EnhanceFunctionTime(
-            in_channels=in_channels,
+        self.encoder = Encoder(
+            in_channels=in_channels * 2 + 1 if use_depth else in_channels * 2,
             hidden_dim=hidden_dim,
-            imgsz=imgsz,
-            chunk_size=chunk_size,
-            use_depth=use_depth,
-            use_anscombe=use_anscombe,
-            *args, **kwargs
         )
-        self.ode_block = ODEBlock(self.enhance_func, tol, adjoint, ode_options)
+        # Implicit decoder (Siren/Continuous MLP)
+        """
+        self.decoder = Decoder(
+            in_channels=hidden_dim + 2,
+            out_channels=self.out_channels,
+            hidden_dim=hidden_dim
+        )
+        """
+        self.decoder = DecoderSIREN(
+            in_channels=hidden_dim,
+            out_channels=self.out_channels,
+            hidden_dim=hidden_dim,
+            pos_encode=True,
+            mapping_size=imgsz
+        )
 
         # Load weights
         if is_weights_type(weights):
@@ -210,7 +148,8 @@ class IZ_DCE_ODE(ModelRegisterMixin, nn.Module):
         self,
         image: Tensor,
         depth: Tensor | None = None,
-        eval_time: Tensor | None = None,
+        t: Tensor | None = None,
+        save_debug: bool = False,
         *args, **kwargs
     ) -> dict:
         """Forward the input through the network.
@@ -220,35 +159,143 @@ class IZ_DCE_ODE(ModelRegisterMixin, nn.Module):
                 ranging from 0.0 to 1.0.
             depth (Tensor, optional): Depth tensor of shape (B, 1, H, W) and
                 values ranging from 0.0 to 1.0. Defaults to None.
-            eval_time (Tensor, optional): Time steps at which to evaluate the
-                ODE solution. If None, defaults to [0, 1]. Defaults to None.
+            t (Tensor, optional): Time tensor. If None, use the original
+                Zero-DCE iteration scheme. Defaults to None.
+            save_debug (bool, optional): Whether to save intermediate results for
+                debugging. Defaults to False.
         """
         # 1. Prepare inputs
-        b, c, h, w = image.shape
-        if depth is None:
-            depth = torch.zeros(b, 1, h, w, device=image.device)
+        x = image
+        d = depth
+        b, c, h, w = x.shape
+        size = (self.imgsz, self.imgsz)
 
-        x = torch.cat([
-            image,
-            depth,
-            torch.zeros_like(image),
-            torch.zeros_like(image)
-        ], dim=1)
+        # We downsample the input to 512x512 so the CNN doesn't cause an OOM error
+        if (h, w) != size:
+            x = F.interpolate(x, size=size, mode="bilinear", align_corners=True)
+            d = F.interpolate(d, size=size, mode="bilinear", align_corners=True) if d is not None else None
 
-        # 2. Forward pass
-        preds = self.ode_block(x, eval_time=eval_time)
+        # 2. Denoise
+        l_denoise, noise, p_x = self.denoiser(x)
 
-        # 3. Extract outputs
-        pred = preds[-1]
+        # 3. Fusion
+        if d is not None:
+            x_in = torch.cat([x, p_x, d], dim=1)
+        else:
+            x_in = torch.cat([x, p_x], dim=1)
 
-        return {
-            "enhanced": pred[:, :3, :, :],
-            "curve_map": self.enhance_func.last_curve_map,
-            "denoised": self.enhance_func.last_denoised,
-            "noise_map": self.enhance_func.last_noise_map,
-            "l_tv": pred[:, 4:7, :, :],
-            "l_denoise": pred[:, 7:10, :, :],
-        }
+        # 4. Encode
+        feat = self.encoder(x_in)
+
+        # 5. Predict curve parameters
+        if (h, w) == size:
+            A = self.predict_curve_map(feat, self.imgsz, self.imgsz)
+        else:
+            A = self.predict_curve_map_chunk(feat, h, w)
+
+        # 6. Enhance
+        if self.method in ["iter8"]:
+            y = self.enhance_iter(image, A, 8)
+        else:
+            y = self.enhance(image, A, t=t)
+
+        # 7. Return final and intermediate results for debugging
+        outputs = { "enhanced": y }
+        if self.training or save_debug:
+            outputs |= {
+                "curve_map": A,
+                "noise_map": noise,
+                "denoised": p_x,
+                "l_denoise": l_denoise,
+            }
+        return outputs
+
+    # --- Curve Map ---
+    def predict_curve_map(self, feat: Tensor, h: int, w: int) -> Tensor:
+        b = feat.shape[0]
+        device = feat.device
+
+        # We map the massive target resolution to the [-1, 1] continuous space.
+        h_coords = torch.linspace(-1, 1, steps=h, device=device)
+        w_coords = torch.linspace(-1, 1, steps=w, device=device)
+        grid_h, grid_w = torch.meshgrid(h_coords, w_coords, indexing="ij")
+        coords = torch.stack([grid_w, grid_h], dim=-1).view(1, -1, 2).repeat(b, 1, 1)  # [B, H*W, 2]
+
+        sampled_feat = F.grid_sample(feat, coords.unsqueeze(1), mode="bilinear", align_corners=True)
+        sampled_feat = sampled_feat.squeeze(2).permute(0, 2, 1)  # [B, N, 32]
+
+        A = self.decoder(sampled_feat, coords)
+        A = A.view(b, h, w, 3).permute(0, 3, 1, 2)
+
+        return A
+
+    def predict_curve_map_chunk(self, feat: Tensor, h: int, w: int) -> Tensor:
+        chunk_size = self.chunk_size
+        b = feat.shape[0]
+        device = feat.device
+
+        # We map the massive target resolution to the [-1, 1] continuous space.
+        h_coords = torch.linspace(-1, 1, steps=h, device=device)
+        w_coords = torch.linspace(-1, 1, steps=w, device=device)
+        grid_h, grid_w = torch.meshgrid(h_coords, w_coords, indexing="ij")
+        coords = torch.stack([grid_w, grid_h], dim=-1).view(b, -1, 2)  # [B, H*W, 2]
+
+        total_points = h * w
+        A_list = []
+
+        # 1 Chunked MLP Inference
+        # Process the points in batches of `chunk_size` to cap VRAM usage.
+        for i in range(0, total_points, chunk_size):
+            coords_chunk = coords[:, i:i+chunk_size, :]  # [B, chunk, 2]
+
+            # Sample from the 512x512 feature map at the exact target coordinates
+            sampled_feat = F.grid_sample(feat, coords_chunk.unsqueeze(1), mode="bilinear", align_corners=True)
+            sampled_feat = sampled_feat.squeeze(2).permute(0, 2, 1)  # [B, chunk, 32]
+
+            # Predict the curve parameters for this chunk
+            A_chunk = self.decoder(sampled_feat, coords_chunk)
+            A_list.append(A_chunk)
+
+        # 2. Reconstruct the spatial curve parameter map
+        A_flat = torch.cat(A_list, dim=1)  # [B, H*W, 24]
+        A = A_flat.view(b, h, w, 3).permute(0, 3, 1, 2)  # [B, 3, H, W]
+
+        return A
+
+    # --- Enhance ---
+    def enhance(self, image: Tensor, A: Tensor, t: Tensor | None = None) -> Tensor:
+        """Apply the continuous enhancement via Neural ODE."""
+        # 1. Initialize the derivative function with our predicted curve
+        ode_func = EnhancementCurveODE(A)
+
+        # 2. Define the continuous integration time span
+        # t=0.0 is the dark image, t=1.0 is the fully enhanced image
+        if t is None:
+            t_span = torch.tensor([0.0, 1.0], device=image.device)
+        else:
+            t_span = t
+
+        # 3. Solve the ODE
+        trajectory = odeint(
+            func=ode_func,
+            y0=image,
+            t=t_span,
+            rtol=self.tol,
+            atol=self.tol,
+            method=self.method,
+            options=self.ode_options,
+        )
+        # trajectory contains the image at t=0.0 and t=1.0. We want the final state.
+        y = trajectory[-1]
+
+        return y
+
+    def enhance_iter(self, image: Tensor, A: Tensor, num_iters: int = 8) -> Tensor:
+        """Apply the original iterative enhancement scheme."""
+        y = image
+        for _ in range(num_iters):
+            y = y + A * (torch.pow(y, 2) - y)
+        return y
 
 # endregion
 
@@ -270,7 +317,9 @@ def iz_dce(*args, **kwargs):
     hidden_dim = kwargs.pop("hidden_dim", 32)
     imgsz = kwargs.pop("imgsz", 256)
     chunk_size = kwargs.pop("chunk_size", 100000)
-    num_iter = kwargs.pop("num_iter", 8)
+    method = kwargs.pop("method", "dopri5")
+    tol = kwargs.pop("tol", 1e-5)
+    ode_options = kwargs.pop("ode_options", None)
     use_depth = kwargs.pop("use_depth", False)
     use_anscombe = kwargs.pop("use_anscombe", False)
     return IZ_DCE(
@@ -279,35 +328,11 @@ def iz_dce(*args, **kwargs):
         hidden_dim=hidden_dim,
         imgsz=imgsz,
         chunk_size=chunk_size,
-        num_iter=num_iter,
-        use_depth=use_depth,
-        use_anscombe=use_anscombe,
-        *args, **kwargs
-    )
-
-
-@MODELS.register(name="iz_dce_ode", metaclass=IZ_DCE_ODE)
-def iz_dce_ode(*args, **kwargs):
-    """Create a IZ-DCE-ODE model."""
-    _ = kwargs.pop("name", "iz_dce_ode")
-    in_channels = kwargs.pop("in_channels", 3)
-    hidden_dim = kwargs.pop("hidden_dim", 32)
-    imgsz = kwargs.pop("imgsz", 128)
-    chunk_size = kwargs.pop("chunk_size", 100000)
-    use_depth = kwargs.pop("use_depth", False)
-    use_anscombe = kwargs.pop("use_anscombe", False)
-    tol = kwargs.pop("tol", 1e-5)
-    adjoint = kwargs.pop("adjoint", True)
-    return IZ_DCE_ODE(
-        name="iz_dce_ode",
-        in_channels=in_channels,
-        hidden_dim=hidden_dim,
-        imgsz=imgsz,
-        chunk_size=chunk_size,
-        use_depth=use_depth,
-        use_anscombe=use_anscombe,
+        method=method,
         tol=tol,
-        adjoint=adjoint,
+        ode_options=ode_options,
+        use_depth=use_depth,
+        use_anscombe=use_anscombe,
         *args, **kwargs
     )
 

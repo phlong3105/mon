@@ -1264,7 +1264,7 @@ class ConfigContext(Config):
         else:
             raise ValueError(f"Invalid run mode: {mode}")
 
-        return self.as_config()
+        return self  # self.as_config()
 
     # --- Transformation ---
     def as_config(self) -> Config:

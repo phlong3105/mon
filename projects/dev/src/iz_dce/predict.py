@@ -10,7 +10,6 @@ from __future__ import annotations
 
 __all__ = [
     "IZ_DCE_Predictor",
-    "IZ_DCE_ODE_Predictor",
 ]
 
 from typing import Any
@@ -29,7 +28,7 @@ from mon.core import (
 from mon.dataset import transform as T
 from mon.runners import Predictor
 # noinspection PyUnusedImports
-from .model import iz_dce, iz_dce_ode
+from .model import iz_dce
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -96,11 +95,12 @@ class IZ_DCE_Predictor(Predictor):
         image = image.to(device)
         depth = datapoint.get("depth", None)
         depth = depth.to(device) if use_depth and depth is not None else None
+        t = torch.tensor([0, config.eval_T]).float().to(device)
         timers.preprocess.tock()
 
         # 2. Inference
         timers.infer.tick()
-        outputs = self.model(image, depth)
+        outputs = self.model(image=image, depth=depth, t=t, save_debug=self.save_debug)
         timers.infer.tock()
 
         return outputs
@@ -132,57 +132,6 @@ class IZ_DCE_Predictor(Predictor):
                 for each data point.
         """
         pass
-
-
-class IZ_DCE_ODE_Predictor(IZ_DCE_Predictor):
-    """Predictor for IZ-DCE-ODE models."""
-
-    # --- Lifecycle & Initialization ---
-    @override
-    def _init_model(self):
-        """Initialize ``self._model`` attribute."""
-        config = self.config
-        device = self.device
-        weights = config.weights or config.finetune
-
-        model = iz_dce_ode(**config.model | { "weights": weights})
-        model = model.to(device)
-        model.eval()
-        self._model = model
-
-    # --- Prediction ---
-    @override
-    @torch.no_grad()
-    def _predict_step(self, datapoint: dict, timers: TimeProfiler) -> dict:
-        """Predict the output of the model for a single data point.
-
-        Args:
-            datapoint (dict): The dictionary containing the data point to predict.
-            timers (TimeProfiler): The time profiler to record timing information
-                during prediction.
-
-        Returns:
-            dict: The dictionary containing the prediction results.
-        """
-        config = self.config
-        device = self.device
-        use_depth = config.model.use_depth
-
-        # 1. Prepare inputs
-        timers.preprocess.tick()
-        image = datapoint["image"]
-        image = image.to(device)
-        depth = datapoint.get("depth", None)
-        depth = depth.to(device) if use_depth and depth is not None else None
-        time_eval = torch.tensor([0, config.T]).float().to(device)
-        timers.preprocess.tock()
-
-        # 2. Inference
-        timers.infer.tick()
-        outputs = self.model(image, depth, time_eval)
-        timers.infer.tock()
-
-        return outputs
 
 # endregion
 

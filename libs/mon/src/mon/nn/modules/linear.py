@@ -340,7 +340,7 @@ class SineLinearTime(SineLinear):
             in_features (int): Number of features in the input (excluding the
                 time feature).
         """
-        super().__init__(in_features + 1, *args, **kwargs)
+        super(SineLinearTime, self).__init__(in_features + 1, *args, **kwargs)
 
     # --- Callable & Context Manager ---
     def forward(self, t: Tensor, x: Tensor) -> Tensor:
@@ -352,7 +352,7 @@ class SineLinearTime(SineLinear):
                 ranging from 0.0 to 1.0.
         """
         t_feat = torch.ones_like(x[:, :, :1]) * t  # (B, N, 1)
-        t_and_x = torch.cat([t_feat, x], dim=-1)  # (B, N, F + 1)
+        t_and_x = torch.cat([t_feat, x], -1)  # (B, N, F + 1)
         return super(SineLinearTime, self).forward(t_and_x)
 
 # endregion

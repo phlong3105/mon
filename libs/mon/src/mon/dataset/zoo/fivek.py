@@ -121,7 +121,7 @@ class FiveK_D(ImageDataset, DatasetRegisterMixin):
     classes: ClassList = ClassList()
 
 
-@DATASETS.register(name="fivek_E")
+@DATASETS.register(name="fivek_e")
 class FiveK_E(ImageDataset, DatasetRegisterMixin):
     """FiveK-E dataset."""
 

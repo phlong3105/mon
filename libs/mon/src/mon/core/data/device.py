@@ -159,6 +159,11 @@ class DeviceList(IndexList[Device]):
         """Return a list of names."""
         return [d.name for d in self]
 
+    @property
+    def values(self) -> list[Device]:
+        """Return a list of values."""
+        return list(self)
+
 # endregion
 
 

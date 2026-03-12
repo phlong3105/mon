@@ -18,12 +18,10 @@ __all__ = [
     "colie",
 ]
 
-import copy
-
 import torch
 from torch import nn, Tensor
 from torch.nn import functional as F
-from torch.optim import Adam
+from torch.optim import Adam, Optimizer
 
 from mon.core import DictLike, log, MODELS, OPTIMIZERS, Path, Task
 from mon.nn import ModelRegisterMixin
@@ -90,20 +88,37 @@ class CoLIE(ModelRegisterMixin, nn.Module):
         self.verbose = verbose
         self.window_size = window_size
         self.hidden_dim = hidden_dim
+        self.num_layers = num_layers
+        self.add_layers = add_layers
         self.epochs = epochs
         self.device = device
 
         # Define network
         self.model = ResidualINR(
-            patch_dim=window_size ** 2,
-            hidden_dim=hidden_dim,
-            num_layers=num_layers,
-            add_layer=add_layers,
-        ).to(device)
+            patch_dim=self.window_size ** 2,
+            hidden_dim=self.hidden_dim,
+            num_layers=self.num_layers,
+            add_layer=self.add_layers,
+        ).to(self.device)
 
-        # Save the initial state dict. Since each weight is optimized for a
-        # single image, so we need to reset the weights before each new image.
-        self.initial_state_dict = copy.deepcopy(self.model.state_dict())
+        # Store default weights
+        self._default_state_dict = self.model.state_dict()
+
+    def _build_optimizer(self, optimizer: DictLike | None = None) -> Optimizer:
+        """Build and return the optimizer for the INR model.
+
+        Args:
+            optimizer (DictLike, optional): Dictionary containing optimizer
+                parameters. Defaults to None.
+        """
+        # Reset the network weights to their initial state
+        self.model.load_state_dict(self._default_state_dict)
+
+        # Define optimizer
+        if optimizer is not None:
+            return OPTIMIZERS.build(params=self.model.parameters(), **optimizer)
+        else:
+            return Adam(self.model.parameters(), lr=1e-5, betas=(0.9, 0.999), weight_decay=3e-4)
 
     # --- Callable & Context Manager ---
     def forward(
@@ -111,7 +126,6 @@ class CoLIE(ModelRegisterMixin, nn.Module):
         image: Tensor,
         epochs: int = 100,
         E: float = 0.5,
-        reset_weights: bool = True,
         optimizer: DictLike | None = None,
         save_debug: bool = False,
     ) -> dict:
@@ -123,8 +137,6 @@ class CoLIE(ModelRegisterMixin, nn.Module):
             epochs (int, optional): Number of optimization epochs for the INR.
                 Defaults to 100.
             E (float, optional): Well-exposedness level E. Defaults to 0.1.
-            reset_weights (bool, optional): If True, reset the network weights
-                to the initial state before optimization. Defaults to True.
             optimizer (DictLike, optional): Dictionary containing optimizer
                 parameters. Defaults to None.
             save_debug (bool, optional): If True, return intermediate results
@@ -139,80 +151,96 @@ class CoLIE(ModelRegisterMixin, nn.Module):
         down_size = self.hidden_dim
         device = self.device
 
-        # 1. Reset the network weights to the initial state
-        if reset_weights and self.initial_state_dict is not None:
-            self.model.load_state_dict(self.initial_state_dict)
+        # 1. Build optimizer
+        optimizer = self._build_optimizer(optimizer=optimizer)
 
-        # 2. Define optimizer & schedulers
-        if optimizer is not None:
-            optimizer = OPTIMIZERS.build(params=self.model.parameters(), **optimizer)
-        else:
-            optimizer = Adam(self.model.parameters(), lr=1e-5, betas=(0.9, 0.999), weight_decay=3e-4)
-
-        # 3. Move inputs to the corresponding device
+        # 2. Move inputs to the corresponding device
         image = image.to(device)
 
-        # 4. Convert the image to HSV color space
+        # 3. Convert the image to HSV color space
         color_func = RgbToHsv().to(device)
-        image_hsv = color_func.to_hsv(image).to(device)
-        image_h = image_hsv[:, 0:1, :, :]
-        image_s = image_hsv[:, 1:2, :, :]
-        image_i = image_hsv[:, 2:3, :, :]
+        image_hsv = color_func.from_rgb(image)
+        image_h = image_hsv[:, 0:1, :, :].detach()  # Detach to prevent memory leak
+        image_s = image_hsv[:, 1:2, :, :].detach()  # Detach to prevent memory leak
+        image_i = image_hsv[:, 2:3, :, :].detach()  # Detach to prevent memory leak
         lr_image_i = F.interpolate(image_i, (down_size, down_size)).to(device)
 
-        # 5. Get coordinates and patches
+        # 4. Get coordinates and patches
         coords = get_coords(down_size, down_size).to(device)
         patches = get_patches(lr_image_i, window_size).to(device)
 
-        # 6. Define losses
+        # 5. Define losses
         L_exp = L.L_exp(16, E).to(device)
         L_tv = L.L_TV().to(device)
         lr_image_i_res = None
         lr_image_i_fixed = None
         lr_image_r = None
 
-        # 7. Optimize the INR network
+        # 6. Optimize the INR network
+        best_loss = float("inf")
+        best_epoch = 0
+        best_state_dict = None
+
         self.model.train()
         for i in range(epochs):
-            # 7.1. Forward pass
+            # 6.1. Forward pass
             lr_image_i_res = self.model(patches, coords)
             lr_image_i_res = lr_image_i_res.view(1, 1, down_size, down_size)
 
-            # 7.2. Retinex reconstruction
+            # 6.2. Retinex reconstruction
             lr_image_i_fixed = lr_image_i_res + lr_image_i
             lr_image_r = lr_image_i / (lr_image_i_fixed + 1e-4)
 
-            # 7.3. Loss
+            # 6.3. Loss
             l_spa = torch.mean(torch.abs(torch.pow(lr_image_i_fixed - lr_image_i, 2)))
-            l_tv = L_tv(lr_image_i_fixed)
+            l_tv = torch.mean(L_tv(lr_image_i_fixed))
             l_exp = torch.mean(L_exp(lr_image_i_fixed))
             l_sparsity = torch.mean(lr_image_r)
             loss = l_spa + (20 * l_tv) + (8 * l_exp) + (5 * l_sparsity)
 
-            # 7.4. Backward pass
+            # 6.4. Backward pass
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
 
-            # 7.5. Log
-            if self.verbose:
-                log(f"Epoch {i+1:4d}/{epochs:4d}: Loss = {loss:6.2f}")
+            # 6.5. Save best weights
+            if loss < best_loss:
+                best_loss = loss
+                best_epoch = i
+                best_state_dict = self.model.state_dict()
+        optimizer.zero_grad(set_to_none=True)  # Clean up to prevent memory leaks
 
-        # 8. Final Retinex reconstruction
-        image_r = guided_filter_upsample(lr_image_r, lr_image_i, image_i)
-        image_hsv_fixed = replace_v_component(image_hsv, image_r)
-        image_rgb_fixed = color_func.to_rgb(image_hsv_fixed)
-        image_rgb_fixed = image_rgb_fixed / torch.max(image_rgb_fixed)
+        # 7. Log
+        if self.verbose:
+            log(f"Best Epoch: {(best_epoch + 1):03} | Loss = {best_loss:.6f}")
+
+        # 8. Final inference
+        self.model.load_state_dict(best_state_dict)
+        self.model.eval()
+        with torch.no_grad():
+            # 8.1. Forward pass
+            lr_image_i_res = self.model(patches, coords)
+            lr_image_i_res = lr_image_i_res.view(1, 1, down_size, down_size)
+            # 8.2. Retinex reconstruction
+            lr_image_i_fixed = lr_image_i_res + lr_image_i
+            lr_image_r = lr_image_i / (lr_image_i_fixed + 1e-4)
+            # 8.3. Upsample and convert back to RGB
+            image_r = guided_filter_upsample(lr_image_r, lr_image_i, image_i)
+            image_hsv_fixed = replace_v_component(image_hsv, image_r)
+            image_rgb_fixed = color_func.to_rgb(image_hsv_fixed)
+            image_rgb_fixed = image_rgb_fixed.clamp(0.0, 1.0)
 
         # 9. Return final and intermediate results for debugging
         outputs = { "enhanced": image_rgb_fixed }
         if save_debug:
+            image_i_res = guided_filter_upsample(lr_image_i_res, lr_image_i, image_i)
+            image_i_fixed = guided_filter_upsample(lr_image_i_fixed, lr_image_i, image_i)
             outputs |= {
                 "image_h": image_h,
                 "image_s": image_s,
                 "image_i": image_i,
-                "image_i_res": guided_filter_upsample(lr_image_i_res, lr_image_i, image_i),
-                "image_i_fixed": guided_filter_upsample(lr_image_i_fixed, lr_image_i, image_i),
+                "image_i_res": image_i_res,
+                "image_i_fixed": image_i_fixed,
                 "image_r": image_r,
             }
         return outputs

@@ -96,10 +96,7 @@ class ZS_N2N(ModelRegisterMixin, nn.Module):
 
         # Save the initial state dict. Since each weight is optimized for a
         # single image, so we need to reset the weights before each new image.
-        if self.fit_enabled:
-            self.initial_state_dict = copy.deepcopy(self.model.state_dict())
-        else:
-            self.initial_state_dict = None
+        self._default_state_dict = self.model.state_dict()
 
      # --- Callable & Context Manager ---
     def forward(self, image: Tensor, *args, **kwargs) -> dict:
@@ -160,8 +157,8 @@ class ZS_N2N(ModelRegisterMixin, nn.Module):
         epochs = epochs or self.fit_epochs
 
         # 1. Reset the network weights to the initial state
-        if reset_weights and self.initial_state_dict is not None:
-            self.model.load_state_dict(self.initial_state_dict)
+        if reset_weights:
+            self.model.load_state_dict(self._default_state_dict)
 
         # 2. Define optimizer & schedulers
         if optimizer is not None:
@@ -324,10 +321,7 @@ class IZS_N2N(ModelRegisterMixin, nn.Module):
 
         # Save the initial state dict. Since each weight is optimized for a
         # single image, so we need to reset the weights before each new image.
-        if self.fit_enabled:
-            self.initial_state_dict = self.model.state_dict()
-        else:
-            self.initial_state_dict = None
+        self._default_state_dict = self.model.state_dict()
 
      # --- Callable & Context Manager ---
     def forward(self, image: Tensor, *args, **kwargs) -> dict:
@@ -388,8 +382,8 @@ class IZS_N2N(ModelRegisterMixin, nn.Module):
         epochs = epochs or self.fit_epochs
 
         # 1. Reset the network weights to the initial state
-        if reset_weights and self.initial_state_dict is not None:
-            self.model.load_state_dict(self.initial_state_dict)
+        if reset_weights:
+            self.model.load_state_dict(self._default_state_dict)
 
         # 2. Define optimizer & schedulers
         if optimizer is not None:

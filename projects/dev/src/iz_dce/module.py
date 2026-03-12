@@ -9,14 +9,18 @@ This module provides various layers, blocks, and modules.
 from __future__ import annotations
 
 __all__ = [
-    "Denoiser",
+    "Decoder",
     "DecoderSIREN",
-    "EnhanceFunction",
+    "Denoiser",
+    "Encoder",
+    "EnhanceModelODE",
+    "EnhancementCurveODE",
 ]
 
 import torch
 from torch import nn, Tensor
 from torch.nn import functional as F
+from torchdiffeq import odeint
 
 from mon.nn import EdgePreservingLoss, FourierPE, SineLinear
 from mon.ops import anscombe, inverse_anscombe
@@ -581,19 +585,49 @@ class DecoderSIREN(nn.Module):
         return A
 
 
+# --- Curve ---
+
+class EnhancementCurveODE(nn.Module):
+
+    # --- Lifecycle & Initialization ---
+    def __init__(self, A: Tensor):
+        super().__init__()
+        self.A = A
+
+    # --- Callable & Context Manager ---
+    def forward(self, t: Tensor, y: Tensor) -> Tensor:
+        """Forward the input through the network.
+
+        Args:
+            t (Tensor): Time tensor.
+            y (Tensor): Input tensor of shape (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
+
+        Returns:
+            Tensor: Output tensor of shape (B, C, H, W) and values ranging
+                from 0.0 to 1.0.
+        """
+        y = torch.clamp(y, 0.0, 1.0)
+        # Swapped to y * (1 - y) so A learns positive values!
+        dy_dt = self.A * y * (1.0 - y)
+        return dy_dt
+
+
 # --- Main Network ---
 
-class EnhanceFunction(nn.Module):
-    """A module for enhancing the input image."""
+class EnhanceModelODE(nn.Module):
+    """A network for enhancing the input image."""
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_channels: int,
         hidden_dim: int = 32,
-        num_iter: int = 8,
         imgsz: int = 256,
         chunk_size: int = 100000,
+        method: str = "dopri5",  # "rpk4", "euler"
+        tol: float = 1e-5,
+        ode_options: dict | None = None,
         use_depth: bool = False,
         use_anscombe: bool = False,
         *args, **kwargs
@@ -606,10 +640,12 @@ class EnhanceFunction(nn.Module):
             hidden_dim (int, optional): Hidden dimension. Defaults to 32.
             imgsz (int, optional): Downsample the input image to this size for
                 encoding. Defaults to 256.
-            num_iter (int, optional): Number of iterations to apply the iterative
-                enhancement. Defaults to 8.
             chunk_size (int): Number of pixels to process at once.
                 Defaults to 100,000.
+            method (str, optional): ODE solver method. Defaults to "dopri5".
+            tol (float, optional): Tolerance for solver. Defaults to 1e-5.
+            ode_options (dict, optional): Additional options to pass to the ODE
+                solver. Defaults to None.
             use_depth (bool, optional): Whether to use depth as an additional
                 input channel. Defaults to False.
             use_anscombe (bool, optional): Whether to apply the Anscombe
@@ -621,23 +657,41 @@ class EnhanceFunction(nn.Module):
         self.out_channels = in_channels
         self.imgsz = imgsz
         self.chunk_size = chunk_size
-        self.num_iter = num_iter
+        self.method = method
+        self.tol = tol
+        self.ode_options = ode_options
 
         # Define network
-        # Denoising module
-        self.denoiser = Denoiser(in_channels, use_anscombe=use_anscombe)
-        # Encoder
-        enc_in_channels = in_channels * 2 + 1 if use_depth else in_channels * 2
-        self.encoder = Encoder(enc_in_channels, hidden_dim)
+        self.denoiser = Denoiser(
+            in_channels=in_channels,
+            use_anscombe=use_anscombe,
+        )
+        self.encoder = Encoder(
+            in_channels=in_channels * 2 + 1 if use_depth else in_channels * 2,
+            hidden_dim=hidden_dim,
+        )
         # Implicit decoder (Siren/Continuous MLP)
-        # self.decoder = Decoder(hidden_dim + 2, self.out_channels, hidden_dim)  # Input: features (32) + coordinates (2) = 34
-        self.decoder = DecoderSIREN(hidden_dim, self.out_channels, hidden_dim, True, imgsz)
+        """
+        self.decoder = Decoder(
+            in_channels=hidden_dim + 2,
+            out_channels=self.out_channels,
+            hidden_dim=hidden_dim
+        )
+        """
+        self.decoder = DecoderSIREN(
+            in_channels=hidden_dim,
+            out_channels=self.out_channels,
+            hidden_dim=hidden_dim,
+            pos_encode=True,
+            mapping_size=imgsz
+        )
 
     # --- Callable & Context Manager ---
     def forward(
         self,
         image: Tensor,
         depth: Tensor | None = None,
+        t: Tensor | None = None,
         save_debug: bool = False
     ) -> dict:
         """Forward the input through the network.
@@ -647,6 +701,8 @@ class EnhanceFunction(nn.Module):
                 ranging from 0.0 to 1.0.
             depth (Tensor, optional): Depth tensor of shape (B, 1, H, W) and
                 values ranging from 0.0 to 1.0. Defaults to None.
+            t (Tensor, optional): Time tensor. If None, use the original
+                Zero-DCE iteration scheme. Defaults to None.
             save_debug (bool, optional): Whether to save intermediate results for
                 debugging. Defaults to False.
         """
@@ -680,15 +736,15 @@ class EnhanceFunction(nn.Module):
             A = self.predict_curve_map_chunk(feat, h, w)
 
         # 6. Enhance
-        y = self.enhance(image, A)
+        y = self.enhance(image, A, t=t)
 
         # 7. Return final and intermediate results for debugging
         outputs = { "enhanced": y }
         if self.training or save_debug:
             outputs |= {
                 "curve_map": A,
-                "denoised": p_x,
                 "noise_map": noise,
+                "denoised": p_x,
                 "l_denoise": l_denoise,
             }
         return outputs
@@ -746,16 +802,31 @@ class EnhanceFunction(nn.Module):
         return A
 
     # --- Enhance ---
-    def enhance(self, image: Tensor, A: Tensor) -> Tensor:
-        """Apply the iterative enhancement."""
-        y = image
-        c = self.out_channels
-        for i in range(self.num_iter):
-            if A.shape[1] == c * self.num_iter:
-                A_i = A[:, i * c:(i + 1) * c, :, :]
-            else:
-                A_i = A
-            y = y + A_i * (torch.pow(y, 2) - y)
+    def enhance(self, image: Tensor, A: Tensor, t: Tensor | None = None) -> Tensor:
+        """Apply the continuous enhancement via Neural ODE."""
+        # 1. Initialize the derivative function with our predicted curve
+        ode_func = EnhancementCurveODE(A)
+
+        # 2. Define the continuous integration time span
+        # t=0.0 is the dark image, t=1.0 is the fully enhanced image
+        if t is None:
+            t_span = torch.tensor([0.0, 1.0], device=image.device)
+        else:
+            t_span = t
+
+        # 3. Solve the ODE
+        trajectory = odeint(
+            func=ode_func,
+            y0=image,
+            t=t_span,
+            rtol=self.tol,
+            atol=self.tol,
+            method=self.method,
+            options=self.ode_options,
+        )
+        # trajectory contains the image at t=0.0 and t=1.0. We want the final state.
+        y = trajectory[-1]
+
         return y
 
 # endregion

@@ -113,7 +113,7 @@ class Conv2dTime(nn.Conv2d):
             in_channels (int): Number of channels in the input image (excluding
                 the time channel).
         """
-        super().__init__(in_channels + 1, *args, **kwargs)
+        super(Conv2dTime, self).__init__(in_channels + 1, *args, **kwargs)
 
     # --- Callable & Context Manager ---
     def forward(self, t: Tensor, x: Tensor) -> Tensor:

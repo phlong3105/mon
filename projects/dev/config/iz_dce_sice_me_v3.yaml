@@ -18,7 +18,10 @@ model:
   hidden_dim: 32
   imgsz: 256
   chunk_size: 100000
-  num_iters: 8
+  method: "iter8"  # "iter8", "dopri8", "dopri5", "bosh3", "fehlberg2", "adaptive_heun", "euler", "midpoint", "heun2", "heun3", "rk4", "explicit_adams", "implicit_adams", "fixed_adams", "scipy_solver"
+  tol: 0.00001  # 1e-5
+  ode_options:
+    step_size: 0.1
   use_depth: True
   use_anscombe: False
   weights: "cv/enhance/iz_dce/iz_dce/sice_me/iz_dce_sice_me.pt"  # (str) Path to model weights.
@@ -73,6 +76,7 @@ data: ~  # (list[str]) List of data names or paths for prediction.
 
 # --- Training ---
 epochs: 100  # (int) Number of epochs to train.
+T: 1.0
 
 optimizer:
   name: "Adam"  # (str) Optimizer name.
@@ -98,6 +102,7 @@ grad_clip_norm: 0.1
 tensorboard_logger: True
 
 # --- Prediction ---
+eval_T: ~
 eval_imgsz: 256  # (int | list[int]) Image size for evaluation.
 eval_resize: False  # (bool) Resize the image to the evaluation size.
 benchmark: False  # (bool) Benchmark the model.

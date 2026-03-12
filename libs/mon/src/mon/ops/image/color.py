@@ -29,8 +29,7 @@ class RgbToHsv(nn.Module):
     """A convenience class to convert RGB images to HSV color space and back."""
 
     # --- Callable & Context Manager ---
-    # noinspection PyMethodMayBeStatic
-    def to_hsv(self, rgb: Tensor) -> Tensor:
+    def rgb_to_hsv(self, rgb: Tensor) -> Tensor:
         """Convert an RGB image to HSV color space.
 
         Args:
@@ -55,8 +54,7 @@ class RgbToHsv(nn.Module):
         hsv_v = cmax
         return torch.cat([hsv_h, hsv_s, hsv_v], dim=1)
 
-    # noinspection PyMethodMayBeStatic
-    def to_rgb(self, hsv: Tensor) -> Tensor:
+    def hsv_to_rgb(self, hsv: Tensor) -> Tensor:
         """Convert an HSV image to RGB color space.
 
         Args:
@@ -83,6 +81,14 @@ class RgbToHsv(nn.Module):
         rgb[idx == 5] = torch.cat([_c, _o, _x], dim=1)[idx == 5]
         rgb += _m
         return rgb
+
+    def from_rgb(self, rgb: Tensor) -> Tensor:
+        """Convert an RGB image to HSV color space. Alias for ``to_hsv``."""
+        return self.rgb_to_hsv(rgb)
+
+    def to_rgb(self, hsv: Tensor) -> Tensor:
+        """Convert an HSV image to RGB color space. Alias for ``rgb_to_hsv``."""
+        return self.hsv_to_rgb(hsv)
 
 # endregion
 
@@ -118,7 +124,7 @@ class RgbToHvi(nn.Module):
         )
 
     # --- Callable & Context Manager ---
-    def to_hvi(self, rgb: Tensor) -> Tensor:
+    def rgb_to_hvi(self, rgb: Tensor) -> Tensor:
         """Convert an RGB image to HVI color space.
 
         Args:
@@ -159,7 +165,7 @@ class RgbToHvi(nn.Module):
 
         return torch.stack([h_coord, v_coord, i], dim=1)
 
-    def to_rgb(self, hvi: Tensor) -> Tensor:
+    def hvi_to_rgb(self, hvi: Tensor) -> Tensor:
         """Convert an HVI image to RGB color space.
 
         Args:
@@ -201,6 +207,14 @@ class RgbToHvi(nn.Module):
         mask = (hi == 5); r[mask], g[mask], b[mask] = i[mask], p[mask], q[mask]
 
         return torch.stack([r, g, b], dim=1)
+
+    def from_rgb(self, rgb: Tensor) -> Tensor:
+        """Convert an RGB image to HVI color space. Alias for ``to_hvi``."""
+        return self.rgb_to_hvi(rgb)
+
+    def to_rgb(self, hvi: Tensor) -> Tensor:
+        """Convert an HVI image to RGB color space. Alias for ``rgb_to_hvi``."""
+        return self.hvi_to_rgb(hvi)
 
 # endregion
 

@@ -63,7 +63,7 @@ class ResidualINR(nn.Module):
     def forward(self, patch: Tensor, spatial: Tensor) -> Tensor:
         patch = self.patch_net(patch)
         spatial = self.spatial_net(spatial)
-        concat = torch.cat((patch, spatial), dim=1)
+        concat = torch.cat((patch, spatial), dim=-1)
         return self.output_net(concat)
 
 # endregion

@@ -44,13 +44,7 @@ class CoLIE_Predictor(Predictor):
     @override
     def _init_model(self):
         """Initialize ``self._model`` attribute."""
-        config = self.config
-        device = self.device
-
-        model = colie(device=device, **config.model)
-        model = model.to(device)
-        model.train()
-        self._model = model
+        self._model = None
 
     @override
     def _init_transforms(self):
@@ -75,9 +69,6 @@ class CoLIE_Predictor(Predictor):
         """
         config = self.config
         device = self.device
-        epochs = config.epochs
-        E = config.loss.E
-        save_debug = config.save_debug
 
         # 1. Prepare inputs
         timers.preprocess.tick()
@@ -85,9 +76,16 @@ class CoLIE_Predictor(Predictor):
         image = image.to(device)
         timers.preprocess.tock()
 
-        # 2. Inference
+        # 3. Inference
         timers.infer.tick()
-        outputs = self.model(image, epochs=epochs, E=E, save_debug=save_debug)
+        model = colie(device=device, **config.model)
+        outputs = model(
+            image=image,
+            epochs=config.epochs,
+            E=config.loss.E,
+            optimizer=config.optimizer,
+            save_debug=self.save_debug,
+        )
         timers.infer.tock()
 
         return outputs

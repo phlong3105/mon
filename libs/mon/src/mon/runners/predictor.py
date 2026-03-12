@@ -133,7 +133,7 @@ class Predictor(Runner, ABC):
         # 3. Define model
         self._init_model()
         if self.model is None:
-            raise RuntimeError(f"'model' is not initialized.")
+            log(f"'model' is not initialized.")
 
         # 4. Define transforms
         self._init_transforms()
@@ -176,7 +176,6 @@ class Predictor(Runner, ABC):
                 during prediction.
         """
         config = self.config
-        save_debug = config.save_debug
 
         # 1. Build dataset
         data_name, dataloader = self._init_data(
@@ -195,8 +194,9 @@ class Predictor(Runner, ABC):
             # 2.2. Post-process
             timers.postprocess.tick()
             meta = datapoint["meta"]
-            self._save(outputs=outputs, meta=meta)
-            if save_debug:
+            if self.save:
+                self._save(outputs=outputs, meta=meta)
+            if self.save_debug:
                 self._save_debug(outputs=outputs, meta=meta)
             timers.postprocess.tock()
 
