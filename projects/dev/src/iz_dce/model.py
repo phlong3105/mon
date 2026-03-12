@@ -168,8 +168,6 @@ class IZ_DCE_ODE(ModelRegisterMixin, nn.Module):
                 Defaults to False.
             use_anscombe (bool, optional): Whether to apply the Anscombe
                 transform to the input before denoising. Defaults to False.
-            use_dopri5 (bool, optional): Whether to use the Dopri5 solver.
-                Defaults to False.
             tol (float, optional): Tolerance for solver. Defaults to 1e-5.
             adjoint (bool, optional): Whether to use the adjoint method for
                 backpropagation. Defaults to False.
@@ -225,9 +223,11 @@ class IZ_DCE_ODE(ModelRegisterMixin, nn.Module):
             eval_time (Tensor, optional): Time steps at which to evaluate the
                 ODE solution. If None, defaults to [0, 1]. Defaults to None.
         """
-        # 1. Pre-process
+        # 1. Prepare inputs
         b, c, h, w = image.shape
-        depth = depth if depth is not None else torch.zeros(b, 1, h, w, device=image.device)
+        if depth is None:
+            depth = torch.zeros(b, 1, h, w, device=image.device)
+
         x = torch.cat([
             image,
             depth,
@@ -238,7 +238,7 @@ class IZ_DCE_ODE(ModelRegisterMixin, nn.Module):
         # 2. Forward pass
         preds = self.ode_block(x, eval_time=eval_time)
 
-        # 3. Post-process
+        # 3. Extract outputs
         pred = preds[-1]
 
         return {

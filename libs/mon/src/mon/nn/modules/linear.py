@@ -298,7 +298,7 @@ class FINERLinear(nn.Module):
         return x if self.is_last else torch.sin(self.w0 * x)
 
 
-# --- Time-Step Linear ---
+# --- Time-Dependent Linear ---
 
 class LinearTime(nn.Linear):
     """Linear layer that takes in the time step as an additional input."""

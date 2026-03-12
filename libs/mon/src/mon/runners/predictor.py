@@ -284,7 +284,7 @@ class Predictor(Runner, ABC):
         # Resize the image if necessary
         imgsz = Size.from_value(image)
         if imgsz != size:
-            image = cv2.resize(image, size.wh)
+            image = cv2.resize(image, size.wh, interpolation=cv2.INTER_LINEAR)
 
         # Save the image
         if stem:

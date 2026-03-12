@@ -20,13 +20,7 @@ import cv2
 from numpy import ndarray
 from torch import Tensor
 
-from mon.core import (
-    Path,
-    PathLike,
-    Size,
-    SizeLike,
-    TensorOrArray,
-)
+from mon.core import Path, PathLike, Size, SizeLike, TensorOrArray
 from mon.ops.image import to_image_array
 
 

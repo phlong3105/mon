@@ -99,6 +99,7 @@ tensorboard_logger: True
 
 # --- Prediction ---
 eval_imgsz: 256  # (int | list[int]) Image size for evaluation.
+eval_resize: True  # (bool) Whether to resize images during evaluation.
 benchmark: False  # (bool) Benchmark the model.
 
 # --- Saving & Visualization ---

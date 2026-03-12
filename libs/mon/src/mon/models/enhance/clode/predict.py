@@ -55,13 +55,18 @@ class CLODE_Predictor(Predictor):
     def _init_transforms(self):
         """Initialize ``self._transforms`` attribute."""
         config = self.config
-        imgsz = config.eval_imgsz
 
-        self._transforms = T.Compose([
-            T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32),
+        transforms = T.Compose([
             T.Normalize(normalization="min_max"),
             T.ToTensorV2(transpose_mask=True),
         ])
+
+        if config.eval_resize:
+            imgsz = config.eval_imgsz
+            resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
+            transforms = resize + transforms
+
+        self._transforms = transforms
 
     # --- Prediction ---
     @override

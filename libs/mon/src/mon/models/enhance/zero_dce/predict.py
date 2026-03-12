@@ -60,17 +60,21 @@ class ZeroDCE_Predictor(Predictor):
     def _init_transforms(self):
         """Initialize ``self._transforms`` attribute."""
         config = self.config
-        imgsz = config.eval_imgsz
 
-        scale_factor = config.model.get("scale_factor")
-        if scale_factor:
-            imgsz = Size(height=imgsz.h // scale_factor, width=imgsz.w // scale_factor)
-
-        self._transforms = T.Compose([
-            T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32),
+        transforms = T.Compose([
             T.Normalize(normalization="min_max"),
             T.ToTensorV2(transpose_mask=True),
         ])
+
+        if config.eval_resize:
+            imgsz = Size.from_value(config.eval_imgsz)
+            scale_factor = config.model.get("scale_factor")
+            if scale_factor:
+                imgsz = Size(height=imgsz.h // scale_factor, width=imgsz.w // scale_factor)
+            resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
+            transforms = resize + transforms
+
+        self._transforms = transforms
 
     # --- Prediction ---
     @override

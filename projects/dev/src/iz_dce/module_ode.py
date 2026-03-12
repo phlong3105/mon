@@ -141,6 +141,82 @@ class DecoderTime(nn.Module):
         return y
 
 
+class DecoderINRTime(nn.Module):
+
+    # --- Lifecycle & Initialization ---
+    def __init__(
+        self,
+        in_channels: int,
+        out_channels: int,
+        hidden_dim: int = 32,
+        pos_encode: bool = False,
+        mapping_size: int = 256,
+        B: float = 20.0,
+    ):
+        """Initialize a new instance.
+
+        Args:
+            in_channels (int): Number of input channels.
+            out_channels (int): Number of output channels.
+            hidden_dim (int, optional): Number of hidden channels. Defaults to 32.
+            pos_encode (bool, optional): Whether to use positional encoding.
+                Defaults to False.
+            mapping_size (int, optional): Size of Fourier feature mapping.
+                Defaults to 256.
+            B (float, optional): Fourier feature scaling factor. Defaults to 20.0.
+        """
+        super().__init__()
+        # Assign attributes
+        self.in_channels = in_channels
+        self.out_channels = out_channels
+
+        # Define network
+        if pos_encode:
+            self.ff = FourierPE(mapping_size=mapping_size, B=B)
+            coords_dim = self.ff.out_features
+        else:
+            self.ff = None
+            coords_dim = 2
+
+        self.patch = LinearTime(in_channels, hidden_dim // 2)
+        self.spatial = LinearTime(coords_dim, hidden_dim // 2)
+        self.output1 = LinearTime(hidden_dim, hidden_dim)
+        self.output2 = LinearTime(hidden_dim, out_channels)
+        self.act = nn.ReLU(inplace=True)
+
+        """
+        weight_decay = [0.1, 0.0001, 0.001]
+        self.params = []
+        self.params += [{"params": self.spatial.parameters(), "weight_decay": weight_decay[0]}]
+        self.params += [{"params": self.patch.parameters(), "weight_decay": weight_decay[1]}]
+        self.params += [{"params": self.output1.parameters(),"weight_decay": weight_decay[2]}]
+        self.params += [{"params": self.output2.parameters(),"weight_decay": weight_decay[2]}]
+        """
+
+    # --- Callable & Context Manager ---
+    def forward(self, t: Tensor, feat: Tensor, coords: Tensor) -> Tensor:
+        """Forward the input through the network.
+
+        Args:
+            t (Tensor): Time step tensor of shape (B,) or a scalar.
+            feat (Tensor): Input feature tensor of shape (B, N, hidden_dim) and
+                values ranging from 0.0 to 1.0.
+            coords (Tensor): Input coordinate tensor of shape (B, N, 2) and
+                values ranging from 0.0 to 1.0.
+
+        Returns:
+            Tensor: Output tensor of shape (B, N, out_channels) and values
+                ranging from 0.0 to 1.0.
+        """
+        coords = self.ff(coords) if self.ff is not None else coords
+        patch = self.act(self.patch(t, feat))
+        coords = self.act(self.spatial(t, coords))
+        concat = torch.cat([patch, coords], dim=-1)
+        output = self.act(self.output1(t, concat))
+        A = F.tanh(self.output2(t, output))
+        return A
+
+
 class DecoderSIRENTime(nn.Module):
 
     # --- Lifecycle & Initialization ---
@@ -276,15 +352,16 @@ class EnhanceFunctionTime(nn.Module):
         self.encoder = EncoderTime(enc_in_channels, hidden_dim)
         # Implicit refiner (Siren/Continuous MLP)
         # self.decoder = DecoderTime(hidden_dim + 2, self.out_channels, hidden_dim)  # Input: features (32) + coordinates (2) = 34
-        self.decoder = DecoderSIRENTime(hidden_dim, self.out_channels, hidden_dim, True, imgsz)
+        # self.decoder = DecoderSIRENTime(hidden_dim, self.out_channels, hidden_dim, True, imgsz)
+        self.decoder = DecoderINRTime(hidden_dim, self.out_channels, hidden_dim, True, imgsz)
 
         # Allocate resources
+        self.tv_loss = L_tv()
         self.nfe = 0
         self.pred_t = []
         self.last_curve_map = None
         self.last_noise_map = None
         self.last_denoised = None
-        self.tv_loss = L_tv()
 
     # --- Callable & Context Manager ---
     def forward(self, t: Tensor, x: Tensor) -> Tensor:
@@ -339,10 +416,11 @@ class EnhanceFunctionTime(nn.Module):
         # the input, we concatenate the intermediate results along the channel
         # dimension for debugging purposes. The final output will still be `y`,
         # which is the enhanced image.
-        depth = depth if self.use_depth else torch.zeros(b, 1, h, w, device=x.device)
         l_tv = torch.ones_like(A) * self.tv_loss(A, depth)
         l_denoise = torch.ones_like(A) * l_denoise
+        depth = depth if self.use_depth else torch.zeros(b, 1, h, w, device=x.device)
         outputs = torch.cat([y, depth, l_tv, l_denoise], dim=1)
+
         return outputs
 
     # --- Curve Map ---

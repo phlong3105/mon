@@ -123,13 +123,12 @@ include  = []
 exclude  = []
 
 [tool.poetry.dependencies]
-ultralytics     = { path = "../cv/ultralytics"     , develop = true }
-clip            = { path = "../genai/clip"         , develop = true }
-diffusers       = { path = "../genai/diffusers"    , develop = true }
-flow_matching   = { path = "../genai/flow_matching", develop = true }
-torchdiffeq     = { path = "../math/torchdiffeq"   , develop = true }
-spikingjelly    = { path = "../nn/spikingjelly"    , develop = true }
-transformers    = { path = "../nn/transformers"    , develop = true }
+ultralytics   = { path = "../cv/ultralytics"     , develop = true }
+clip          = { path = "../genai/clip"         , develop = true }
+diffusers     = { path = "../genai/diffusers"    , develop = true }
+flow_matching = { path = "../genai/flow_matching", develop = true }
+spikingjelly  = { path = "../nn/spikingjelly"    , develop = true }
+transformers  = { path = "../nn/transformers"    , develop = true }
 
 [build-system]
 requires      = ["poetry-core>=2.0.0,<3.0.0"]

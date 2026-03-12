@@ -26,7 +26,7 @@ from mon.core import Float3, log, Size, SizeLike
 
 
 # ==============================================================================
-# region MODEL COMPLEXITY METRICS
+# region MODEL COMPLEXITY
 # ==============================================================================
 
 def compute_model_stats(
@@ -127,11 +127,11 @@ def benchmark(
 # region UTILITIES
 # ==============================================================================
 
-def _format_unit(val: float, target: str = "M") -> str:
+def _format_unit(value: float, target: str = "M") -> str:
     """Helper to format large numbers (e.g., 1.2G, 3.5M)."""
     if target == "G":
-        return f"{val / 1e9:.2f} G"
-    return f"{val / 1e6:.2f} M"
+        return f"{value / 1e9:.2f} G"
+    return f"{value / 1e6:.2f} M"
 
 # endregion
 

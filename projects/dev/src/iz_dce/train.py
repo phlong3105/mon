@@ -285,7 +285,7 @@ class IZ_DCE_ODE_Trainer(IZ_DCE_Trainer):
         use_depth = config.model.use_depth
 
         # 1. Define losses
-        L_tv_A = L.L_tv().to(device)
+        # L_tv_A = L.L_tv().to(device)
         L_spa = L.L_spa().to(device)
         L_col = L.L_col().to(device)
         L_col_pre = L.L_col_pre().to(device)

@@ -24,6 +24,7 @@ from mon.core import (
     Task,
     TimeProfiler,
 )
+from mon.dataset import transform as T
 from mon.runners import Predictor
 from .model import ZS_N2N
 
@@ -53,7 +54,10 @@ class ZS_N2N_Predictor(Predictor):
     @override
     def _init_transforms(self):
         """Initialize ``self._transforms`` attribute."""
-        self._transforms = None
+        self._transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
 
     # --- Prediction ---
     @override
