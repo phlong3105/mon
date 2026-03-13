@@ -194,7 +194,7 @@ class SLICE(ModelRegisterMixin, nn.Module):
         size1 = self.imgsz
         chunk_size = chunk_size or self.chunk_size
 
-        # We downsample the input to 512x512 so the CNN doesn't cause an OOM error
+        # Downsample the inputs to self.imgsz so the CNN doesn't cause an OOM
         if size0 != size1:
             x = F.interpolate(x, size=size1.hw, mode="bilinear", align_corners=True)
             d = F.interpolate(d, size=size1.hw, mode="bilinear", align_corners=True) if d is not None else None
@@ -208,21 +208,21 @@ class SLICE(ModelRegisterMixin, nn.Module):
         else:
             x_in = torch.cat([x, p_x], dim=1)
 
-        # 4. Encode
+        # 4. Encode global features
         features = self.encoder(x_in)
 
         # 5. Predict curve parameters
         if size0 == size1:
-            A = self.predict_curve_map(features, size1)
+            A = self.gen_curve_map(features, size1)
         else:
-            A = self.predict_curve_map_chunk(features, size0, chunk_size=chunk_size)
+            A = self.gen_curve_map_chunk(features, size0, chunk_size=chunk_size)
 
         # 6. Enhance
         if "iter" in self.method:
             num_iters = int(self.method.split("iter")[-1])
-            y = self.enhance_iter(image, A, num_iters)
+            y = self.enhance_iter(image=image, A=A, num_iters=num_iters)
         else:
-            y = self.enhance(image, A, t=t)
+            y = self.enhance_ode(image=image, A=A, t=t)
 
         # 7. Return final and intermediate results for debugging
         outputs = { "enhanced": y }
@@ -236,7 +236,8 @@ class SLICE(ModelRegisterMixin, nn.Module):
         return outputs
 
     # --- Curve Map ---
-    def predict_curve_map(self, features: Tensor, size: Size) -> Tensor:
+    def gen_curve_map(self, features: Tensor, size: Size) -> Tensor:
+        """Predict the curve parameters of the full image (for training)."""
         b = features.shape[0]
 
         coords = get_coords(features, size)
@@ -248,7 +249,10 @@ class SLICE(ModelRegisterMixin, nn.Module):
 
         return A
 
-    def predict_curve_map_chunk(self, features: Tensor, size: Size, chunk_size: int) -> Tensor:
+    def gen_curve_map_chunk(self, features: Tensor, size: Size, chunk_size: int) -> Tensor:
+        """Predict the curve parameters of the full image in chunks
+        (for inference on large images).
+        """
         b = features.shape[0]
 
         coords = get_coords(features, size)
@@ -275,7 +279,7 @@ class SLICE(ModelRegisterMixin, nn.Module):
         return A
 
     # --- Enhance ---
-    def enhance(self, image: Tensor, A: Tensor, t: Tensor | None = None) -> Tensor:
+    def enhance_ode(self, image: Tensor, A: Tensor, t: Tensor | None = None) -> Tensor:
         """Apply the continuous enhancement via Neural ODE."""
         # 1. Initialize the derivative function with our predicted curve
         ode_func = EnhancementCurveODE(A)
@@ -325,7 +329,7 @@ class SLICE(ModelRegisterMixin, nn.Module):
         feat_orig = self.encoder(x_in_orig)
 
         # Predict standard curve map (assuming training size, e.g., 256x256)
-        A_orig = self.predict_curve_map(feat_orig, self.imgsz)
+        A_orig = self.gen_curve_map(feat_orig, self.imgsz)
 
         # 2. The Flipped Pass
         # Apply a horizontal flip (dim 3 is the width dimension in B, C, H, W)
@@ -339,7 +343,7 @@ class SLICE(ModelRegisterMixin, nn.Module):
         feat_flipped = self.encoder(x_in_flipped)
 
         # Predict curve map from the flipped inputs
-        A_pred_flip = self.predict_curve_map(feat_flipped, self.imgsz)
+        A_pred_flip = self.gen_curve_map(feat_flipped, self.imgsz)
 
         # 3. The Equivariance Penalty
         # Manually flip the original prediction to see if they match

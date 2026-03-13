@@ -29,7 +29,7 @@ current_dir = current_file.parents[0]
 def main():
     trainer = SLICE_Trainer.from_cli(
         root=resolve_project_root(current_dir),
-        config_file="slice_dopri5_sice_me_v1.yaml",
+        config_file="slice_dopri5_sice_me_v2.yaml",
         task=Task.ENHANCE,
         mode=RunMode.TRAIN,
         arch="slice",
@@ -37,7 +37,7 @@ def main():
         device="auto",
         save=True,
         save_debug=True,
-        exist_ok=False,
+        exist_ok=True,
         verbose=True,
     )
     trainer.train()

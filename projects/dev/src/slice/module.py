@@ -637,6 +637,10 @@ class EnhancementCurveODE(nn.Module):
         # Assign attributes
         self.A = A
 
+        # Allocate resources
+        self.nfe = 0
+        self.pred_t = []
+
     # --- Callable & Context Manager ---
     def forward(self, t: Tensor, y: Tensor) -> Tensor:
         """Forward the input through the network.
@@ -653,6 +657,9 @@ class EnhancementCurveODE(nn.Module):
         y = torch.clamp(y, 0.0, 1.0)
         # Swapped to y * (1.0 - y) so A learns positive values!!!
         dy_dt = self.A * y * (1.0 - y)
+
+        self.nfe += 1
+        self.pred_t.append(t)
         return dy_dt
 
 # endregion
