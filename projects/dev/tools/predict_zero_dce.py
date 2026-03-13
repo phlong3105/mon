@@ -15,8 +15,8 @@ from __future__ import annotations
 
 __all__ = []
 
-from mon.models.enhance.zero_dce import ZeroDCE_Predictor
 from mon.core import Path, resolve_project_root, RunMode, Task
+from mon.models.enhance.zero_dce import ZeroDCE_Predictor
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -35,7 +35,7 @@ def main():
         mode=RunMode.PREDICT,
         arch="zero_dce",
         model="zero_dce",
-        device="cuda:0",
+        device="auto",
         save=True,
         save_debug=True,
         exist_ok=True,

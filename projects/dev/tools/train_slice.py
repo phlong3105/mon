@@ -3,19 +3,20 @@
 
 """Training Script.
 
-This script provides a CLI for running IZ-DCE training on a given dataset.
+This script provides a CLI for running SLICE training on a given dataset.
 
 References:
-    - Paper: "IZ-DCE: Implicit Zero-Reference Deep Curve Estimation"
-    - Code: https://github.com/phlong3105/izdce
+    - Paper: "SLICE: Scale-Arbitrary Low-Light Enhancement via Depth-Aware
+      Implicit Curve Estimation"
+    - Code: https://github.com/phlong3105/slice
 """
 
 from __future__ import annotations
 
 __all__ = []
 
-from iz_dce import IZ_DCE_Trainer
 from mon.core import Path, resolve_project_root, RunMode, Task
+from slice import SLICE_Trainer
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -26,13 +27,13 @@ current_dir = current_file.parents[0]
 # ==============================================================================
 
 def main():
-    trainer = IZ_DCE_Trainer.from_cli(
+    trainer = SLICE_Trainer.from_cli(
         root=resolve_project_root(current_dir),
-        config_file="iz_dce_sice_me_v4.yaml",
+        config_file="slice_sice_me_v4.yaml",
         task=Task.ENHANCE,
         mode=RunMode.TRAIN,
-        arch="iz_dce",
-        model="iz_dce",
+        arch="slice",
+        model="slice",
         device="auto",
         save=True,
         save_debug=True,

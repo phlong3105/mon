@@ -148,6 +148,7 @@ def main():
         mode=RunMode.PREDICT,
         arch="zsn2n",
         model="zsn2n",
+        device="auto",
         save=True,
         exist_ok=True,
         verbose=True,

@@ -1,5 +1,5 @@
 # --- General ---
-exp_name: "iz_dce_dopri5_sice_me"  # (str) Experiment name.
+exp_name: "slice_sice_me_v3"  # (str) Experiment name.
 
 root: ~  # (str) Root path of the project.
 output_dir: ~  # (str) Output directory.
@@ -12,23 +12,23 @@ seed: 100  # (int) Random seed for reproducibility
 
 # --- Model ---
 model:
-  name: "iz_ode"  # (str) Model name (e.g., resnet50, yolov8n).
-  arch: "iz_dce"  # (str) Model architecture (e.g., resnet, yolo8).
+  name: "slice"  # (str) Model name (e.g., resnet50, yolov8n).
+  arch: "slice"  # (str) Model architecture (e.g., resnet, yolo8).
   in_channels: 3
   hidden_dim: 32
   imgsz: 256
-  chunk_size: 100000
-  method: "dopri5"
+  method: "iter8"
   # "iter8", "iter5", "iter4", "dopri8", "dopri5", "bosh3", "fehlberg2",
   # "adaptive_heun", "euler", "midpoint", "heun2", "heun3", "rk4",
   # "explicit_adams", "implicit_adams", "fixed_adams", "scipy_solver"
   tol: 0.00001  # 1e-5
   ode_options:
+    step_size: 0.1
     max_num_steps: 1000
   noise_level: ~
   use_depth: True
-  use_anscombe: True
-  weights: "cv/enhance/iz_dce/iz_dce_ode/sice_me/iz_dce_ode_sice_me.pt"  # (str) Path to model weights.
+  use_anscombe: False
+  weights: "cv/enhance/slice/slice/sice_me/slice_sice_me.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---
@@ -41,7 +41,7 @@ train_dataloader:
     split: "train"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 256, width : 256 }
+        - { name: "Resize", height: 256, width: 256 }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
@@ -63,7 +63,7 @@ val_dataloader:
     split: "val"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 256, width : 256 }
+        - { name: "Resize", height: 256, width: 256 }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
@@ -80,12 +80,12 @@ data: ~  # (list[str]) List of data names or paths for prediction.
 
 # --- Training ---
 epochs: 100  # (int) Number of epochs to train.
-T: 3.0
+T: 1.0
 
 optimizer:
   name: "Adam"  # (str) Optimizer name.
-  lr: 0.00001  # 0.0001 (float) Learning rate.
-  # weight_decay: 0.0001
+  lr: 0.00001  # 0.00001 (float) Learning rate.
+  weight_decay: 0.00001
 
 lr_scheduler: ~
 
@@ -93,10 +93,10 @@ lr_warmup_scheduler: ~
 
 loss:
   E: 0.6  # (float) Default is 0.6, but the author suggests 0.5 or 0.45
-  L_tv_A_w: 200
+  L_tv_A_w: 1600
   L_spa_w: 1
   L_col_w: 20  # 0.8
-  L_col_pre_w: 10
+  L_col_pre_w: 10  # 10
   L_exp_w: 10
   L_enhance_w: 1
   L_denoise_w: 1  # 50
@@ -106,7 +106,7 @@ grad_clip_norm: 0.1
 tensorboard_logger: True
 
 # --- Prediction ---
-eval_T: 2.0
+eval_T: ~
 eval_imgsz: 256  # (int | list[int]) Image size for evaluation.
 eval_resize: False  # (bool) Resize the image to the evaluation size.
 benchmark: False  # (bool) Benchmark the model.

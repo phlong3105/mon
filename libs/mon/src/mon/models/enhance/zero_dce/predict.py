@@ -165,6 +165,7 @@ def main():
         mode=RunMode.PREDICT,
         arch="zero_dce",
         model="zero_dce",
+        device="auto",
         save=True,
         save_debug=True,
         exist_ok=True,

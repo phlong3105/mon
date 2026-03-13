@@ -145,6 +145,7 @@ def main():
         mode=RunMode.PREDICT,
         arch="colie",
         model="colie",
+        device="auto",
         save=True,
         exist_ok=True,
         verbose=True,

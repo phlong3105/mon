@@ -204,6 +204,7 @@ class ImprovedDenoiseNetwork(nn.Module):
         return noise
 
 
+# noinspection PyMethodMayBeStatic
 class Denoiser(nn.Module):
     """A simple CNN for estimating the noise in the input image."""
 

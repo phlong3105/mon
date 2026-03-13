@@ -3,13 +3,13 @@
 
 """Training Runners.
 
-This module provides training runner classes for IZ-DCE and IZ-DCE-ODE models.
+This module provides training runner classes for SLICE models.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "IZ_DCE_Trainer",
+    "SLICE_Trainer",
 ]
 
 import pyiqa
@@ -21,7 +21,7 @@ from mon.core import OPTIMIZERS, Path, resolve_project_root, RunMode, Task
 from mon.ops import normalize_minmax
 from mon.runners import Trainer
 from . import loss as L
-from .model import iz_dce
+from .model import slice
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -31,8 +31,8 @@ current_dir = current_file.parents[0]
 # region TRAINER
 # ==============================================================================
 
-class IZ_DCE_Trainer(Trainer):
-    """Trainer for IZ-DCE models."""
+class SLICE_Trainer(Trainer):
+    """Trainer for SLICE models."""
 
     # --- Lifecycle & Initialization ---
     @override
@@ -42,7 +42,7 @@ class IZ_DCE_Trainer(Trainer):
         device = self.device
         weights = config.finetune
 
-        model = iz_dce(**config.model | { "weights": weights})
+        model = slice(**config.model | {"weights": weights})
         model = model.to(device)
         model.train()
         self._model = model
@@ -250,14 +250,15 @@ class IZ_DCE_Trainer(Trainer):
 # ==============================================================================
 
 def main():
-    """Unit test for IZDCE_Trainer."""
-    trainer = IZ_DCE_Trainer.from_cli(
+    """Unit test for SLICE_Trainer."""
+    trainer = SLICE_Trainer.from_cli(
         root=resolve_project_root(current_dir),
-        config_file="iz_dce_sice_me.yaml",
+        config_file="slice_sice_me.yaml",
         task=Task.ENHANCE,
         mode=RunMode.TRAIN,
-        arch="iz_dce",
-        model="iz_dce",
+        arch="slice",
+        model="slice",
+        device="auto",
         save=True,
         save_debug=True,
         exist_ok=False,

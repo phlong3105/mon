@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""IZ-DCE utilities.
+"""Utilities.
 
-This module provides various utilities for IZ-DCE.
+This module provides various utilities for SLICE.
 """
 
 from __future__ import annotations

@@ -3,13 +3,13 @@
 
 """Prediction Runners.
 
-This module provides prediction runner classes for IZ-DCE and IZ-DCE-ODE models.
+This module provides prediction runner classes for SLICE models.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "IZ_DCE_Predictor",
+    "SLICE_Predictor",
 ]
 
 from typing import Any
@@ -28,7 +28,7 @@ from mon.core import (
 from mon.dataset import transform as T
 from mon.runners import Predictor
 # noinspection PyUnusedImports
-from .model import iz_dce
+from .model import slice
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -38,8 +38,8 @@ current_dir = current_file.parents[0]
 # region PREDICTOR
 # ==============================================================================
 
-class IZ_DCE_Predictor(Predictor):
-    """Predictor for IZ-DCE models."""
+class SLICE_Predictor(Predictor):
+    """Predictor for SLICE models."""
 
     # --- Lifecycle & Initialization ---
     @override
@@ -49,7 +49,7 @@ class IZ_DCE_Predictor(Predictor):
         device = self.device
         weights = config.weights or config.finetune
 
-        model = iz_dce(**config.model | { "weights": weights})
+        model = slice(**config.model | {"weights": weights})
         model = model.to(device)
         model.eval()
         self._model = model
@@ -141,15 +141,16 @@ class IZ_DCE_Predictor(Predictor):
 # ==============================================================================
 
 def main():
-    """Unit test for IZDCE_Predictor."""
-    predictor = IZ_DCE_Predictor.from_cli(
+    """Unit test for SLICE_Predictor."""
+    predictor = SLICE_Predictor.from_cli(
         prompt=True,
         root=resolve_project_root(current_dir),
-        config_file="iz_dce_sice_me.yaml",
+        config_file="slice_sice_me.yaml",
         task=Task.ENHANCE,
         mode=RunMode.PREDICT,
-        arch="iz_dce",
-        model="iz_dce",
+        arch="slice",
+        model="slice",
+        device="auto",
         save=True,
         save_debug=True,
         exist_ok=True,

@@ -1,20 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""IZ-DCE Models.
+"""SLICE Models.
 
-This module provides the IZ-DCE definition and pre-trained weights.
+This module provides the SLICE definition and pre-trained weights.
 
 References:
-    - Paper: "IZ-DCE: Implicit Zero-Reference Deep Curve Estimation"
-    - Code: https://github.com/phlong3105/izdce
+    - Paper: "SLICE: Scale-Arbitrary Low-Light Enhancement via Depth-Aware
+      Implicit Curve Estimation"
+    - Code: https://github.com/phlong3105/slice
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "IZ_DCE",
-    "iz_dce",
+    "SLICE",
+    "slice",
 ]
 
 import torch
@@ -22,7 +23,16 @@ from torch import nn, Tensor
 from torch.nn import functional as F
 from torchdiffeq import odeint
 
-from mon.core import is_weights_type, log, MODELS, Path, Task, WeightsLike, Size, SizeLike
+from mon.core import (
+    is_weights_type,
+    log,
+    MODELS,
+    Path,
+    Size,
+    SizeLike,
+    Task,
+    WeightsLike,
+)
 from mon.nn import ModelRegisterMixin
 from .module import DecoderSIREN, Denoiser, Encoder, EnhancementCurveODE
 
@@ -34,12 +44,13 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-class IZ_DCE(ModelRegisterMixin, nn.Module):
-    """IZ-DCE model.
+class SLICE(ModelRegisterMixin, nn.Module):
+    """SLICE model.
 
     References:
-        - Paper: "IZ-DCE: Implicit Zero-Reference Deep Curve Estimation"
-        - Code: https://github.com/phlong3105/izdce
+        - Paper: "SLICE: Scale-Arbitrary Low-Light Enhancement via Depth-Aware
+          Implicit Curve Estimation"
+        - Code: https://github.com/phlong3105/slice
     """
 
     arch: str = "iz_dce"
@@ -309,28 +320,28 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
 
 # --- Model Variants ---
 
-@MODELS.register(name="iz_dce", metaclass=IZ_DCE)
-def iz_dce(*args, **kwargs):
-    """Create a IZ-DCE model."""
+@MODELS.register(name="slice", metaclass=SLICE)
+def slice(*args, **kwargs):
+    """Create a SLICE model."""
     _ = kwargs.pop("name", "iz_dce")
     in_channels = kwargs.pop("in_channels", 3)
     hidden_dim = kwargs.pop("hidden_dim", 32)
     imgsz = kwargs.pop("imgsz", 256)
-    chunk_size = kwargs.pop("chunk_size", 100000)
     method = kwargs.pop("method", "dopri5")
     tol = kwargs.pop("tol", 1e-5)
     ode_options = kwargs.pop("ode_options", None)
+    noise_level = kwargs.pop("noise_level", None)
     use_depth = kwargs.pop("use_depth", False)
     use_anscombe = kwargs.pop("use_anscombe", False)
-    return IZ_DCE(
-        name="iz_dce",
+    return SLICE(
+        name="slice",
         in_channels=in_channels,
         hidden_dim=hidden_dim,
         imgsz=imgsz,
-        chunk_size=chunk_size,
         method=method,
         tol=tol,
         ode_options=ode_options,
+        noise_level=noise_level,
         use_depth=use_depth,
         use_anscombe=use_anscombe,
         *args, **kwargs

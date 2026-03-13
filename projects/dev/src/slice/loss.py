@@ -3,7 +3,7 @@
 
 """Losses.
 
-This module provides various loss functions for training IZ-DCE models.
+This module provides various loss functions for training SLICE models.
 """
 
 from __future__ import annotations

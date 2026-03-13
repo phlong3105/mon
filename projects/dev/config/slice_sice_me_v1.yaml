@@ -1,5 +1,5 @@
 # --- General ---
-exp_name: "iz_dce_sice_me_v1"  # (str) Experiment name.
+exp_name: "slice_sice_me_v1"  # (str) Experiment name.
 
 root: ~  # (str) Root path of the project.
 output_dir: ~  # (str) Output directory.
@@ -12,12 +12,11 @@ seed: 100  # (int) Random seed for reproducibility
 
 # --- Model ---
 model:
-  name: "iz_dce"  # (str) Model name (e.g., resnet50, yolov8n).
-  arch: "iz_dce"  # (str) Model architecture (e.g., resnet, yolo8).
+  name: "slice"  # (str) Model name (e.g., resnet50, yolov8n).
+  arch: "slice"  # (str) Model architecture (e.g., resnet, yolo8).
   in_channels: 3
   hidden_dim: 32
   imgsz: 256
-  chunk_size: 100000
   method: "iter8"
   # "iter8", "iter5", "iter4", "dopri8", "dopri5", "bosh3", "fehlberg2",
   # "adaptive_heun", "euler", "midpoint", "heun2", "heun3", "rk4",
@@ -25,10 +24,11 @@ model:
   tol: 0.00001  # 1e-5
   ode_options:
     step_size: 0.1
+    max_num_steps: 1000
   noise_level: ~
   use_depth: False
   use_anscombe: False
-  weights: "cv/enhance/iz_dce/iz_dce/sice_me/iz_dce_sice_me.pt"  # (str) Path to model weights.
+  weights: "cv/enhance/slice/slice/sice_me/slice_sice_me.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---

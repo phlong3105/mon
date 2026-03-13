@@ -36,7 +36,7 @@ def main():
         mode=RunMode.PREDICT,
         arch="dav2",
         model="dav2_vitb",
-        device="cuda:0",
+        device="auto",
         save=True,
         exist_ok=True,
         verbose=True,
