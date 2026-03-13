@@ -25,6 +25,7 @@ model:
   tol: 0.00001  # 1e-5
   ode_options:
     max_num_steps: 1000
+  noise_level: ~
   use_depth: True
   use_anscombe: True
   weights: "cv/enhance/iz_dce/iz_dce_ode/sice_me/iz_dce_ode_sice_me.pt"  # (str) Path to model weights.

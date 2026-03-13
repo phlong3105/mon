@@ -13,14 +13,12 @@ __all__ = [
     "DecoderSIREN",
     "Denoiser",
     "Encoder",
-    "EnhanceModelODE",
     "EnhancementCurveODE",
 ]
 
 import torch
 from torch import nn, Tensor
 from torch.nn import functional as F
-from torchdiffeq import odeint
 
 from mon.nn import EdgePreservingLoss, FourierPE, SineLinear
 from mon.ops import anscombe, inverse_anscombe
@@ -214,6 +212,7 @@ class Denoiser(nn.Module):
         self,
         in_channels: int = 3,
         hidden_dim: int = 48,
+        noise_level: float | None = None,
         use_anscombe: bool = False,
     ):
         """Initialize a new instance.
@@ -221,19 +220,22 @@ class Denoiser(nn.Module):
         Args:
             in_channels (int, optional): Number of input channels. Defaults to 3.
             hidden_dim (int, optional): Number of hidden channels. Defaults to 48.
+            noise_level (float | None, optional): The noise level to add to the
+                input. If None, no noise is added. Defaults to None.
             use_anscombe (bool, optional): Whether to apply the Anscombe
                 transform to the input before denoising. Defaults to False.
         """
         super().__init__()
         # Assign attributes
         self.use_anscombe = use_anscombe
+        self.noise_level = noise_level
 
         # Define network
         # self.model = DenoiseNetwork(in_channels=in_channels, hidden_dim=hidden_dim)
         self.model = ImprovedDenoiseNetwork(in_channels=in_channels, hidden_dim=hidden_dim)
 
     # --- Callable & Context Manager ---
-    def forward(self, x: Tensor) -> tuple[Tensor | None, Tensor, Tensor]:
+    def forward(self, x: Tensor) -> tuple[Tensor, Tensor, Tensor]:
         """Forward the input through the network.
 
         Args:
@@ -241,16 +243,16 @@ class Denoiser(nn.Module):
                 from 0.0 to 1.0.
 
         Returns:
-            tuple[Tensor | None, Tensor]: A tuple containing:
-                - loss (Tensor | None): The denoising loss if in training mode,
-                    otherwise None.
+            tuple[Tensor, Tensor, Tensor]: A tuple containing:
+                - loss (Tensor): The denoising loss if in training mode, otherwise None.
                 - noise (Tensor): The predicted noise tensor of shape (B, C, H, W)
                     and values ranging from 0.0 to 1.0.
                 - y (Tensor): The denoised image tensor of shape (B, C, H, W)
                     and values ranging from 0.0 to 1.0.
         """
         # 1. Add noise to the input image.
-        x = self.add_noise(x, 40)
+        if self.noise_level is not None:
+            x = self.add_noise(x, 40)
 
         # 2. Apply Anscombe transform if enabled.
         # This stabilizes the variance of Poisson noise, making it more
@@ -611,223 +613,6 @@ class EnhancementCurveODE(nn.Module):
         # Swapped to y * (1 - y) so A learns positive values!
         dy_dt = self.A * y * (1.0 - y)
         return dy_dt
-
-
-# --- Main Network ---
-
-class EnhanceModelODE(nn.Module):
-    """A network for enhancing the input image."""
-
-    # --- Lifecycle & Initialization ---
-    def __init__(
-        self,
-        in_channels: int,
-        hidden_dim: int = 32,
-        imgsz: int = 256,
-        chunk_size: int = 100000,
-        method: str = "dopri5",  # "rpk4", "euler"
-        tol: float = 1e-5,
-        ode_options: dict | None = None,
-        use_depth: bool = False,
-        use_anscombe: bool = False,
-        *args, **kwargs
-    ):
-        """Initialize a new instance.
-
-        Args:
-            in_channels (int, optional): Number of input channels.
-                Defaults to 3.
-            hidden_dim (int, optional): Hidden dimension. Defaults to 32.
-            imgsz (int, optional): Downsample the input image to this size for
-                encoding. Defaults to 256.
-            chunk_size (int): Number of pixels to process at once.
-                Defaults to 100,000.
-            method (str, optional): ODE solver method. Defaults to "dopri5".
-            tol (float, optional): Tolerance for solver. Defaults to 1e-5.
-            ode_options (dict, optional): Additional options to pass to the ODE
-                solver. Defaults to None.
-            use_depth (bool, optional): Whether to use depth as an additional
-                input channel. Defaults to False.
-            use_anscombe (bool, optional): Whether to apply the Anscombe
-                transform to the input before denoising. Defaults to False.
-        """
-        super().__init__()
-        # Assign attributes
-        self.in_channels = in_channels
-        self.out_channels = in_channels
-        self.imgsz = imgsz
-        self.chunk_size = chunk_size
-        self.method = method
-        self.tol = tol
-        self.ode_options = ode_options
-
-        # Define network
-        self.denoiser = Denoiser(
-            in_channels=in_channels,
-            use_anscombe=use_anscombe,
-        )
-        self.encoder = Encoder(
-            in_channels=in_channels * 2 + 1 if use_depth else in_channels * 2,
-            hidden_dim=hidden_dim,
-        )
-        # Implicit decoder (Siren/Continuous MLP)
-        """
-        self.decoder = Decoder(
-            in_channels=hidden_dim + 2,
-            out_channels=self.out_channels,
-            hidden_dim=hidden_dim
-        )
-        """
-        self.decoder = DecoderSIREN(
-            in_channels=hidden_dim,
-            out_channels=self.out_channels,
-            hidden_dim=hidden_dim,
-            pos_encode=True,
-            mapping_size=imgsz
-        )
-
-    # --- Callable & Context Manager ---
-    def forward(
-        self,
-        image: Tensor,
-        depth: Tensor | None = None,
-        t: Tensor | None = None,
-        save_debug: bool = False
-    ) -> dict:
-        """Forward the input through the network.
-
-        Args:
-            image (Tensor): Image tensor of shape (B, 3, H, W) and values
-                ranging from 0.0 to 1.0.
-            depth (Tensor, optional): Depth tensor of shape (B, 1, H, W) and
-                values ranging from 0.0 to 1.0. Defaults to None.
-            t (Tensor, optional): Time tensor. If None, use the original
-                Zero-DCE iteration scheme. Defaults to None.
-            save_debug (bool, optional): Whether to save intermediate results for
-                debugging. Defaults to False.
-        """
-        # 1. Pre-process
-        x = image
-        d = depth
-        b, c, h, w = x.shape
-        size = (self.imgsz, self.imgsz)
-
-        # We downsample the input to 512x512 so the CNN doesn't cause an OOM error
-        if (h, w) != size:
-            x = F.interpolate(x, size=size, mode="bilinear", align_corners=True)
-            d = F.interpolate(d, size=size, mode="bilinear", align_corners=True) if d is not None else None
-
-        # 2. Denoise
-        l_denoise, noise, p_x = self.denoiser(x)
-
-        # 3. Fusion
-        if d is not None:
-            x_in = torch.cat([x, p_x, d], dim=1)
-        else:
-            x_in = torch.cat([x, p_x], dim=1)
-
-        # 4. Encode
-        feat = self.encoder(x_in)
-
-        # 5. Predict curve parameters
-        if (h, w) == size:
-            A = self.predict_curve_map(feat, self.imgsz, self.imgsz)
-        else:
-            A = self.predict_curve_map_chunk(feat, h, w)
-
-        # 6. Enhance
-        y = self.enhance(image, A, t=t)
-
-        # 7. Return final and intermediate results for debugging
-        outputs = { "enhanced": y }
-        if self.training or save_debug:
-            outputs |= {
-                "curve_map": A,
-                "noise_map": noise,
-                "denoised": p_x,
-                "l_denoise": l_denoise,
-            }
-        return outputs
-
-    # --- Curve Map ---
-    def predict_curve_map(self, feat: Tensor, h: int, w: int) -> Tensor:
-        b = feat.shape[0]
-        device = feat.device
-
-        # We map the massive target resolution to the [-1, 1] continuous space.
-        h_coords = torch.linspace(-1, 1, steps=h, device=device)
-        w_coords = torch.linspace(-1, 1, steps=w, device=device)
-        grid_h, grid_w = torch.meshgrid(h_coords, w_coords, indexing="ij")
-        coords = torch.stack([grid_w, grid_h], dim=-1).view(1, -1, 2).repeat(b, 1, 1)  # [B, H*W, 2]
-
-        sampled_feat = F.grid_sample(feat, coords.unsqueeze(1), mode="bilinear", align_corners=True)
-        sampled_feat = sampled_feat.squeeze(2).permute(0, 2, 1)  # [B, N, 32]
-
-        A = self.decoder(sampled_feat, coords)
-        A = A.view(b, h, w, 3).permute(0, 3, 1, 2)
-
-        return A
-
-    def predict_curve_map_chunk(self, feat: Tensor, h: int, w: int) -> Tensor:
-        chunk_size = self.chunk_size
-        b = feat.shape[0]
-        device = feat.device
-
-        # We map the massive target resolution to the [-1, 1] continuous space.
-        h_coords = torch.linspace(-1, 1, steps=h, device=device)
-        w_coords = torch.linspace(-1, 1, steps=w, device=device)
-        grid_h, grid_w = torch.meshgrid(h_coords, w_coords, indexing="ij")
-        coords = torch.stack([grid_w, grid_h], dim=-1).view(b, -1, 2)  # [B, H*W, 2]
-
-        total_points = h * w
-        A_list = []
-
-        # 1 Chunked MLP Inference
-        # Process the points in batches of `chunk_size` to cap VRAM usage.
-        for i in range(0, total_points, chunk_size):
-            coords_chunk = coords[:, i:i+chunk_size, :]  # [B, chunk, 2]
-
-            # Sample from the 512x512 feature map at the exact target coordinates
-            sampled_feat = F.grid_sample(feat, coords_chunk.unsqueeze(1), mode="bilinear", align_corners=True)
-            sampled_feat = sampled_feat.squeeze(2).permute(0, 2, 1)  # [B, chunk, 32]
-
-            # Predict the curve parameters for this chunk
-            A_chunk = self.decoder(sampled_feat, coords_chunk)
-            A_list.append(A_chunk)
-
-        # 2. Reconstruct the spatial curve parameter map
-        A_flat = torch.cat(A_list, dim=1)  # [B, H*W, 24]
-        A = A_flat.view(b, h, w, 3).permute(0, 3, 1, 2)  # [B, 3, H, W]
-
-        return A
-
-    # --- Enhance ---
-    def enhance(self, image: Tensor, A: Tensor, t: Tensor | None = None) -> Tensor:
-        """Apply the continuous enhancement via Neural ODE."""
-        # 1. Initialize the derivative function with our predicted curve
-        ode_func = EnhancementCurveODE(A)
-
-        # 2. Define the continuous integration time span
-        # t=0.0 is the dark image, t=1.0 is the fully enhanced image
-        if t is None:
-            t_span = torch.tensor([0.0, 1.0], device=image.device)
-        else:
-            t_span = t
-
-        # 3. Solve the ODE
-        trajectory = odeint(
-            func=ode_func,
-            y0=image,
-            t=t_span,
-            rtol=self.tol,
-            atol=self.tol,
-            method=self.method,
-            options=self.ode_options,
-        )
-        # trajectory contains the image at t=0.0 and t=1.0. We want the final state.
-        y = trajectory[-1]
-
-        return y
 
 # endregion
 

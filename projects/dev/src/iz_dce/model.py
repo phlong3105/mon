@@ -22,7 +22,7 @@ from torch import nn, Tensor
 from torch.nn import functional as F
 from torchdiffeq import odeint
 
-from mon.core import is_weights_type, log, MODELS, Path, Task, WeightsLike
+from mon.core import is_weights_type, log, MODELS, Path, Task, WeightsLike, Size, SizeLike
 from mon.nn import ModelRegisterMixin
 from .module import DecoderSIREN, Denoiser, Encoder, EnhancementCurveODE
 
@@ -58,11 +58,11 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
         name: str,
         in_channels: int = 3,
         hidden_dim: int = 32,
-        imgsz: int = 256,
-        chunk_size: int = 100000,
+        imgsz: SizeLike = 256,
         method: str = "dopri5",
         tol: float = 1e-5,
         ode_options: dict | None = None,
+        noise_level: float | None = None,
         use_depth: bool = False,
         use_anscombe: bool = False,
         weights: WeightsLike | None = None,
@@ -75,14 +75,14 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
             name (str): Name of the model to use.
             in_channels (int, optional): Number of input channels. Defaults to 3.
             hidden_dim (int, optional): Hidden dimension. Defaults to 32.
-            imgsz (int, optional): Downsample the input image to this size for
-                encoding. Defaults to 256.
-            chunk_size (int): Number of pixels to process at once.
-                Defaults to 100,000.
+            imgsz (SizeLike, optional): Downsample the input image to this size
+                for encoding. Defaults to 256.
             method (str, optional): ODE solver method. Defaults to "dopri5".
             tol (float, optional): Tolerance for solver. Defaults to 1e-5.
             ode_options (dict, optional): Additional options to pass to the ODE
                 solver. Defaults to None.
+            noise_level (float | None, optional): The noise level to add to the
+                input. If None, no noise is added. Defaults to None.
             use_depth (bool, optional): Whether to use depth as an additional
                 input channel. Defaults to False.
             use_anscombe (bool, optional): Whether to apply the Anscombe
@@ -103,8 +103,7 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
         self.verbose = verbose
         self.in_channels = in_channels
         self.out_channels = in_channels
-        self.imgsz = imgsz
-        self.chunk_size = chunk_size
+        self.imgsz = Size.from_value(imgsz)
         self.method = method
         self.tol = tol
         self.ode_options = ode_options
@@ -113,19 +112,13 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
         self.denoiser = Denoiser(
             in_channels=in_channels,
             use_anscombe=use_anscombe,
+            noise_level=noise_level,
         )
         self.encoder = Encoder(
             in_channels=in_channels * 2 + 1 if use_depth else in_channels * 2,
             hidden_dim=hidden_dim,
         )
         # Implicit decoder (Siren/Continuous MLP)
-        """
-        self.decoder = Decoder(
-            in_channels=hidden_dim + 2,
-            out_channels=self.out_channels,
-            hidden_dim=hidden_dim
-        )
-        """
         self.decoder = DecoderSIREN(
             in_channels=hidden_dim,
             out_channels=self.out_channels,
@@ -149,6 +142,7 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
         image: Tensor,
         depth: Tensor | None = None,
         t: Tensor | None = None,
+        chunk_size: int = 100000,
         save_debug: bool = False,
         *args, **kwargs
     ) -> dict:
@@ -161,19 +155,22 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
                 values ranging from 0.0 to 1.0. Defaults to None.
             t (Tensor, optional): Time tensor. If None, use the original
                 Zero-DCE iteration scheme. Defaults to None.
+            chunk_size (int): Number of pixels to process at once at inference.
+                Defaults to 100,000.
             save_debug (bool, optional): Whether to save intermediate results for
                 debugging. Defaults to False.
         """
         # 1. Prepare inputs
         x = image
         d = depth
-        b, c, h, w = x.shape
-        size = (self.imgsz, self.imgsz)
+        size0 = Size.from_value(x)
+        size1 = self.imgsz
+        chunk_size = chunk_size or self.chunk_size
 
         # We downsample the input to 512x512 so the CNN doesn't cause an OOM error
-        if (h, w) != size:
-            x = F.interpolate(x, size=size, mode="bilinear", align_corners=True)
-            d = F.interpolate(d, size=size, mode="bilinear", align_corners=True) if d is not None else None
+        if size0 != size1:
+            x = F.interpolate(x, size=size1.hw, mode="bilinear", align_corners=True)
+            d = F.interpolate(d, size=size1.hw, mode="bilinear", align_corners=True) if d is not None else None
 
         # 2. Denoise
         l_denoise, noise, p_x = self.denoiser(x)
@@ -185,13 +182,13 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
             x_in = torch.cat([x, p_x], dim=1)
 
         # 4. Encode
-        feat = self.encoder(x_in)
+        features = self.encoder(x_in)
 
         # 5. Predict curve parameters
-        if (h, w) == size:
-            A = self.predict_curve_map(feat, self.imgsz, self.imgsz)
+        if size0 != size1:
+            A = self.predict_curve_map(features, size1)
         else:
-            A = self.predict_curve_map_chunk(feat, h, w)
+            A = self.predict_curve_map_chunk(features, size0, chunk_size=chunk_size)
 
         # 6. Enhance
         if "iter" in self.method:
@@ -212,39 +209,37 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
         return outputs
 
     # --- Curve Map ---
-    def predict_curve_map(self, feat: Tensor, h: int, w: int) -> Tensor:
-        b = feat.shape[0]
-        device = feat.device
+    def predict_curve_map(self, features: Tensor, size: Size) -> Tensor:
+        b = features.shape[0]
+        device = features.device
 
         # We map the massive target resolution to the [-1, 1] continuous space.
-        h_coords = torch.linspace(-1, 1, steps=h, device=device)
-        w_coords = torch.linspace(-1, 1, steps=w, device=device)
+        h_coords = torch.linspace(-1, 1, steps=size.h, device=device)
+        w_coords = torch.linspace(-1, 1, steps=size.w, device=device)
         grid_h, grid_w = torch.meshgrid(h_coords, w_coords, indexing="ij")
         coords = torch.stack([grid_w, grid_h], dim=-1).view(1, -1, 2).repeat(b, 1, 1)  # [B, H*W, 2]
 
-        sampled_feat = F.grid_sample(feat, coords.unsqueeze(1), mode="bilinear", align_corners=True)
+        sampled_feat = F.grid_sample(features, coords.unsqueeze(1), mode="bilinear", align_corners=True)
         sampled_feat = sampled_feat.squeeze(2).permute(0, 2, 1)  # [B, N, 32]
 
         A = self.decoder(sampled_feat, coords)
-        A = A.view(b, h, w, 3).permute(0, 3, 1, 2)
+        A = A.view(b, size.h, size.w, 3).permute(0, 3, 1, 2)
 
         return A
 
-    def predict_curve_map_chunk(self, feat: Tensor, h: int, w: int) -> Tensor:
-        chunk_size = self.chunk_size
-        b = feat.shape[0]
-        device = feat.device
+    def predict_curve_map_chunk(self, features: Tensor, size: Size, chunk_size: int) -> Tensor:
+        b = features.shape[0]
+        device = features.device
 
         # We map the massive target resolution to the [-1, 1] continuous space.
-        h_coords = torch.linspace(-1, 1, steps=h, device=device)
-        w_coords = torch.linspace(-1, 1, steps=w, device=device)
+        h_coords = torch.linspace(-1, 1, steps=size.h, device=device)
+        w_coords = torch.linspace(-1, 1, steps=size.w, device=device)
         grid_h, grid_w = torch.meshgrid(h_coords, w_coords, indexing="ij")
-
         # coords = torch.stack([grid_w, grid_h], dim=-1).view(b, -1, 2)  # [B, H*W, 2]
         # FIX: View as 1 batch, then expand/repeat to match actual batch size B
         coords = torch.stack([grid_w, grid_h], dim=-1).view(1, -1, 2).expand(b, -1, -1)
 
-        total_points = h * w
+        total_points = size.area
         A_list = []
 
         # 1 Chunked MLP Inference
@@ -253,7 +248,7 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
             coords_chunk = coords[:, i:i+chunk_size, :]  # [B, chunk, 2]
 
             # Sample from the 512x512 feature map at the exact target coordinates
-            sampled_feat = F.grid_sample(feat, coords_chunk.unsqueeze(1), mode="bilinear", align_corners=True)
+            sampled_feat = F.grid_sample(features, coords_chunk.unsqueeze(1), mode="bilinear", align_corners=True)
             sampled_feat = sampled_feat.squeeze(2).permute(0, 2, 1)  # [B, chunk, 32]
 
             # Predict the curve parameters for this chunk
@@ -262,7 +257,7 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
 
         # 2. Reconstruct the spatial curve parameter map
         A_flat = torch.cat(A_list, dim=1)  # [B, H*W, 24]
-        A = A_flat.view(b, h, w, 3).permute(0, 3, 1, 2)  # [B, 3, H, W]
+        A = A_flat.view(b, size.h, size.w, 3).permute(0, 3, 1, 2)  # [B, 3, H, W]
 
         return A
 
@@ -294,6 +289,7 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
 
         return y
 
+    # noinspection PyMethodMayBeStatic
     def enhance_iter(self, image: Tensor, A: Tensor, num_iters: int = 8) -> Tensor:
         """Apply the original iterative enhancement scheme."""
         y = image
