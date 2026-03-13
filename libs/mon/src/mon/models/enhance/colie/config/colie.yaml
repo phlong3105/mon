@@ -79,11 +79,11 @@ lr_scheduler: ~
 lr_warmup_scheduler: ~
 
 loss:
-  L_tv_w: 20
-  L_spa_w: 1
-  l_spar_w: 5
-  L_exp_w: 8
   E: 0.3
+  W_tv: 20
+  W_spa: 1
+  W_spar: 5
+  W_exp: 8
 
 tensorboard_logger: True
 

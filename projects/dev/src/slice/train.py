@@ -81,13 +81,14 @@ class SLICE_Trainer(Trainer):
         L_exp = L.L_exp(16, config.loss.E).to(device)
         # L_exp = L.L_exp_asym(16, config.loss.E).to(device)
         # Loss weights
-        L_tv_A_w = config.loss.L_tv_A_w
-        L_spa_w = config.loss.L_spa_w
-        L_col_w = config.loss.L_col_w
-        L_col_pre_w = config.loss.L_col_pre_w
-        L_exp_w = config.loss.L_exp_w
-        L_enhance_w = config.loss.L_enhance_w
-        L_denoise_w = config.loss.L_denoise_w
+        W_tv_A = config.loss.W_tv_A
+        W_spa = config.loss.W_spa
+        W_col = config.loss.W_col
+        W_col_pre = config.loss.W_col_pre
+        W_exp = config.loss.W_exp
+        W_enhance = config.loss.W_enhance
+        W_denoise = config.loss.W_denoise
+        W_equi_A = config.loss.W_equi_A
 
         # 2. Train loop
         grad_clip_norm = config.grad_clip_norm
@@ -115,16 +116,21 @@ class SLICE_Trainer(Trainer):
 
             # 2.4. Calculate loss
             # Enhance loss
-            l_tv_A = L_tv_A_w * torch.mean(L_tv_A(curve_map, depth))
-            l_spa = L_spa_w * L_spa(image, enhanced, depth)
-            l_col = L_col_w * L_col(enhanced)
-            l_col_pre = L_col_pre_w * L_col_pre(image, enhanced)
-            l_exp = L_exp_w * L_exp(enhanced)
-            l_enhance = l_tv_A + l_spa + l_col + l_col_pre + l_exp
+            l_tv_A = W_tv_A * torch.mean(L_tv_A(curve_map, depth))
+            l_spa = W_spa * L_spa(image, enhanced, depth)
+            l_col = W_col * L_col(enhanced)
+            l_col_pre = W_col_pre * L_col_pre(image, enhanced)
+            l_exp = W_exp * L_exp(enhanced)
+            l_enhance = W_enhance * (l_tv_A + l_spa + l_col + l_col_pre + l_exp)
             # Denoise loss
-            l_denoise = torch.mean(outputs["l_denoise"])
+            l_denoise = W_denoise * torch.mean(outputs["l_denoise"])
+            # Equivariance loss
+            if W_equi_A not in [0, None]:
+                l_equi_A = W_equi_A * self.model.loss_equi_A(image, depth)
+            else:
+                l_equi_A = 0  # torch.tensor(0.0, device=device)
             # Total loss
-            loss = (L_enhance_w * l_enhance) + (L_denoise_w * l_denoise)
+            loss = l_enhance + l_denoise + l_equi_A
 
             # 2.5. Backward pass
             self.optimizer.zero_grad()

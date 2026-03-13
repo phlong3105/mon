@@ -310,6 +310,46 @@ class SLICE(ModelRegisterMixin, nn.Module):
             y = y + A * (torch.pow(y, 2) - y)
         return y
 
+    # --- Extension for IEEE TIP ---
+    def loss_equi_A(self, image: Tensor, depth: Tensor | None = None) -> Tensor:
+        """Calculate the equivariance loss on the curve map A (inspired by P2N paper).
+        """
+        # 1. The Original Pass
+        x = image
+        d = depth
+        _, _, p_x = self.denoiser(x)
+        if d is not None:
+            x_in_orig = torch.cat([x, p_x, d], dim=1)
+        else:
+            x_in_orig = torch.cat([x, p_x], dim=1)
+        feat_orig = self.encoder(x_in_orig)
+
+        # Predict standard curve map (assuming training size, e.g., 256x256)
+        A_orig = self.predict_curve_map(feat_orig, self.imgsz)
+
+        # 2. The Flipped Pass
+        # Apply a horizontal flip (dim 3 is the width dimension in B, C, H, W)
+        x_flipped = torch.flip(x, dims=[3])
+        d_flipped = torch.flip(d, dims=[3]) if d is not None else None
+        _, _, p_x_flipped = self.denoiser(x_flipped)
+        if d_flipped is not None:
+            x_in_flipped = torch.cat([x_flipped, p_x_flipped, d_flipped], dim=1)
+        else:
+            x_in_flipped = torch.cat([x_flipped, p_x_flipped], dim=1)
+        feat_flipped = self.encoder(x_in_flipped)
+
+        # Predict curve map from the flipped inputs
+        A_pred_flip = self.predict_curve_map(feat_flipped, self.imgsz)
+
+        # 3. The Equivariance Penalty
+        # Manually flip the original prediction to see if they match
+        A_orig_manually_flipped = torch.flip(A_orig, dims=[3])
+
+        # Calculate the L1 loss between the two
+        loss_equi = F.l1_loss(A_pred_flip, A_orig_manually_flipped)
+
+        return loss_equi
+
 # endregion
 
 

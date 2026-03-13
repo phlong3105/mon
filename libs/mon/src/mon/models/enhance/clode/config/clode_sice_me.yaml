@@ -80,11 +80,11 @@ lr_scheduler: ~
 lr_warmup_scheduler: ~
 
 loss:
-  L_tv_w: 200
-  L_spa_w: 1
-  L_col_w: 20
-  L_exp_w: 10
-  L_exp_mean: 0.6
+  E: 0.6
+  W_tv: 200
+  W_spa: 1
+  W_col: 20
+  W_exp: 10
 
 grad_clip_norm: 0.1
 

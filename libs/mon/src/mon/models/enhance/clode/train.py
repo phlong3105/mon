@@ -73,12 +73,12 @@ class CLODE_Trainer(Trainer):
         # 1. Define losses
         L_spa = L.L_spa().to(device)
         L_col = L.L_col().to(device)
-        L_exp = L.L_exp(16, config.loss.L_exp_mean).to(device)
+        L_exp = L.L_exp(16, config.loss.E).to(device)
         # Loss weights
-        L_tv_w = config.loss.L_tv_w
-        L_spa_w = config.loss.L_spa_w
-        L_col_w = config.loss.L_col_w
-        L_exp_w = config.loss.L_exp_w
+        W_tv = config.loss.L_tv_w
+        W_spa = config.loss.L_spa_w
+        W_col = config.loss.L_col_w
+        W_exp = config.loss.L_exp_w
 
         # 2. Train loop
         grad_clip_norm = config.grad_clip_norm
@@ -105,10 +105,10 @@ class CLODE_Trainer(Trainer):
 
             # 2.4. Calculate loss
             # Enhance loss
-            l_param = L_tv_w  * torch.mean(A_map)
-            l_col = L_col_w * L_col(enhanced)
-            l_spa = L_spa_w * L_spa(enhanced, image)
-            l_exp = L_exp_w * L_exp(enhanced)
+            l_param = W_tv  * torch.mean(A_map)
+            l_col = W_col * L_col(enhanced)
+            l_spa = W_spa * L_spa(enhanced, image)
+            l_exp = W_exp * L_exp(enhanced)
             l_noise = torch.mean(noise_map)
             # Total loss
             loss = l_spa + l_col + l_exp + l_param + l_noise

@@ -10,7 +10,6 @@ from __future__ import annotations
 
 __all__ = [
     "Decoder",
-    "DecoderFINER",
     "DecoderSIREN",
     "Denoiser",
     "Encoder",

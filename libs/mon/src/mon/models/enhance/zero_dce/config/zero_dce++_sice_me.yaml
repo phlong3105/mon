@@ -81,11 +81,11 @@ lr_scheduler: ~
 lr_warmup_scheduler: ~
 
 loss:
-  L_tv_w: 1600
-  L_spa_w: 1
-  L_col_w: 5
-  L_exp_w: 10
-  L_exp_mean: 0.5  # (float) Default is 0.6, but the author suggests 0.5 or 0.45
+  E: 0.5  # (float) Default is 0.6, but the author suggests 0.5 or 0.45
+  W_tv: 1600
+  W_spa: 1
+  W_col: 5
+  W_exp: 10
 
 grad_clip_norm: 0.1
 
