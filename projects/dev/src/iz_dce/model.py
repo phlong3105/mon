@@ -47,9 +47,9 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
     tasks: list[Task] = [Task.ENHANCE]
     model_dir: Path = current_dir
     methods = [
-        "iter8", "dopri8", "dopri5", "bosh3", "fehlberg2", "adaptive_heun",
-        "euler", "midpoint", "heun2", "heun3", "rk4", "explicit_adams",
-        "implicit_adams", "fixed_adams", "scipy_solver"
+        "iter8", "iter5", "iter4", "dopri8", "dopri5", "bosh3", "fehlberg2",
+        "adaptive_heun", "euler", "midpoint", "heun2", "heun3", "rk4",
+        "explicit_adams", "implicit_adams", "fixed_adams", "scipy_solver"
     ]
 
     # --- Lifecycle & Initialization ---
@@ -194,8 +194,9 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
             A = self.predict_curve_map_chunk(feat, h, w)
 
         # 6. Enhance
-        if self.method in ["iter8"]:
-            y = self.enhance_iter(image, A, 8)
+        if "iter" in self.method:
+            num_iters = int(self.method.split("iter")[-1])
+            y = self.enhance_iter(image, A, num_iters)
         else:
             y = self.enhance(image, A, t=t)
 
@@ -238,7 +239,10 @@ class IZ_DCE(ModelRegisterMixin, nn.Module):
         h_coords = torch.linspace(-1, 1, steps=h, device=device)
         w_coords = torch.linspace(-1, 1, steps=w, device=device)
         grid_h, grid_w = torch.meshgrid(h_coords, w_coords, indexing="ij")
-        coords = torch.stack([grid_w, grid_h], dim=-1).view(b, -1, 2)  # [B, H*W, 2]
+
+        # coords = torch.stack([grid_w, grid_h], dim=-1).view(b, -1, 2)  # [B, H*W, 2]
+        # FIX: View as 1 batch, then expand/repeat to match actual batch size B
+        coords = torch.stack([grid_w, grid_h], dim=-1).view(1, -1, 2).expand(b, -1, -1)
 
         total_points = h * w
         A_list = []

@@ -19,6 +19,9 @@ model:
   imgsz: 256
   chunk_size: 100000
   method: "dopri5"
+  # "iter8", "iter5", "iter4", "dopri8", "dopri5", "bosh3", "fehlberg2",
+  # "adaptive_heun", "euler", "midpoint", "heun2", "heun3", "rk4",
+  # "explicit_adams", "implicit_adams", "fixed_adams", "scipy_solver"
   tol: 0.00001  # 1e-5
   ode_options:
     max_num_steps: 1000
