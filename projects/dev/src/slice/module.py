@@ -10,6 +10,7 @@ from __future__ import annotations
 
 __all__ = [
     "Decoder",
+    "DecoderFINER",
     "DecoderSIREN",
     "Denoiser",
     "Encoder",
@@ -410,10 +411,8 @@ class Denoiser(nn.Module):
 
 
 # ==============================================================================
-# region MODULES
+# region ENCODERS
 # ==============================================================================
-
-# --- Encoders ---
 
 class Encoder(nn.Module):
     """A CNN-based encoder that extracts features from the input image.
@@ -471,8 +470,12 @@ class Encoder(nn.Module):
         y = self.act(self.norm_1(self.confusion(x_3)))
         return y
 
+# endregion
 
-# --- Decoders ---
+
+# ==============================================================================
+# region DECODERS
+# ==============================================================================
 
 class Decoder(nn.Module):
     """A simple MLP-based decoder."""
@@ -609,11 +612,16 @@ class DecoderSIREN(nn.Module):
         coords = self.ff(coords) if self.ff is not None else coords
         patch = self.patch_net(feat)
         coords = self.spatial_net(coords)
-        A = F.tanh(self.output_net(torch.cat([patch, coords], dim=-1)))
+        concat = torch.cat([patch, coords], dim=-1)
+        A = F.tanh(self.output_net(concat))
         return A
 
+# endregion
 
-# --- Curve Enhancement ---
+
+# ==============================================================================
+# region CURVE
+# ==============================================================================
 
 class EnhancementCurveODE(nn.Module):
     """A simple ODE-based curve module."""

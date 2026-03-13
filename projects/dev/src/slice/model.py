@@ -35,6 +35,7 @@ from mon.core import (
 )
 from mon.nn import ModelRegisterMixin
 from .module import DecoderSIREN, Denoiser, Encoder, EnhancementCurveODE
+from .utils import get_coords
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -211,7 +212,7 @@ class SLICE(ModelRegisterMixin, nn.Module):
         features = self.encoder(x_in)
 
         # 5. Predict curve parameters
-        if size0 != size1:
+        if size0 == size1:
             A = self.predict_curve_map(features, size1)
         else:
             A = self.predict_curve_map_chunk(features, size0, chunk_size=chunk_size)
@@ -237,14 +238,8 @@ class SLICE(ModelRegisterMixin, nn.Module):
     # --- Curve Map ---
     def predict_curve_map(self, features: Tensor, size: Size) -> Tensor:
         b = features.shape[0]
-        device = features.device
 
-        # We map the massive target resolution to the [-1, 1] continuous space.
-        h_coords = torch.linspace(-1, 1, steps=size.h, device=device)
-        w_coords = torch.linspace(-1, 1, steps=size.w, device=device)
-        grid_h, grid_w = torch.meshgrid(h_coords, w_coords, indexing="ij")
-        coords = torch.stack([grid_w, grid_h], dim=-1).view(1, -1, 2).repeat(b, 1, 1)  # [B, H*W, 2]
-
+        coords = get_coords(features, size)
         sampled_feat = F.grid_sample(features, coords.unsqueeze(1), mode="bilinear", align_corners=True)
         sampled_feat = sampled_feat.squeeze(2).permute(0, 2, 1)  # [B, N, 32]
 
@@ -255,20 +250,12 @@ class SLICE(ModelRegisterMixin, nn.Module):
 
     def predict_curve_map_chunk(self, features: Tensor, size: Size, chunk_size: int) -> Tensor:
         b = features.shape[0]
-        device = features.device
 
-        # We map the massive target resolution to the [-1, 1] continuous space.
-        h_coords = torch.linspace(-1, 1, steps=size.h, device=device)
-        w_coords = torch.linspace(-1, 1, steps=size.w, device=device)
-        grid_h, grid_w = torch.meshgrid(h_coords, w_coords, indexing="ij")
-        # coords = torch.stack([grid_w, grid_h], dim=-1).view(b, -1, 2)  # [B, H*W, 2]
-        # FIX: View as 1 batch, then expand/repeat to match actual batch size B
-        coords = torch.stack([grid_w, grid_h], dim=-1).view(1, -1, 2).expand(b, -1, -1)
-
+        coords = get_coords(features, size)
         total_points = size.area
         A_list = []
 
-        # 1 Chunked MLP Inference
+        # 1. Chunked MLP Inference
         # Process the points in batches of `chunk_size` to cap VRAM usage.
         for i in range(0, total_points, chunk_size):
             coords_chunk = coords[:, i:i+chunk_size, :]  # [B, chunk, 2]
@@ -296,7 +283,7 @@ class SLICE(ModelRegisterMixin, nn.Module):
         # 2. Define the continuous integration time span
         # t=0.0 is the dark image, t=1.0 is the fully enhanced image
         if t is None:
-            t_span = torch.tensor([0.0, 1.0], device=image.device)
+            t_span = torch.tensor([0.0, 3.0], device=image.device)
         else:
             t_span = t
 

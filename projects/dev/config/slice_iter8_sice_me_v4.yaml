@@ -1,5 +1,5 @@
 # --- General ---
-exp_name: "slice_sice_me_v3"  # (str) Experiment name.
+exp_name: "slice_iter8_sice_me_v4"  # (str) Experiment name.
 
 root: ~  # (str) Root path of the project.
 output_dir: ~  # (str) Output directory.
@@ -27,7 +27,7 @@ model:
     max_num_steps: 1000
   noise_level: ~
   use_depth: True
-  use_anscombe: False
+  use_anscombe: True
   weights: "cv/enhance/slice/slice/sice_me/slice_sice_me.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
