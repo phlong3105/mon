@@ -30,6 +30,7 @@ from .utils import weights_init
 # ==============================================================================
 
 class DenoiseNetwork(nn.Module):
+    """A simple CNN for estimating the noise in the input image (from ZS-N2N)."""
 
     # --- Lifecycle & Initialization ---
     def __init__(self, in_channels: int = 3, hidden_dim: int = 48):
@@ -146,6 +147,7 @@ class ChannelAttentionModule(nn.Module):
 
 
 class ImprovedDenoiseNetwork(nn.Module):
+    """An improved CNN for estimating the noise in the input image (from IZS-N2N)."""
 
     # --- Lifecycle & Initialization ---
     def __init__(self, in_channels: int = 3, hidden_dim: int = 48):
@@ -206,7 +208,16 @@ class ImprovedDenoiseNetwork(nn.Module):
 
 # noinspection PyMethodMayBeStatic
 class Denoiser(nn.Module):
-    """A simple CNN for estimating the noise in the input image."""
+    """A CNN for estimating the noise in the input image.
+
+    This is the main denoiser module that incorporates noise addition, optional
+    Anscombe transform, and the underlying noise estimation network.
+
+    It also includes two loss functions: ZS-N2N loss and the proposed P2N
+    consistency loss. The P2N loss encourages the network to produce consistent
+    denoised outputs even when the noise is shuffled, which helps prevent
+    overfitting to specific noise patterns and promotes better generalization.
+    """
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -405,6 +416,12 @@ class Denoiser(nn.Module):
 # --- Encoders ---
 
 class Encoder(nn.Module):
+    """A CNN-based encoder that extracts features from the input image.
+
+    The architecture consists of a series of convolutional layers with varying
+    kernel sizes (3x3 and 5x5) to capture both local and slightly more global
+    features.
+    """
 
     # --- Lifecycle & Initialization ---
     def __init__(self, in_channels: int, hidden_dim: int = 32):
@@ -458,6 +475,7 @@ class Encoder(nn.Module):
 # --- Decoders ---
 
 class Decoder(nn.Module):
+    """A simple MLP-based decoder."""
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -508,6 +526,13 @@ class Decoder(nn.Module):
 
 
 class DecoderSIREN(nn.Module):
+    """A SIREN-based decoder.
+
+    It is a Coordinate-based Implicit Neural Representations that takes in
+    features and coordinates and outputs a denoised image. The SIREN architecture
+    allows for better modeling of high-frequency details, making it suitable for
+    image reconstruction tasks.
+    """
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -588,13 +613,21 @@ class DecoderSIREN(nn.Module):
         return A
 
 
-# --- Curve ---
+# --- Curve Enhancement ---
 
 class EnhancementCurveODE(nn.Module):
+    """A simple ODE-based curve module."""
 
     # --- Lifecycle & Initialization ---
     def __init__(self, A: Tensor):
+        """Initialize a new instance.
+
+        Args:
+            A (Tensor): Curve parameter tensor map of shape (B, C, H, W) and
+                values ranging from 0.0 to 1.0.
+        """
         super().__init__()
+        # Assign attributes
         self.A = A
 
     # --- Callable & Context Manager ---
@@ -611,7 +644,7 @@ class EnhancementCurveODE(nn.Module):
                 from 0.0 to 1.0.
         """
         y = torch.clamp(y, 0.0, 1.0)
-        # Swapped to y * (1 - y) so A learns positive values!
+        # Swapped to y * (1.0 - y) so A learns positive values!!!
         dy_dt = self.A * y * (1.0 - y)
         return dy_dt
 

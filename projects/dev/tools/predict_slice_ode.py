@@ -30,7 +30,7 @@ def main():
     predictor = SLICE_Predictor.from_cli(
         prompt=True,
         root=resolve_project_root(current_dir),
-        config_file="slice_dopri5_sice_me.yaml",
+        config_file="slice_dopri5_sice_me_v1.yaml",
         task=Task.ENHANCE,
         mode=RunMode.PREDICT,
         arch="slice",

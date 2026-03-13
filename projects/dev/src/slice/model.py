@@ -45,7 +45,22 @@ current_dir = current_file.parents[0]
 # ==============================================================================
 
 class SLICE(ModelRegisterMixin, nn.Module):
-    """SLICE model.
+    r"""SLICE model.
+
+    "What exactly is SLICE?":
+
+    - Self-Supervised Frontend: Takes the noisy raw tensor and extracts a
+      mathematically pristine, structurally sound image (bypassing the Anscombe
+      clipping trap and structure leakage).
+    - Contextual Encoding: Downsamples the clean image and its corresponding
+      depth map to generate a rich, globally aware feature latent space.
+    - Scale-Arbitrary Decoding: Uses a Fourier-encoded SIREN MLP to map
+      continuous high-resolution spatial coordinates $(x, y)$ against the global
+      features, instantly generating the spatial curve parameters $\mathcal{A}$
+      in memory-safe chunks.
+    - Iterative/Continuous Enhancement: Applies the predicted curve to the
+      pristine image using either discrete iterations or a continuous ODE solver,
+      yielding a 4K/8K image with perfect contrast and zero noise amplification.
 
     References:
         - Paper: "SLICE: Scale-Arbitrary Low-Light Enhancement via Depth-Aware
@@ -53,8 +68,8 @@ class SLICE(ModelRegisterMixin, nn.Module):
         - Code: https://github.com/phlong3105/slice
     """
 
-    arch: str = "iz_dce"
-    name: str = "iz_dce"
+    arch: str = "slice"
+    name: str = "slice"
     tasks: list[Task] = [Task.ENHANCE]
     model_dir: Path = current_dir
     methods = [
@@ -323,7 +338,7 @@ class SLICE(ModelRegisterMixin, nn.Module):
 @MODELS.register(name="slice", metaclass=SLICE)
 def slice(*args, **kwargs):
     """Create a SLICE model."""
-    _ = kwargs.pop("name", "iz_dce")
+    _ = kwargs.pop("name", "slice")
     in_channels = kwargs.pop("in_channels", 3)
     hidden_dim = kwargs.pop("hidden_dim", 32)
     imgsz = kwargs.pop("imgsz", 256)
