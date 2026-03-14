@@ -707,7 +707,7 @@ class Config:
             recursive=True
         ) if model_dir else []
 
-        return config_files
+        return sorted(config_files)
 
     @property
     def weights_files(self) -> list[Path]:
@@ -731,7 +731,7 @@ class Config:
             recursive=True
         ) if K.ZOO_ROOT else []
 
-        return weights_files
+        return sorted(weights_files)
 
     @property
     def infer_data(self) -> PathLike:

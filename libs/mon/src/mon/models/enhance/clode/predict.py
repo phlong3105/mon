@@ -70,7 +70,7 @@ class CLODE_Predictor(Predictor):
 
     # --- Prediction ---
     @override
-    @torch.no_grad()
+    @torch.inference_mode()
     def _predict_step(self, datapoint: dict, timers: TimeProfiler) -> dict:
         """Predict the output of the model for a single data point.
 

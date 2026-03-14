@@ -80,7 +80,7 @@ data: ~  # (list[str]) List of data names or paths for prediction.
 
 # --- Training ---
 epochs: 100  # (int) Number of epochs to train.
-T: 1.0
+T: 3.0
 
 optimizer:
   name: "Adam"  # (str) Optimizer name.

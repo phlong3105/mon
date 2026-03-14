@@ -151,7 +151,7 @@ class SLICE(ModelRegisterMixin, nn.Module):
             out_channels=self.out_channels,
             hidden_dim=hidden_dim,
             pos_encode=True,
-            mapping_size=imgsz
+            mapping_size=imgsz,
         )
 
         # Load weights
@@ -169,7 +169,7 @@ class SLICE(ModelRegisterMixin, nn.Module):
         image: Tensor,
         depth: Tensor | None = None,
         t: Tensor | None = None,
-        chunk_size: int = 100000,
+        chunk_size: int = 65536,
         save_debug: bool = False,
         *args, **kwargs
     ) -> dict:
@@ -183,7 +183,7 @@ class SLICE(ModelRegisterMixin, nn.Module):
             t (Tensor, optional): Time tensor. If None, use the original
                 Zero-DCE iteration scheme. Defaults to None.
             chunk_size (int): Number of pixels to process at once at inference.
-                Defaults to 100,000.
+                Defaults to 65,536.
             save_debug (bool, optional): Whether to save intermediate results for
                 debugging. Defaults to False.
         """
@@ -249,17 +249,20 @@ class SLICE(ModelRegisterMixin, nn.Module):
 
         return A
 
+    @torch.inference_mode()
     def gen_curve_map_chunk(self, features: Tensor, size: Size, chunk_size: int) -> Tensor:
         """Predict the curve parameters of the full image in chunks
         (for inference on large images).
         """
         b = features.shape[0]
-
-        coords = get_coords(features, size)
+        device = features.device
         total_points = size.area
-        A_list = []
 
-        # 1. Chunked MLP Inference
+        # 1. Pre-allocate the output tensor and get the coordinates for the full image
+        coords = get_coords(features, size)
+        A_flat = torch.empty((b, total_points, 3), dtype=features.dtype, device=device)
+
+        # 2. Chunked MLP Inference
         # Process the points in batches of `chunk_size` to cap VRAM usage.
         for i in range(0, total_points, chunk_size):
             coords_chunk = coords[:, i:i+chunk_size, :]  # [B, chunk, 2]
@@ -270,10 +273,11 @@ class SLICE(ModelRegisterMixin, nn.Module):
 
             # Predict the curve parameters for this chunk
             A_chunk = self.decoder(sampled_feat, coords_chunk)
-            A_list.append(A_chunk)
 
-        # 2. Reconstruct the spatial curve parameter map
-        A_flat = torch.cat(A_list, dim=1)  # [B, H*W, 24]
+            # 3. Inject directly into the pre-allocated tensor (No lists!)
+            A_flat[:, i:i+chunk_size, :] = A_chunk
+
+        # 4. Reconstruct the spatial curve parameter map
         A = A_flat.view(b, size.h, size.w, 3).permute(0, 3, 1, 2)  # [B, 3, H, W]
 
         return A

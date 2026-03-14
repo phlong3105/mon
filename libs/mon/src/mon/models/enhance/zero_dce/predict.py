@@ -23,6 +23,7 @@ from mon.core import (
     resolve_project_root,
     RunMode,
     Size,
+    SizeLike,
     Task,
     TimeProfiler,
 )
@@ -78,7 +79,7 @@ class ZeroDCE_Predictor(Predictor):
 
     # --- Prediction ---
     @override
-    @torch.no_grad()
+    @torch.inference_mode()
     def _predict_step(self, datapoint: dict, timers: TimeProfiler) -> dict:
         """Predict the output of the model for a single data point.
 
@@ -137,10 +138,15 @@ class ZeroDCE_Predictor(Predictor):
 
     # --- Utilities ---
     @override
-    def benchmark(self):
-        """Run the benchmark for the model."""
+    def benchmark(self, imgsz: SizeLike | None = None):
+        """Run the benchmark for the model.
+
+        Args:
+            imgsz (SizeLike, optional): The input image size for benchmarking.
+                Defaults to None, which means using the default size.
+        """
         config = self.config
-        imgsz = config.eval_imgsz
+        imgsz = Size.from_value(imgsz or config.eval_imgsz)
 
         scale_factor = config.model.get("scale_factor")
         if scale_factor:
