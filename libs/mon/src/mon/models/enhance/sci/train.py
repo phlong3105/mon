@@ -17,7 +17,6 @@ import pyiqa
 import torch
 from rich.progress import Progress
 from torch.autograd import Variable
-from torch.optim import Adam
 from typing_extensions import override
 
 from mon.core import OPTIMIZERS, Path
@@ -154,8 +153,7 @@ class SCI_Trainer(Trainer):
         for i, datapoint in enumerate(self.val_dataloader):
             # 2.1. Prepare inputs
             image = datapoint["image"]
-            # image = image.to(device)
-            image = Variable(image, volatile=True).to(device)
+            image = image.to(device)
             target = datapoint["target"]
             target = target.to(device)
 
@@ -269,8 +267,8 @@ class SCI_Finetuner(Trainer):
         for i, datapoint in enumerate(self.train_dataloader):
             # 2.1. Prepare inputs
             image = datapoint["image"]
-            # image = image.to(device)
-            image = Variable(image, requires_grad=False).to(device)
+            image = image.to(device)
+            # image = Variable(image, requires_grad=False).to(device)
 
             # 2.2. Forward pass
             outputs = self.model(image, inference=True)
@@ -332,8 +330,7 @@ class SCI_Finetuner(Trainer):
         for i, datapoint in enumerate(self.val_dataloader):
             # 2.1. Prepare inputs
             image = datapoint["image"]
-            # image = image.to(device)
-            image = Variable(image, volatile=True).to(device)
+            image = image.to(device)
             target = datapoint["target"]
             target = target.to(device)
 

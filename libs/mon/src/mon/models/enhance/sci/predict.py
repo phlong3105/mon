@@ -15,10 +15,10 @@ __all__ = [
 from typing import Any
 
 import torch
-from torch.autograd import Variable
 from typing_extensions import override
 
 from mon.core import (
+    K,
     MODELS,
     Path,
     resolve_project_root,
@@ -53,8 +53,9 @@ class SCI_Predictor(Predictor):
 
         model = MODELS.build(**config.model | { "weights": weights})
         model = model.to(device)
-        model.eval()
+        # model.eval()
         self._model = model
+        self._model.eval()
 
     @override
     def _init_transforms(self):
@@ -93,13 +94,12 @@ class SCI_Predictor(Predictor):
         # 1. Prepare inputs
         timers.preprocess.tick()
         image = datapoint["image"]
-        # image = image.to(device)
-        image = Variable(image, volatile=True).to(device)
+        image = image.to(device)
         timers.preprocess.tock()
 
         # 2. Inference
         timers.infer.tick()
-        outputs = self.model(image, inference=True)
+        outputs = self.model(image=image, inference=True)
         timers.infer.tock()
 
         return outputs
@@ -118,7 +118,7 @@ class SCI_Predictor(Predictor):
         for i, meta_i in enumerate(meta):
             path = Path(meta_i["path"])
             size = Size.from_value(meta_i["imgsz"])
-            self._save_image(outputs["enhanced"][i:i+1], size, path)
+            self._save_image(outputs["enhanced"][i:i+1], size, path, dirname=K.PRED_DIR)
 
     @override
     def _save_debug(self, outputs: dict[str, Any], meta: list[dict[str, Any]]):
@@ -133,7 +133,11 @@ class SCI_Predictor(Predictor):
         for i, meta_i in enumerate(meta):
             path = Path(meta_i["path"])
             size = Size.from_value(meta_i["imgsz"])
-            self._save_image(outputs["illumination"][i:i+1], size, path)
+            debug_images = {
+                "illumination": outputs["illumination"][i:i+1],
+            }
+            for stem, image in debug_images.items():
+                self._save_image(image, size, path, dirname=K.DEBUG_DIR, stem=stem)
 
 # endregion
 

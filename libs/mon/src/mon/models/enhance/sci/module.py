@@ -51,12 +51,12 @@ class EnhanceNetwork(nn.Module):
 
     # --- Callable & Context Manager ---
     def forward(self, x: Tensor) -> Tensor:
-        fea = self.in_conv(x)
+        feat = self.in_conv(x)
         for conv in self.blocks:
-            fea = fea + conv(fea)
-        fea = self.out_conv(fea)
+            feat = feat + conv(feat)
+        feat = self.out_conv(feat)
 
-        illu = fea + x
+        illu = feat + x
         illu = torch.clamp(illu, 0.0001, 1)
         return illu
 
@@ -97,12 +97,12 @@ class CalibrateNetwork(nn.Module):
 
     # --- Callable & Context Manager ---
     def forward(self, x: Tensor) -> Tensor:
-        fea = self.in_conv(x)
+        feat = self.in_conv(x)
         for conv in self.blocks:
-            fea = fea + conv(fea)
+            feat = feat + conv(feat)
 
-        fea = self.out_conv(fea)
-        delta = x - fea
+        feat = self.out_conv(feat)
+        delta = x - feat
         return delta
 
 # endregion

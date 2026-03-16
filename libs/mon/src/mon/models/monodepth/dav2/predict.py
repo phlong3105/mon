@@ -144,7 +144,7 @@ class DAV2_Predictor(Predictor):
         size = Size.from_value(meta["imgsz"])
         depth = outputs["depth"]
         depth = np.repeat(depth[..., np.newaxis], 3, axis=-1)
-        self._save_image(depth, size, path)
+        self._save_image(depth, size, path, dirname=K.PRED_DIR)
 
     @override
     def _save_debug(self, outputs: dict, meta: dict):

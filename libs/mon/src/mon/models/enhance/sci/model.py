@@ -88,14 +88,13 @@ class SCI(ModelRegisterMixin, nn.Module):
         self.enhance = EnhanceNetwork(layers=1, channels=3)
         self.calibrate = CalibrateNetwork(layers=3, channels=16)
 
-        self.weights_init()
-
         # Load weights
         if is_weights_type(weights):
             self.load_state_dict(weights.state_dict())
             if self.verbose:
                 log(f"Initialized '{name}' from weights: '{weights.path}'.")
         else:
+            self.weights_init()
             if self.verbose:
                 log(f"Initialized '{name}' from scratch.")
 
@@ -183,7 +182,7 @@ class SCI_Weights(WeightsEnum):
         transforms=None,
         meta={},
     )
-    DEFAULT = EASY
+    DEFAULT = MEDIUM
 
 
 # --- Model Variants ---

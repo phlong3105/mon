@@ -292,6 +292,7 @@ class Predictor(Runner, ABC):
             save_path = save_dir / f"{src_path.stem}_{stem}{K.IMAGE_EXT}"
         else:
             save_path = config.resolve_save_file(dirname=dirname, subdirname=subdirname, src_path=src_path)
+
         write_image(image=image, path=save_path)
 
 # endregion

@@ -224,7 +224,7 @@ def to_image_array(image: Tensor) -> ndarray:
     # We avoid squeeze() to prevent accidentally removing C=1
     image = image[0].detach().cpu()  # Move to CPU
     # (C, H, W) -> (H, W, C)
-    image = image.permute(1, 2, 0).clamp(0, 1).mul(255).round().to(torch.uint8)
+    image = image.permute(1, 2, 0).clamp(0.0, 1.0).mul(255).round().to(torch.uint8)
     return image.numpy()
 
 

@@ -25,7 +25,7 @@ def measure():
     # 1. Define arguments
     archs_models = {
         "colie": ["colie"],
-        # "saleo": ["saleo_ffsiren"],
+        "sci": ["sci_difficult", "sci_medium", "sci_easy"],
         "zero_dce": ["zero_dce_sice_me"],
         "slice": [
             "slice_dopri5_sice_me_v4",

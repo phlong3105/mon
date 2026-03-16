@@ -262,7 +262,7 @@ def write_image(image: TensorOrArray, path: PathLike):
         # Handle tensor (B, C, H, W)
         # torchvision handles the [0, 1] -> [0, 255] conversion internally
         # We ensure it's on CPU before saving
-        torchvision.utils.save_image(image.cpu(), str(path))
+        torchvision.utils.save_image(image.detach().cpu(), str(path))
     elif isinstance(image, ndarray):
         # Handle array (H, W, C)
         # Ensure it's 8-bit for OpenCV

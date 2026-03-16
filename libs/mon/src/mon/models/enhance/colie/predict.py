@@ -104,7 +104,7 @@ class CoLIE_Predictor(Predictor):
         for i, meta_i in enumerate(meta):
             path = Path(meta_i["path"])
             size = Size.from_value(meta_i["imgsz"])
-            self._save_image(outputs["enhanced"][i:i+1], size, path)
+            self._save_image(outputs["enhanced"][i:i+1], size, path, dirname=K.PRED_DIR)
 
     @override
     def _save_debug(self, outputs: dict[str, Any], meta: list[dict[str, Any]]):

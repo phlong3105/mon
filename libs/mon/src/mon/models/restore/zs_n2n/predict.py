@@ -17,6 +17,7 @@ from typing import Any
 from typing_extensions import override
 
 from mon.core import (
+    K,
     Path,
     resolve_project_root,
     RunMode,
@@ -117,7 +118,7 @@ class ZS_N2N_Predictor(Predictor):
         for i, meta_i in enumerate(meta):
             path = Path(meta_i["path"])
             size = Size.from_value(meta_i["imgsz"])
-            self._save_image(outputs["restored"][i:i+1], size, path)
+            self._save_image(outputs["restored"][i:i+1], size, path, dirname=K.PRED_DIR)
 
     @override
     def _save_debug(self, outputs: dict[str, Any], meta: list[dict[str, Any]]):
