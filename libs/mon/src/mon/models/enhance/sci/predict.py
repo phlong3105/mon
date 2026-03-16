@@ -10,6 +10,7 @@ from __future__ import annotations
 
 __all__ = [
     "SCI_Predictor",
+    "SCI_PP_Predictor",
 ]
 
 from typing import Any
@@ -138,6 +139,11 @@ class SCI_Predictor(Predictor):
             }
             for stem, image in debug_images.items():
                 self._save_image(image, size, path, dirname=K.DEBUG_DIR, stem=stem)
+
+
+class SCI_PP_Predictor(SCI_Predictor):
+    """Predictor for SCI++ models."""
+    pass
 
 # endregion
 
