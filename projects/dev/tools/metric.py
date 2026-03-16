@@ -24,25 +24,23 @@ current_dir = current_file.parents[0]
 def measure():
     # 1. Define arguments
     archs_models = {
-        # "colie": ["colie"],
-        # "calie": ["calie_siren", "calie_ffsiren"],
+        "colie": ["colie"],
         # "saleo": ["saleo_ffsiren"],
-        "zero_dce": ["zero_dce_sice_me",],
-        "iz_dce": [
-            # "iz_dce_sice_me_v2",
-            "iz_dce_ode_sice_me",
+        "zero_dce": ["zero_dce_sice_me"],
+        "slice": [
+            "slice_dopri5_sice_me_v4",
         ]
     }
     datasets = [
         # "dicm", "lime", "mef", "npe", "vv",
-        "lol_v1",
+        # "lol_v1",
         # "lol_v2_real",
         # "lol_v2_syn",
         "sice",
         # "lsrw",
         # "uhd_ll",
     ]
-    metrics = ["psnr", "ssimc", "lpips"]
+    metrics = ["psnr", "ssim", "ssimc", "lpips", "niqe", "pi"]
 
     # 2. Define constants
     root = resolve_project_root(current_dir)
