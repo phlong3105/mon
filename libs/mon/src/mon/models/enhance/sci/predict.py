@@ -3,18 +3,19 @@
 
 """Prediction Runners.
 
-This module provides prediction runner classes for Zero-DCE and Zero-DCE++ models.
+This module provides prediction runner classes for SCI and SCI++ models.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "ZeroDCE_Predictor",
+    "SCI_Predictor",
 ]
 
 from typing import Any
 
 import torch
+from torch.autograd import Variable
 from typing_extensions import override
 
 from mon.core import (
@@ -23,15 +24,13 @@ from mon.core import (
     resolve_project_root,
     RunMode,
     Size,
-    SizeLike,
     Task,
     TimeProfiler,
 )
 from mon.dataset import transform as T
-from mon.metrics import benchmark
 from mon.runners import Predictor
 # noinspection PyUnusedImports
-from .model import zero_dce, zero_dce_pp
+from .model import sci
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -41,8 +40,8 @@ current_dir = current_file.parents[0]
 # region PREDICTOR
 # ==============================================================================
 
-class ZeroDCE_Predictor(Predictor):
-    """Predictor for Zero-DCE models."""
+class SCI_Predictor(Predictor):
+    """Predictor for SCI models."""
 
     # --- Lifecycle & Initialization ---
     @override
@@ -69,9 +68,6 @@ class ZeroDCE_Predictor(Predictor):
 
         if config.eval_resize:
             imgsz = Size.from_value(config.eval_imgsz)
-            scale_factor = config.model.get("scale_factor")
-            if scale_factor:
-                imgsz = Size(height=imgsz.h // scale_factor, width=imgsz.w // scale_factor)
             resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
             transforms = resize + transforms
 
@@ -91,18 +87,19 @@ class ZeroDCE_Predictor(Predictor):
         Returns:
             dict: The dictionary containing the prediction results.
         """
+        config = self.config
         device = self.device
-        save_debug = self.save_debug
 
         # 1. Prepare inputs
         timers.preprocess.tick()
         image = datapoint["image"]
-        image = image.to(device)
+        # image = image.to(device)
+        image = Variable(image, volatile=True).to(device)
         timers.preprocess.tock()
 
         # 2. Inference
         timers.infer.tick()
-        outputs = self.model(image, save_debug=save_debug)
+        outputs = self.model(image, inference=True)
         timers.infer.tock()
 
         return outputs
@@ -133,26 +130,10 @@ class ZeroDCE_Predictor(Predictor):
             meta (list[dict]): The list of dictionaries containing the metadata
                 for each data point.
         """
-        pass
-
-    # --- Utilities ---
-    @override
-    def benchmark(self, imgsz: SizeLike | None = None):
-        """Run the benchmark for the model.
-
-        Args:
-            imgsz (SizeLike, optional): The input image size for benchmarking.
-                Defaults to None, which means using the default size.
-        """
-        config = self.config
-        imgsz = Size.from_value(imgsz or config.eval_imgsz)
-
-        scale_factor = config.model.get("scale_factor")
-        if scale_factor:
-            imgsz = Size(height=imgsz.h // scale_factor, width=imgsz.w // scale_factor)
-
-        if self.benchmark:
-            benchmark(self.model, imgsz=imgsz)
+        for i, meta_i in enumerate(meta):
+            path = Path(meta_i["path"])
+            size = Size.from_value(meta_i["imgsz"])
+            self._save_image(outputs["illumination"][i:i+1], size, path)
 
 # endregion
 
@@ -162,14 +143,14 @@ class ZeroDCE_Predictor(Predictor):
 # ==============================================================================
 
 def main():
-    predictor = ZeroDCE_Predictor.from_cli(
+    predictor = SCI_Predictor.from_cli(
         prompt=True,
         root=resolve_project_root(current_dir),
-        config_file="zero_dce_sice_me.yaml",
+        config_file="sci_medium.yaml",
         task=Task.ENHANCE,
         mode=RunMode.PREDICT,
-        arch="zero_dce",
-        model="zero_dce",
+        arch="sci",
+        model="sci",
         device="auto",
         save=True,
         save_debug=True,

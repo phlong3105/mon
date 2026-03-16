@@ -55,7 +55,7 @@ current_dir = current_file.parents[0]
 # ==============================================================================
 
 class ZeroDCE(ModelRegisterMixin, nn.Module):
-    """ZeroDCE model for low-light image enhancement.
+    """Zero-DCE model for low-light image enhancement.
 
     References:
         - Paper: "Zero-Reference Deep Curve Estimation for Low-Light Image
@@ -173,7 +173,7 @@ class ZeroDCE(ModelRegisterMixin, nn.Module):
 
 
 class ZeroDCEPP(ModelRegisterMixin, nn.Module):
-    """ZeroDCE++ model for low-light image enhancement.
+    """Zero-DCE++ model for low-light image enhancement.
 
     References:
         - Paper: "Learning to Enhance Low-Light Image via Zero-Reference Deep Curve

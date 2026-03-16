@@ -16,7 +16,7 @@ __all__ = [
 ]
 
 import torch
-from torch import nn
+from torch import nn, Tensor
 from torch.nn import functional as F
 
 from mon.nn import Loss
@@ -34,7 +34,7 @@ class L_col(Loss):
     """
 
     # --- Callable & Context Manager ---
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
+    def forward(self, input: Tensor) -> Tensor:
         """Calculate the color constancy loss on the ``input``.
 
         Args:
@@ -85,7 +85,7 @@ class L_spa(Loss):
         self.pool = nn.AvgPool2d(4)
 
     # --- Callable & Context Manager ---
-    def forward(self, input: torch.Tensor, pred: torch.Tensor) -> torch.Tensor:
+    def forward(self, input: Tensor, pred: Tensor) -> Tensor:
         """Calculate the loss between ``input`` and ``pred``.
 
         Args:
@@ -146,7 +146,7 @@ class L_exp(Loss):
         self.E = E
 
     # --- Callable & Context Manager ---
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
+    def forward(self, input: Tensor) -> Tensor:
         """Calculate the loss between the ``input`` and the target exposure.
 
         Args:
@@ -169,7 +169,7 @@ class L_tv(Loss):
     """
 
     # --- Callable & Context Manager ---
-    def forward(self, input: torch.Tensor) -> torch.Tensor:
+    def forward(self, input: Tensor) -> Tensor:
         """Calculate the loss for the ``input`` tensor.
 
         Args:

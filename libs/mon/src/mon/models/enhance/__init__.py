@@ -10,4 +10,5 @@ from __future__ import annotations
 
 from .clode import *
 from .colie import *
+from .sci import *
 from .zero_dce import *
