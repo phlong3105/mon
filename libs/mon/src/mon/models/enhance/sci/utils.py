@@ -3,28 +3,19 @@
 
 """Utilities.
 
-This module provides various utilities for Zero-DCE.
+This module provides various utilities for SCI.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "weights_init",
+
 ]
-
-from torch import nn
-
 
 # ==============================================================================
 # region UTILITIES
 # ==============================================================================
 
-def weights_init(m):
-    if isinstance(m, nn.Conv2d):
-        m.weight.data.normal_(0, 0.02)
-        m.bias.data.zero_()
-    if isinstance(m, nn.BatchNorm2d):
-        m.weight.data.normal_(1., 0.02)
 
 # endregion
 

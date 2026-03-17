@@ -49,7 +49,6 @@ from .module import (
     EnhanceNetwork_Ha,
     EnhanceNetwork_Hb,
 )
-from .utils import weights_init
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -107,17 +106,8 @@ class SCI(ModelRegisterMixin, nn.Module):
             if self.verbose:
                 log(f"Initialized '{name}' from weights: '{weights.path}'.")
         else:
-            self.weights_init()
             if self.verbose:
                 log(f"Initialized '{name}' from scratch.")
-
-    def weights_init(self):
-        self.enhance.in_conv.apply(weights_init)
-        self.enhance.conv.apply(weights_init)
-        self.enhance.out_conv.apply(weights_init)
-        self.calibrate.in_conv.apply(weights_init)
-        self.calibrate.convs.apply(weights_init)
-        self.calibrate.out_conv.apply(weights_init)
 
     # --- Callable & Context Manager ---
     def forward(self, image: Tensor, inference: bool = True) -> dict:

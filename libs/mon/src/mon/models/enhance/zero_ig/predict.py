@@ -3,14 +3,13 @@
 
 """Prediction Runners.
 
-This module provides prediction runner classes for SCI and SCI++ models.
+This module provides prediction runner classes for Zero-IG models.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "SCI_Predictor",
-    "SCI_PP_Predictor",
+    "ZeroIG_Predictor",
 ]
 
 from typing import Any
@@ -31,7 +30,7 @@ from mon.core import (
 from mon.dataset import transform as T
 from mon.runners import Predictor
 # noinspection PyUnusedImports
-from .model import sci
+from .model import zero_ig
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -41,8 +40,8 @@ current_dir = current_file.parents[0]
 # region PREDICTOR
 # ==============================================================================
 
-class SCI_Predictor(Predictor):
-    """Predictor for SCI models."""
+class ZeroIG_Predictor(Predictor):
+    """Predictor for Zero-IG models."""
 
     # --- Lifecycle & Initialization ---
     @override
@@ -134,15 +133,10 @@ class SCI_Predictor(Predictor):
             path = Path(meta_i["path"])
             size = Size.from_value(meta_i["imgsz"])
             debug_images = {
-                "illumination": outputs["illumination"][i:i+1],
+                "denoised": outputs["denoised"][i:i+1],
             }
             for stem, image in debug_images.items():
                 self._save_image(image, size, path, dirname=K.DEBUG_DIR, stem=stem)
-
-
-class SCI_PP_Predictor(SCI_Predictor):
-    """Predictor for SCI++ models."""
-    pass
 
 # endregion
 
@@ -152,14 +146,14 @@ class SCI_PP_Predictor(SCI_Predictor):
 # ==============================================================================
 
 def main():
-    predictor = SCI_Predictor.from_cli(
+    predictor = ZeroIG_Predictor.from_cli(
         prompt=True,
         root=resolve_project_root(current_dir),
-        config_file="sci_medium.yaml",
+        config_file="zero_ig_lol.yaml",
         task=Task.ENHANCE,
         mode=RunMode.PREDICT,
-        arch="sci",
-        model="sci",
+        arch="zero_ig",
+        model="zero_ig",
         device="auto",
         save=True,
         save_debug=True,

@@ -1,15 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Zero-DCE.
+"""SCI.
 
-This package contains Zero-DCE model implementations, pre-trained weights, and
+This package contains SCI model implementations, pre-trained weights, and
 utilities for training and inference.
 
 References:
-    - Paper: "Zero-Reference Deep Curve Estimation for Low-Light Image
-      Enhancement," CVPR 2020.
-    - Code: https://github.com/Li-Chongyi/Zero-DCE
+    - Paper: "Toward Fast, Flexible, and Robust Low-Light Image Enhancement,"
+      CVPR 2022.
+    - Code: https://github.com/vis-opt-group/SCI
+
+    - Paper: "Learning with Self-Calibrator for Fast and Robust Low-Light
+      Image Enhancement," TPAMI 2025.
+    - Code: https://github.com/vis-opt-group/SCI
 """
 
 from __future__ import annotations

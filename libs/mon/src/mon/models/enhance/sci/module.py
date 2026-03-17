@@ -55,6 +55,16 @@ class EnhanceNetwork(nn.Module):
             nn.Sigmoid()
         )
 
+        self.apply(self.weights_init)
+
+    def weights_init(self, m):
+        if isinstance(m, nn.Conv2d):
+            m.weight.data.normal_(0.0, 0.02)
+            if m.bias is not None:
+                m.bias.data.zero_()
+        if isinstance(m, nn.BatchNorm2d):
+            m.weight.data.normal_(1.0, 0.02)
+
     # --- Callable & Context Manager ---
     def forward(self, x: Tensor) -> Tensor:
         feat = self.in_conv(x)
@@ -95,11 +105,20 @@ class CalibrateNetwork(nn.Module):
         self.blocks = nn.ModuleList()
         for i in range(layers):
             self.blocks.append(self.convs)
-
         self.out_conv = nn.Sequential(
             nn.Conv2d(channels, 3, 3, 1, 1),
             nn.Sigmoid()
         )
+
+        self.apply(self.weights_init)
+
+    def weights_init(self, m):
+        if isinstance(m, nn.Conv2d):
+            m.weight.data.normal_(0.0, 0.02)
+            if m.bias is not None:
+                m.bias.data.zero_()
+        if isinstance(m, nn.BatchNorm2d):
+            m.weight.data.normal_(1.0, 0.02)
 
     # --- Callable & Context Manager ---
     def forward(self, x: Tensor) -> Tensor:
