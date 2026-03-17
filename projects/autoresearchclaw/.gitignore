@@ -1,0 +1,79 @@
+.venv/
+__pycache__/
+*.pyc
+*.egg-info/
+dist/
+build/
+workspaces/
+.claude/*
+!.claude/agents/
+!.claude/agents/*.md
+!.claude/skills/
+!.claude/skills/**/SKILL.md
+.claude/settings.local.json
+
+# Experiment run artifacts (local only)
+artifacts/
+output/
+experiment_metaclaw/
+promotional/
+
+# Legacy experiment artifacts (pre-v5)
+exp/
+logs/
+writing/
+
+# Root-level config (local overrides, not committed)
+/config.yaml
+
+# Sensitive / credentials
+user_token_cache.json
+*.secret
+.env
+.env.*
+config_run*.yaml
+
+# Literature search cache
+.researchclaw_cache/
+
+# Playwright MCP logs
+.playwright-mcp/
+
+# Internal dev/debug docs (not for public)
+docs/internal/
+docs/kb/
+docs/plans/
+docs/BUGFIX_TRACKER*.md
+docs/IMPROVEMENT_PLAN*.md
+docs/IMPROVEMENT_*_EXECUTION.md
+docs/OPTIMIZATION_PLAN*.md
+docs/MULTI_CASE_EVALUATION*.md
+docs/pipeline_quality_issues*.md
+docs/autobench-loop.md
+RESEARCHCLAW_AGENTS.md
+RESEARCHCLAW_CLAUDE.md
+
+# Task-specific config files (keep example template only)
+config_agent_*.yaml
+config_case*.yaml
+config_v8_case*.yaml
+pipeline_run_*.log
+benchmarks/
+
+# Logo generation prompts
+image/logo_prompt.md
+
+# macOS
+.DS_Store
+
+# Misc temp files
+.history/
+.serena/
+cli_pause
+暂停
+进入
+连续失败
+重试一次
+
+.venv_arc/
+/config.arc.yaml
