@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Custom Prompts.
+"""Custom Rich Prompts.
 
 This module reimplements and extends the ``rich.prompt`` module.
 """
@@ -40,6 +40,7 @@ from rich.text import Text, TextType
 from mon.core.path import Path
 from mon.core.typing import PathLike
 from mon.core.utils import is_int, is_valid_str, to_list, truncate_string
+
 
 # ==============================================================================
 # region TYPE DEFINITIONS
@@ -322,7 +323,7 @@ class PromptBase(Generic[PromptType]):
                 )
         return return_value
 
-    # --- Visualizations ---
+    # --- Visualization ---
     def pre_prompt(self) -> None:
         """Hook to display something before the prompt."""
 
@@ -787,7 +788,7 @@ class OptionPrompt(PromptBase[str]):
             # If multiselect is disabled, return the first processed value
             return processed_values[0]
 
-    # --- Visualizations ---
+    # --- Visualization ---
     @override
     def make_prompt(self, default: DefaultType) -> Text:
         """Make prompt text.
@@ -996,7 +997,7 @@ class PathPrompt(OptionPrompt):
         )
         return _prompt(default=default, stream=stream)
 
-    # --- Visualizations ---
+    # --- Visualization ---
     @override
     def render_choices(self):
         """Print available choices in columns."""
@@ -1058,7 +1059,7 @@ class Confirm(PromptBase[bool]):
             raise InvalidResponse(self.validate_error_message)
         return value == self.choices[0]
 
-    # --- Visualizations ---
+    # --- Visualization ---
     @override
     def render_default(self, default: DefaultType) -> Text:
         """Render the default as (y) or (n) rather than True/False."""

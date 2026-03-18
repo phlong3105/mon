@@ -43,7 +43,7 @@ from mon.core.typing import (
     RunModeLike,
     TaskLike,
 )
-from mon.core.ui import Confirm, OptionPrompt, PathPrompt, Prompt
+from mon.core.ui.prompt_toolkit import ConfirmPrompt, PathPrompt, Prompt
 from mon.core.utils import is_valid_str, merge_dicts, truncate_string
 
 
@@ -123,7 +123,7 @@ ARGUMENTS = Box({
     "task": {
         "default": None,
         "type": _str_or_none,
-        "choices": [None] + Task.values(),
+        "choices": Task.values(),
         "help": f"Task to run: {Task.values()}.",
         "prompt_only": False,
         "prompt_text": "Task",
@@ -131,7 +131,7 @@ ARGUMENTS = Box({
     "mode": {
         "default": None,
         "type": _str_or_none,
-        "choices": [None] + RunMode.values(),
+        "choices": RunMode.values(),
         "help": f"Run mode: {RunMode.values()}.",
         "prompt_only": False,
         "i_cli_type": str,
@@ -169,8 +169,8 @@ ARGUMENTS = Box({
     "device": {
         "default": None,
         "type": _str_or_none,
-        "choices": [None] + sys_ctx.device_names,
-        "help": f"Running device: {[None] + sys_ctx.device_names}.",
+        "choices": sys_ctx.device_names,
+        "help": f"Running device: {sys_ctx.device_names}.",
         "prompt_only": False,
         "prompt_text": "Device",
     },
@@ -405,7 +405,7 @@ class Config:
     @property
     def config_file(self) -> Path | None:
         """Return the path to the configuration file."""
-        return self.config.config_file
+        return self._config.config_file
 
     @config_file.setter
     def config_file(self, value: PathLike | None):
@@ -1292,43 +1292,43 @@ class ConfigContext(Config):
 
         if self._index == 0:
             # Task
-            self.task = OptionPrompt.ask(
+            self.task = Prompt.ask(
                 prompt=ARGUMENTS.task.prompt_text,
-                default=self.task,
                 choices=ARGUMENTS.task.choices,
+                defaults=self.task,
             )
         if self._index == 1:
             # Mode
-            self.mode = OptionPrompt.ask(
+            self.mode = Prompt.ask(
                 prompt=ARGUMENTS.mode.prompt_text,
-                default=self.mode,
                 choices=ARGUMENTS.mode.choices,
+                defaults=self.mode,
             )
         if self._index == 2:
             # Arch
-            self.arch = OptionPrompt.ask(
+            self.arch = Prompt.ask(
                 prompt=ARGUMENTS.arch.prompt_text,
-                default=self.arch,
-                choices=MODELS.search_archs(self.task)
+                choices=MODELS.search_archs(self.task),
+                defaults=self.arch,
             )
         if self._index == 3:
             # Model
-            self.model_name = OptionPrompt.ask(
+            self.model_name = Prompt.ask(
                 prompt=ARGUMENTS.model.prompt_text,
-                default=self.model_name,
-                choices=MODELS.search(self.arch, self.task)
+                choices=MODELS.search(self.arch, self.task),
+                defaults=self.model_name,
             )
         if self._index == 4:
             # Config file
+            print(self.config_file)
             self.config_file = PathPrompt.ask(
                 prompt=ARGUMENTS.config.prompt_text,
-                default=self.config,
                 choices=self.config_files,
-                column_first=True,
+                defaults=self.config_file,
                 truncate_length=60,
                 truncate_side="middle",
                 commonpath=self.root,
-                allow_empty=True,
+                show_column=True,
             )
             # First, update from a new config file
             self.update_from_yaml(self.config_file)
@@ -1347,85 +1347,85 @@ class ConfigContext(Config):
             # Weights
             self.weights = PathPrompt.ask(
                 prompt=ARGUMENTS.weights.prompt_text,
-                default=resolve_weights_file(self.root, self.weights.path),
                 choices=self.weights_files,
-                column_first=True,
+                defaults=resolve_weights_file(self.root, self.weights.path),
+                skip=True,
                 truncate_length=60,
                 truncate_side="middle",
                 commonpath=self.root,
-                allow_empty=True,
+                show_column=True,
             )
         if self._index == 6:
             # Data
             if self.mode not in [RunMode.PREDICT]:
                 self._next()
             else:
-                self.data = OptionPrompt.ask(
+                self.data = Prompt.ask(
                     prompt=ARGUMENTS.data.prompt_text,
-                    default=self.data,
                     choices=DATASETS.search(self.task, self.mode),
+                    defaults=self.data,
                     multiselect=True,
-                    allow_empty=True,
+                    show_column=True,
                 )
         if self._index == 7:
             # Experiment Name
             self.exp_name = Prompt.ask(
                 prompt=ARGUMENTS.exp_name.prompt_text,
-                default=self.exp_name,
+                defaults=self.exp_name,
             )
         if self._index == 8:
             # Device
-            self.device = OptionPrompt.ask(
+            self.device = Prompt.ask(
                 prompt=ARGUMENTS.device.prompt_text,
-                default=sys_ctx.get_device(self.device).name,
                 choices=ARGUMENTS.device.choices,
+                defaults=sys_ctx.get_device(self.device).name,
             )
         if self._index == 9:
             # Benchmark
-            self.benchmark = Confirm.ask(
+            self.benchmark = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.benchmark.prompt_text,
-                default=self.benchmark,
+                defaults=self.benchmark,
             )
         if self._index == 10:
             # Save
-            self.save = Confirm.ask(
+            self.save = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.save.prompt_text,
-                default=self.save,
+                defaults=self.save,
             )
         if self._index == 11:
             # Save Debug
-            self.save_debug = Confirm.ask(
+            self.save_debug = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.save_debug.prompt_text,
-                default=self.save_debug,
+                defaults=self.save_debug,
             )
         if self._index == 12:
             # Keep Subdirs
-            self.keep_subdirs = Confirm.ask(
+            self.keep_subdirs = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.keep_subdirs.prompt_text,
-                default=self.keep_subdirs,
+                defaults=self.keep_subdirs,
             )
         if self._index == 13:
             # Near Source
-            self.near_src = Confirm.ask(
+            self.near_src = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.near_src.prompt_text,
-                default=self.near_src,
+                defaults=self.near_src,
             )
         if self._index == 14:
             # Exist OK
-            self.exist_ok = Confirm.ask(
+            self.exist_ok = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.exist_ok.prompt_text,
-                default=self.exist_ok,
+                defaults=self.exist_ok,
             )
         if self._index == 15:
             # Verbose
-            self.verbose = Confirm.ask(
+            self.verbose = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.verbose.prompt_text,
-                default=self.verbose,
+                defaults=self.verbose,
             )
         if self._index == 16:
             # Finish
             pprint_dict(self.config, title="Input Arguments")
-            finish = Confirm.ask(prompt="Finish/Re-input", default=True)
+            finish = ConfirmPrompt.ask(prompt="Finish/Re-input", defaults=True)
             if finish:
                 self._index = self.__len__()
 

@@ -106,7 +106,17 @@ from aenum import (
 # region BASE CLASSES
 # ==============================================================================
 
-class Enum(Enum_):
+class EnumMeta_(EnumMeta):
+
+    # --- Callable & Context Manager ---
+    def __call__(cls, value, *args, **kwargs):
+        # If it's already an instance of this enum, return it directly
+        if isinstance(value, cls):
+            return value
+        return super().__call__(value, *args, **kwargs)
+
+
+class Enum(Enum_, metaclass=EnumMeta_):
 
     # --- Lifecycle & Initialization ---
     @classmethod

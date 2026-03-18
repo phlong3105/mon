@@ -17,5 +17,5 @@ File Structure:
 
 from __future__ import annotations
 
+from . import prompt_toolkit, rich_prompt
 from .progress import *
-from .prompt import *
