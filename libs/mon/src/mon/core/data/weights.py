@@ -23,9 +23,9 @@ from typing import Any, Callable, Mapping, override, TypeAlias, Union
 
 import torch
 
-from mon.core.base.enum import Enum
+from mon.core.base.enum import Enum, EnumMeta
 from mon.core.console import log
-from mon.core.constants import zoo_root
+from mon.core.constants import K
 from mon.core.path import Path
 from mon.core.typing import PathLike
 from mon.core.utils import is_valid_str
@@ -199,12 +199,30 @@ class Weights:
             self.path = local_file
 
         # Check global zoo directory
-        global_file = zoo_root / self.path
+        global_file = K.ZOO_ROOT / self.path
         if global_file.is_weights_file(exists=True):
             self.path = global_file
 
 
-class WeightsEnum(Enum):
+class WeightsEnumMeta(EnumMeta):
+
+    # --- Callable & Context Manager ---
+    def __call__(cls, value=None, *args, **kwargs):
+        # If it's already an instance of this enum, return it directly
+        if isinstance(value, cls):
+            return value
+
+        # If it's a Weights object or a path-like, bypass enum lookup entirely
+        if isinstance(value, Weights):
+            return value
+        if isinstance(value, (Path, str)) and value != "default":
+            return create_weights(weights=value) or value
+
+        # Otherwise, delegate to the normal enum machinery (which calls _missing_)
+        return super().__call__(value, *args, **kwargs)
+
+
+class WeightsEnum(Enum, metaclass=WeightsEnumMeta):
     """A base class for enumerations of pre-trained model weights.
 
     Each model building method receives an optional ``weights`` parameter with
@@ -214,10 +232,10 @@ class WeightsEnum(Enum):
 
     # --- Lifecycle & Initialization ---
     @classmethod
-    def _missing_(cls, value) -> Weights | PathLike:
+    def _missing_(cls, value):
         # 1. If no value is passed (None), return the first member
         if value is None:
-            return list(cls)[0]
+            return None
 
         # 2. If the user explicitly passes the string "default",
         # return the first member if "DEFAULT" is not defined, otherwise return
@@ -228,17 +246,8 @@ class WeightsEnum(Enum):
             else:
                 return list(cls)[0]
 
-        # 3. If the value is already of the correct type, return it directly
-        if isinstance(value, Weights):
-            return value
-
-        # 4. If the value is a path or a string, try to create a Weights object
-        # from it. If it fails, return the value as-is.
-        if isinstance(value, (Path, str)):
-            return create_weights(weights=value) or value
-
-        # 4. Otherwise, it's an invalid extension
-        raise ValueError(f"'{value}' is not a valid {cls.__name__} extension.")
+        # 3. Otherwise, it's an invalid extension
+        raise ValueError(f"'{value}' is not a valid {cls.__name__}.")
 
     # --- Properties ---
     @property

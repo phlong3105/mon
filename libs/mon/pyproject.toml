@@ -39,6 +39,7 @@ dependencies    = [
     "fjson",                            # Python JSON writer with formatted floats
     "loguru",                           # Python logging made (stupidly) simple.
     "omegaconf",                        # Flexible Python configuration system.
+    "prompt_toolkit",                   # Library for building powerful interactive command lines in Python.
     "psutil",                           # Cross-platform lib for process and system monitoring in Python.
     "python-box",                       # Advanced Python dictionaries with dot notation access.
     "requests",                         # Requests is an elegant and simple HTTP library for Python, built with ♥.

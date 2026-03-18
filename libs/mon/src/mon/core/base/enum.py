@@ -106,24 +106,14 @@ from aenum import (
 # region BASE CLASSES
 # ==============================================================================
 
-class EnumMeta_(EnumMeta):
-
-    # --- Callable & Context Manager ---
-    def __call__(cls, value, *args, **kwargs):
-        # If it's already an instance of this enum, return it directly
-        if isinstance(value, cls):
-            return value
-        return super().__call__(value, *args, **kwargs)
-
-
-class Enum(Enum_, metaclass=EnumMeta_):
+class Enum(Enum_):
 
     # --- Lifecycle & Initialization ---
     @classmethod
     def _missing_(cls, value):
         # 1. If no value is passed (None), return the first member
         if value is None:
-            return list(cls)[0]
+            value = "default"
 
         # 2. If the user explicitly passes the string "default",
         # return the first member if "DEFAULT" is not defined, otherwise return

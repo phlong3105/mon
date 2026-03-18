@@ -96,7 +96,6 @@ class ZeroIG(ModelRegisterMixin, nn.Module):
             if self.verbose:
                 log(f"Initialized '{name}' from weights: '{weights.path}'.")
         else:
-            self.weights_init()
             if self.verbose:
                 log(f"Initialized '{name}' from scratch.")
 
