@@ -122,7 +122,7 @@ class UniK3D(ModelRegisterMixin, nn.Module):
 class UniK3D_ViTS_Weights(WeightsEnum):
 
     PRETRAINED = Weights(
-        path=K.ZOO_ROOT / "cv/monodepth/unik3d/unik3d_vits/",
+        path=K.ZOO_ROOT / "monodepth/unik3d/unik3d_vits/",
         url=None,
         num_classes=None,
         transforms=None,
@@ -135,7 +135,7 @@ class UniK3D_ViTS_Weights(WeightsEnum):
 class UniK3D_ViTB_Weights(WeightsEnum):
 
     PRETRAINED = Weights(
-        path=K.ZOO_ROOT / "cv/monodepth/unik3d/unik3d_vitb",
+        path=K.ZOO_ROOT / "monodepth/unik3d/unik3d_vitb",
         url=None,
         num_classes=None,
         transforms=None,
@@ -148,7 +148,7 @@ class UniK3D_ViTB_Weights(WeightsEnum):
 class UniK3D_ViTL_Weights(WeightsEnum):
 
     PRETRAINED = Weights(
-        path=K.ZOO_ROOT / "cv/monodepth/unik3d/unik3d_vitl",
+        path=K.ZOO_ROOT / "monodepth/unik3d/unik3d_vitl",
         url=None,
         num_classes=None,
         transforms=None,

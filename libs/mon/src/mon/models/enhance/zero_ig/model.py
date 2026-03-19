@@ -208,21 +208,21 @@ class ZeroIG(ModelRegisterMixin, nn.Module):
 class ZeroIG_Weights(WeightsEnum):
 
     LOL = Weights(
-        path=K.ZOO_ROOT / "cv/enhance/zero_ig/zero_ig/lol/zero_ig_lol.pt",
+        path=K.ZOO_ROOT / "enhance/zero_ig/zero_ig/lol/zero_ig_lol.pt",
         url=None,
         num_classes=None,
         transforms=None,
         meta={},
     )
     LSRW_HUAWEI = Weights(
-        path=K.ZOO_ROOT / "cv/enhance/zero_ig/zero_ig/lsrw/zero_ig_lsrw_huawei.pt",
+        path=K.ZOO_ROOT / "enhance/zero_ig/zero_ig/lsrw/zero_ig_lsrw_huawei.pt",
         url=None,
         num_classes=None,
         transforms=None,
         meta={},
     )
     LSRW_NIKON = Weights(
-        path=K.ZOO_ROOT / "cv/enhance/zero_ig/zero_ig/pretrained/zero_ig_lsrw_nikon.pt",
+        path=K.ZOO_ROOT / "enhance/zero_ig/zero_ig/pretrained/zero_ig_lsrw_nikon.pt",
         url=None,
         num_classes=None,
         transforms=None,

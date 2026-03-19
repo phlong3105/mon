@@ -177,7 +177,7 @@ class EfficientNetBackBone(ModelRegisterMixin, nn.Module):
 class EfficientNet_B0_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/efficientnet/efficientnet_b0/imagenet1k_v1/efficientnet_b0_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/efficientnet/efficientnet_b0/imagenet1k_v1/efficientnet_b0_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/efficientnet_b0_rwightman-7f5810bc.pth"),
         num_classes=1000,
         transforms=None,
@@ -204,7 +204,7 @@ class EfficientNet_B0_Weights(WeightsEnum):
 class EfficientNet_B1_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/efficientnet/efficientnet_b1/imagenet1k_v1/efficientnet_b1_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/efficientnet/efficientnet_b1/imagenet1k_v1/efficientnet_b1_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/efficientnet_b1_rwightman-bac287d4.pth"),
         num_classes=1000,
         transforms=None,
@@ -225,7 +225,7 @@ class EfficientNet_B1_Weights(WeightsEnum):
         },
     )
     IMAGENET1K_V2 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone//efficientnet//efficientnet_b1/imagenet1k_v2//efficientnet_b1_imagenet1k_v2.pt",
+        path=K.ZOO_ROOT / "backbone//efficientnet//efficientnet_b1/imagenet1k_v2//efficientnet_b1_imagenet1k_v2.pt",
         url=Path("https://download.pytorch.org/models/efficientnet_b1-c27df63c.pth"),
         num_classes=1000,
         transforms=None,
@@ -256,7 +256,7 @@ class EfficientNet_B1_Weights(WeightsEnum):
 class EfficientNet_B2_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/efficientnet/efficientnet_b2/imagenet1k_v1/efficientnet_b2_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/efficientnet/efficientnet_b2/imagenet1k_v1/efficientnet_b2_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/efficientnet_b2_rwightman-c35c1473.pth"),
         num_classes=1000,
         transforms=None,
@@ -283,7 +283,7 @@ class EfficientNet_B2_Weights(WeightsEnum):
 class EfficientNet_B3_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/efficientnet/efficientnet_b3/imagenet1k_v1/efficientnet_b3_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/efficientnet/efficientnet_b3/imagenet1k_v1/efficientnet_b3_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/efficientnet_b3_rwightman-b3899882.pth"),
         num_classes=1000,
         transforms=None,
@@ -310,7 +310,7 @@ class EfficientNet_B3_Weights(WeightsEnum):
 class EfficientNet_B4_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/efficientnet/efficientnet_b4/imagenet1k_v1/efficientnet_b4_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/efficientnet/efficientnet_b4/imagenet1k_v1/efficientnet_b4_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/efficientnet_b4_rwightman-23ab8bcd.pth"),
         num_classes=1000,
         transforms=None,
@@ -337,7 +337,7 @@ class EfficientNet_B4_Weights(WeightsEnum):
 class EfficientNet_B5_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/efficientnet/efficientnet_b5/imagenet1k_v1/efficientnet_b5_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/efficientnet/efficientnet_b5/imagenet1k_v1/efficientnet_b5_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/efficientnet_b5_lukemelas-1a07897c.pth"),
         num_classes=1000,
         transforms=None,
@@ -364,7 +364,7 @@ class EfficientNet_B5_Weights(WeightsEnum):
 class EfficientNet_B6_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/efficientnet/efficientnet_b6/imagenet1k_v1/efficientnet_b6_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/efficientnet/efficientnet_b6/imagenet1k_v1/efficientnet_b6_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/efficientnet_b6_lukemelas-24a108a5.pth"),
         num_classes=1000,
         transforms=None,
@@ -391,7 +391,7 @@ class EfficientNet_B6_Weights(WeightsEnum):
 class EfficientNet_B7_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/efficientnet/efficientnet_b7/imagenet1k_v1/efficientnet_b7_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/efficientnet/efficientnet_b7/imagenet1k_v1/efficientnet_b7_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/efficientnet_b7_lukemelas-c5b4e57e.pth"),
         num_classes=1000,
         transforms=None,
@@ -418,7 +418,7 @@ class EfficientNet_B7_Weights(WeightsEnum):
 class EfficientNet_V2_S_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone//efficientnet/efficientnet_v2_s/imagenet1k_v1/efficientnet_v2_s_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone//efficientnet/efficientnet_v2_s/imagenet1k_v1/efficientnet_v2_s_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/efficientnet_v2_s-dd5fe13b.pth"),
         num_classes=1000,
         transforms=None,
@@ -449,7 +449,7 @@ class EfficientNet_V2_S_Weights(WeightsEnum):
 class EfficientNet_V2_M_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/efficientnet/efficientnet_v2_m/imagenet1k_v1/efficientnet_v2_m_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/efficientnet/efficientnet_v2_m/imagenet1k_v1/efficientnet_v2_m_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/efficientnet_v2_m-dc08266a.pth"),
         num_classes=1000,
         transforms=None,
@@ -480,7 +480,7 @@ class EfficientNet_V2_M_Weights(WeightsEnum):
 class EfficientNet_V2_L_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/efficientnet/efficientnet_v2_l/imagenet1k_v1/efficientnet_v2_l_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/efficientnet/efficientnet_v2_l/imagenet1k_v1/efficientnet_v2_l_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/efficientnet_v2_l-59c71312.pth"),
         num_classes=1000,
         transforms=None,

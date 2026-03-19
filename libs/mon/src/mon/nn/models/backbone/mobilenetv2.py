@@ -125,7 +125,7 @@ class MobileNetV2BackBone(ModelRegisterMixin, nn.Module):
 class MobileNet_V2_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/mobilenet/mobilenet_v2/imagenet1k_v1/mobilenet_v2_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/mobilenet/mobilenet_v2/imagenet1k_v1/mobilenet_v2_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/mobilenet_v2-b0353104.pth"),
         num_classes=1000,
         transforms=None,
@@ -146,7 +146,7 @@ class MobileNet_V2_Weights(WeightsEnum):
         },
     )
     IMAGENET1K_V2 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/mobilenet/mobilenet_v2/imagenet1k_v2/mobilenet_v2_imagenet1k_v2.pt",
+        path=K.ZOO_ROOT / "backbone/mobilenet/mobilenet_v2/imagenet1k_v2/mobilenet_v2_imagenet1k_v2.pt",
         url=Path("https://download.pytorch.org/models/mobilenet_v2-7ebf99e0.pth"),
         num_classes=1000,
         transforms=None,

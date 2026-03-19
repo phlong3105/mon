@@ -342,7 +342,7 @@ class Config:
         # Update the config with the given values
         if config:
             self.update_from_dict(config)
-        if self.config_file:
+        if self.config_file and self.config_file.exists():
             # If a config file is given, load it and update the default config
             self.update_from_yaml(self.config_file)
         if self.cli_kwargs:
@@ -426,6 +426,16 @@ class Config:
             if config_file.has_ext(".yaml", ".yml", exists=True):
                 self._config.config_file = config_file
                 return
+
+        # Look for the configuration file in the model directory
+        if self.model_dir:
+            config_file = self.model_dir / "config" / value
+            if config_file.has_ext(".yaml", ".yml", exists=True):
+                self._config.config_file = config_file
+                return
+
+        # Else, just store the config file name
+        self._config.config_file = Path(value)
 
     @property
     def exp_name(self) -> str:
@@ -1320,7 +1330,6 @@ class ConfigContext(Config):
             )
         if self._index == 4:
             # Config file
-            print(self.config_file)
             self.config_file = PathPrompt.ask(
                 prompt=ARGUMENTS.config.prompt_text,
                 choices=self.config_files,

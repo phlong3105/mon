@@ -155,7 +155,7 @@ class DenseNetBackBone(ModelRegisterMixin, nn.Module):
 class DenseNet121_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/densenet/densenet121/imagenet1k_v1/densenet121_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/densenet/densenet121/imagenet1k_v1/densenet121_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/densenet121-a639ec97.pth"),
         num_classes=1000,
         transforms=None,
@@ -182,7 +182,7 @@ class DenseNet121_Weights(WeightsEnum):
 class DenseNet161_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/densenet/densenet161/imagenet1k_v1/densenet161_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/densenet/densenet161/imagenet1k_v1/densenet161_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/densenet161-8d451a50.pth"),
         num_classes=1000,
         transforms=None,
@@ -209,7 +209,7 @@ class DenseNet161_Weights(WeightsEnum):
 class DenseNet169_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/densenet/densenet169/imagenet1k_v1/densenet169_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/densenet/densenet169/imagenet1k_v1/densenet169_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/densenet169-b2777c0a.pth"),
         num_classes=1000,
         transforms=None,
@@ -236,7 +236,7 @@ class DenseNet169_Weights(WeightsEnum):
 class DenseNet201_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/densenet/densenet201/imagenet1k_v1/densenet201_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/densenet/densenet201/imagenet1k_v1/densenet201_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/densenet201-c1103571.pth"),
         num_classes=1000,
         transforms=None,

@@ -271,21 +271,21 @@ class SCI_PP(ModelRegisterMixin, nn.Module):
 class SCI_Weights(WeightsEnum):
 
     EASY = Weights(
-        path=K.ZOO_ROOT / "cv/enhance/sci/sci/pretrained/sci_easy.pt",
+        path=K.ZOO_ROOT / "enhance/sci/sci/pretrained/sci_easy.pt",
         url=None,
         num_classes=None,
         transforms=None,
         meta={},
     )
     MEDIUM = Weights(
-        path=K.ZOO_ROOT / "cv/enhance/sci/sci/pretrained/sci_medium.pt",
+        path=K.ZOO_ROOT / "enhance/sci/sci/pretrained/sci_medium.pt",
         url=None,
         num_classes=None,
         transforms=None,
         meta={},
     )
     DIFFICULT = Weights(
-        path=K.ZOO_ROOT / "cv/enhance/sci/sci/pretrained/sci_difficult.pt",
+        path=K.ZOO_ROOT / "enhance/sci/sci/pretrained/sci_difficult.pt",
         url=None,
         num_classes=None,
         transforms=None,
@@ -298,7 +298,7 @@ class SCI_Weights(WeightsEnum):
 class SCI_PP_Weights(WeightsEnum):
 
     DEFAULT = Weights(
-        path=K.ZOO_ROOT / "cv/enhance/sci/sci++/pretrained/sci++_1_3500.pt",
+        path=K.ZOO_ROOT / "enhance/sci/sci++/pretrained/sci++_1_3500.pt",
         url=None,
         num_classes=None,
         transforms=None,

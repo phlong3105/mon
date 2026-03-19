@@ -3,7 +3,7 @@
 
 """Prediction Script.
 
-This script provides a CLI for running SCI training on a given dataset.
+This script provides a CLI for running SCI prediction on a given dataset.
 
 References:
     - Paper: "Learning with Self-Calibrator for Fast and Robust Low-Light

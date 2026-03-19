@@ -126,7 +126,7 @@ class AlexNetBackBone(ModelRegisterMixin, nn.Module):
 class AlexNet_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/alexnet/alexnet/imagenet1k_v1/alexnet_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/alexnet/alexnet/imagenet1k_v1/alexnet_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/alexnet-owt-7be5be79.pth"),
         num_classes=1000,
         transforms=None,

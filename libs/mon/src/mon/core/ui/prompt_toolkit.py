@@ -75,9 +75,9 @@ class PromptBase(Generic[PromptType]):
     validate_error_message: str = "Please select or enter at least one value"
     invalid_choice_message: str = "Invalid choice(s)"
     invalid_type_message: str = "Invalid value(s)"
+    skip_message: str = "Skip"
 
     choices: list[str] | None = None
-    skip_label = "Skip"
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -138,7 +138,7 @@ class PromptBase(Generic[PromptType]):
         # Assign attributes
         self.prompt = prompt
         if choices is not None:
-            self.choices = [self.skip_label] + list(choices) if skip else list(choices)
+            self.choices = [self.skip_message] + list(choices) if skip else list(choices)
         self.password = password
         self.multiselect = multiselect
         self.strict = strict
@@ -888,7 +888,7 @@ class PromptBase(Generic[PromptType]):
         Returns:
             str: Truncated string, or original if no truncation is set.
         """
-        if not value or value == self.skip_label or not self.truncate_length :
+        if not value or value == self.skip_message or not self.truncate_length :
             return value or ""
         return truncate_string(
             value=value,
@@ -1115,8 +1115,8 @@ class PathPrompt(PromptBase[Path]):
         display = []
         if self.commonpath:
             for c in self.choices:
-                if c == self.skip_label:
-                    display.append(self.skip_label)
+                if c == self.skip_message:
+                    display.append(self.skip_message)
                 else:
                     display.append(Path(c).unique_path_from(self.commonpath))
         display = [self._truncate(d) for d in display]

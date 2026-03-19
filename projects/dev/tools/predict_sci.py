@@ -3,7 +3,7 @@
 
 """Prediction Script.
 
-This script provides a CLI for running SCI training on a given dataset.
+This script provides a CLI for running SCI prediction on a given dataset.
 
 References:
     - Paper: "Toward Fast, Flexible, and Robust Low-Light Image Enhancement,"

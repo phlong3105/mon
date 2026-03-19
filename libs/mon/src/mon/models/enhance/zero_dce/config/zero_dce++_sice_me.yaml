@@ -18,7 +18,7 @@ model:
   out_channels: 3
   hidden_dim: 32
   scale_factor: 1.0
-  weights: "cv/enhance/zero_dce/zero_dce++/sice_me/zero_dce++_sice_me.pt"  # (str) Path to model weights.
+  weights: "enhance/zero_dce/zero_dce++/sice_me/zero_dce++_sice_me.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---

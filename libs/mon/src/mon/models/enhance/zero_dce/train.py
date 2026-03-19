@@ -17,7 +17,7 @@ import torch
 from rich.progress import Progress
 from typing_extensions import override
 
-from mon.core import OPTIMIZERS, Path
+from mon.core import K, OPTIMIZERS, Path
 from mon.runners import Trainer
 from . import loss as L
 from .model import zero_dce
@@ -76,10 +76,10 @@ class ZeroDCE_Trainer(Trainer):
         L_col = L.L_col().to(device)
         L_exp = L.L_exp(16, config.loss.L_exp_mean).to(device)
         # Loss weights
-        W_tv = config.loss.L_tv_w
-        W_spa = config.loss.L_spa_w
-        W_col = config.loss.L_col_w
-        W_exp = config.loss.L_exp_w
+        W_tv = config.loss.W_tv
+        W_spa = config.loss.W_spa
+        W_col = config.loss.W_col
+        W_exp = config.loss.W_exp
 
         # 2. Train loop
         grad_clip_norm = config.grad_clip_norm
@@ -211,7 +211,7 @@ class ZeroDCE_Trainer(Trainer):
             "target": val_outputs["target"],
             "enhanced": val_outputs["enhanced"],
         }
-        self._save_image(epoch, debug_image)
+        self._save_image(epoch, debug_image, dirname=K.PRED_DIR, stem="debug")
 
 # endregion
 

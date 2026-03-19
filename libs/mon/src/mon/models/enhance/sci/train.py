@@ -23,7 +23,7 @@ from torch.nn import functional as F
 from torch.optim import Adam
 from typing_extensions import override
 
-from mon.core import OPTIMIZERS, Path
+from mon.core import K, OPTIMIZERS, Path
 from mon.runners import Trainer
 from . import loss as L
 from .model import sci, sci_pp
@@ -214,7 +214,7 @@ class SCI_Trainer(Trainer):
             "illumination": val_outputs["illumination"],
             "attention": val_outputs["attention"],
         }
-        self._save_image(epoch, debug_image)
+        self._save_image(epoch, debug_image, dirname=K.PRED_DIR, stem="debug", column_first=True)
 
 
 class SCI_Finetuner(Trainer):
@@ -388,7 +388,7 @@ class SCI_Finetuner(Trainer):
             "enhanced": val_outputs["enhanced"],
             "illumination": val_outputs["illumination"],
         }
-        self._save_image(epoch, debug_image)
+        self._save_image(epoch, debug_image, dirname=K.PRED_DIR, stem="debug", column_first=True)
 
 
 # --- SCI++ ---
@@ -605,7 +605,7 @@ class SCI_PP_Trainer(Trainer):
             "illumination": val_outputs["illumination"],
             "attention": val_outputs["attention"],
         }
-        self._save_image(epoch, debug_image)
+        self._save_image(epoch, debug_image, dirname=K.PRED_DIR, stem="debug", column_first=True)
 
 
 class SCI_PP_Finetuner(SCI_Finetuner):

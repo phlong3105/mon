@@ -10,6 +10,8 @@ from __future__ import annotations
 
 from .clode import *
 from .colie import *
+from .pairlie import *
+from .retinexnet import *
 from .sci import *
 from .zero_dce import *
 from .zero_ig import *

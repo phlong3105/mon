@@ -1,0 +1,284 @@
+objectives:
+  - "H1 (Luminance-Stratified Depth Test): Verify that gradient-based depth proxy
+    conditioning provides ≥0.3 dB PSNR improvement in moderate-dark regime (scale=0.25)
+    but ≤0.1 dB in extreme-dark regime (scale=0.05) on CIFAR-10 with synthetic
+    Poisson-Gaussian noise, confirming MDE domain-shift prediction."
+  - "H3 (DCT-Sparse ICF): Verify that a DCT-sparse illumination curve predictor
+    (K coefficients capturing 95% energy) achieves MSE within 10% of full dense
+    coordinate-MLP, while using ≤40% of the per-pixel model's effective parameters,
+    validating resolution-decoupled memory efficiency."
+  - "Compare SLICE variants against CLAHE and adaptive gamma correction on synthetic
+    low-light CIFAR-10 across two noise/exposure regimes to establish that the
+    depth-conditioned implicit curve field outperforms classical baselines."
+
+datasets:
+  - name: CIFAR10_synthetic_dark
+    tier: 1
+    path: /opt/datasets
+    description: "CIFAR-10 images synthetically degraded to simulate real dark-sensor
+      capture: pixel values scaled by exposure factor then corrupted with Poisson
+      shot noise plus additive Gaussian PRNU noise. Enhancement target is the
+      original CIFAR-10 image. Luminance stratification from H1 is encoded in
+      the two regimes."
+    regimes:
+      - name: moderate_dark
+        description: "Moderate underexposure (ISO ~3200 equivalent): exposure_scale=0.25,
+          Poisson noise scale=0.10, Gaussian sigma=0.05. Gradient-based depth proxy
+          is meaningful here — H1 predicts depth conditioning helps."
+        exposure_scale: 0.25
+        poisson_noise_scale: 0.10
+        gaussian_sigma: 0.05
+      - name: extreme_dark
+        description: "Extreme underexposure (ISO ~25600 equivalent): exposure_scale=0.05,
+          Poisson noise scale=0.02, Gaussian sigma=0.15 (right-skewed shot noise
+          dominant). Gradient proxy is noise-dominated — H1 predicts depth conditioning
+          does NOT help."
+        exposure_scale: 0.05
+        poisson_noise_scale: 0.02
+        gaussian_sigma: 0.15
+
+baselines:
+  - name: clahe_adaptive_baseline
+    description: "CLAHE (Contrast Limited Adaptive Histogram Equalization) — inference-only
+      classical baseline widely used as a competitive reference in LLIE papers
+      (Zero-DCE 2020, SNR-Aware 2022). Tile size 8×8, clip limit 2.0. Provides
+      the 'free' strong baseline that SLICE must clearly outperform."
+    implementation_spec:
+      class_name: CLAHEAdaptiveBaseline
+      key_methods: [__init__, enhance, evaluate]
+      algorithm_steps:
+        - "1. Convert RGB input to YCbCr."
+        - "2. Apply adaptive histogram equalization to Y channel with tile_grid=(8,8)
+          and clip_limit=2.0 using skimage.exposure.equalize_adapthist (fallback:
+          numpy percentile stretch if skimage unavailable)."
+        - "3. Convert back to RGB and clip to [0,1]."
+        - "4. Compute MSE and PSNR against reference original image."
+      loss_function: "No training — inference-only method."
+      key_hyperparameters:
+        tile_grid_size: 8
+        clip_limit: 2.0
+      differentiator: "Traditional histogram method with no neural network. Sets
+        the floor that neural methods must exceed."
+
+  - name: adaptive_gamma_correction_baseline
+    description: "Adaptive gamma correction (AGC) — computes optimal gamma per image
+      from luminance CDF. Standard reference in zero-reference LLIE literature
+      (SCI 2022, Zero-DCE 2020). Provides a single-parameter closed-form upper
+      bound on non-learning approaches."
+    implementation_spec:
+      class_name: AdaptiveGammaCorrectionBaseline
+      key_methods: [__init__, compute_gamma, enhance, evaluate]
+      algorithm_steps:
+        - "1. Compute grayscale luminance L = 0.299*R + 0.587*G + 0.114*B."
+        - "2. Compute optimal gamma: g = log(0.5) / log(mean(L) + 1e-8)."
+        - "3. Apply: I_out = I_in ** g, clip to [0,1]."
+        - "4. Compute MSE and PSNR against reference."
+      loss_function: "No training — closed-form formula."
+      key_hyperparameters:
+        target_mean_luminance: 0.5
+      differentiator: "Single-parameter inference-only method. Fastest possible
+        enhancement and a fair lower bound on learned methods."
+
+proposed_methods:
+  - name: slice_depth_conditioned_icf
+    description: "SLICE core method: a coordinate-conditioned implicit curve field
+      (ICF) MLP that takes (x, y, depth_proxy) as input and predicts per-pixel
+      illumination gain. Depth proxy = normalized Sobel gradient magnitude of
+      dark input (differentiates near-field from far-field under single dominant
+      light source). Tests H1 directly."
+    implementation_spec:
+      class_name: SLICEDepthConditionedICF
+      key_methods: [__init__, compute_depth_proxy, forward, enhance, train_step, evaluate]
+      algorithm_steps:
+        - "1. Compute depth proxy: D = normalize(sobel_magnitude(I_dark)) ∈ [0,1]^{H×W}."
+        - "2. Build coordinate grid C ∈ [-1,1]^{H×W×2} (normalized spatial coords)."
+        - "3. Concatenate (C, D_expanded) → Z ∈ R^{H×W×3} per-pixel triplets."
+        - "4. Pass each triplet through ICF MLP: 3 → 64 → 64 → 3 (ReLU activations,
+          output sigmoid to predict gain G ∈ [0,3]^{H×W×3})."
+        - "5. Enhanced image: I_enh = clip(I_dark * G, 0, 1)."
+        - "6. Zero-reference loss: L = MSE(I_enh, I_ref) + 0.1*TV(G) +
+          0.05*max(0, mean(G)-2.5) (over-enhancement penalty)."
+        - "7. Test-time optimization: Adam 30 steps, lr=0.001, grad_clip=1.0."
+        - "8. Reinitialize if mean(G) < 0.05 after 5 steps (collapse detection)."
+      loss_function: "L = MSE(I_enh, I_ref) + 0.1*TotalVariation(G) + 0.05*OverEnhancementPenalty(G)"
+      key_hyperparameters:
+        hidden_dim: 64
+        num_layers: 3
+        learning_rate: 0.001
+        num_steps: 30
+        lambda_tv: 0.1
+        lambda_overenhance: 0.05
+        gradient_clip: 1.0
+        gain_scale: 3.0
+      differentiator: "Depth proxy (Sobel gradient) as third spatial coordinate
+        enables the MLP to modulate illumination gain based on estimated scene
+        structure, unlike coordinate-only implicit representations."
+
+  - name: slice_dct_sparse_icf
+    description: "SLICE memory-efficient variant: predicts K=32 fixed DCT basis
+      coefficients of the illumination gain field from global image statistics
+      (mean, std, skewness per channel), then reconstructs dense gain via iDCT.
+      Decouples model parameter count from image resolution. Tests H3 directly."
+    implementation_spec:
+      class_name: SLICEDCTSparseICF
+      key_methods: [__init__, extract_statistics, predict_dct_coefficients,
+        reconstruct_gain_field, enhance, train_step, evaluate, measure_sparsity]
+      algorithm_steps:
+        - "1. Extract 9 global statistics from I_dark: (mean_R, std_R, skew_R,
+          mean_G, std_G, skew_G, mean_B, std_B, skew_B)."
+        - "2. Pass statistics through micro-MLP: 9 → 32 → 32 (ReLU) → K=32
+          (K DCT coefficients, output range [-5, 5])."
+        - "3. Place K predicted values at the K lowest-frequency DCT positions
+          (DC + 31 lowest AC in zigzag order). Zero-fill all higher frequencies."
+        - "4. Apply 2D inverse DCT (scipy.fft.idctn) to reconstruct H×W gain map G."
+        - "5. Expand G to 3 channels, sigmoid-scale to [0, 3]."
+        - "6. Enhanced image: I_enh = clip(I_dark * G, 0, 1)."
+        - "7. Loss: L = MSE(I_enh, I_ref) + 0.01*L1(dct_coefficients)."
+        - "8. Test-time optimization: Adam 30 steps, lr=0.001, grad_clip=1.0."
+        - "9. Report effective sparsity: K / (H*W) ratio."
+      loss_function: "L = MSE(I_enh, I_ref) + 0.01*L1_norm(dct_coefficients)"
+      key_hyperparameters:
+        num_dct_coefficients: 32
+        hidden_dim: 32
+        num_layers: 2
+        learning_rate: 0.001
+        num_steps: 30
+        lambda_dct_sparsity: 0.01
+        gradient_clip: 1.0
+      differentiator: "Input is global image statistics (not per-pixel coordinates),
+        output is DCT coefficient vector (not per-pixel gain). Model size is O(1)
+        regardless of image resolution — same 32-coefficient MLP works on 32px
+        or 4K images."
+
+ablations:
+  - name: slice_depth_zeroed_ablation
+    what_is_removed: "Depth proxy signal — the Sobel gradient depth channel is
+      zeroed out at test time (depth=0 everywhere) while keeping the trained model."
+    how_it_differs: "Reuse trained slice_depth_conditioned_icf model but replace
+      `D = normalize(sobel_magnitude(I_dark))` with `D = torch.zeros_like(D)`.
+      No retraining — pure inference-time ablation."
+    expected_effect: "PSNR should drop ≥0.3 dB in moderate_dark regime (where
+      gradient-based depth carries real scene information) but ≤0.1 dB in
+      extreme_dark regime (where gradient proxy is noise-dominated). This is
+      the key H1 test: depth helps only where MDE-like signals are reliable."
+    implementation_spec:
+      class_name: SLICEDepthZeroedAblation
+      key_methods: [__init__, enhance, evaluate]
+      algorithm_steps:
+        - "1. Load trained SLICEDepthConditionedICF weights."
+        - "2. Override compute_depth_proxy to return torch.zeros(H, W)."
+        - "3. Run the same test-time optimization loop with zeroed depth."
+        - "4. Evaluate PSNR/MSE and compare to slice_depth_conditioned_icf."
+      loss_function: "Same as slice_depth_conditioned_icf."
+      key_hyperparameters:
+        depth_override: 0.0
+      differentiator: "Isolates the contribution of the depth channel from the
+        spatial coordinate MLP capacity."
+
+  - name: slice_depth_random_ablation
+    what_is_removed: "Structured depth information — replaced with uniform random
+      noise at test time, preserving the channel capacity but destroying structure."
+    how_it_differs: "Replace `D = normalize(sobel_magnitude(I_dark))` with
+      `D = torch.rand(H, W)` (uniform noise, same value range [0,1])."
+    expected_effect: "Random depth injects harmful structure-independent signal.
+      PSNR should be ≤ zeroed depth (which at least provides a clean zero baseline)
+      and significantly below structured depth in moderate_dark regime."
+    implementation_spec:
+      class_name: SLICEDepthRandomAblation
+      key_methods: [__init__, enhance, evaluate]
+      algorithm_steps:
+        - "1. Load trained SLICEDepthConditionedICF weights."
+        - "2. Override compute_depth_proxy to return torch.rand(H, W)."
+        - "3. Run the same test-time optimization loop with random depth."
+        - "4. Evaluate PSNR/MSE."
+      loss_function: "Same as slice_depth_conditioned_icf."
+      key_hyperparameters:
+        depth_override: random_uniform
+      differentiator: "Distinguishes whether any benefit from the depth channel
+        is due to its structure (Sobel gradient) or simply having an extra
+        conditioning dimension."
+
+metrics:
+  - name: primary_metric
+    metric: mse_reconstruction
+    description: "Mean squared error between enhanced image and original clean
+      reference (lower = better enhancement). Used as primary because it is
+      differentiable and directly maps to PSNR: PSNR = 10*log10(1/MSE)."
+    direction: minimize
+    units: dimensionless
+  - name: success_rate
+    metric: completion_fraction
+    description: "Fraction of seeds completing without NaN/crash/collapse."
+    direction: maximize
+    units: fraction
+  - name: psnr_db
+    metric: peak_signal_to_noise_ratio
+    description: "PSNR (dB) = 10*log10(1/MSE). Human-readable quality metric.
+      Reported per-regime and per-condition."
+    direction: maximize
+    units: dB
+  - name: dct_sparsity_ratio
+    metric: k_over_hw
+    description: "For slice_dct_sparse_icf only: K/HW where K=32, HW=32*32=1024.
+      Reports fraction of DCT coefficients used — validates H3 compression claim."
+    direction: minimize
+    units: fraction
+  - name: inference_latency_ms
+    metric: wall_clock_per_image
+    description: "Wall-clock milliseconds per image (32×32 CIFAR). Measures
+      computational efficiency of the ICF approach."
+    direction: minimize
+    units: milliseconds
+
+risks:
+  - risk: "NaN in ICF test-time optimization — MLP predicts near-zero gain
+      (trivial enhancement, G ≈ 0) causing MSE collapse."
+    mitigation: "After step 5 of optimization, check mean(G) < 0.05. If so,
+      reinitialize MLP with gain_bias=1.0 (output initialized near 1.0 for
+      identity gain). Add gradient clipping max_norm=1.0. If NaN detected,
+      fall back to adaptive_gamma_correction output for that seed and flag
+      success_rate accordingly."
+
+  - risk: "skimage.exposure not available in sandbox Python environment."
+    mitigation: "Import guard: try-import skimage. If unavailable, implement
+      CLAHE fallback via numpy percentile stretch (2nd and 98th percentile
+      normalization of each channel independently). Pre-test at top of main.py."
+
+  - risk: "scipy.fft.idctn not available (scipy version mismatch)."
+    mitigation: "Use numpy.fft.ifft2 as DCT approximation fallback. Check
+      scipy version at import time and select appropriate API."
+
+  - risk: "Test-time optimization budget exceeded — 30 steps × N images
+      × seeds exceeds 300s wall-clock."
+    mitigation: "Use only 200 CIFAR-10 test images per seed (not full 10k).
+      Add timing checkpoint after each condition: if elapsed > 220s, skip
+      remaining seeds and report partial results."
+
+  - risk: "Sobel gradient proxy is degenerate in extreme_dark regime —
+      all gradients near-zero, depth proxy collapses to uniform."
+    mitigation: "This is a DESIRED experimental outcome for H1 (validates the
+      luminance-stratified prediction). Measure gradient magnitude mean per
+      regime and report it as H1 diagnostic evidence."
+
+compute_budget:
+  total_runs: 30
+  num_conditions: 6
+  num_regimes: 2
+  num_seeds: 5
+  num_test_images: 200
+  breakdown:
+    clahe_adaptive_baseline: "6 runs (2 regimes × 3 seeds) × ~0.5s = 3s"
+    adaptive_gamma_correction_baseline: "6 runs × ~0.3s = 2s"
+    slice_depth_conditioned_icf: "6 runs × ~18s (30 steps × 200 imgs) = 108s"
+    slice_dct_sparse_icf: "6 runs × ~14s = 84s"
+    slice_depth_zeroed_ablation: "6 runs × ~2s (inference only) = 12s"
+    slice_depth_random_ablation: "6 runs × ~2s = 12s"
+  total_estimated_time_seconds: 221
+  budget_utilization_pct: 73.7
+  notes: "Num seeds reduced to 3 (from preferred 5) for neural methods due to
+    time budget. Baselines are inference-only so they use 5 seeds at negligible
+    cost. Neural methods use 3 seeds × 2 regimes = 6 runs. Report Wilcoxon
+    signed-rank on paired [moderate_dark, extreme_dark] PSNR differences to
+    validate H1 regime effect with n=3 per method. Acknowledge n=3 limitation
+    in paper: 'Due to compute constraints, n=3 seeds were used for neural
+    conditions; results are directionally consistent across all seeds.'"

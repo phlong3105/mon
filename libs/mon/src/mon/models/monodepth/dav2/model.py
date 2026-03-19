@@ -163,7 +163,7 @@ class DAV2(ModelRegisterMixin, nn.Module):
 class DAV2_ViTS_Weights(WeightsEnum):
 
     DA_2K = Weights(
-        path=K.ZOO_ROOT / "cv/monodepth/dav2/dav2_vits/da2k/dav2_vits_da2k.pt",
+        path=K.ZOO_ROOT / "monodepth/dav2/dav2_vits/da2k/dav2_vits_da2k.pt",
         url=None,
         num_classes=None,
         transforms=None,
@@ -176,7 +176,7 @@ class DAV2_ViTS_Weights(WeightsEnum):
 class DAV2_ViTB_Weights(WeightsEnum):
 
     DA_2K = Weights(
-        path=K.ZOO_ROOT / "cv/monodepth/dav2/dav2_vitb/da2k/dav2_vitb_da2k.pt",
+        path=K.ZOO_ROOT / "monodepth/dav2/dav2_vitb/da2k/dav2_vitb_da2k.pt",
         url=None,
         num_classes=None,
         transforms=None,
@@ -189,7 +189,7 @@ class DAV2_ViTB_Weights(WeightsEnum):
 class DAV2_ViTL_Weights(WeightsEnum):
 
     DA_2K = Weights(
-        path=K.ZOO_ROOT / "cv/monodepth/dav2/dav2_vitl/da2k/dav2_vitl_da2k.pt",
+        path=K.ZOO_ROOT / "monodepth/dav2/dav2_vitl/da2k/dav2_vitl_da2k.pt",
         url=None,
         num_classes=None,
         transforms=None,

@@ -17,7 +17,7 @@ import torch
 from rich.progress import Progress
 from typing_extensions import override
 
-from mon.core import OPTIMIZERS, Path
+from mon.core import K, OPTIMIZERS, Path
 from mon.models.enhance.clode import loss as L
 from mon.runners import Trainer
 from .model import clode
@@ -214,7 +214,7 @@ class CLODE_Trainer(Trainer):
             "target": val_outputs["target"],
             "enhanced": val_outputs["enhanced"],
         }
-        self._save_image(epoch, debug_image)
+        self._save_image(epoch, debug_image, dirname=K.PRED_DIR, stem="debug")
 
 # endregion
 

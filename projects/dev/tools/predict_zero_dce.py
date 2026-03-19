@@ -3,7 +3,7 @@
 
 """Prediction Script.
 
-This script provides a CLI for running Zero-DCE training on a given dataset.
+This script provides a CLI for running Zero-DCE prediction on a given dataset.
 
 References:
     - Paper: "Zero-Reference Deep Curve Estimation for Low-Light Image

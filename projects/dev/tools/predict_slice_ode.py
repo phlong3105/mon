@@ -3,7 +3,7 @@
 
 """Prediction Script.
 
-This script provides a CLI for running SLICE training on a given dataset.
+This script provides a CLI for running SLICE prediction on a given dataset.
 
 References:
     - Paper: "SLICE: Scale-Arbitrary Low-Light Enhancement via Depth-Aware

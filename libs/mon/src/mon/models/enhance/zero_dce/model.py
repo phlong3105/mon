@@ -312,7 +312,7 @@ class ZeroDCEPP(ModelRegisterMixin, nn.Module):
 class ZeroDCE_Weights(WeightsEnum):
 
     SICE_ME = Weights(
-        path=K.ZOO_ROOT / "cv/enhance/zero_dce/zero_dce/sice_me/zero_dce_sice_me.pt",
+        path=K.ZOO_ROOT / "enhance/zero_dce/zero_dce/sice_me/zero_dce_sice_me.pt",
         url=None,
         num_classes=None,
         transforms=None,
@@ -325,7 +325,7 @@ class ZeroDCE_Weights(WeightsEnum):
 class ZeroDCEPP_Weights(WeightsEnum):
 
     SICE_ME = Weights(
-        path=K.ZOO_ROOT / "cv/enhance/zero_dce/zero_dce++/sice_me/zero_dce++_sice_me.pt",
+        path=K.ZOO_ROOT / "enhance/zero_dce/zero_dce++/sice_me/zero_dce++_sice_me.pt",
         url=None,
         num_classes=None,
         transforms=None,

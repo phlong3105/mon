@@ -3,7 +3,7 @@
 
 """Prediction Script.
 
-This script provides a CLI for running Zero-IG training on a given dataset.
+This script provides a CLI for running Zero-IG prediction on a given dataset.
 
 References:
     - Paper: "Zero-Shot Illumination-Guided Joint Denoising and Adaptive

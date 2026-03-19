@@ -152,7 +152,7 @@ class ConvNeXtBackBone(ModelRegisterMixin, nn.Module):
 class ConvNeXt_Tiny_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/convnext/convnext_tiny/imagenet1k_v1/convnext_tiny_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/convnext/convnext_tiny/imagenet1k_v1/convnext_tiny_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/convnext_tiny-983f1562.pth"),
         num_classes=1000,
         transforms=None,
@@ -183,7 +183,7 @@ class ConvNeXt_Tiny_Weights(WeightsEnum):
 class ConvNeXt_Small_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/convnext/convnext_small/imagenet1k_v1/convnext_small_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/convnext/convnext_small/imagenet1k_v1/convnext_small_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/convnext_small-0c510722.pth"),
         num_classes=1000,
         transforms=None,
@@ -214,7 +214,7 @@ class ConvNeXt_Small_Weights(WeightsEnum):
 class ConvNeXt_Base_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/convnext/convnext_base/imagenet1k_v1/convnext_base_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/convnext/convnext_base/imagenet1k_v1/convnext_base_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/convnext_base-6075fbad.pth"),
         num_classes=1000,
         transforms=None,
@@ -245,7 +245,7 @@ class ConvNeXt_Base_Weights(WeightsEnum):
 class ConvNeXt_Large_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/convnext/convnext_large/imagenet1k_v1/convnext_large_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/convnext/convnext_large/imagenet1k_v1/convnext_large_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/convnext_large-ea097f82.pth"),
         num_classes=1000,
         transforms=None,

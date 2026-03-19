@@ -145,7 +145,7 @@ class MobileNetV3BackBone(ModelRegisterMixin, nn.Module):
 class MobileNet_V3_Large_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/mobilenet/mobilenet_v3_large/imagenet1k_v1/mobilenet_v3_large_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/mobilenet/mobilenet_v3_large/imagenet1k_v1/mobilenet_v3_large_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/mobilenet_v3_large-8738ca79.pth"),
         num_classes=1000,
         transforms=None,
@@ -166,7 +166,7 @@ class MobileNet_V3_Large_Weights(WeightsEnum):
         },
     )
     IMAGENET1K_V2 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/mobilenet/mobilenet_v3_large/imagenet1k_v2/mobilenet_v3_large_imagenet1k_v2.pt",
+        path=K.ZOO_ROOT / "backbone/mobilenet/mobilenet_v3_large/imagenet1k_v2/mobilenet_v3_large_imagenet1k_v2.pt",
         url=Path("https://download.pytorch.org/models/mobilenet_v3_large-5c1a4163.pth"),
         num_classes=1000,
         transforms=None,
@@ -197,7 +197,7 @@ class MobileNet_V3_Large_Weights(WeightsEnum):
 class MobileNet_V3_Small_Weights(WeightsEnum):
 
     IMAGENET1K_V1 = Weights(
-        path=K.ZOO_ROOT / "nn/backbone/mobilenet/mobilenet_v3_small/imagenet1k_v1/mobilenet_v3_small_imagenet1k_v1.pt",
+        path=K.ZOO_ROOT / "backbone/mobilenet/mobilenet_v3_small/imagenet1k_v1/mobilenet_v3_small_imagenet1k_v1.pt",
         url=Path("https://download.pytorch.org/models/mobilenet_v3_small-047dcff4.pth"),
         num_classes=1000,
         transforms=None,

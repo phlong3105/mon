@@ -14,7 +14,7 @@ seed: 42  # (int) Random seed for reproducibility
 model:
   name: "unik3d_vitb"  # (str) Model name (e.g., resnet50, yolov8n).
   arch: "unik3d"  # (str) Model architecture (e.g., resnet, yolo8).
-  weights: "cv/monodepth/unik3d/unik3d_vitb"  # (str) Path to model weights.
+  weights: "monodepth/unik3d/unik3d_vitb"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---

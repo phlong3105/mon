@@ -18,7 +18,7 @@ from rich.progress import Progress
 from torch.autograd import Variable
 from typing_extensions import override
 
-from mon.core import OPTIMIZERS, Path
+from mon.core import K, OPTIMIZERS, Path
 from mon.runners import Trainer
 from . import loss as L
 from .model import zero_ig
@@ -199,7 +199,7 @@ class SCI_Trainer(Trainer):
             "enhanced": val_outputs["enhanced"],
             "denoised": val_outputs["denoised"],
         }
-        self._save_image(epoch, debug_image)
+        self._save_image(epoch, debug_image, dirname=K.PRED_DIR, stem="debug", column_first=True)
 
 # endregion
 

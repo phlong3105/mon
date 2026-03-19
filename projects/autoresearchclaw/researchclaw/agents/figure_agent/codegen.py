@@ -1,8 +1,13 @@
-"""CodeGen Agent — generates matplotlib plotting scripts for each figure.
+"""CodeGen Agent — generates visualization code for each figure.
 
 Takes the Planner's figure specifications and experiment data, then
-generates standalone Python scripts that produce publication-quality
-charts using SciencePlots academic styling.
+generates either:
+  - Standalone Python scripts (Matplotlib/Seaborn) — run by Renderer
+  - LaTeX code (TikZ/PGFPlots) — embedded directly in the paper
+
+Architecture follows Visual ChatGPT (Wu et al., 2023): the LLM acts
+as a *controller* calling deterministic render tools instead of
+generating pixels directly.
 """
 
 from __future__ import annotations
@@ -10,10 +15,13 @@ from __future__ import annotations
 import json
 import logging
 import re
+from pathlib import Path
 from typing import Any
 
 from researchclaw.agents.base import BaseAgent, AgentStepResult
 from researchclaw.agents.figure_agent.style_config import get_style_preamble
+from researchclaw.utils.sanitize import sanitize_figure_id
+from researchclaw.utils.thinking_tags import strip_thinking_tags
 
 logger = logging.getLogger(__name__)
 
@@ -243,14 +251,118 @@ _TEMPLATES: dict[str, str] = {
     "scatter_plot": _TEMPLATE_SCATTER,
 }
 
+# ---------------------------------------------------------------------------
+# LaTeX / PGFPlots templates — for direct LaTeX embedding
+# ---------------------------------------------------------------------------
+
+_LATEX_TEMPLATE_BAR_COMPARISON = r'''
+\begin{{figure}}[htbp]
+\centering
+\begin{{tikzpicture}}
+\begin{{axis}}[
+    ybar,
+    bar width=15pt,
+    width={width}cm,
+    height={height}cm,
+    xlabel={{{x_label}}},
+    ylabel={{{y_label}}},
+    title={{{title}}},
+    symbolic x coords={{{x_coords}}},
+    xtick=data,
+    x tick label style={{rotate=25, anchor=east, font=\small}},
+    ymin=0,
+    nodes near coords,
+    nodes near coords align={{vertical}},
+    every node near coord/.append style={{font=\tiny}},
+    grid=major,
+    grid style={{dashed, gray!30}},
+]
+\addplot[fill=blue!60, draw=blue!80] coordinates {{{coords}}};
+\end{{axis}}
+\end{{tikzpicture}}
+\caption{{{caption}}}
+\label{{fig:{figure_id}}}
+\end{{figure}}
+'''
+
+_LATEX_TEMPLATE_LINE = r'''
+\begin{{figure}}[htbp]
+\centering
+\begin{{tikzpicture}}
+\begin{{axis}}[
+    width={width}cm,
+    height={height}cm,
+    xlabel={{{x_label}}},
+    ylabel={{{y_label}}},
+    title={{{title}}},
+    legend pos=north west,
+    grid=major,
+    grid style={{dashed, gray!30}},
+    cycle list name=color list,
+]
+{plot_commands}
+\end{{axis}}
+\end{{tikzpicture}}
+\caption{{{caption}}}
+\label{{fig:{figure_id}}}
+\end{{figure}}
+'''
+
+_LATEX_TEMPLATE_HEATMAP = r'''
+\begin{{figure}}[htbp]
+\centering
+\begin{{tikzpicture}}
+\begin{{axis}}[
+    colormap/viridis,
+    colorbar,
+    width={width}cm,
+    height={height}cm,
+    xlabel={{{x_label}}},
+    ylabel={{{y_label}}},
+    title={{{title}}},
+    point meta min={meta_min},
+    point meta max={meta_max},
+    xtick={{{xtick}}},
+    ytick={{{ytick}}},
+    xticklabels={{{xticklabels}}},
+    yticklabels={{{yticklabels}}},
+    x tick label style={{rotate=45, anchor=east, font=\small}},
+]
+\addplot[matrix plot*, mesh/cols={cols}, mesh/rows={rows},
+    point meta=explicit] coordinates {{
+{matrix_coords}
+}};
+\end{{axis}}
+\end{{tikzpicture}}
+\caption{{{caption}}}
+\label{{fig:{figure_id}}}
+\end{{figure}}
+'''
+
+_LATEX_TEMPLATES: dict[str, str] = {
+    "bar_comparison": _LATEX_TEMPLATE_BAR_COMPARISON,
+    "ablation_grouped": _LATEX_TEMPLATE_BAR_COMPARISON,
+    "training_curve": _LATEX_TEMPLATE_LINE,
+    "loss_curve": _LATEX_TEMPLATE_LINE,
+    "line_multi": _LATEX_TEMPLATE_LINE,
+    "heatmap": _LATEX_TEMPLATE_HEATMAP,
+    "confusion_matrix": _LATEX_TEMPLATE_HEATMAP,
+}
+
 
 class CodeGenAgent(BaseAgent):
-    """Generates Python plotting scripts for each planned figure."""
+    """Generates visualization code (Python or LaTeX) for each planned figure.
+
+    Supports two output formats:
+      - ``"python"`` (default): Matplotlib/Seaborn scripts executed by Renderer
+      - ``"latex"``: TikZ/PGFPlots code embedded directly in the paper
+    """
 
     name = "figure_codegen"
 
-    def __init__(self, llm: Any) -> None:
+    def __init__(self, llm: Any, *, output_format: str = "python") -> None:
         super().__init__(llm)
+        self._output_format = output_format  # "python" or "latex"
 
     # ------------------------------------------------------------------
     # Public API
@@ -280,6 +392,10 @@ class CodeGenAgent(BaseAgent):
             scripts: list[dict[str, Any]] = []
 
             for fig_spec in figures:
+                # BUG-36: skip non-dict entries (LLM may return strings)
+                if not isinstance(fig_spec, dict):
+                    self.logger.warning("Skipping non-dict fig_spec: %s", type(fig_spec))
+                    continue
                 figure_id = fig_spec.get("figure_id", "unknown")
                 chart_type = fig_spec.get("chart_type", "bar_comparison")
 
@@ -334,8 +450,9 @@ class CodeGenAgent(BaseAgent):
         critic_feedback: dict[str, Any] | None,
     ) -> str:
         """Generate a plotting script for a single figure."""
-        figure_id = fig_spec.get("figure_id", "figure")
-        output_path = f"{output_dir}/{figure_id}.png"
+        figure_id = sanitize_figure_id(fig_spec.get("figure_id", "figure"))
+        # BUG-20: Use absolute path to avoid CWD-relative savefig errors
+        output_path = str((Path(output_dir) / f"{figure_id}.png").resolve())
         title = fig_spec.get("title", "")
         x_label = fig_spec.get("x_label", "")
         y_label = fig_spec.get("y_label", "")
@@ -417,10 +534,20 @@ class CodeGenAgent(BaseAgent):
             )
 
         if chart_type == "grouped_bar" and source_type == "multi_metric":
+            # BUG-37: LLM may return nested lists in metrics — flatten to list[str]
+            _raw_metrics = data_source.get("metrics", [])
+            _flat_metrics: list[str] = []
+            for _mi in (_raw_metrics if isinstance(_raw_metrics, list) else []):
+                if isinstance(_mi, str):
+                    _flat_metrics.append(_mi)
+                elif isinstance(_mi, list):
+                    _flat_metrics.extend(str(x) for x in _mi)
+                else:
+                    _flat_metrics.append(str(_mi))
             return self._fill_grouped_bar_template(
                 template=template,
                 condition_summaries=condition_summaries,
-                metrics=data_source.get("metrics", []),
+                metrics=_flat_metrics,
                 output_path=output_path,
                 title=title,
                 x_label=x_label,
@@ -616,6 +743,18 @@ class CodeGenAgent(BaseAgent):
         critic_feedback: dict[str, Any] | None,
     ) -> str:
         """Generate a plotting script using LLM."""
+        if self._output_format == "latex":
+            return self._llm_generate_latex(
+                fig_spec=fig_spec,
+                chart_type=chart_type,
+                condition_summaries=condition_summaries,
+                metrics_summary=metrics_summary,
+                metric_key=metric_key,
+                width=width,
+                height=height,
+                critic_feedback=critic_feedback,
+            )
+
         style_preamble = get_style_preamble()
 
         system_prompt = (
@@ -624,14 +763,15 @@ class CodeGenAgent(BaseAgent):
             "matplotlib chart.\n\n"
             "RULES:\n"
             "- The script must be completely self-contained (no external imports "
-            "beyond matplotlib, numpy)\n"
+            "beyond matplotlib, numpy, seaborn)\n"
             "- All data values must be hardcoded in the script (no file I/O)\n"
             "- Use the provided style preamble at the top of the script\n"
             "- Output format: PNG at 300 DPI\n"
             "- Use colorblind-safe colors from the COLORS list\n"
             "- Include descriptive axis labels and title\n"
             "- Call fig.savefig() and plt.close(fig) at the end\n"
-            "- Print 'Saved: <path>' after saving\n\n"
+            "- Print 'Saved: <path>' after saving\n"
+            "- Do NOT include any <think> or </think> tags\n\n"
             "Return ONLY the Python script, no explanation."
         )
 
@@ -667,6 +807,9 @@ class CodeGenAgent(BaseAgent):
 
         raw = self._chat(system_prompt, user_prompt, max_tokens=4096, temperature=0.3)
 
+        # Strip reasoning model thinking tags before parsing
+        raw = strip_thinking_tags(raw)
+
         # Strip markdown fences
         script = self._strip_fences(raw)
 
@@ -676,10 +819,86 @@ class CodeGenAgent(BaseAgent):
 
         return script
 
+    def _llm_generate_latex(
+        self,
+        *,
+        fig_spec: dict[str, Any],
+        chart_type: str,
+        condition_summaries: dict[str, Any],
+        metrics_summary: dict[str, Any],
+        metric_key: str,
+        width: float,
+        height: float,
+        critic_feedback: dict[str, Any] | None,
+    ) -> str:
+        """Generate LaTeX TikZ/PGFPlots code for a figure.
+
+        This produces code that compiles directly in a LaTeX document that
+        includes ``\\usepackage{pgfplots}`` and ``\\usepackage{tikz}``.
+        """
+        system_prompt = (
+            "You are an expert scientific visualization programmer specializing "
+            "in LaTeX/TikZ/PGFPlots.\n\n"
+            "Generate LaTeX code using PGFPlots that creates a publication-quality "
+            "chart suitable for a top-tier AI conference paper.\n\n"
+            "RULES:\n"
+            "- Use pgfplots (version ≥ 1.18) with \\pgfplotsset{compat=1.18}\n"
+            "- All data values must be hardcoded in the LaTeX source\n"
+            "- Use the colorbrewer palette or viridis colormap\n"
+            "- Include descriptive axis labels and title\n"
+            "- Wrap in a figure environment with \\caption and \\label\n"
+            "- Font sizes should match: title 12pt, labels 10pt, ticks 9pt\n"
+            "- Width should be \\columnwidth or 0.48\\textwidth for single column\n"
+            "- Do NOT include any <think> or </think> tags\n\n"
+            "Return ONLY the LaTeX code, no explanation."
+        )
+
+        # Build data context
+        data_context = {
+            "conditions": list(condition_summaries.keys())[:10],
+            "metric_key": metric_key,
+        }
+        for cond, cdata in list(condition_summaries.items())[:10]:
+            if isinstance(cdata, dict):
+                data_context[cond] = {
+                    "metrics": {k: v for k, v in (cdata.get("metrics") or {}).items()
+                                if not any(t in k.lower()
+                                           for t in ["time", "elapsed", "runtime"])},
+                }
+
+        user_prompt = (
+            f"Chart type: {chart_type}\n"
+            f"Figure specification:\n{json.dumps(fig_spec, indent=2)}\n\n"
+            f"Experiment data:\n{json.dumps(data_context, indent=2, default=str)}\n\n"
+            f"Figure dimensions: width={width}in, height={height}in\n"
+        )
+
+        if critic_feedback:
+            user_prompt += (
+                f"\n\nPREVIOUS ATTEMPT FAILED REVIEW. Fix these issues:\n"
+                f"{json.dumps(critic_feedback.get('issues', []), indent=2)}\n"
+            )
+
+        raw = self._chat(system_prompt, user_prompt, max_tokens=4096, temperature=0.3)
+
+        # Strip reasoning model thinking tags before parsing
+        raw = strip_thinking_tags(raw)
+
+        # Strip markdown fences (```latex ... ```)
+        return self._strip_latex_fences(raw)
+
     @staticmethod
     def _strip_fences(text: str) -> str:
         """Remove markdown code fences from LLM output."""
         m = re.search(r"```(?:python)?\s*\n(.*?)```", text, re.DOTALL)
+        if m:
+            return m.group(1).strip()
+        return text.strip()
+
+    @staticmethod
+    def _strip_latex_fences(text: str) -> str:
+        """Remove markdown code fences from LaTeX LLM output."""
+        m = re.search(r"```(?:latex|tex)?\s*\n(.*?)```", text, re.DOTALL)
         if m:
             return m.group(1).strip()
         return text.strip()

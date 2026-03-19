@@ -135,21 +135,21 @@ class CLODE(ModelRegisterMixin, nn.Module):
 class CLODE_Weights(WeightsEnum):
 
     SICE_ME = Weights(
-        path=K.ZOO_ROOT / "cv/enhance/clode/clode/sice_me/clode_sice_me.pt",
+        path=K.ZOO_ROOT / "enhance/clode/clode/sice_me/clode_sice_me.pt",
         url=None,
         num_classes=None,
         transforms=None,
         meta={}
     )
     LOL_V1 = Weights(
-        path=K.ZOO_ROOT / "cv/enhance/clode/clode/lol_v1/clode_lol_v1.pt",
+        path=K.ZOO_ROOT / "enhance/clode/clode/lol_v1/clode_lol_v1.pt",
         url=None,
         num_classes=None,
         transforms=None,
         meta={}
     )
     UNIVERSAL = Weights(
-        path=K.ZOO_ROOT / "cv/enhance/clode/clode/universal/clode_universal.pt",
+        path=K.ZOO_ROOT / "enhance/clode/clode/universal/clode_universal.pt",
         url=None,
         num_classes=None,
         transforms=None,

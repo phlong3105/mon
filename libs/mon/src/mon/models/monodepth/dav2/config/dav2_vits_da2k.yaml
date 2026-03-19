@@ -14,7 +14,7 @@ seed: 2  # (int) Random seed for reproducibility
 model:
   name: "dav2_vits"  # (str) Model name (e.g., resnet50, yolov8n).
   arch: "dav2"  # (str) Model architecture (e.g., resnet, yolo8).
-  weights: "cv/monodepth/dav2/dav2_vits/da2k/dav2_vits_da2k.pt"  # (str) Path to model weights.
+  weights: "monodepth/dav2/dav2_vits/da2k/dav2_vits_da2k.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---
