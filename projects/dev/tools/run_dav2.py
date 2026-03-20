@@ -29,7 +29,7 @@ current_dir = current_file.parents[0]
 # ==============================================================================
 
 def main(args: argparse.Namespace):
-    if args.mode == "predict":
+    if args.predict:
         predictor = DAV2_Predictor.from_cli(
             prompt=True,
             root=resolve_project_root(current_dir),
@@ -46,13 +46,15 @@ def main(args: argparse.Namespace):
         )
         predictor.predict()
     else:
-        raise ValueError(f"Invalid mode: {args.mode}")
+        raise NotImplementedError("Run mode hasn't been implemented.")
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser("main")
-    parser.add_argument("--mode", type=str, default="train", choices=["train", "test", "predict"])
     parser.add_argument("--config", type=str, default="dav2_vitb_da2k.yaml")
+    parser.add_argument("--train", action="store_true", help="Train the model.")
+    parser.add_argument("--test", action="store_true", help="Test the model.")
+    parser.add_argument("--predict", action="store_true", help="Predict using the model.")
     return parser.parse_args()
 
 

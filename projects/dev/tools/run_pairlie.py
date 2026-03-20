@@ -29,7 +29,7 @@ current_dir = current_file.parents[0]
 # ==============================================================================
 
 def main(args: argparse.Namespace):
-    if args.mode == "train":
+    if args.train:
         trainer = PairLIE_Trainer.from_cli(
             root=resolve_project_root(current_dir),
             config_file=args.config,
@@ -44,11 +44,11 @@ def main(args: argparse.Namespace):
             verbose=True,
         )
         trainer.train()
-    elif args.mode == "predict":
+    elif args.predict:
         predictor = PairLIE_Predictor.from_cli(
             prompt=True,
             root=resolve_project_root(current_dir),
-            config_file="pairlie_sice.yaml",
+            config_file=args.config,
             task=Task.ENHANCE,
             mode=RunMode.PREDICT,
             arch="pairlie",
@@ -61,13 +61,15 @@ def main(args: argparse.Namespace):
         )
         predictor.predict()
     else:
-        raise ValueError(f"Invalid mode: {args.mode}")
+        raise NotImplementedError("Run mode hasn't been implemented.")
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser("main")
-    parser.add_argument("--mode", type=str, default="train", choices=["train", "test", "predict"])
     parser.add_argument("--config", type=str, default="pairlie_sice.yaml")
+    parser.add_argument("--train", action="store_true", help="Train the model.")
+    parser.add_argument("--test", action="store_true", help="Test the model.")
+    parser.add_argument("--predict", action="store_true", help="Predict using the model.")
     return parser.parse_args()
 
 
