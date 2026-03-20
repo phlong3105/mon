@@ -28,6 +28,7 @@ from mon.core import (
     sys_ctx,
 )
 from mon.dataset import build_dataloader, transform as T
+from mon.ops import normalize_minmax
 from mon.runners import Trainer
 from .model import retinexnet
 from .utils import smooth
@@ -57,16 +58,19 @@ class RetinexNet_Trainer(Trainer):
         self._model = model
 
     @override
-    def _init_optimizer(self):
+    def _init_optimizer(self, phase: Literal["decom", "enhance", "whole"]):
         """Initialize ``self._optimizer`` and ``self._scheduler`` attributes."""
         config = self.config
 
-        self._optimizer_decom = OPTIMIZERS.build(params=self.model.decom_net.parameters(), **config.optimizer)
-        self._optimizer_enhance = OPTIMIZERS.build(params=self.model.enhance_net.parameters(), **config.optimizer)
-        self._optimizer = None
-        self._scheduler_decom = SCHEDULERS.build(optimizer=self._optimizer_decom, **config.lr_scheduler)
-        self._scheduler_enhance = SCHEDULERS.build(optimizer=self._optimizer_enhance, **config.lr_scheduler)
-        self._scheduler = None
+        if phase == "decom":
+            self._optimizer = OPTIMIZERS.build(params=self.model.decom_net.parameters(), **config.optimizer)
+            self._scheduler = SCHEDULERS.build(optimizer=self._optimizer, **config.lr_scheduler)
+        elif phase == "enhance":
+            self._optimizer = OPTIMIZERS.build(params=self.model.enhance_net.parameters(), **config.optimizer)
+            self._scheduler = SCHEDULERS.build(optimizer=self._optimizer, **config.lr_scheduler)
+        else:
+            self._optimizer = OPTIMIZERS.build(params=self.model.parameters(), **config.optimizer | {"lr": 0.0001})
+            self._scheduler = None
 
     @override
     def _init_train_dataloader(self):
@@ -120,7 +124,7 @@ class RetinexNet_Trainer(Trainer):
             raise RuntimeError(f"'model' is not initialized.")
 
         # 4. Define optimizer & scheduler
-        self._init_optimizer()
+        # self._init_optimizer()
         # if self.optimizer is None:
         #     raise RuntimeError(f"'optimizer' is not initialized.")
 
@@ -137,6 +141,7 @@ class RetinexNet_Trainer(Trainer):
         self.benchmark()
 
         # 8. Main loop (DecomNet)
+        self._init_optimizer(phase="decom")
         with create_progress_bar() as pbar:
             for epoch in pbar.track(
                 sequence=range(epochs),
@@ -154,7 +159,8 @@ class RetinexNet_Trainer(Trainer):
                     )
 
                 # 8.2. Scheduler Step
-                self._scheduler_decom.step()
+                if self.scheduler is not None:
+                    self.scheduler.step()
 
                 # 8.3. Log
                 if self.verbose:
@@ -165,10 +171,13 @@ class RetinexNet_Trainer(Trainer):
                     self._save(epoch, train_outputs=train_outputs, val_outputs={})
 
         # 9. Main loop (EnhanceNet)
+        current_epoch = epochs
+        end_epoch = epochs * 2
+        self._init_optimizer(phase="enhance")
         with create_progress_bar() as pbar:
             for epoch in pbar.track(
-                sequence=range(epochs, epochs * 2),
-                total=epochs,
+                sequence=range(current_epoch, end_epoch),
+                total=(end_epoch - current_epoch),
                 description=f"[bright_yellow]Training EnhanceNet"
             ):
                 # 9.1. Train epoch
@@ -188,7 +197,8 @@ class RetinexNet_Trainer(Trainer):
                     val_outputs = self._val_epoch(epoch=epoch, pbar=pbar)
 
                 # 9.3. Scheduler Step
-                self._scheduler_enhance.step()
+                if self.scheduler is not None:
+                    self.scheduler.step()
 
                 # 9.4. Log
                 if self.verbose:
@@ -199,6 +209,48 @@ class RetinexNet_Trainer(Trainer):
                     self._save(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
 
                 # 9.6. Save debug
+                if self.save_debug:
+                    self._save_debug(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
+
+        # 10. Main loop (Whole)
+        current_epoch = epochs * 2
+        end_epoch = epochs * 2 + 5
+        self._init_optimizer(phase="whole")
+        with create_progress_bar() as pbar:
+            for epoch in pbar.track(
+                sequence=range(current_epoch, end_epoch),
+                total=(end_epoch - current_epoch),
+                description=f"[bright_yellow]Training Whole Model"
+            ):
+                # 10.1. Train epoch
+                self.model.decom_net.eval()
+                self.model.enhance_net.train()
+                train_outputs = self._train_epoch(epoch=epoch, phase="whole", pbar=pbar)
+                if "loss" not in train_outputs:
+                    raise ValueError(
+                        f"Expected 'loss' from 'self._train_epoch()', "
+                        f"but got {train_outputs.keys()}."
+                    )
+
+                # 10.2. Val epoch
+                val_outputs = {}
+                if self.val_dataloader is not None:
+                    self.model.eval()
+                    val_outputs = self._val_epoch(epoch=epoch, pbar=pbar)
+
+                # 10.3. Scheduler Step
+                if self.scheduler is not None:
+                    self.scheduler.step()
+
+                # 10.4. Log
+                if self.verbose:
+                    self._log(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
+
+                # 10.5. Save
+                if self.save:
+                    self._save(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
+
+                # 10.6. Save debug
                 if self.save_debug:
                     self._save_debug(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
 
@@ -265,11 +317,10 @@ class RetinexNet_Trainer(Trainer):
             l_recon_mutal_low = L(R_high * L_low_3, image)
             l_recon_mutal_high = L(R_low * L_high_3, target)
             l_equal_R = L(R_low, R_high.detach())
-            l_smooth_low = smooth(L_low, R_low)
-            l_smooth_high = smooth(L_high, R_high)
+            l_smooth_low = smooth(R_low, L_low)
+            l_smooth_high = smooth(R_high, L_high)
             loss = (
-                l_recon_low
-                + l_recon_high
+                l_recon_low + l_recon_high
                 + 0.001 * l_recon_mutal_low
                 + 0.001 * l_recon_mutal_high
                 + 0.1 * l_smooth_low
@@ -278,25 +329,16 @@ class RetinexNet_Trainer(Trainer):
             )
             # EnhanceNet loss
             if phase != "decom":
-                L_delta = outputs_high["L_delta"]
-                L_delta_3 = outputs_high["L_delta_3"]
+                L_delta = outputs_low["L_delta"]
+                L_delta_3 = torch.cat((L_delta, L_delta, L_delta), dim=1)
                 l_relight = L(R_low * L_delta_3, target)
-                l_smooth_delta = smooth(L_delta, R_low)
+                l_smooth_delta = smooth(R_low, L_delta)
                 loss += l_relight + 3 * l_smooth_delta
 
             # 2.5. Backward pass
-            if phase == "decom":
-                self._optimizer_decom.zero_grad()
-                loss.backward()
-                self._optimizer_decom.step()
-            elif phase == "enhance":
-                self._optimizer_enhance.zero_grad()
-                loss.backward()
-                self._optimizer_enhance.step()
-            else:
-                self.optimizer.zero_grad()
-                loss.backward()
-                self.optimizer.step()
+            self.optimizer.zero_grad()
+            loss.backward()
+            self.optimizer.step()
             losses.append(loss.item())
 
             pbar.update(task, advance=1)
@@ -398,8 +440,8 @@ class RetinexNet_Trainer(Trainer):
             "target": val_outputs["target"],
             "enhanced": val_outputs["enhanced"],
             "reflectance": val_outputs["reflectance"],
-            "illumination": val_outputs["illumination"],
-            "illumination_delta": val_outputs["illumination_delta"],
+            "illumination": normalize_minmax(val_outputs["illumination"]),
+            "illumination_delta": normalize_minmax(val_outputs["illumination_delta"]),
         }
         self._save_image(epoch, debug_image, dirname=K.PRED_DIR, stem="debug", column_first=True)
 

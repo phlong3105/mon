@@ -1,25 +1,24 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""PairLIE Models.
+"""DCC-Net Models.
 
-This module provides the PairLIE definition and pre-trained weights.
+This module provides the DCC-Net definition and pre-trained weights.
 
 References:
-    - Paper: "Learning a Simple Low-light Image Enhancer from Paired Low-light
-      Instances," CVPR 2023.
-    - Code: https://github.com/zhenqifu/PairLIE
+    - Paper: "Deep Color Consistent Network for Low Light-Image Enhancement,"
+      CVPR 2022.
+    - Code: https://github.com/Ian0926/DCC-Net
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "PairLIE",
-    "PairLIE_Weights",
-    "pairlie",
+    "DCCNet",
+    "DCCNet_Weights",
+    "dccnet",
 ]
 
-import torch
 from torch import nn, Tensor
 
 from mon.core import (
@@ -35,7 +34,7 @@ from mon.core import (
     WeightsLike,
 )
 from mon.nn import ModelRegisterMixin
-from .module import L_Net, N_Net, R_Net
+from .module import C_Net, G_Net, R_Net
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -45,17 +44,17 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-class PairLIE(ModelRegisterMixin, nn.Module):
-    """PairLIE model for low-light image enhancement.
+class DCCNet(ModelRegisterMixin, nn.Module):
+    """DCC-Net model for low-light image enhancement.
 
     References:
-        - Paper: "Learning a Simple Low-light Image Enhancer from Paired Low-light
-          Instances," CVPR 2023.
-        - Code: https://github.com/zhenqifu/PairLIE
+        - Paper: "Deep Color Consistent Network for Low Light-Image Enhancement,"
+          CVPR 2022.
+        - Code: https://github.com/Ian0926/DCC-Net
     """
 
-    arch: str = "pairlie"
-    name: str = "pairlie"
+    arch: str = "dccnet"
+    name: str = "dccnet"
     tasks: list[Task] = [Task.ENHANCE]
     model_dir: Path = current_dir
 
@@ -63,7 +62,7 @@ class PairLIE(ModelRegisterMixin, nn.Module):
     def __init__(
         self,
         name: str,
-        alpha: float = 0.2,  # default=0.2, LOL=0.14.
+        d_hist: int = 64,
         weights: WeightsLike | None = None,
         verbose: bool = True,
         *args, **kwargs
@@ -72,8 +71,8 @@ class PairLIE(ModelRegisterMixin, nn.Module):
 
         Args:
             name (str): Name of the model variant.
-            alpha (float, optional): The illumination correction factor (alpha).
-                Defaults to 0.2, as used in the original paper.
+            d_hist (int, optional): Number of histogram bins for the C-Net.
+                Defaults to 64.
             weights (WeightsLike, optional): Pre-trained weights to load.
                 Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
@@ -82,12 +81,11 @@ class PairLIE(ModelRegisterMixin, nn.Module):
 
         # Assign attributes
         self.verbose = verbose
-        self.alpha = alpha
 
         # Define network
-        self.L_net = L_Net(num_channels=64)
-        self.R_net = R_Net(num_channels=64)
-        self.N_net = N_Net(num_channels=64)
+        self.g_net = G_Net()
+        self.c_net = C_Net(d_hist)
+        self.r_net = R_Net()
 
         # Load weights
         if is_weights_type(weights):
@@ -110,19 +108,15 @@ class PairLIE(ModelRegisterMixin, nn.Module):
             dict: Dictionary containing the enhanced image tensor and
                 intermediate results for debugging.
         """
-        X = self.N_net(image)
-        L = self.L_net(X)
-        R = self.R_net(X)
-        D = image - X
-        I = torch.pow(L, self.alpha) * R  # default=0.2, LOL=0.14.
+        gray = self.g_net(image)
+        color_hist, color_feature = self.c_net(image)
+        enhanced = self.r_net(image, gray, color_feature)
 
         # Return final and intermediate results for debugging
         outputs = {
-            "enhanced": I,
-            "L": L,
-            "R": R,
-            "X": X,
-            "D": D,
+            "enhanced": enhanced,
+            "gray": gray,
+            "color_hist": color_hist,
         }
         return outputs
 
@@ -135,11 +129,11 @@ class PairLIE(ModelRegisterMixin, nn.Module):
 
 # --- Pre-trained Weights ---
 
-@WEIGHTS.register(name="pairlie")
-class PairLIE_Weights(WeightsEnum):
+@WEIGHTS.register(name="dccnet")
+class DCCNet_Weights(WeightsEnum):
 
     SICE = Weights(
-        path=K.ZOO_ROOT / "enhance/pairlie/pairlie/sice/pairlie_sice.pt",
+        path=K.ZOO_ROOT / "enhance/dccnet/dccnet/lol_v1/dccnet_lol_v1.pt",
         url=None,
         num_classes=None,
         transforms=None,
@@ -150,18 +144,20 @@ class PairLIE_Weights(WeightsEnum):
 
 # --- Model Variants ---
 
-@MODELS.register(name="pairlie", metaclass=PairLIE)
-def pairlie(weights: WeightsLike = "default", *args, **kwargs):
-    """Create a PairLIE model.
+@MODELS.register(name="dccnet", metaclass=DCCNet)
+def dccnet(weights: WeightsLike = "default", *args, **kwargs):
+    """Create a DCC-Net model.
 
     Args:
         weights (WeightsLike, optional): Pre-trained weights to load.
             Defaults to "default".
     """
-    _ = kwargs.pop("name", "pairlie")
-    return PairLIE(
-        name="pairlie",
-        weights=PairLIE_Weights(weights),
+    _ = kwargs.pop("name", "dccnet")
+    d_hist = kwargs.pop("d_hist", 64)
+    return DCCNet(
+        name="dccnet",
+        d_hist=d_hist,
+        weights=DCCNet_Weights(weights),
         *args, **kwargs,
     )
 

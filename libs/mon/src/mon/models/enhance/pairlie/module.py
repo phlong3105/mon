@@ -9,9 +9,9 @@ This module provides various layers, blocks, and modules for the PairLIE model.
 from __future__ import annotations
 
 __all__ = [
-    "L_net",
-    "R_net",
-    "N_net",
+    "L_Net",
+    "R_Net",
+    "N_Net",
 ]
 
 import torch
@@ -22,7 +22,7 @@ from torch import nn, Tensor
 # region MODULES
 # ==============================================================================
 
-class L_net(nn.Module):
+class L_Net(nn.Module):
 
     # --- Lifecycle & Initialization ---
     def __init__(self, num_channels: int = 64):
@@ -51,7 +51,7 @@ class L_net(nn.Module):
         return torch.sigmoid(self.L_net(x))
 
 
-class R_net(nn.Module):
+class R_Net(nn.Module):
 
     # --- Lifecycle & Initialization ---
     def __init__(self, num_channels: int = 64):
@@ -79,7 +79,7 @@ class R_net(nn.Module):
         return torch.sigmoid(self.R_net(x))
 
 
-class N_net(nn.Module):
+class N_Net(nn.Module):
 
     # --- Lifecycle & Initialization ---
     def __init__(self, num_channels: int = 64):
