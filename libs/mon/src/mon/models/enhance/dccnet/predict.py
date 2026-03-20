@@ -68,11 +68,10 @@ class DCCNet_Predictor(Predictor):
 
         if config.eval_resize:
             imgsz = Size.from_value(config.eval_imgsz)
-            scale_factor = config.model.get("scale_factor")
-            if scale_factor:
-                imgsz = Size(height=imgsz.h // scale_factor, width=imgsz.w // scale_factor)
             resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-            transforms = resize + transforms
+        else:
+            resize = T.ResizeDivisibleBy(divisor=32)
+        transforms = resize + transforms
 
         self._transforms = transforms
 
@@ -136,10 +135,7 @@ class DCCNet_Predictor(Predictor):
             path = Path(meta_i["path"])
             size = Size.from_value(meta_i["imgsz"])
             debug_images = {
-                "L": outputs["L"][i:i+1],
-                "R": outputs["R"][i:i+1],
-                "X": outputs["X"][i:i+1],
-                "D": outputs["D"][i:i+1],
+                "gray": outputs["gray"][i:i+1],
             }
             for stem, image in debug_images.items():
                 self._save_image(image, size, path, dirname=K.DEBUG_DIR, stem=stem)
@@ -155,11 +151,11 @@ def main():
     predictor = DCCNet_Predictor.from_cli(
         prompt=True,
         root=resolve_project_root(current_dir),
-        config_file="pairlie_sice.yaml",
+        config_file="dccnet_lol_v1.yaml",
         task=Task.ENHANCE,
         mode=RunMode.PREDICT,
-        arch="pairlie",
-        model="pairlie",
+        arch="dccnet",
+        model="dccnet",
         device="auto",
         save=True,
         save_debug=True,
@@ -167,6 +163,7 @@ def main():
         verbose=True,
     )
     predictor.predict()
+
 
 if __name__ == "__main__":
     pass

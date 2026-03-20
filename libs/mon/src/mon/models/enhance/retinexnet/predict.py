@@ -68,9 +68,6 @@ class RetinexNet_Predictor(Predictor):
 
         if config.eval_resize:
             imgsz = Size.from_value(config.eval_imgsz)
-            scale_factor = config.model.get("scale_factor")
-            if scale_factor:
-                imgsz = Size(height=imgsz.h // scale_factor, width=imgsz.w // scale_factor)
             resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
             transforms = resize + transforms
 

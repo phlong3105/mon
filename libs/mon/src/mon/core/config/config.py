@@ -46,7 +46,6 @@ from mon.core.typing import (
 from mon.core.ui.prompt_toolkit import ConfirmPrompt, PathPrompt, Prompt
 from mon.core.utils import is_valid_str, merge_dicts, truncate_string
 
-
 # ==============================================================================
 # region CONSTANTS
 # ==============================================================================
@@ -175,7 +174,15 @@ ARGUMENTS = Box({
         "prompt_text": "Device",
     },
     # Prediction
+    "eval_resize": {
+        "default": False,
+        "action": "store_true",
+        "help": "Resize input image during evaluation.",
+        "prompt_only": False,
+        "prompt_text": "Resize?   ",
+    },
     "benchmark": {
+        "default": False,
         "action": "store_true",
         "help": "Enable benchmark mode.",
         "prompt_only": False,
@@ -183,36 +190,42 @@ ARGUMENTS = Box({
     },
     # Saving & Visualization
     "save": {
+        "default": False,
         "action": "store_true",
         "help": "Save results.",
         "prompt_only": False,
         "prompt_text": "Save Result? ",
     },
     "save_debug": {
+        "default": False,
         "action": "store_true",
         "help": "Save debug information.",
         "prompt_only": False,
         "prompt_text": "Save Debug?  ",
     },
     "keep_subdirs": {
+        "default": False,
         "action": "store_true",
         "help": "Keep subdirectories in the ``output_dir``.",
         "prompt_only": False,
         "prompt_text": "Keep Subdirs?",
     },
     "near_src": {
+        "default": False,
         "action": "store_true",
         "help": "Save the results near the source directory.",
         "prompt_only": False,
         "prompt_text": "Near Source? ",
     },
     "exist_ok": {
+        "default": False,
         "action": "store_true",
         "help": "Keep existing directories.",
         "prompt_only": False,
         "prompt_text": "Exist OK?    ",
     },
     "verbose": {
+        "default": False,
         "action": "store_true",
         "help": "Verbose mode.",
         "prompt_only": False,
@@ -299,7 +312,7 @@ class Config:
         "tensorboard_logger": True,
 
         # --- Prediction ---
-        "eval_imgsz": None,
+        "eval_imgsz": False,
         "benchmark": False,
 
         # --- Saving & Visualization ---
@@ -607,6 +620,16 @@ class Config:
         """Set the evaluation image size."""
         if value is not None:
             self._config.eval_imgsz = Size.from_value(value)
+
+    @property
+    def eval_resize(self) -> bool:
+        """Return whether to resize the input image during evaluation."""
+        return self._config.eval_resize
+
+    @eval_resize.setter
+    def eval_resize(self, value: bool):
+        """Set whether to resize the input image during evaluation."""
+        self._config.eval_resize = value
 
     @property
     def benchmark(self) -> bool:
@@ -931,7 +954,8 @@ class Config:
                     self._config[key] = val
 
         self._force_validation(
-            "task", "mode", "arch", "model", "weights", "finetune"
+            "task", "mode", "arch", "model", "weights", "finetune",
+            "eval_resize"
         )
 
     def prepare_for_train(self):
@@ -955,7 +979,8 @@ class Config:
 
         # 1.2. Clean, explicit, and lint-friendly!
         self._force_validation(
-            "config_file", "task", "mode", "arch", "model", "eval_imgsz"
+            "config_file", "task", "mode", "arch", "model",
+            "eval_imgsz", "eval_resize",
         )
 
         # 1.5. Resolve device
@@ -1033,7 +1058,8 @@ class Config:
 
         # 1.2. Clean, explicit, and lint-friendly!
         self._force_validation(
-            "config_file", "task", "mode", "arch", "model", "eval_imgsz"
+            "config_file", "task", "mode", "arch", "model",
+            "eval_imgsz", "eval_resize",
         )
 
         # 1.5. Resolve device
@@ -1176,7 +1202,7 @@ class ConfigContext(Config):
     # --- Container / Sequence Methods ---
     def __len__(self) -> int:
         """Return the total number of interactive steps."""
-        return 17
+        return 18
 
     # --- Creation ---
     @classmethod
@@ -1244,7 +1270,16 @@ class ConfigContext(Config):
         prompt = args.pop("prompt")
         root = args.pop("root") or root or Path.cwd()
         config_file = args.pop("config") or config_file
-        return cls(root=root, config_file=config_file, prompt=prompt, **args)
+
+        # If the argument is not provided or is None, we don't include it in
+        # kwargs to avoid overriding defaults
+        kwargs = {}
+        for k, v in args.items():
+            if v is None or (k in ARGUMENTS and v == ARGUMENTS[k].get("default")):
+                continue
+            kwargs[k] = v
+
+        return cls(root=root, config_file=config_file, prompt=prompt, **kwargs)
 
     # --- Retrieval ---
     def config_for(self, mode: RunModeLike, prompt: bool = False) -> Config:
@@ -1390,48 +1425,56 @@ class ConfigContext(Config):
                 defaults=sys_ctx.get_device(self.device).name,
             )
         if self._index == 9:
+            # Eval Resize
+            if self.mode not in [RunMode.PREDICT]:
+                self._next()
+            self.eval_resize = ConfirmPrompt.ask(
+                prompt=ARGUMENTS.eval_resize.prompt_text,
+                defaults=self.eval_resize,
+            )
+        if self._index == 10:
             # Benchmark
             self.benchmark = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.benchmark.prompt_text,
                 defaults=self.benchmark,
             )
-        if self._index == 10:
+        if self._index == 11:
             # Save
             self.save = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.save.prompt_text,
                 defaults=self.save,
             )
-        if self._index == 11:
+        if self._index == 12:
             # Save Debug
             self.save_debug = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.save_debug.prompt_text,
                 defaults=self.save_debug,
             )
-        if self._index == 12:
+        if self._index == 13:
             # Keep Subdirs
             self.keep_subdirs = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.keep_subdirs.prompt_text,
                 defaults=self.keep_subdirs,
             )
-        if self._index == 13:
+        if self._index == 14:
             # Near Source
             self.near_src = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.near_src.prompt_text,
                 defaults=self.near_src,
             )
-        if self._index == 14:
+        if self._index == 15:
             # Exist OK
             self.exist_ok = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.exist_ok.prompt_text,
                 defaults=self.exist_ok,
             )
-        if self._index == 15:
+        if self._index == 16:
             # Verbose
             self.verbose = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.verbose.prompt_text,
                 defaults=self.verbose,
             )
-        if self._index == 16:
+        if self._index == 17:
             # Finish
             pprint_dict(self.config, title="Input Arguments")
             finish = ConfirmPrompt.ask(prompt="Finish/Re-input", defaults=True)

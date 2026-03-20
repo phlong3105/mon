@@ -213,6 +213,7 @@ class RetinexNet_Trainer(Trainer):
                     self._save_debug(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
 
         # 10. Main loop (Whole)
+        '''
         current_epoch = epochs * 2
         end_epoch = epochs * 2 + 5
         self._init_optimizer(phase="whole")
@@ -253,6 +254,7 @@ class RetinexNet_Trainer(Trainer):
                 # 10.6. Save debug
                 if self.save_debug:
                     self._save_debug(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
+        '''
 
     # --- Training ---
     @override

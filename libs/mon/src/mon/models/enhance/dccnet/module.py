@@ -9,9 +9,7 @@ This module provides various layers, blocks, and modules for the DCC-Net model.
 from __future__ import annotations
 
 __all__ = [
-    "C_Net",
-    "G_Net",
-    "R_Net",
+    "Net",
 ]
 
 import torch
@@ -393,6 +391,23 @@ class G_Net(nn.Module):
                 x = torch.cat([x, shortcuts[index]], 1)
             x = self.Decoder[i](x)
         return x
+
+
+class Net(nn.Module):
+
+    # --- Lifecycle & Initialization ---
+    def __init__(self, d_hist: int = 64):
+        super().__init__()
+        self.g_net = G_Net()
+        self.c_net = C_Net(d_hist=d_hist)
+        self.r_net = R_Net()
+
+    # --- Callable & Context Manager ---
+    def forward(self, image: Tensor) -> tuple[Tensor, Tensor, Tensor]:
+        gray = self.g_net(image)
+        color_hist, color_feature = self.c_net(image)
+        enhanced = self.r_net(image, gray, color_feature)
+        return enhanced, gray, color_hist
 
 # endregion
 

@@ -32,7 +32,8 @@ from prompt_toolkit.styles import Style
 
 from mon.core.path import Path
 from mon.core.typing import PathLike
-from mon.core.utils import truncate_string
+from mon.core.utils import is_scalar, truncate_string
+
 
 # ==============================================================================
 # region TYPE DEFINITIONS
@@ -177,10 +178,10 @@ class PromptBase(Generic[PromptType]):
             if self.multiselect:
                 return
             else:
-                defaults = 0 if self.skip or self.choices else 1
+                defaults = [0] if (self.skip or self.choices) else [1]
 
         # Normalize
-        defaults = [defaults] if not isinstance(defaults,(list, tuple)) else defaults
+        defaults = [defaults] if isinstance(defaults, (int, float, str, Path)) else defaults
         candidates = defaults[:1] if not self.multiselect else defaults
 
         # Free-input mode — store as pre-filled buffer text

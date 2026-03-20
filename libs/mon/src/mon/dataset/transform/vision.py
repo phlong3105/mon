@@ -279,8 +279,8 @@ class ResizeDivisibleBy(DualTransform):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        height: int,
-        width: int,
+        height: int = 0,
+        width: int = 0,
         divisor: int = 1,
         interpolation: int = cv2.INTER_LINEAR,
         mask_interpolation: int = cv2.INTER_NEAREST,

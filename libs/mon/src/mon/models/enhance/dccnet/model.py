@@ -34,7 +34,7 @@ from mon.core import (
     WeightsLike,
 )
 from mon.nn import ModelRegisterMixin
-from .module import C_Net, G_Net, R_Net
+from .module import Net
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -83,9 +83,7 @@ class DCCNet(ModelRegisterMixin, nn.Module):
         self.verbose = verbose
 
         # Define network
-        self.g_net = G_Net()
-        self.c_net = C_Net(d_hist)
-        self.r_net = R_Net()
+        self.module = Net(d_hist=d_hist)
 
         # Load weights
         if is_weights_type(weights):
@@ -108,9 +106,7 @@ class DCCNet(ModelRegisterMixin, nn.Module):
             dict: Dictionary containing the enhanced image tensor and
                 intermediate results for debugging.
         """
-        gray = self.g_net(image)
-        color_hist, color_feature = self.c_net(image)
-        enhanced = self.r_net(image, gray, color_feature)
+        enhanced, gray, color_hist = self.module(image)
 
         # Return final and intermediate results for debugging
         outputs = {
