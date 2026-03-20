@@ -15,6 +15,7 @@ from __future__ import annotations
 __all__ = []
 
 import argparse
+import sys
 
 from mon.core import Path, resolve_project_root, RunMode, Task
 from mon.models.enhance.retinexnet import (
@@ -48,10 +49,11 @@ def main(args: argparse.Namespace):
         trainer.train()
     elif args.predict:
         predictor = RetinexNet_Predictor.from_cli(
+            prompt=True,
             root=resolve_project_root(current_dir),
             config_file=args.config,
             task=Task.ENHANCE,
-            mode=RunMode.TEST,
+            mode=RunMode.PREDICT,
             arch="retinexnet",
             model="retinexnet",
             device="auto",
@@ -66,12 +68,14 @@ def main(args: argparse.Namespace):
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser("main")
+    parser = argparse.ArgumentParser("main1")
     parser.add_argument("--config", type=str, default="retinexnet_lol_v1.yaml")
     parser.add_argument("--train", action="store_true", help="Train the model.")
     parser.add_argument("--test", action="store_true", help="Test the model.")
     parser.add_argument("--predict", action="store_true", help="Predict using the model.")
-    return parser.parse_args()
+    args, remaining = parser.parse_known_args()
+    sys.argv = [sys.argv[0]] + remaining
+    return args
 
 
 if __name__ == "__main__":

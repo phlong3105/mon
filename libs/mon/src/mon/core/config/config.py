@@ -736,8 +736,10 @@ class Config:
 
         # 2. Look for weights files in the global zoo directory
         weights_files += K.ZOO_ROOT.files(
-            f"*{model}*.pt",
-            f"*{model}*.pth",
+            # f"*{model}*.pt",
+            # f"*{model}*.pth",
+            f"*/*/{model}/*/*.pt",
+            f"*/*/{model}/*/*.pth",
             recursive=True
         ) if K.ZOO_ROOT else []
 
@@ -1334,7 +1336,6 @@ class ConfigContext(Config):
                 prompt=ARGUMENTS.config.prompt_text,
                 choices=self.config_files,
                 defaults=self.config_file,
-                truncate_length=60,
                 truncate_side="middle",
                 commonpath=self.root,
                 show_column=True,
@@ -1359,7 +1360,6 @@ class ConfigContext(Config):
                 choices=self.weights_files,
                 defaults=resolve_weights_file(self.root, self.weights.path),
                 skip=True,
-                truncate_length=60,
                 truncate_side="middle",
                 commonpath=self.root,
                 show_column=True,

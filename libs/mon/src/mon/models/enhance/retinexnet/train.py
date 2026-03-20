@@ -390,7 +390,7 @@ class RetinexNet_Trainer(Trainer):
             target = target.to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(image=image)
+            outputs = self.model(image=image, decom=False)
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]

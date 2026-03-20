@@ -27,7 +27,7 @@ from pathlib import (
     PureWindowsPath,
     WindowsPath,
 )
-from typing import Iterable, Literal, Optional
+from typing import Iterable, Literal, Optional, Union
 
 from .dtype import (
     ConfigExtension,
@@ -300,7 +300,7 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
         return self
 
     # --- Mutation ---
-    def append(self, path: "Path" | str):
+    def append(self, path: Union["Path", str]):
         """Append a path to the current path, ensuring no duplicate parts."""
         # If path is empty or None, return self
         if not path:
@@ -418,7 +418,7 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
         return Path(tmp)
 
     # --- Filesystem ---
-    def copy_to(self, dst: "Path" | str, replace: bool = True):
+    def copy_to(self, dst: Union["Path", str], replace: bool = True):
         """Copy the current file to destination.
 
         Args:
