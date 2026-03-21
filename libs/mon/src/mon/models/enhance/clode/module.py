@@ -186,7 +186,7 @@ class NODE(nn.Module):
     ):
         super().__init__()
         self.num_filters = num_filters
-        self.odefunc = EnhanceFunc(num_filters)
+        self.odefunc = EnhanceFunc(num_filters=num_filters)
         self.odeblock = ODEBlock(self.odefunc, tol=tol, adjoint=adjoint)
 
     # --- Callable & Context Manager ---
@@ -203,14 +203,14 @@ class NODE(nn.Module):
 
         if inference:
             return {
-                "output": torch.clamp(pred[:, 0:3, :, :]  - self.odefunc.denoise(pred[:, 0:3, :, :]), 0, 1),
+                "enhanced": torch.clamp(pred[:, 0:3, :, :]  - self.odefunc.denoise(pred[:, 0:3, :, :]), 0, 1),
                 "curve_map": normalize_minmax(curve_map),
                 "noise_map": self.odefunc.denoise(pred[:, 0:3, :, :]),  # normalize_minmax(self.odefunc.denoise(pred[:, 0:3, :, :]), 255),  # self.odefunc.denoise(pred[:, 0:3, :, :]),
                 "all": [torch.clamp(pred[:, 0:3, :, :] - self.odefunc.denoise(pred[:, 0:3, :, :]), 0, 1) for pred in preds],
             }
         else:
             return {
-                "output": pred[:, 0:3, :, :],
+                "enhanced": pred[:, 0:3, :, :],
                 "curve_map": pred[:, 3:6, :, :],
                 "noise_map": pred[:, 6:9, :, :],
             }

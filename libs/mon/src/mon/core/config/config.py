@@ -955,7 +955,6 @@ class Config:
 
         self._force_validation(
             "task", "mode", "arch", "model", "weights", "finetune",
-            "eval_resize"
         )
 
     def prepare_for_train(self):
@@ -979,8 +978,7 @@ class Config:
 
         # 1.2. Clean, explicit, and lint-friendly!
         self._force_validation(
-            "config_file", "task", "mode", "arch", "model",
-            "eval_imgsz", "eval_resize",
+            "config_file", "task", "mode", "arch", "model", "eval_imgsz"
         )
 
         # 1.5. Resolve device
@@ -1058,8 +1056,7 @@ class Config:
 
         # 1.2. Clean, explicit, and lint-friendly!
         self._force_validation(
-            "config_file", "task", "mode", "arch", "model",
-            "eval_imgsz", "eval_resize",
+            "config_file", "task", "mode", "arch", "model", "eval_imgsz"
         )
 
         # 1.5. Resolve device

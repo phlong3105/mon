@@ -32,8 +32,7 @@ from prompt_toolkit.styles import Style
 
 from mon.core.path import Path
 from mon.core.typing import PathLike
-from mon.core.utils import is_scalar, truncate_string
-
+from mon.core.utils import truncate_string
 
 # ==============================================================================
 # region TYPE DEFINITIONS
@@ -955,7 +954,7 @@ class PathPrompt(PromptBase[Path]):
         strict: bool = False,
         skip: bool = False,
         case_sensitive: bool = True,
-        truncate_length: int = os.get_terminal_size().columns,
+        truncate_length: int | None = None,
         truncate_side: Literal["left", "middle", "right"] = "middle",
         commonpath: PathLike | None = None,
         show_default: bool = True,
@@ -988,7 +987,7 @@ class PathPrompt(PromptBase[Path]):
                 ``choices`` is case-sensitive. Defaults to True.
             truncate_length (int, optional): Maximum display length for paths
                 in the choices list and header. None means no truncation.
-                Defaults to the terminal width.
+                Defaults to None.
             truncate_side (Literal["left", "middle", "right"], optional):
                 Which side to truncate on. ``"middle"`` preserves both the
                 root and the filename, which is usually most readable for
@@ -1016,7 +1015,7 @@ class PathPrompt(PromptBase[Path]):
             strict=strict,
             skip=skip,
             case_sensitive=case_sensitive,
-            truncate_length=truncate_length,
+            truncate_length=truncate_length or os.get_terminal_size().columns,
             truncate_side=truncate_side,
             show_default=show_default,
             show_choices=show_choices,
@@ -1036,7 +1035,7 @@ class PathPrompt(PromptBase[Path]):
         strict: bool = False,
         skip: bool = False,
         case_sensitive: bool = True,
-        truncate_length: int = os.get_terminal_size().columns,
+        truncate_length: int | None = None,
         truncate_side: Literal["left", "middle", "right"] = "middle",
         commonpath: PathLike | None = None,
         show_default: bool = True,
@@ -1069,7 +1068,7 @@ class PathPrompt(PromptBase[Path]):
                 ``choices`` is case-sensitive. Defaults to True.
             truncate_length (int, optional): Maximum display length for paths
                 in the choices list and header. None means no truncation.
-                Defaults to the terminal width.
+                Defaults to None.
             truncate_side (Literal["left", "middle", "right"], optional):
                 Which side to truncate on. ``"middle"`` preserves both the
                 root and the filename, which is usually most readable for
