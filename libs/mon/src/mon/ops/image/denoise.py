@@ -146,14 +146,14 @@ def tv_denoise(
     Returns:
         Tensor | ndarray: Denoising image.
     """
-    if isinstance(image, torch.Tensor):
+    if isinstance(image, Tensor):
         # Optional: Add batch dimension if missing (C, H, W) -> (1, C, H, W)
         has_batch = image.ndim == 4
         if not has_batch:
             image = image.unsqueeze(0)
         out = _tv_denoise_torch(image, weight, num_iter)
         return out.squeeze(0) if not has_batch else out
-    elif isinstance(image, np.ndarray):
+    elif isinstance(image, ndarray):
         return _tv_denoise_numpy(image, weight, num_iter)
     else:
         raise TypeError(

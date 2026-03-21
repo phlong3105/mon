@@ -39,12 +39,12 @@ current_dir = current_file.parents[0]
 # ==============================================================================
 
 class CoLIE(ModelRegisterMixin, nn.Module):
-    """ZeroDCE model for low-light image enhancement.
+    """CoLIE model for low-light image enhancement.
 
     References:
-        - Paper: "Zero-Reference Deep Curve Estimation for Low-Light Image
-          Enhancement," CVPR 2020.
-        - Code: https://github.com/Li-Chongyi/Zero-DCE
+        - Paper: "Fast Context-Based Low-Light Image Enhancement via Neural Implicit
+          Representations," ECCV 2024.
+        - Code: https://github.com/ctom2/colie
     """
 
     arch: str = "colie"
