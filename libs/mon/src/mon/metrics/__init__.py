@@ -18,4 +18,5 @@ File Structure:
 from __future__ import annotations
 
 from .complexity import *
+from .depth import *
 from .iqa import *

@@ -9,6 +9,7 @@ This module provides base runner classes.
 from __future__ import annotations
 
 __all__ = [
+    "Evaluator",
     "Runner",
 ]
 
@@ -20,6 +21,7 @@ from torch import nn
 
 from mon.core import (
     Config,
+    DeviceLike,
     DictLike,
     Path,
     PathLike,
@@ -27,6 +29,7 @@ from mon.core import (
     SizeLike,
     Split,
     SplitLike,
+    sys_ctx,
 )
 from mon.dataset import (
     build_dataloader,
@@ -178,6 +181,132 @@ class Runner(ABC):
 
         if config.benchmark:
             benchmark(self.model, imgsz=imgsz)
+
+
+class Evaluator(ABC):
+    """Base class for all evaluators."""
+
+    all_metrics: dict = {}
+
+    # --- Lifecycle & Initialization ---
+    def __init__(
+        self,
+        input_dir: PathLike,
+        target_dir: PathLike | None,
+        result_file: PathLike | None,
+        metrics: list[str],
+        device: DeviceLike,
+        verbose: bool,
+    ):
+        """Initialize a new instance.
+
+        Args:
+            input_dir (PathLike): The directory containing the input data.
+            target_dir (PathLike | None): The directory containing the target
+                data. If None, it will be inferred from the input directory.
+            result_file (PathLike | None): The file to save the evaluation
+                results. If None, results will not be saved.
+            metrics (list[str]): The list of metrics to evaluate.
+            device (DeviceLike): The device to use for evaluation.
+            verbose (bool): Whether to print verbose logs during evaluation.
+        """
+        # Validate inputs
+        if not self.all_metrics:
+            raise NotImplementedError(
+                f"{self.__class__.__name__} must define the 'all_metrics' class "
+                f"attribute."
+            )
+
+        # Assign attributes
+        self.verbose = verbose
+        self.input_dir = input_dir
+        self.target_dir = target_dir
+        self.result_file = result_file
+        self.device = device
+
+        # Allocate resources
+        self._metrics: list[str] = []
+        self._metrics_func: dict = {}
+        self._results = {}
+
+        self._init_metrics(metrics)
+
+    @abstractmethod
+    def _init_metrics(self, metrics: list[str]):
+        """Initialize ``self._metrics`` and ``self._metrics_func`` attributes.``"""
+        pass
+
+    @abstractmethod
+    def _init_dataloader(self) -> DataLoader:
+        """Build a dataloader for the given dataset."""
+        pass
+
+    # --- Properties ---
+    @property
+    def input_dir(self) -> Path:
+        """Return the input directory."""
+        return self._input_dir
+
+    @input_dir.setter
+    def input_dir(self, input_dir: PathLike):
+        """Set the input directory."""
+        self._input_dir = Path(input_dir).normalize()
+
+    @property
+    def target_dir(self) -> Path:
+        """Return the target directory."""
+        return self._target_dir
+
+    @target_dir.setter
+    def target_dir(self, target_dir: PathLike | None):
+        """Set the target directory."""
+        target_dir = Path(target_dir).normalize() if target_dir else None
+        if target_dir:
+            self._target_dir = target_dir
+        else:
+            self._target_dir = self.input_dir.replace_part("/image/", "/target/")
+
+    @property
+    def has_target(self) -> bool:
+        """Check if the dataset has target data."""
+        return self.target_dir is not None and self.target_dir.is_dir()
+
+    @property
+    def metrics(self) -> list[str]:
+        """Return the list of metrics."""
+        return self._metrics
+
+    @property
+    def metrics_func(self) -> dict:
+        """Return the dictionary of metric functions."""
+        return self._metrics_func
+
+    @property
+    def device(self) -> torch.device:
+        """Return the device to use."""
+        return self._device
+
+    @device.setter
+    def device(self, device: DeviceLike):
+        """Set the device to use."""
+        self._device = sys_ctx.get_torch_device(device)
+
+    @property
+    def results(self) -> dict:
+        """Return the dictionary of measured results."""
+        return self._results
+
+    # --- Measure ---
+    @abstractmethod
+    def measure(self):
+        """Run the evaluation."""
+        pass
+
+    # --- Logging ---
+    @abstractmethod
+    def log_results(self):
+        """Log the evaluation results."""
+        pass
 
 # endregion
 
