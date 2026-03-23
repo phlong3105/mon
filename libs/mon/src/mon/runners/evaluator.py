@@ -276,6 +276,7 @@ class IQAEvaluator(Evaluator):
         console.log(f"[bold red]Data  : {self.data}")
         console.log(f"[bold]Device: {self.device}")
 
+    @override
     def log_results(self):
         """Print the measured results."""
         results = self.results
@@ -321,7 +322,7 @@ class DQAEvaluator(Evaluator):
     def __init__(
         self,
         input_dir: PathLike,
-        target_dir: PathLike | None,
+        target_dir: PathLike,
         result_file: PathLike | None,
         arch: str,
         model: str,
@@ -517,6 +518,7 @@ class DQAEvaluator(Evaluator):
         console.log(f"[bold red]Data  : {self.data}")
         console.log(f"[bold]Device: {self.device}")
 
+    @override
     def log_results(self):
         """Print the measured results."""
         results = self.results
