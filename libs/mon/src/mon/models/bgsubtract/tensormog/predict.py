@@ -3,33 +3,21 @@
 
 """Prediction Runners.
 
-This module provides prediction runner classes for Ultralytics YOLOs models.
+This module provides prediction runner classes for TensorMoG models.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "YOLO_Predictor",
+    "TensorMOG_Predictor",
 ]
 
 from typing import Any
 
-import torch
 from typing_extensions import override
 
-from mon.core import (
-    K,
-    MODELS,
-    Path,
-    resolve_project_root,
-    RunMode,
-    Size,
-    SizeLike,
-    Task,
-    TimeProfiler,
-)
+from mon.core import K, MODELS, Path, Size, TimeProfiler
 from mon.dataset import transform as T
-from mon.metrics import benchmark
 from mon.runners import Predictor
 
 current_file = Path(__file__).normalize()
@@ -40,8 +28,8 @@ current_dir = current_file.parents[0]
 # region PREDICTOR
 # ==============================================================================
 
-class YOLO_Predictor(Predictor):
-    """Predictor for Zero-DCE models."""
+class TensorMOG_Predictor(Predictor):
+    """Predictor for TensorMoG models."""
 
     # --- Lifecycle & Initialization ---
     @override
@@ -49,11 +37,16 @@ class YOLO_Predictor(Predictor):
         """Initialize ``self._model`` attribute."""
         config = self.config
         device = self.device
-        weights = config.weights or config.finetune
 
-        model = MODELS.build(**config.model | { "weights": weights})
+        imgsz = config.eval_imgsz
+        model = MODELS.build(
+            **config.model | {
+                "height": imgsz.h,
+                "width": imgsz.w,
+                "device": device,
+            }
+        )
         model = model.to(device)
-        model.eval()
         self._model = model
 
     @override
@@ -61,24 +54,16 @@ class YOLO_Predictor(Predictor):
         """Initialize ``self._transforms`` attribute."""
         config = self.config
 
+        imgsz = Size.from_value(config.eval_imgsz)
         transforms = T.Compose([
+            T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32),
             T.Normalize(normalization="min_max"),
             T.ToTensorV2(transpose_mask=True),
         ])
-
-        if config.eval_resize:
-            imgsz = Size.from_value(config.eval_imgsz)
-            scale_factor = config.model.get("scale_factor")
-            if scale_factor:
-                imgsz = Size(height=imgsz.h // scale_factor, width=imgsz.w // scale_factor)
-            resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-            transforms = resize + transforms
-
         self._transforms = transforms
 
     # --- Prediction ---
     @override
-    @torch.inference_mode()
     def _predict_step(self, datapoint: dict, timers: TimeProfiler) -> dict:
         """Predict the output of the model for a single data point.
 
@@ -90,8 +75,8 @@ class YOLO_Predictor(Predictor):
         Returns:
             dict: The dictionary containing the prediction results.
         """
+        config = self.config
         device = self.device
-        save_debug = self.save_debug
 
         # 1. Prepare inputs
         timers.preprocess.tick()
@@ -99,9 +84,9 @@ class YOLO_Predictor(Predictor):
         image = image.to(device)
         timers.preprocess.tock()
 
-        # 2. Inference
+        # 3. Inference
         timers.infer.tick()
-        outputs = self.model(image, save_debug=save_debug)
+        outputs = self.model(image=image)
         timers.infer.tock()
 
         return outputs
@@ -120,7 +105,7 @@ class YOLO_Predictor(Predictor):
         for i, meta_i in enumerate(meta):
             path = Path(meta_i["path"])
             size = Size.from_value(meta_i["imgsz"])
-            self._save_image(outputs["enhanced"][i:i+1], size, path, dirname=K.PRED_DIR)
+            self._save_image(outputs["background"][i:i+1], size, path, dirname=K.PRED_DIR)
 
     @override
     def _save_debug(self, outputs: dict[str, Any], meta: list[dict[str, Any]]):
@@ -132,26 +117,14 @@ class YOLO_Predictor(Predictor):
             meta (list[dict]): The list of dictionaries containing the metadata
                 for each data point.
         """
-        pass
-
-    # --- Utilities ---
-    @override
-    def benchmark(self, imgsz: SizeLike | None = None):
-        """Run the benchmark for the model.
-
-        Args:
-            imgsz (SizeLike, optional): The input image size for benchmarking.
-                Defaults to None, which means using the default size.
-        """
-        config = self.config
-        imgsz = Size.from_value(imgsz or config.eval_imgsz)
-
-        scale_factor = config.model.get("scale_factor")
-        if scale_factor:
-            imgsz = Size(height=imgsz.h // scale_factor, width=imgsz.w // scale_factor)
-
-        if self.benchmark:
-            benchmark(self.model, imgsz=imgsz)
+        for i, meta_i in enumerate(meta):
+            path = Path(meta_i["path"])
+            size = Size.from_value(meta_i["imgsz"])
+            debug_images = {
+                "foreground": outputs["image_i"][i:i+1],
+            }
+            for stem, image in debug_images.items():
+                self._save_image(image, size, path, dirname=K.DEBUG_DIR, stem=stem)
 
 # endregion
 
@@ -159,23 +132,6 @@ class YOLO_Predictor(Predictor):
 # ==============================================================================
 # region UNIT TEST
 # ==============================================================================
-
-def main():
-    predictor = YOLO_Predictor.from_cli(
-        prompt=True,
-        root=resolve_project_root(current_dir),
-        config_file="zero_dce_sice_me.yaml",
-        task=Task.DETECT,
-        mode=RunMode.PREDICT,
-        arch="zero_dce",
-        model="zero_dce",
-        device="auto",
-        save=True,
-        save_debug=True,
-        exist_ok=True,
-        verbose=True,
-    )
-    predictor.predict()
 
 if __name__ == "__main__":
     pass

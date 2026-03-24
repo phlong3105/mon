@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""Modules.
+
+This module provides various layers, blocks, and modules for the CoLIE model.
+"""
+
 from __future__ import annotations
 
 __all__ = [

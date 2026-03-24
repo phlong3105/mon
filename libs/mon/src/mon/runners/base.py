@@ -144,6 +144,11 @@ class Runner(ABC):
         return self._config
 
     @property
+    def model(self) -> nn.Module:
+        """Return the model object."""
+        return self._model
+
+    @property
     def device(self) -> torch.device:
         """Return the device to use."""
         return self.config.device
@@ -162,11 +167,6 @@ class Runner(ABC):
     def verbose(self) -> bool:
         """Return the verbose flag."""
         return self.config.verbose
-
-    @property
-    def model(self) -> nn.Module:
-        """Return the model object."""
-        return self._model
 
     # --- Utilities ---
     def benchmark(self, imgsz: SizeLike | None = None):

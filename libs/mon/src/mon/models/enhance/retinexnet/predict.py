@@ -17,16 +17,7 @@ from typing import Any
 import torch
 from typing_extensions import override
 
-from mon.core import (
-    K,
-    MODELS,
-    Path,
-    resolve_project_root,
-    RunMode,
-    Size,
-    Task,
-    TimeProfiler,
-)
+from mon.core import K, MODELS, Path, Size, TimeProfiler
 from mon.dataset import transform as T
 from mon.runners import Predictor
 # noinspection PyUnusedImports
@@ -146,23 +137,6 @@ class RetinexNet_Predictor(Predictor):
 # ==============================================================================
 # region UNIT TEST
 # ==============================================================================
-
-def main():
-    predictor = RetinexNet_Predictor.from_cli(
-        prompt=True,
-        root=resolve_project_root(current_dir),
-        config_file="retinexnet_lol_v1.yaml",
-        task=Task.ENHANCE,
-        mode=RunMode.PREDICT,
-        arch="retinexnet",
-        model="retinexnet",
-        device="auto",
-        save=True,
-        save_debug=True,
-        exist_ok=True,
-        verbose=True,
-    )
-    predictor.predict()
 
 if __name__ == "__main__":
     pass

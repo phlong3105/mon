@@ -17,17 +17,7 @@ from typing import Any
 import torch
 from typing_extensions import override
 
-from mon.core import (
-    K,
-    MODELS,
-    Path,
-    resolve_project_root,
-    RunMode,
-    Size,
-    SizeLike,
-    Task,
-    TimeProfiler,
-)
+from mon.core import K, MODELS, Path, Size, SizeLike, TimeProfiler
 from mon.dataset import transform as T
 from mon.metrics import benchmark
 from mon.runners import Predictor
@@ -161,23 +151,6 @@ class ZeroDCE_Predictor(Predictor):
 # ==============================================================================
 # region UNIT TEST
 # ==============================================================================
-
-def main():
-    predictor = ZeroDCE_Predictor.from_cli(
-        prompt=True,
-        root=resolve_project_root(current_dir),
-        config_file="zero_dce_sice_me.yaml",
-        task=Task.ENHANCE,
-        mode=RunMode.PREDICT,
-        arch="zero_dce",
-        model="zero_dce",
-        device="auto",
-        save=True,
-        save_debug=True,
-        exist_ok=True,
-        verbose=True,
-    )
-    predictor.predict()
 
 if __name__ == "__main__":
     pass

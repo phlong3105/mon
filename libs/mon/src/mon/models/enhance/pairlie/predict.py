@@ -17,16 +17,7 @@ from typing import Any
 import torch
 from typing_extensions import override
 
-from mon.core import (
-    K,
-    MODELS,
-    Path,
-    resolve_project_root,
-    RunMode,
-    Size,
-    Task,
-    TimeProfiler,
-)
+from mon.core import K, MODELS, Path, Size, TimeProfiler
 from mon.dataset import transform as T
 from mon.runners import Predictor
 # noinspection PyUnusedImports
@@ -147,23 +138,6 @@ class PairLIE_Predictor(Predictor):
 # ==============================================================================
 # region UNIT TEST
 # ==============================================================================
-
-def main():
-    predictor = PairLIE_Predictor.from_cli(
-        prompt=True,
-        root=resolve_project_root(current_dir),
-        config_file="pairlie_sice.yaml",
-        task=Task.ENHANCE,
-        mode=RunMode.PREDICT,
-        arch="pairlie",
-        model="pairlie",
-        device="auto",
-        save=True,
-        save_debug=True,
-        exist_ok=True,
-        verbose=True,
-    )
-    predictor.predict()
 
 if __name__ == "__main__":
     pass

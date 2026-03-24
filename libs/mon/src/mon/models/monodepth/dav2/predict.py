@@ -28,12 +28,9 @@ from mon.core import (
     MODELS,
     Path,
     PathLike,
-    resolve_project_root,
-    RunMode,
     Size,
     Split,
     SplitLike,
-    Task,
     TimeProfiler,
 )
 from mon.dataset import build_dataset, DataLoader, Dataset, transform as T
@@ -165,24 +162,6 @@ class DAV2_Predictor(Predictor):
 # ==============================================================================
 # region UNIT TEST
 # ==============================================================================
-
-def main():
-    """Unit test for DAV2_Predictor."""
-    predictor = DAV2_Predictor.from_cli(
-        prompt=True,
-        root=resolve_project_root(current_dir),
-        config_file="dav2_vitb_da2k.yaml",
-        task=Task.MONODEPTH,
-        mode=RunMode.PREDICT,
-        arch="dav2",
-        model="dav2_vitb",
-        device="auto",
-        save=True,
-        exist_ok=True,
-        verbose=True,
-    )
-    predictor.predict()
-
 
 if __name__ == "__main__":
     pass

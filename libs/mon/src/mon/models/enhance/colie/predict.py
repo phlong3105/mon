@@ -16,15 +16,7 @@ from typing import Any
 
 from typing_extensions import override
 
-from mon.core import (
-    K,
-    Path,
-    resolve_project_root,
-    RunMode,
-    Size,
-    Task,
-    TimeProfiler,
-)
+from mon.core import K, Path, Size, TimeProfiler
 from mon.dataset import transform as T
 from mon.runners import Predictor
 from .model import colie
@@ -134,24 +126,6 @@ class CoLIE_Predictor(Predictor):
 # ==============================================================================
 # region UNIT TEST
 # ==============================================================================
-
-def main():
-    """Unit test for CoLIE_Predictor."""
-    predictor = CoLIE_Predictor.from_cli(
-        prompt=True,
-        root=resolve_project_root(current_dir),
-        config_file="colie.yaml",
-        task=Task.ENHANCE,
-        mode=RunMode.PREDICT,
-        arch="colie",
-        model="colie",
-        device="auto",
-        save=True,
-        exist_ok=True,
-        verbose=True,
-    )
-    predictor.predict()
-
 
 if __name__ == "__main__":
     pass
