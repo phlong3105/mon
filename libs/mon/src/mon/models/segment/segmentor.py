@@ -32,12 +32,6 @@ from mon.core import (
     WeightsLike,
 )
 
-try:
-    import ultralytics
-except ImportError:
-    raise ImportError("Please install 'ultralytics' first.")
-
-
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
 

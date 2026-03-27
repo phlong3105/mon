@@ -17,7 +17,14 @@ import torch
 from rich.progress import Progress
 from typing_extensions import override
 
-from mon.core import OPTIMIZERS, Path, resolve_project_root, RunMode, Task
+from mon.core import (
+    OPTIMIZERS,
+    Path,
+    resolve_project_root,
+    RunMode,
+    Task,
+    TRAINERS,
+)
 from mon.ops import normalize_minmax
 from mon.runners import Trainer
 from . import loss as L
@@ -31,6 +38,7 @@ current_dir = current_file.parents[0]
 # region TRAINER
 # ==============================================================================
 
+@TRAINERS.register(name="slice")
 class SLICE_Trainer(Trainer):
     """Trainer for SLICE models."""
 
@@ -260,7 +268,7 @@ def main():
     trainer = SLICE_Trainer.from_cli(
         root=resolve_project_root(current_dir),
         config_file="slice_sice_me.yaml",
-        task=Task.ENHANCE,
+        task=Task.LLIE,
         mode=RunMode.TRAIN,
         arch="slice",
         model="slice",

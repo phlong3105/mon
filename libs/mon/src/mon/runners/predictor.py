@@ -37,7 +37,12 @@ from mon.core import (
     TensorOrArray,
     TimeProfiler,
 )
-from mon.dataset import build_dataloader, DataLoader, Dataset, transform as T
+from mon.dataset import (
+    build_dataloader,
+    DataLoader,
+    Dataset,
+    transform as T,
+)
 from mon.ops import to_image_array, write_image
 from .base import Runner
 
@@ -75,7 +80,6 @@ class Predictor(Runner, ABC):
         self,
         source: DictLike | PathLike,
         split: SplitLike = Split.TEST,
-        transforms: T.Compose | None = None,
     ) -> tuple[str, Dataset | DataLoader]:
         """Initialize and return a dataset or dataloader.
 
@@ -84,21 +88,27 @@ class Predictor(Runner, ABC):
                 dictionary or a source path.
             split (SplitLike, optional): The data split to use.
                 Defaults to Split.TEST.
-            transforms (T.Compose, optional): The data transformations to apply.
-                Defaults to None.
 
         Returns:
             tuple[str, Dataset | DataLoader]: A tuple containing the name of the
                 dataset/dataloader and the dataset/dataloader object itself.
         """
+        # Apply pre-processing transforms inside the dataset or dataloader
         return build_dataloader(
             src=source,
             dataset_dir=self.config.data_dir,
             split=split,
-            transforms=transforms,
+            transforms=self.transforms,
+            keep_original=self.keep_original,
+            batch_size=1,
         )
 
     # --- Properties ---
+    @property
+    def keep_original(self) -> bool:
+        """Whether to keep the original data alongside the transformed data."""
+        return False
+
     @property
     def transforms(self) -> T.Compose | None:
         """Return the transforms object."""
@@ -178,9 +188,7 @@ class Predictor(Runner, ABC):
         config = self.config
 
         # 1. Build dataset
-        data_name, dataloader = self._init_data(
-            source=data, split=Split.TEST, transforms=self.transforms,
-        )
+        data_name, dataloader = self._init_data(source=data, split=Split.TEST)
 
         # 2. Main processing loop
         task = pbar.add_task(
@@ -191,13 +199,12 @@ class Predictor(Runner, ABC):
             # 2.1. Predict step
             outputs = self._predict_step(datapoint=datapoint, timers=timers)
 
-            # 2.2. Post-process
+            # 2.2. Save results
             timers.postprocess.tick()
-            meta = datapoint["meta"]
             if self.save:
-                self._save(outputs=outputs, meta=meta)
+                self._save(datapoint=datapoint, outputs=outputs)
             if self.save_debug:
-                self._save_debug(outputs=outputs, meta=meta)
+                self._save_debug(datapoint=datapoint, outputs=outputs)
             timers.postprocess.tock()
 
             pbar.update(task, advance=1)
@@ -221,26 +228,24 @@ class Predictor(Runner, ABC):
 
     # --- Output ---
     @abstractmethod
-    def _save(self, outputs: dict[str, Any], meta: list[dict[str, Any]]):
+    def _save(self, datapoint: dict[str, Any], outputs: dict[str, Any]):
         """Save the main prediction results to a file.
 
         Args:
+            datapoint (dict): The dictionary containing the input data.
             outputs (dict): The dictionary containing the main prediction results.
                 Each key in the dictionary is a batched of prediction results.
-            meta (list[dict]): The list of dictionaries containing the metadata
-                for each data point.
         """
         pass
 
     @abstractmethod
-    def _save_debug(self, outputs: dict[str, Any], meta: list[dict[str, Any]]):
+    def _save_debug(self, datapoint: dict[str, Any], outputs: dict[str, Any]):
         """Save debugging results for visualization.
 
         Args:
+            datapoint (dict): The dictionary containing the input data.
             outputs (dict): The dictionary containing the main prediction results.
                 Each key in the dictionary is a batched of prediction results.
-            meta (list[dict]): The list of dictionaries containing the metadata
-                for each data point.
         """
         pass
 

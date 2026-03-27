@@ -36,7 +36,7 @@ class FiveK(ImageDataset, DatasetRegisterMixin):
     """FiveK dataset."""
 
     name: str = "fivek"
-    tasks: list[Task] = [Task.ENHANCE]
+    tasks: list[Task] = [Task.LLIE]
     dirname: str = "fivek"
     subdir: str = ""
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
@@ -58,7 +58,7 @@ class FiveK_A(ImageDataset, DatasetRegisterMixin):
     """FiveK-A dataset."""
 
     name: str = "fivek_a"
-    tasks: list[Task] = [Task.ENHANCE]
+    tasks: list[Task] = [Task.LLIE]
     dirname: str = "fivek"
     subdir: str = ""
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
@@ -75,7 +75,7 @@ class FiveK_B(ImageDataset, DatasetRegisterMixin):
     """FiveK-B dataset."""
 
     name: str = "fivek_b"
-    tasks: list[Task] = [Task.ENHANCE]
+    tasks: list[Task] = [Task.LLIE]
     dirname: str = "fivek"
     subdir: str = ""
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
@@ -92,7 +92,7 @@ class FiveK_C(ImageDataset, DatasetRegisterMixin):
     """FiveK-C dataset."""
 
     name: str = "fivek_c"
-    tasks: list[Task] = [Task.ENHANCE]
+    tasks: list[Task] = [Task.LLIE]
     dirname: str = "fivek"
     subdir: str = ""
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
@@ -109,7 +109,7 @@ class FiveK_D(ImageDataset, DatasetRegisterMixin):
     """FiveK-D dataset."""
 
     name: str = "fivek_d"
-    tasks: list[Task] = [Task.ENHANCE]
+    tasks: list[Task] = [Task.LLIE]
     dirname: str = "fivek"
     subdir: str = ""
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
@@ -126,7 +126,7 @@ class FiveK_E(ImageDataset, DatasetRegisterMixin):
     """FiveK-E dataset."""
 
     name: str = "fivek_e"
-    tasks: list[Task] = [Task.ENHANCE]
+    tasks: list[Task] = [Task.LLIE]
     dirname: str = "fivek"
     subdir: str = ""
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]

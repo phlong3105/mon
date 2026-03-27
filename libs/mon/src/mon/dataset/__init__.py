@@ -48,6 +48,7 @@ def build_dataset(
     dataset_dir: PathLike | None = None,
     cwd: PathLike | None = None,
     transforms: ComposeLike | None = None,
+    keep_original: bool = False,
     verbose: bool = False,
     *args, **kwargs
 ) -> tuple[str | None, Dataset | None]:
@@ -63,6 +64,8 @@ def build_dataset(
             dataset directory from. Defaults to None.
         transforms (ComposeLike, optional): Transformations to apply.
             Defaults to None.
+        keep_original (bool, optional): Whether to keep the original data
+            alongside the transformed data. Defaults to False.
         verbose (bool, optional): Verbosity mode. Defaults to False.
         *args: Additional positional arguments for ``Dataset`` constructor.
         **kwargs: Additional keyword arguments for ``Dataset`` constructor.
@@ -87,6 +90,12 @@ def build_dataset(
         )
 
     # Build the corresponding Dataset instance
+    config = kwargs | {
+        "transforms": transforms,
+        "keep_original": keep_original,
+        "verbose": verbose,
+    }
+
     src = Path(src).normalize()
 
     # 2.1. If src is a registered dataset name, use the corresponding class
@@ -96,29 +105,17 @@ def build_dataset(
             dataset_name=src.name,
             data_root=dataset_dir or cwd
         )
-        config = kwargs | {
-            "root": dataset_dir,
-            "transforms": transforms,
-            "verbose": verbose,
-        }
+        config["root"] = dataset_dir
         return src.name, module.from_config(config)
 
     # 2.2. If src is a directory of images, build an ImageDataset
     if src.is_dir() or src.is_image_file():
-        config = kwargs | {
-            "root": src,
-            "transforms": transforms,
-            "verbose": verbose,
-        }
+        config["root"] = src
         return src.name, ImageOnlyDataset.from_config(config)
 
     # 2.3. If src is a video file, build a VideoOnlyDataset
     if src.is_video_file():
-        config = kwargs | {
-            "root": src,
-            "transforms": transforms,
-            "verbose": verbose,
-        }
+        config["root"] = src
         return src.name, VideoOnlyDataset.from_config(config)
 
     # 3. If neither is a dataset nor a dataloader config dict, return None
@@ -133,6 +130,7 @@ def build_dataloader(
     dataset_dir: PathLike | None = None,
     cwd: PathLike | None = None,
     transforms: ComposeLike | None = None,
+    keep_original: bool = False,
     batch_size: int = 1,
     verbose: bool = False,
     *args, **kwargs
@@ -148,6 +146,8 @@ def build_dataloader(
             dataset directory from. Defaults to None.
         transforms (ComposeLike, optional): Transformations to apply.
             Defaults to None.
+        keep_original (bool, optional): Whether to keep the original data
+            alongside the transformed data. Defaults to False.
         batch_size (int, optional): Batch size for the dataloader. Defaults to 1.
         verbose (bool, optional): Verbosity mode. Defaults to False.
         *args: Additional positional arguments for ``Dataset`` constructor.
@@ -172,6 +172,7 @@ def build_dataloader(
             cwd=cwd,
             split=split,
             transforms=transforms,
+            keep_original=keep_original,
             verbose=verbose,
             *args, **kwargs
         )

@@ -39,7 +39,7 @@ class LOLv1(ImageDataset, DatasetRegisterMixin):
     """LOL-v1 dataset."""
 
     name: str = "lol_v1"
-    tasks: list[Task] = [Task.ENHANCE]
+    tasks: list[Task] = [Task.LLIE]
     dirname: str = "lol_v1"
     subdir: str = ""
     splits: list[Split] = [Split.TRAIN, Split.TEST]
@@ -56,7 +56,7 @@ class LOLv2Real(ImageDataset, DatasetRegisterMixin):
     """LOL-v2-Real dataset."""
 
     name: str = "lol_v2_real"
-    tasks: list[Task] = [Task.ENHANCE]
+    tasks: list[Task] = [Task.LLIE]
     dirname: str = "lol_v2"
     subdir: str = "real"
     splits: list[Split] = [Split.TRAIN, Split.TEST]
@@ -73,7 +73,7 @@ class LOLv2Syn(ImageDataset, DatasetRegisterMixin):
     """LOL-v2-Synthetic dataset."""
 
     name: str = "lol_v2_real"
-    tasks: list[Task] = [Task.ENHANCE]
+    tasks: list[Task] = [Task.LLIE]
     dirname: str = "lol_v2"
     subdir: str = "syn"
     splits: list[Split] = [Split.TRAIN, Split.TEST]

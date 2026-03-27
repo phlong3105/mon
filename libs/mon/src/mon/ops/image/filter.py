@@ -191,43 +191,43 @@ class FastGuidedFilter(nn.Module):
         self.box_filter = BoxFilter(r)
 
     # --- Callable & Context Manager ---
-    def forward(self, lr_x: Tensor, lr_y: Tensor, hr_x: Tensor) -> Tensor:
+    def forward(self, x_lr: Tensor, y_lr: Tensor, y_hr: Tensor) -> Tensor:
         """Apply the guided filter to an image pair.
 
         Args:
-            lr_x (Tensor): Low-resolution guidance image tensor of shape
+            x_lr (Tensor): Low-resolution input image tensor of shape
                 (B, C, H0, W0) and values ranging from 0.0 to 1.0.
-            lr_y (Tensor): Low-resolution input image tensor of shape
+            y_lr (Tensor): Low-resolution guidance image tensor of shape
                 (B, C, H0, W0) and values ranging from 0.0 to 1.0.
-            hr_x (Tensor): High-resolution guidance image tensor of shape
+            y_hr (Tensor): High-resolution guidance image tensor of shape
                 (B, C, H1, W1) and values ranging from 0.0 to 1.0.
 
         Returns:
             Tensor: The filtered high-resolution image tensor of shape
                 (B, C, H1, W1) and values ranging from 0.0 to 1.0.
         """
-        n_lrx, c_lrx, h_lrx, w_lrx = lr_x.size()
-        n_lry, c_lry, h_lry, w_lry = lr_y.size()
-        n_hrx, c_hrx, h_hrx, w_hrx = hr_x.size()
+        n_x_lr, c_x_lr, h_x_lr, w_x_lr = x_lr.size()
+        n_y_lr, c_y_lr, h_y_lr, w_y_lr = y_lr.size()
+        n_y_hr, c_y_hr, h_y_hr, w_y_hr = y_hr.size()
 
-        assert n_lrx == n_lry and n_lry == n_hrx
-        assert c_lrx == c_hrx and (c_lrx == 1 or c_lrx == c_lry)
-        assert h_lrx == h_lry and w_lrx == w_lry
-        assert h_lrx > 2 * self.r + 1 and w_lrx > 2 * self.r + 1
+        assert n_y_lr == n_x_lr and n_x_lr == n_y_hr
+        assert c_y_lr == c_y_hr and (c_y_lr == 1 or c_y_lr == c_x_lr)
+        assert h_y_lr == h_x_lr and w_y_lr == w_x_lr
+        assert h_y_lr > 2 * self.r + 1 and w_y_lr > 2 * self.r + 1
 
-        N = self.box_filter(Variable(lr_x.data.new().resize_((1, 1, h_lrx, w_lrx)).fill_(1.0)))
-        mean_x = self.box_filter(lr_x) / N
-        mean_y = self.box_filter(lr_y) / N
-        cov_xy = self.box_filter(lr_x * lr_y) / N - mean_x * mean_y
-        var_x  = self.box_filter(lr_x * lr_x) / N - mean_x * mean_x
+        N = self.box_filter(Variable(y_lr.data.new().resize_((1, 1, h_y_lr, w_y_lr)).fill_(1.0)))
+        mean_x = self.box_filter(x_lr) / N
+        mean_y = self.box_filter(y_lr) / N
+        cov_xy = self.box_filter(y_lr * x_lr) / N - mean_y * mean_x
+        var_y  = self.box_filter(y_lr * y_lr) / N - mean_y * mean_y
 
-        A = cov_xy / (var_x + self.eps)
-        b = mean_y - A * mean_x
+        A = cov_xy / (var_y + self.eps)
+        b = mean_x - A * mean_y
 
-        mean_A = F.interpolate(A, (h_hrx, w_hrx), mode="bilinear", align_corners=True)
-        mean_b = F.interpolate(b, (h_hrx, w_hrx), mode="bilinear", align_corners=True)
+        mean_A = F.interpolate(A, (h_y_hr, w_y_hr), mode="bilinear", align_corners=True)
+        mean_y = F.interpolate(b, (h_y_hr, w_y_hr), mode="bilinear", align_corners=True)
 
-        return mean_A * hr_x + mean_b
+        return mean_A * y_hr + mean_y
 
 # endregion
 

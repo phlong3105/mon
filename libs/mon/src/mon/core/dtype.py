@@ -181,19 +181,49 @@ class Task(MultiStrEnum):
     # --- Neural Networks ---
     BACKBONE = "backbone"
 
-    # --- Generative AI ---
-    IMG2IMG = "img2img"        # Image-to-Image Translation
-
     # --- Computer Vision ---
-    BGSUBTRACT = "bgsubtract"  # Background Subtraction
-    CLASSIFY = "classify"      # Classification
-    DETECT = "detect"          # Object Detection
-    ENHANCE = "enhance"        # Image Enhancement
-    MONODEPTH = "monodepth"    # Monocular-Depth Estimation
+    # -- Low-Level --
+    # Restoration
+    DEBLUR = "deblur"          # Deblurring
+    DEHAZE = "dehaze"          # Dehazing
+    DEMOIRE = "demoire"        # Demoireing
+    DEMOSAIC = "demosaic"      # Demosaicing
+    DENOISE = "denoise"        # Denoising
+    DERAIN = "derain"          # Deraining
+    DESNOW = "desnow"          # Desnowing
+    INPAINT = "inpaint"        # Image Inpainting
+    SUPER_RES = "super_res"    # Super-Resolution
+
+    # Enhancement
+    CC = "cc"                  # Color Correction
+    CE = "ce"                  # Contrast Enhancement
+    COLORIZATION = "colorization"
+    LLIE = "llie"              # Low-Light Image Enhancement
+    RETOUCH = "retouch"        # Image Retouching
+    SHARPEN = "sharpen"        # Image Sharpening
+    STYLE_TRANSFER = "style_transfer"
+    TONE_MAPPING = "tone_mapping"
+
+    # Joint Restoration & Enhancement
+    EXPOSURE = "exposure"      # Exposure Correction
+    FUSION = "fusion"          # Image Fusion
+
+    # -- Mid-Level --
+    # Keypoint
     POSE = "pose"              # Pose Estimation
-    RESTORE = "restore"        # Image Restoration
+
+    BGSUBTRACT = "bgsubtract"  # Background Subtraction
+    MONODEPTH = "monodepth"    # Monocular-Depth Estimation
+    OPTICAL_FLOW = "optical_flow"
     SEGMENT = "segment"        # Semantic Segmentation
     TRACK = "track"            # Tracking
+
+    # -- High-Level --
+    CLASSIFY = "classify"      # Classification
+    DETECT = "detect"          # Object Detection
+
+    # --- Generative AI ---
+    IMG2IMG = "img2img"        # Image-to-Image Translation
 
 
 class Precision(MultiStrEnum):

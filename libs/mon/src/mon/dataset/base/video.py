@@ -67,6 +67,7 @@ class VideoOnlyDataset(
         dirname: str = "",
         subdir: str = "",
         transforms: Compose | None = None,
+        keep_original: bool = False,
         modalities: ModalityList | None = None,
         classes: ClassList | None = None,
         verbose: bool = True,
@@ -87,6 +88,8 @@ class VideoOnlyDataset(
                 overrides the class-level default. Defaults to "".
             transforms (Compose, optional): Transformations to apply.
                 Defaults to None.
+            keep_original (bool, optional): Whether to keep the original data
+                in the datapoint dictionary. If True, the original data will be
             modalities (ModalityList, optional): A list of ``Modality``
                 definitions. By default, the first modality is considered the
                 primary one. If provided, it overrides the class-level default.
@@ -110,6 +113,7 @@ class VideoOnlyDataset(
             dirname=dirname,
             subdir=subdir,
             transforms=transforms,
+            keep_original=keep_original,
             modalities=modalities,
             classlist=classes,
             verbose=verbose,

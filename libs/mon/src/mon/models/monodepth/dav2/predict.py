@@ -18,6 +18,8 @@ __all__ = [
     "DAV2_Predictor",
 ]
 
+from typing import Any
+
 import numpy as np
 import torch
 from typing_extensions import override
@@ -28,6 +30,7 @@ from mon.core import (
     MODELS,
     Path,
     PathLike,
+    PREDICTORS,
     Size,
     Split,
     SplitLike,
@@ -45,6 +48,7 @@ current_dir = current_file.parents[0]
 # region PREDICTOR
 # ==============================================================================
 
+@PREDICTORS.register(name="dav2")
 class DAV2_Predictor(Predictor):
     """Predictor for DAV2 models."""
 
@@ -130,13 +134,15 @@ class DAV2_Predictor(Predictor):
 
     # --- Output ---
     @override
-    def _save(self, outputs: dict, meta: dict):
+    def _save(self, datapoint: dict[str, Any], outputs: dict[str, Any]):
         """Save the main prediction results to a file.
 
         Args:
+            datapoint (dict): The dictionary containing the input data.
             outputs (dict): The dictionary containing the main prediction results.
-            meta (dict): The dictionary containing the metadata.
+                Each key in the dictionary is a batched of prediction results.
         """
+        meta = datapoint["meta"]
         path = Path(meta["path"])
         size = Size.from_value(meta["imgsz"])
         depth = outputs["depth"]
@@ -144,13 +150,15 @@ class DAV2_Predictor(Predictor):
         self._save_image(depth, size, path, dirname=K.PRED_DIR)
 
     @override
-    def _save_debug(self, outputs: dict, meta: dict):
+    def _save_debug(self, datapoint: dict[str, Any], outputs: dict[str, Any]):
         """Save debugging results for visualization.
 
         Args:
-            outputs (dict): The dictionary containing the debugging results.
-            meta (dict): The dictionary containing the metadata.
+            datapoint (dict): The dictionary containing the input data.
+            outputs (dict): The dictionary containing the main prediction results.
+                Each key in the dictionary is a batched of prediction results.
         """
+        meta = datapoint["meta"]
         path = Path(meta["path"])
         size = Size.from_value(meta["imgsz"])
         depth_c = vis_heatmap(outputs["depth"], colormap="Spectral_r")

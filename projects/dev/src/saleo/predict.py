@@ -20,6 +20,7 @@ from mon.core import (
     K,
     MODELS,
     Path,
+    PREDICTORS,
     resolve_project_root,
     RunMode,
     Size,
@@ -39,6 +40,7 @@ current_dir = current_file.parents[0]
 # region PREDICTOR
 # ==============================================================================
 
+@PREDICTORS.register(name="saleo")
 class SALEO_Predictor(Predictor):
     """Predictor for SALEO models."""
 
@@ -106,30 +108,30 @@ class SALEO_Predictor(Predictor):
 
     # --- Output ---
     @override
-    def _save(self, outputs: dict[str, Any], meta: list[dict[str, Any]]):
+    def _save(self, datapoint: dict[str, Any], outputs: dict[str, Any]):
         """Save the main prediction results to a file.
 
         Args:
+            datapoint (dict): The dictionary containing the input data.
             outputs (dict): The dictionary containing the main prediction results.
                 Each key in the dictionary is a batched of prediction results.
-            meta (list[dict]): The list of dictionaries containing the metadata
-                for each data point.
         """
+        meta = datapoint["meta"]
         for i, meta_i in enumerate(meta):
             path = Path(meta_i["path"])
             size = Size.from_value(meta_i["imgsz"])
             self._save_image(outputs["enhanced"][i:i+1], size, path)
 
     @override
-    def _save_debug(self, outputs: dict[str, Any], meta: list[dict[str, Any]]):
-        """Save the main prediction results to a file.
+    def _save_debug(self, datapoint: dict[str, Any], outputs: dict[str, Any]):
+        """Save debugging results for visualization.
 
         Args:
+            datapoint (dict): The dictionary containing the input data.
             outputs (dict): The dictionary containing the main prediction results.
                 Each key in the dictionary is a batched of prediction results.
-            meta (list[dict]): The list of dictionaries containing the metadata
-                for each data point.
         """
+        meta = datapoint["meta"]
         for i, meta_i in enumerate(meta):
             path = Path(meta_i["path"])
             size = Size.from_value(meta_i["imgsz"])
@@ -155,7 +157,7 @@ def main():
         prompt=True,
         root=resolve_project_root(current_dir),
         config_file="saleo_ffsiren.yaml",
-        task=Task.ENHANCE,
+        task=Task.LLIE,
         mode=RunMode.PREDICT,
         arch="saleo",
         model="saleo_ffsiren",

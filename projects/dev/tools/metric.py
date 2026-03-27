@@ -74,7 +74,7 @@ def measure():
                     arch=arch,
                     model=model,
                     data=data,
-                    metric=metrics,
+                    metrics=metrics,
                     device="cuda:0",
                     resize=False,
                     verbose=True,

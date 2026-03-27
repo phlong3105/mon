@@ -46,6 +46,7 @@ train_dataloader:
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
       seed: ~
+    keep_original: False  # (bool) Keep the original data along with augmented ones.
     modalities: ~
     classes: ~
     verbose: True
@@ -68,6 +69,7 @@ val_dataloader:
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
       seed: ~
+    keep_original: False  # (bool) Keep the original data along with augmented ones.
     modalities: ~
     classes: ~
     verbose: True
@@ -75,8 +77,6 @@ val_dataloader:
   shuffle: False  # (bool) Shuffle the data each epoch.
   num_workers: 1  # (int) Number of workers for data loading.
   drop_last: False  # (bool) Drop the last incomplete batch.
-
-data: ~  # (list[str]) List of data names or paths for prediction.
 
 # --- Training ---
 epochs: 100  # (int) Number of epochs to train.
@@ -108,6 +108,9 @@ tensorboard_logger: True
 
 # --- Prediction ---
 eval_T: 3.0
+
+data: ~  # (list[str]) List of data names or paths for prediction.
+
 eval_imgsz: 256  # (int | list[int]) Image size for evaluation.
 eval_resize: False  # (bool) Resize the image to the evaluation size.
 benchmark: False  # (bool) Benchmark the model.

@@ -57,7 +57,7 @@ class SICE(ImageDataset, DatasetRegisterMixin):
     """SICE dataset."""
 
     name: str = "sice"
-    tasks: list[Task] = [Task.ENHANCE]
+    tasks: list[Task] = [Task.LLIE]
     dirname: str = "sice"
     subdir: str = "sice"
     splits: list[Split] = [Split.TRAIN, Split.TEST]
@@ -76,7 +76,7 @@ class SICE_LR(ImageDataset, DatasetRegisterMixin):
     """SICE-LR dataset."""
 
     name: str = "sice_lr"
-    tasks: list[Task] = [Task.ENHANCE]
+    tasks: list[Task] = [Task.LLIE]
     dirname: str = "sice"
     subdir: str = "sice_lr"
     splits: list[Split] = [Split.TRAIN, Split.TEST]
@@ -99,7 +99,7 @@ class SICE_ME(ImageDataset, DatasetRegisterMixin):
     """
 
     name: str = "sice_me"
-    tasks: list[Task] = [Task.ENHANCE]
+    tasks: list[Task] = [Task.LLIE]
     dirname: str = "sice"
     subdir: str = "me"
     splits: list[Split] = [Split.TRAIN, Split.VAL]

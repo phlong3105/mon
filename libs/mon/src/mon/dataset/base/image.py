@@ -15,6 +15,7 @@ __all__ = [
     "ImageOnlyDataset",
 ]
 
+import copy
 import glob
 from abc import ABC
 from typing import Any, override
@@ -49,19 +50,32 @@ from .mixins import DatasetCollationMixin
 class AlbumentationsDataset(Dataset, ABC):
     """Base class for datasets that use albumentations for transformations."""
 
+    transformed_suffix: str = "T"
+
     # --- Lifecycle & Initialization ---
-    def __init__(self, transforms: Compose | None = None, *args, **kwargs):
+    def __init__(
+        self,
+        transforms: Compose | None = None,
+        keep_original: bool = False,
+        *args, **kwargs
+    ):
         """Initialize a new instance.
 
         Args:
             transforms (Compose, optional): Transformations to apply.
                 Defaults to None.
+            keep_original (bool, optional): Whether to keep the original data
+                alongside the transformed ones. Defaults to False.
             *args: Positional arguments for ``Dataset`` constructor.
             **kwargs: Keyword arguments for ``Dataset`` constructor.
         """
         super().__init__(*args, **kwargs)
         # Assign attributes
         self.transforms = transforms
+        self.keep_original = keep_original
+
+        # Initialize basic transformations
+        self.basic_transforms = self.transforms
 
     # --- Container / Sequence Methods ---
     @override
@@ -79,13 +93,20 @@ class AlbumentationsDataset(Dataset, ABC):
         datapoint = self.get_underlying_data(index=index)
 
         # 2. Apply transformations
-        compose = self.transforms
-        if compose:
-            # Create a dictionary of transformable items by filtering out None
-            # values
+        transforms = self.transforms
+        if transforms:
+            # Create a dictionary of transformable items by filtering out None values
             kv = {k: v for k, v in datapoint.items() if v is not None}
             # Apply transformations
-            transformed = compose(**kv)
+            transformed = transforms(**kv)
+
+            if self.keep_original:
+                # Add the transformed items with a suffix to their keys (e.g., 'image' -> 'image_T')
+                transformed = {f"{k}_{self.transformed_suffix}": v for k, v in transformed.items()}
+                # Apply basic transformations to the original data
+                basic_transforms = self.basic_transforms
+                transformed |= basic_transforms(**kv)
+
             # Update the datapoint with the transformed values
             datapoint.update(transformed)
 
@@ -93,25 +114,49 @@ class AlbumentationsDataset(Dataset, ABC):
 
     # --- Properties ---
     @property
+    def basic_transforms(self) -> Compose | None:
+        """Return the basic transformations.
+
+        This is used when ``self.keep_original`` is True to transform the
+        original data without modifying it (i.e., Normalize and ToTensor).
+        """
+        return self._basic_transforms
+
+    @basic_transforms.setter
+    def basic_transforms(self, value: Compose | None):
+        """Set the basic transformations."""
+        # Make a copy of the Compose object to avoid modifying the original one
+        value = copy.deepcopy(value)
+
+        # Keep only basic transformations (e.g., Normalize and ToTensor)
+        if isinstance(value, Compose):
+            # Only keep Normalize and ToTensor
+            for t in value.transforms:
+                if t.__class__.__name__ not in ["Normalize", "ToTensorV2"]:
+                    value.transforms.remove(t)
+
+        self._basic_transforms = value
+
+    @property
     def transforms(self) -> Compose | None:
         """Return the transformation operations."""
         return self._transforms
 
     @transforms.setter
-    def transforms(self, transforms: Compose | None):
+    def transforms(self, value: Compose | None):
         """Set the transformation operations.
 
         Args:
-            transforms (Compose, optional): Transformations to apply.
+            value (Compose, optional): Transformations to apply.
 
         Raises:
             TypeError: If ``transform`` is not an instance of albumentations.Compose.
         """
-        # Validate inputs
-        if isinstance(transforms, (Box, dict)):
-            transforms = Compose.from_config(config=transforms)
+        # Normalize inputs
+        if isinstance(value, (Box, dict)):
+            value = Compose.from_config(config=value)
 
-        if isinstance(transforms, Compose):
+        if isinstance(value, Compose):
             # Add additional targets to transform if needed
             # Get the primary modality key
             pk, _ = self.primary
@@ -122,9 +167,9 @@ class AlbumentationsDataset(Dataset, ABC):
                 if (k != pk) and v is not None:
                     # If the modality is not primary and has a target type, add it
                     # to the Compose
-                    transforms.add_targets(self.modalities[k].additional_target)
+                    value.add_targets(self.modalities[k].additional_target)
 
-        self._transforms = transforms
+        self._transforms = value
 
 
 class ImageDataset(
@@ -155,6 +200,7 @@ class ImageDataset(
         dirname: str = "",
         subdir: str = "",
         transforms: Compose | None = None,
+        keep_original: bool = False,
         modalities: ModalityList | None = None,
         classes: ClassList | None = None,
         verbose: bool = True,
@@ -175,6 +221,8 @@ class ImageDataset(
                 overrides the class-level default. Defaults to "".
             transforms (Compose, optional): Transformations to apply.
                 Defaults to None.
+            keep_original (bool, optional): Whether to keep the original data
+                alongside the transformed ones. Defaults to False.
             modalities (ModalityList, optional): A list of ``Modality``
                 definitions. By default, the first modality is considered the
                 primary one. If provided, it overrides the class-level default.
@@ -192,6 +240,7 @@ class ImageDataset(
             dirname=dirname,
             subdir=subdir,
             transforms=transforms,
+            keep_original=keep_original,
             modalities=modalities,
             classlist=classes,
             verbose=verbose,
@@ -251,6 +300,7 @@ class ImageOnlyDataset(
         dirname: str = "",
         subdir: str = "",
         transforms: Compose | None = None,
+        keep_original: bool = False,
         modalities: ModalityList | None = None,
         classes: ClassList | None = None,
         verbose: bool = True,
@@ -271,6 +321,8 @@ class ImageOnlyDataset(
                 overrides the class-level default. Defaults to "".
             transforms (Compose, optional): Transformations to apply.
                 Defaults to None.
+            keep_original (bool, optional): Whether to keep the original data
+                alongside the transformed ones. Defaults to False.
             modalities (ModalityList, optional): A list of ``Modality``
                 definitions. By default, the first modality is considered the
                 primary one. If provided, it overrides the class-level default.
@@ -288,6 +340,7 @@ class ImageOnlyDataset(
             dirname=dirname,
             subdir=subdir,
             transforms=transforms,
+            keep_original=keep_original,
             modalities=modalities,
             classlist=classes,
             verbose=verbose,
@@ -392,6 +445,7 @@ class IQADataset(
         input_dir: PathLike,
         target_dir: PathLike | None = None,
         transforms: Compose | None = None,
+        keep_original: bool = False,
         modalities: ModalityList | None = None,
         classes: ClassList | None = None,
         verbose: bool = True,
@@ -405,6 +459,8 @@ class IQADataset(
                 Defaults to None.
             transforms (Compose, optional): Transformations to apply.
                 Defaults to None.
+            keep_original (bool, optional): Whether to keep the original data
+                alongside the transformed ones. Defaults to False.
             modalities (ModalityList, optional): A list of ``Modality``
                 definitions. By default, the first modality is considered the
                 primary one. If provided, it overrides the class-level default.
@@ -420,6 +476,7 @@ class IQADataset(
             input_dir=input_dir,
             target_dir=target_dir,
             transforms=transforms,
+            keep_original=keep_original,
             modalities=modalities,
             classlist=classes,
             verbose=verbose,

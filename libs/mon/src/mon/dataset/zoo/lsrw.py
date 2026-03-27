@@ -32,7 +32,7 @@ class LSRW(ImageDataset, DatasetRegisterMixin):
     """LSRW dataset."""
 
     name: str = "lsrw"
-    tasks: list[Task] = [Task.ENHANCE]
+    tasks: list[Task] = [Task.LLIE]
     dirname: str = "lsrw"
     subdir: str = ""
     splits: list[Split] = [Split.TRAIN, Split.TEST]

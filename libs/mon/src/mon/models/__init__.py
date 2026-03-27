@@ -12,6 +12,7 @@ from .bgsubtract import *
 from .classify import *
 from .detect import *
 from .enhance import *
+from .exposure import *
 from .monodepth import *
 from .restore import *
 from .segment import *

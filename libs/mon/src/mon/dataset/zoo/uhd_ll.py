@@ -31,7 +31,7 @@ class UHD_LL(ImageDataset, DatasetRegisterMixin):
     """UHD-LL dataset."""
 
     name: str = "uhd_ll"
-    tasks: list[Task] = [Task.ENHANCE]
+    tasks: list[Task] = [Task.LLIE]
     dirname: str = "uhd_ll"
     subdir: str = ""
     splits: list[Split] = [Split.TRAIN, Split.TEST]

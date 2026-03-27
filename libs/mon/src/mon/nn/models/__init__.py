@@ -24,3 +24,4 @@ from .head import *
 from .mixins import *
 from .neck import *
 from .repr import *
+from .upsample import *

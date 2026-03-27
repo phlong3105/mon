@@ -158,13 +158,6 @@ ARGUMENTS = Box({
         "prompt_only": False,
         "prompt_text": "Weights",
     },
-    "data": {
-        "default": None,
-        "type": _str_or_none,
-        "help": "Dataset name or directory.",
-        "prompt_only": False,
-        "prompt_text": "Predict(s)",
-    },
     "device": {
         "default": None,
         "type": _str_or_none,
@@ -174,6 +167,13 @@ ARGUMENTS = Box({
         "prompt_text": "Device",
     },
     # Prediction
+    "data": {
+        "default": None,
+        "type": _str_or_none,
+        "help": "Dataset name or directory.",
+        "prompt_only": False,
+        "prompt_text": "Predict(s)",
+    },
     "eval_resize": {
         "default": False,
         "action": "store_true",
@@ -297,7 +297,6 @@ class Config:
                 }
             }
         },
-        "data": [],
 
         # --- Training ---
         "epochs": 100,
@@ -312,6 +311,7 @@ class Config:
         "tensorboard_logger": True,
 
         # --- Prediction ---
+        "data": [],
         "eval_imgsz": False,
         "benchmark": False,
 

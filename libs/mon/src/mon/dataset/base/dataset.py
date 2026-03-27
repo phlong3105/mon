@@ -448,37 +448,37 @@ class StandardDataset(Dataset, ABC):
         return self._root
 
     @root.setter
-    def root(self, root: PathLike):
+    def root(self, value: PathLike):
         """Set the dataset root directory.
 
         Args:
-            root (PathLike): Path to the root directory of the dataset.
+            value (PathLike): Path to the root directory of the dataset.
 
         Raises:
             FileNotFoundError: If the ``root`` directory does not exist.
         """
-        root = Path(root).normalize()
+        value = Path(value).normalize()
 
         # Append dirname if specified
         if is_valid_str(self.dirname):
             # Check if the current root ends with a dataset directory; if not,
             # try to append
-            dataset_dir = root.resolve_subdir(self.dirname)
+            dataset_dir = value.resolve_subdir(self.dirname)
             if dataset_dir.is_dir():
-                root = dataset_dir
+                value = dataset_dir
 
         # Append subdir if specified
         if is_valid_str(self.subdir):
             # Check if the current root ends with a subset; if not, try to append
-            subdir = root.resolve_subdir(self.subdir)
+            subdir = value.resolve_subdir(self.subdir)
             if subdir.is_dir():
-                root = subdir
+                value = subdir
 
         # Validate inputs
-        if not root.is_dir():
-            raise FileNotFoundError(f"Dataset root not found at: {root}")
+        if not value.is_dir():
+            raise FileNotFoundError(f"Dataset root not found at: {value}")
 
-        self._root = root
+        self._root = value
 
     @property
     def split(self) -> Split:
@@ -486,25 +486,25 @@ class StandardDataset(Dataset, ABC):
         return self._split
 
     @split.setter
-    def split(self, split: SplitLike):
+    def split(self, value: SplitLike):
         """Set the current dataset split.
 
         Args:
-            split (SplitType): Data split subset to use. Must be one of the
+            value (SplitType): Data split subset to use. Must be one of the
                 options defined in ``splits``.
 
         Raises:
             ValueError: If ``split`` is not one of the supported ``splits``.
         """
-        split = Split(split)
+        value = Split(value)
 
         # Validate inputs
-        if split not in self.splits:
+        if value not in self.splits:
             raise ValueError(
-                f"Unsupported 'split': {split}. Must be one of: {self.splits}."
+                f"Unsupported 'split': {value}. Must be one of: {self.splits}."
             )
 
-        self._split = split
+        self._split = value
 
     @property
     def base_dir(self) -> Path:
@@ -581,27 +581,27 @@ class InputTargetDataset(Dataset, ABC):
         return self._input_dir
 
     @input_dir.setter
-    def input_dir(self, input_dir: PathLike):
+    def input_dir(self, value: PathLike):
         """Set the input directory.
 
         Args:
-            input_dir (PathLike): Path to the input directory.
+            value (PathLike): Path to the input directory.
 
         Raises:
             TypeError: If ``input_dir`` is None.
             FileNotFoundError: If the ``input_dir`` directory does not exist.
         """
-        if input_dir is None:
+        if value is None:
             raise TypeError(
                 f"Expected 'input_dir' to be a Path or str, "
-                f"but got {type(input_dir).__name__}."
+                f"but got {type(value).__name__}."
             )
 
-        input_dir = Path(input_dir).normalize()
-        if not input_dir.is_dir():
-            raise FileNotFoundError(f"Input directory not found at: {input_dir}")
+        value = Path(value).normalize()
+        if not value.is_dir():
+            raise FileNotFoundError(f"Input directory not found at: {value}")
 
-        self._input_dir = input_dir
+        self._input_dir = value
 
     @property
     def target_dir(self) -> Path | None:
@@ -609,22 +609,22 @@ class InputTargetDataset(Dataset, ABC):
         return self._target_dir
 
     @target_dir.setter
-    def target_dir(self, target_dir: PathLike | None):
+    def target_dir(self, value: PathLike | None):
         """Set the target directory.
 
         Args:
-            target_dir (PathLike, optional): Path to the target directory.
+            value (PathLike, optional): Path to the target directory.
 
         Raises:
             FileNotFoundError: If the ``target_dir`` directory does not exist.
         """
-        if target_dir is not None:
-            target_dir = Path(target_dir).normalize()
-            if not target_dir.is_dir():
+        if value is not None:
+            value = Path(value).normalize()
+            if not value.is_dir():
                 raise FileNotFoundError(
-                    f"Target directory not found at: {target_dir}"
+                    f"Target directory not found at: {value}"
                 )
-            self._target_dir = target_dir
+            self._target_dir = value
         else:
             self._target_dir = None
 

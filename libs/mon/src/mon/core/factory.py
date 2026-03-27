@@ -18,7 +18,9 @@ __all__ = [
     "ModelFactory",
     "OPTIMIZERS",
     "OptimizerFactory",
+    "PREDICTORS",
     "SCHEDULERS",
+    "TRAINERS",
     "WEIGHTS",
     "WeightsFactory",
 ]
@@ -774,11 +776,16 @@ class OptimizerFactory(Factory):
 
 ALBUMENTATIONS: Factory = Factory(name="Albumentations", decamelize=False)
 DATASETS: DatasetFactory = DatasetFactory(name="Datasets", decamelize=False)
+
 BACKBONES: ModelFactory = ModelFactory(name="Backbones", decamelize=False)
+UPSAMPLERS: Factory = Factory(name="Upsamplers", decamelize=False)
 MODELS: ModelFactory = ModelFactory(name="Models", decamelize=False)
 WEIGHTS: WeightsFactory = WeightsFactory(name="Weights", decamelize=False)
 OPTIMIZERS: OptimizerFactory = OptimizerFactory(name="Optimizers", decamelize=False)
 SCHEDULERS: Factory = Factory(name="Schedulers", decamelize=False)
+
+TRAINERS: Factory = Factory(name="Trainers", decamelize=False)
+PREDICTORS: Factory = Factory(name="Predictors", decamelize=False)
 
 # endregion
 

@@ -64,7 +64,7 @@ class SALEO(ModelRegisterMixin, nn.Module):
 
     arch: str = "saleo"
     name: str = "saleo"
-    tasks: list[Task] = [Task.ENHANCE]
+    tasks: list[Task] = [Task.LLIE]
     model_dir: Path = current_dir
 
     color_funcs: dict = {

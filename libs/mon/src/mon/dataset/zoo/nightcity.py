@@ -31,7 +31,7 @@ class NightCity(ImageDataset, DatasetRegisterMixin):
     """NightCity dataset."""
 
     name: str = "nightcity"
-    tasks: list[Task] = [Task.ENHANCE, Task.SEGMENT]
+    tasks: list[Task] = [Task.LLIE, Task.SEGMENT]
     dirname: str = "nightcity"
     subdir: str = "nightcity"
     splits: list[Split] = [Split.TRAIN, Split.VAL]
