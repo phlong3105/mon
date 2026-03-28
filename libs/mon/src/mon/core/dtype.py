@@ -199,14 +199,11 @@ class Task(MultiStrEnum):
     CE = "ce"                  # Contrast Enhancement
     COLORIZATION = "colorization"
     LLIE = "llie"              # Low-Light Image Enhancement
+    MEF = "mef"                # Multi-Exposure Fusion
     RETOUCH = "retouch"        # Image Retouching
     SHARPEN = "sharpen"        # Image Sharpening
     STYLE_TRANSFER = "style_transfer"
     TONE_MAPPING = "tone_mapping"
-
-    # Joint Restoration & Enhancement
-    EXPOSURE = "exposure"      # Exposure Correction
-    FUSION = "fusion"          # Image Fusion
 
     # -- Mid-Level --
     # Keypoint

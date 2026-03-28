@@ -24,12 +24,11 @@ Taxonomy:
     │   │   ├── Color Correction
     │   │   ├── Colorization
     │   │   ├── Low-Light Image Enhancement
+    │   │   ├── Multiple-Exposure Fusion
     │   │   ├── Retouching
     │   │   ├── Sharpening
     │   │   ├── Style Transfer
     │   │   └── Tone Mapping
-    │   ├── Exposure Correction
-    │   ├── Image Fusion (MEF, HDR)
     │   └── Filtering
     ├── Mid-Level
     │   ├── Segmentation
@@ -62,7 +61,7 @@ from .bgsubtract import *
 from .classify import *
 from .detect import *
 from .enhance import *
-from .exposure import *
+from .fusion import *
 from .monodepth import *
 from .restore import *
 from .segment import *

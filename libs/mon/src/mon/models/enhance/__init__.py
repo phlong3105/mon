@@ -9,3 +9,4 @@ This package contains various image enhancement models.
 from __future__ import annotations
 
 from .llie import *
+from .mef import *

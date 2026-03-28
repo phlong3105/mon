@@ -17,12 +17,15 @@ __all__ = [
     "tensormog",
 ]
 
+from typing import override
+
 import torch
 from torch import nn, Tensor
 
 from mon.core import MODELS, Path, Task
 from mon.nn import ModelRegisterMixin
 from .module import HVR
+from mon.models.bgsubtract.base import BackgroundSubtractionModel
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -32,7 +35,7 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-class TensorMOG(ModelRegisterMixin, nn.Module):
+class TensorMOG(ModelRegisterMixin, BackgroundSubtractionModel):
     """TensorMoG model for background subtraction.
 
     References:
@@ -99,23 +102,23 @@ class TensorMOG(ModelRegisterMixin, nn.Module):
         )
 
     # --- Callable & Context Manager ---
-    def forward(self, image: Tensor) -> dict:
+    @override
+    def forward_step(self, data: dict, *args, **kwargs) -> dict:
         """Forward the input through the network.
 
         Args:
-            image (Tensor): Image tensor of shape (B, 3, H, W) and values
-                ranging from 0.0 to 1.0.
+            data (dict): Input data dictionary.
 
         Returns:
-            dict: Dictionary containing the enhanced image tensor and
-                intermediate results for debugging.
+            dict: Output data dictionary.
         """
+        image = data["image"]
         self.hvr.update(image)
         background = self.hvr.get_background()
         foreground = self.hvr.get_foreground(image)
         return {
-            "foreground": foreground,
             "background": background,
+            "foreground": foreground,
         }
 
 # endregion

@@ -17,10 +17,10 @@ __all__ = [
     "Mertens",
 ]
 
-from numpy import ndarray
-from torch import nn, Tensor
+from typing import override
 
 from mon.core import MODELS, Path, Task
+from mon.models.enhance.mef.base import MEFModel
 from mon.nn import ModelRegisterMixin
 from .module import mertens
 
@@ -33,7 +33,7 @@ current_dir = current_file.parents[0]
 # ==============================================================================
 
 @MODELS.register(name="mertens")
-class Mertens(ModelRegisterMixin, nn.Module):
+class Mertens(ModelRegisterMixin, MEFModel):
     """Mertens model for low-light image enhancement.
 
     References:
@@ -80,17 +80,17 @@ class Mertens(ModelRegisterMixin, nn.Module):
         self.n_levels = n_levels
 
     # --- Callable & Context Manager ---
-    def forward(self, images: Tensor | list[Tensor] | list[ndarray]) -> dict:
+    @override
+    def forward_step(self, data: dict, *args, **kwargs) -> dict:
         """Forward the input through the network.
 
         Args:
-            images (Tensor | list[Tensor] | list[ndarray]): Input tensor of
-                shape (B, C, H, W); or a list of images of shape (C, H, W).
+            data (dict): Input data dictionary.
 
         Returns:
-            dict: Dictionary containing the enhanced image tensor and
-                intermediate results for debugging.
+            dict: Output data dictionary.
         """
+        images = data["images"]
         enhanced = mertens(
             images=images,
             w_sat=self.w_sat,
@@ -98,7 +98,7 @@ class Mertens(ModelRegisterMixin, nn.Module):
             w_exp=self.w_exp,
             n_levels=self.n_levels
         )
-        return {"enhanced": enhanced}
+        return { "enhanced": enhanced }
 
 # endregion
 

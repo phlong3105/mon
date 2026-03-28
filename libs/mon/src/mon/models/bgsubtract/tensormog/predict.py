@@ -16,7 +16,7 @@ from typing import Any
 
 from typing_extensions import override
 
-from mon.core import K, MODELS, Path, Size, TimeProfiler, PREDICTORS
+from mon.core import K, MODELS, Path, PREDICTORS, Size, TimeProfiler
 from mon.dataset import transform as T
 from mon.runners import Predictor
 
@@ -76,7 +76,6 @@ class TensorMOG_Predictor(Predictor):
         Returns:
             dict: The dictionary containing the prediction results.
         """
-        config = self.config
         device = self.device
 
         # 1. Prepare inputs
@@ -87,7 +86,7 @@ class TensorMOG_Predictor(Predictor):
 
         # 3. Inference
         timers.infer.tick()
-        outputs = self.model(image=image)
+        outputs = self.model(data={"image": image}, save_debug=self.save_debug)
         timers.infer.tock()
 
         return outputs
