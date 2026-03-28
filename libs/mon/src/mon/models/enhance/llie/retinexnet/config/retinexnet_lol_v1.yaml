@@ -14,7 +14,7 @@ seed: 0  # (int) Random seed for reproducibility
 model:
   name: "retinexnet"  # (str) Model name (e.g., resnet50, yolov8n).
   arch: "retinexnet"  # (str) Model architecture (e.g., resnet, yolo8).
-  weights: "enhance/retinexnet/retinexnet/lol_v1/retinexnet_lol_v1.pt"  # (str) Path to model weights.
+  weights: "enhance/llie/retinexnet/retinexnet/lol_v1/retinexnet_lol_v1.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---

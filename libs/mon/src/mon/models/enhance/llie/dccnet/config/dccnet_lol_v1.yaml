@@ -14,7 +14,7 @@ seed: 0  # (int) Random seed for reproducibility
 model:
   name: "dccnet"  # (str) Model name (e.g., resnet50, yolov8n).
   arch: "dccnet"  # (str) Model architecture (e.g., resnet, yolo8).
-  weights: "enhance/dccnet/dccnet/lol_v1/dccnet_lol_v1.pt"  # (str) Path to model weights.
+  weights: "enhance/llie/dccnet/dccnet/lol_v1/dccnet_lol_v1.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---

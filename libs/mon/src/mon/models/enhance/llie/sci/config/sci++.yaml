@@ -15,8 +15,8 @@ model:
   name: "sci++"  # (str) Model name (e.g., resnet50, yolov8n).
   arch: "sci"  # (str) Model architecture (e.g., resnet, yolo8).
   stage: 3
-  weights: "enhance/sci/sci++/pretrained/sci++_1_3500.pt"  # (str) Path to model weights.
-  finetune: "enhance/sci/sci++/pretrained/sci++_1_3500.pt"  # (str) Path to fine-tuning weights.
+  weights: "enhance/llie/sci/sci++/pretrained/sci++_1_3500.pt"  # (str) Path to model weights.
+  finetune: "enhance/llie/sci/sci++/pretrained/sci++_1_3500.pt"  # (str) Path to fine-tuning weights.
 
 # --- Data ---
 train_dataloader:

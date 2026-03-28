@@ -14,7 +14,7 @@ seed: 123456789  # (int) Random seed for reproducibility
 model:
   name: "pairlie"  # (str) Model name (e.g., resnet50, yolov8n).
   arch: "pairlie"  # (str) Model architecture (e.g., resnet, yolo8).
-  weights: "enhance/pairlie/pairlie/sice/pairlie_sice.pt"  # (str) Path to model weights.
+  weights: "enhance/llie/pairlie/pairlie/sice/pairlie_sice.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---

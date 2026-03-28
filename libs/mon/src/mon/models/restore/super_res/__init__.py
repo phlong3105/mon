@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Upsampling Models.
+"""Super-Resolution Models.
 
-This package contains various upsampling models.
+This package contains various super-resolution models.
 """
 
 from __future__ import annotations

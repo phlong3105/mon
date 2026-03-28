@@ -17,7 +17,7 @@ model:
   in_channels: 3
   out_channels: 3
   hidden_dim: 32
-  weights: "enhance/zero_dce/zero_dce/sice_me/zero_dce_sice_me.pt"  # (str) Path to model weights.
+  weights: "enhance/llie/zero_dce/zero_dce/sice_me/zero_dce_sice_me.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---

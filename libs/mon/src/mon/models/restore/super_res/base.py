@@ -1,31 +1,30 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Base Upsamplers.
+"""Base Models.
 
-This module defines the base class for upsamplers.
+This module defines the base class for super-resolution models.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "ImageUpsampler",
+    "SuperRes",
 ]
 
 from abc import ABC, abstractmethod
-from typing import Any
 
 from torch import nn, Tensor
 
-from mon.core import DeviceLike, IntOrTuple2, Path, Size, sys_ctx, WeightsLike
+from mon.core import IntOrTuple2, Size
 
 
 # ==============================================================================
 # region BASE CLASSES
 # ==============================================================================
 
-class ImageUpsampler(nn.Module, ABC):
-    """Base class for all image upsampling methods."""
+class SuperRes(nn.Module, ABC):
+    """Base class for all super-resolution models."""
 
     # --- Callable & Context Manager ---
     @abstractmethod

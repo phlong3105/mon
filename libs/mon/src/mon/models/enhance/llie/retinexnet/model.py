@@ -139,7 +139,7 @@ class RetinexNet(ModelRegisterMixin, nn.Module):
 class RetinexNet_Weights(WeightsEnum):
 
     SICE_ME = Weights(
-        path=K.ZOO_ROOT / "enhance/retinexnet/retinexnet/lol_v1/retinexnet_lol_v1.pt",
+        path=K.ZOO_ROOT / "enhance/llie/retinexnet/retinexnet/lol_v1/retinexnet_lol_v1.pt",
         url=None,
         num_classes=None,
         transforms=None,

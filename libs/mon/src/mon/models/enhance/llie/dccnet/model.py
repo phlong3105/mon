@@ -129,7 +129,7 @@ class DCCNet(ModelRegisterMixin, nn.Module):
 class DCCNet_Weights(WeightsEnum):
 
     SICE = Weights(
-        path=K.ZOO_ROOT / "enhance/dccnet/dccnet/lol_v1/dccnet_lol_v1.pt",
+        path=K.ZOO_ROOT / "enhance/llie/dccnet/dccnet/lol_v1/dccnet_lol_v1.pt",
         url=None,
         num_classes=None,
         transforms=None,

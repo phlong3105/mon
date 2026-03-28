@@ -17,7 +17,7 @@ model:
   num_filters: 32
   tol: 0.00001
   adjoint: True
-  weights: "enhance/clode/clode/sice_me/clode_sice_me.pt"  # (str) Path to model weights.
+  weights: "enhance/llie/clode/clode/sice_me/clode_sice_me.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---

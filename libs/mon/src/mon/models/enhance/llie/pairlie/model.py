@@ -139,7 +139,7 @@ class PairLIE(ModelRegisterMixin, nn.Module):
 class PairLIE_Weights(WeightsEnum):
 
     SICE = Weights(
-        path=K.ZOO_ROOT / "enhance/pairlie/pairlie/sice/pairlie_sice.pt",
+        path=K.ZOO_ROOT / "enhance/llie/pairlie/pairlie/sice/pairlie_sice.pt",
         url=None,
         num_classes=None,
         transforms=None,
