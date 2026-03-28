@@ -19,7 +19,7 @@ __all__ = [
     "clode",
 ]
 
-from torch import nn, Tensor
+from typing import override
 
 from mon.core import (
     is_weights_type,
@@ -33,6 +33,7 @@ from mon.core import (
     WeightsEnum,
     WeightsLike,
 )
+from mon.models.enhance.base import EnhancementModel
 from mon.nn import ModelRegisterMixin
 from .module import NODE
 
@@ -44,7 +45,7 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-class CLODE(ModelRegisterMixin, nn.Module):
+class CLODE(ModelRegisterMixin, EnhancementModel):
     """CLODE model for low-light image enhancement.
 
     References:
@@ -57,6 +58,7 @@ class CLODE(ModelRegisterMixin, nn.Module):
     name: str = "clode"
     tasks: list[Task] = [Task.LLIE]
     model_dir: Path = current_dir
+    requires: dict = {"image", "eval_time"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -101,25 +103,19 @@ class CLODE(ModelRegisterMixin, nn.Module):
                 log(f"Initialized '{name}' from scratch.")
 
     # --- Callable & Context Manager ---
-    def forward(
-        self,
-        x: Tensor,
-        eval_time: Tensor | None = None,
-        inference: bool = False
-    ) -> dict:
+    @override
+    def forward_step(self, data: dict, *args, **kwargs) -> dict:
         """Forward the input through the network.
 
         Args:
-            x (Tensor): Input tensor of shape (B, C, H, W) and values ranging
-                from 0.0 to 1.0.
-            eval_time (Tensor | None, optional): Evaluation time tensor of shape
-                (B,) and values ranging from 0.0 to 1.0, representing the
-                normalized exposure time for each image in the batch. If None,
-                defaults to a tensor of ones (i.e., full exposure). Defaults to None.
-            inference (bool, optional): Whether the model is being used for
-                inference. If True, the model may use a faster ODE solver or
-                other optimizations. Defaults to False.
+            data (dict): Input data dictionary.
+
+        Returns:
+            dict: Output data dictionary.
         """
+        x = data["image"]
+        eval_time = data["eval_time"]
+        inference = data.get("inference", False)
         return self.model(x, eval_time, inference)
 
 # endregion

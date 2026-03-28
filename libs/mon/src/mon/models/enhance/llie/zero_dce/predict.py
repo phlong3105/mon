@@ -84,7 +84,6 @@ class ZeroDCE_Predictor(Predictor):
             dict: The dictionary containing the prediction results.
         """
         device = self.device
-        save_debug = self.save_debug
 
         # 1. Prepare inputs
         timers.preprocess.tick()
@@ -94,7 +93,7 @@ class ZeroDCE_Predictor(Predictor):
 
         # 2. Inference
         timers.infer.tick()
-        outputs = self.model(image, save_debug=save_debug)
+        outputs = self.model(data={"image": image}, save_debug=self.save_debug)
         timers.infer.tock()
 
         return outputs

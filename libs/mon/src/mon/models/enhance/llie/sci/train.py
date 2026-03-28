@@ -98,7 +98,10 @@ class SCI_Trainer(Trainer):
             image = Variable(image, requires_grad=False).to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(image=image, inference=False)
+            outputs = self.model(
+                data={"image": image, "inference": False},
+                save_debug=True,
+            )
 
             # 2.3. Extract outputs
             i_list = outputs["i_list"]
@@ -165,7 +168,10 @@ class SCI_Trainer(Trainer):
             target = target.to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(image=image, inference=False)
+            outputs = self.model(
+                data={"image": image, "inference": False},
+                save_debug=True,
+            )
 
             # 2.3. Extract outputs
             enhanced = outputs["r_list"][0]
@@ -278,7 +284,10 @@ class SCI_Finetuner(Trainer):
             # image = Variable(image, requires_grad=False).to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(image=image, inference=True)
+            outputs = self.model(
+                data={"image": image, "inference": True},
+                save_debug=True,
+            )
 
             # 2.3. Extract outputs
             illumination = outputs["illumination"]
@@ -342,7 +351,10 @@ class SCI_Finetuner(Trainer):
             target = target.to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(image=image, inference=True)
+            outputs = self.model(
+                data={"image": image, "inference": True},
+                save_debug=True,
+            )
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
@@ -470,7 +482,10 @@ class SCI_PP_Trainer(Trainer):
             image = Variable(image, requires_grad=False).to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(image=image, inference=False)
+            outputs = self.model(
+                data={"image": image, "inference": False},
+                save_debug=True,
+            )
 
             # 2.3. Extract outputs
             i_list = outputs["i_list"]
@@ -557,7 +572,10 @@ class SCI_PP_Trainer(Trainer):
             target = target.to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(image=image, inference=False)
+            outputs = self.model(
+                data={"image": image, "inference": False},
+                save_debug=True,
+            )
 
             # 2.3. Extract outputs
             enhanced = outputs["r_list"][0]

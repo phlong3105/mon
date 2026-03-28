@@ -104,8 +104,8 @@ class PairLIE_Trainer(Trainer):
             target = target.to(device)
 
             # 2.2. Forward pass
-            outputs1 = self.model(image=image)
-            outputs2 = self.model(image=target)
+            outputs1 = self.model(data={"image": image}, save_debug=True)
+            outputs2 = self.model(data={"image": target}, save_debug=True)
 
             # 2.3. Extract outputs
             L1, R1, X1 = outputs1["L"], outputs1["R"], outputs1["X"]
@@ -174,7 +174,7 @@ class PairLIE_Trainer(Trainer):
             target = target.to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(image)
+            outputs = self.model(data={"image": image}, save_debug=True)
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]

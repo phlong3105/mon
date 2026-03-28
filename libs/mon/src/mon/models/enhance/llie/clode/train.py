@@ -18,8 +18,8 @@ from rich.progress import Progress
 from typing_extensions import override
 
 from mon.core import K, OPTIMIZERS, Path, TRAINERS
-from mon.models.enhance.clode import loss as L
 from mon.runners import Trainer
+from . import loss as L
 from .model import clode
 
 current_file = Path(__file__).normalize()
@@ -42,7 +42,7 @@ class CLODE_Trainer(Trainer):
         device = self.device
         weights = config.finetune
 
-        model = clode(**config.model | { "weights": weights})
+        model = clode(**config.model | {"weights": weights})
         model = model.to(device)
         model.train()
         self._model = model
@@ -52,7 +52,10 @@ class CLODE_Trainer(Trainer):
         """Initialize ``self._optimizer`` and ``self._scheduler`` attributes."""
         config = self.config
 
-        self._optimizer = OPTIMIZERS.build(params=self.model.parameters(), **config.optimizer)
+        self._optimizer = OPTIMIZERS.build(
+            params=self.model.parameters(),
+            **config.optimizer,
+        )
         self._scheduler = None
 
     # --- Training ---
@@ -87,8 +90,8 @@ class CLODE_Trainer(Trainer):
         losses = []
 
         task = pbar.add_task(
-            f"[bright_yellow]Train Epoch {epoch+1:03}",
-            total=len(self.train_dataloader)
+            f"[bright_yellow]Train Epoch {epoch + 1:03}",
+            total=len(self.train_dataloader),
         )
         for i, datapoint in enumerate(self.train_dataloader):
             # 2.1. Prepare inputs
@@ -97,7 +100,13 @@ class CLODE_Trainer(Trainer):
             eval_time = torch.tensor([0, 3]).float().to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(image, eval_time)
+            outputs = self.model(
+                data={
+                    "image": image,
+                    "eval_time": eval_time,
+                },
+                save_debug=True,
+            )
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
@@ -106,7 +115,7 @@ class CLODE_Trainer(Trainer):
 
             # 2.4. Calculate loss
             # Enhance loss
-            l_param = W_tv  * torch.mean(A_map)
+            l_param = W_tv * torch.mean(A_map)
             l_col = W_col * L_col(enhanced)
             l_spa = W_spa * L_spa(enhanced, image)
             l_exp = W_exp * L_exp(enhanced)
@@ -117,7 +126,10 @@ class CLODE_Trainer(Trainer):
             # 2.5. Backward pass
             self.optimizer.zero_grad()
             loss.backward()
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), grad_clip_norm)
+            torch.nn.utils.clip_grad_norm_(
+                self.model.parameters(),
+                grad_clip_norm,
+            )
             self.optimizer.step()
             losses.append(loss.item())
 
@@ -159,8 +171,8 @@ class CLODE_Trainer(Trainer):
         ssimcs = []
 
         task = pbar.add_task(
-            f"[bright_cyan]Val Epoch {epoch+1:03}",
-            total=len(self.val_dataloader)
+            f"[bright_cyan]Val Epoch {epoch + 1:03}",
+            total=len(self.val_dataloader),
         )
         for i, datapoint in enumerate(self.val_dataloader):
             # 2.1. Prepare inputs
@@ -171,7 +183,14 @@ class CLODE_Trainer(Trainer):
             eval_time = torch.tensor([0, 3]).float().to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(image, eval_time, inference=True)
+            outputs = self.model(
+                data={
+                    "image": image,
+                    "eval_time": eval_time,
+                    "inference": True,
+                },
+                save_debug=self.save_debug,
+            )
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
@@ -194,7 +213,7 @@ class CLODE_Trainer(Trainer):
 
         # 3. Output
         val_outputs |= {
-             "psnr": torch.cat(psnrs).mean().item(),
+            "psnr": torch.cat(psnrs).mean().item(),
             "ssim": torch.cat(ssims).mean().item(),
             "ssimc": torch.cat(ssimcs).mean().item(),
         }
@@ -216,6 +235,7 @@ class CLODE_Trainer(Trainer):
             "enhanced": val_outputs["enhanced"],
         }
         self._save_image(epoch, debug_image, dirname=K.PRED_DIR, stem="debug")
+
 
 # endregion
 

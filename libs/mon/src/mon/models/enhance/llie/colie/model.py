@@ -18,12 +18,14 @@ __all__ = [
     "colie",
 ]
 
+from typing import override
+
 import torch
-from torch import nn, Tensor
 from torch.nn import functional as F
 from torch.optim import Adam, Optimizer
 
 from mon.core import DictLike, log, MODELS, OPTIMIZERS, Path, Task
+from mon.models.enhance.base import EnhancementModel
 from mon.nn import ModelRegisterMixin
 from mon.ops import guided_filter_upsample, RgbToHsv
 from . import loss as L
@@ -38,7 +40,7 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-class CoLIE(ModelRegisterMixin, nn.Module):
+class CoLIE(ModelRegisterMixin, EnhancementModel):
     """CoLIE model for low-light image enhancement.
 
     References:
@@ -51,6 +53,7 @@ class CoLIE(ModelRegisterMixin, nn.Module):
     name: str = "colie"
     tasks: list[Task] = [Task.LLIE]
     model_dir: Path = current_dir
+    requires: dict = {"image", "E"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -61,6 +64,7 @@ class CoLIE(ModelRegisterMixin, nn.Module):
         num_layers: int,
         add_layers: int,
         epochs: int = 100,
+        optimizer: DictLike | None = None,
         device: torch.device = torch.device("cpu"),
         verbose: bool = True,
         *args, **kwargs
@@ -75,6 +79,8 @@ class CoLIE(ModelRegisterMixin, nn.Module):
             add_layers (int): Number of additional layers for context aggregation.
             epochs (int, optional): Number of optimization epochs for
                 single-image optimization. Defaults to 100.
+            optimizer (DictLike, optional): Dictionary containing optimizer
+                parameters. Defaults to None.
             device (torch.device, optional): Device to use for computation.
                 Defaults to torch.device("cpu").
             verbose (bool, optional): Verbosity mode. Defaults to True.
@@ -101,6 +107,8 @@ class CoLIE(ModelRegisterMixin, nn.Module):
             add_layer=self.add_layers,
         ).to(self.device)
 
+        self.optimizer = self._build_optimizer(optimizer=optimizer)
+
         # Store default weights
         self._default_state_dict = self.model.state_dict()
 
@@ -111,9 +119,6 @@ class CoLIE(ModelRegisterMixin, nn.Module):
             optimizer (DictLike, optional): Dictionary containing optimizer
                 parameters. Defaults to None.
         """
-        # Reset the network weights to their initial state
-        self.model.load_state_dict(self._default_state_dict)
-
         # Define optimizer
         if optimizer is not None:
             return OPTIMIZERS.build(params=self.model.parameters(), **optimizer)
@@ -121,41 +126,27 @@ class CoLIE(ModelRegisterMixin, nn.Module):
             return Adam(self.model.parameters(), lr=1e-5, betas=(0.9, 0.999), weight_decay=3e-4)
 
     # --- Callable & Context Manager ---
-    def forward(
-        self,
-        image: Tensor,
-        epochs: int = 100,
-        E: float = 0.5,
-        optimizer: DictLike | None = None,
-        save_debug: bool = False,
-    ) -> dict:
-        """Forward the input through the network.
+    @override
+    def forward_step(self, data: dict, *args, **kwargs) -> dict:
+        """Perform a single forward step of the model.
 
         Args:
-            image (Tensor): Image tensor of shape (B, 3, H, W) and values
-                ranging from 0.0 to 1.0.
-            epochs (int, optional): Number of optimization epochs for the INR.
-                Defaults to 100.
-            E (float, optional): Well-exposedness level E. Defaults to 0.1.
-            optimizer (DictLike, optional): Dictionary containing optimizer
-                parameters. Defaults to None.
-            save_debug (bool, optional): If True, return intermediate results
-                for debugging. Defaults to False.
+            data (dict): Input data dictionary.
 
         Returns:
-            dict: Dictionary containing the enhanced image tensor and
-                intermediate results for debugging.
+            dict: Output data dictionary.
         """
-        epochs = epochs or self.epochs
+        epochs = data.get("epochs", self.epochs)
         window_size = self.window_size
         down_size = self.hidden_dim
         device = self.device
 
-        # 1. Build optimizer
-        optimizer = self._build_optimizer(optimizer=optimizer)
+        # 1. Reset the network weights to their initial state
+        self.model.load_state_dict(self._default_state_dict)
 
         # 2. Move inputs to the corresponding device
-        image = image.to(device)
+        image = data["image"].to(device)
+        E = data.get("E", 0.5)
 
         # 3. Convert the image to HSV color space
         color_func = RgbToHsv().to(device)
@@ -174,7 +165,6 @@ class CoLIE(ModelRegisterMixin, nn.Module):
         L_tv = L.L_TV().to(device)
         lr_image_i_res = None
         lr_image_i_fixed = None
-        lr_image_r = None
 
         # 6. Optimize the INR network
         best_loss = float("inf")
@@ -199,16 +189,16 @@ class CoLIE(ModelRegisterMixin, nn.Module):
             loss = l_spa + (20 * l_tv) + (8 * l_exp) + (5 * l_sparsity)
 
             # 6.4. Backward pass
-            optimizer.zero_grad()
+            self.optimizer.zero_grad()
             loss.backward()
-            optimizer.step()
+            self.optimizer.step()
 
             # 6.5. Save best weights
             if loss < best_loss:
                 best_loss = loss
                 best_epoch = i
                 best_state_dict = self.model.state_dict()
-        optimizer.zero_grad(set_to_none=True)  # Clean up to prevent memory leaks
+        self.optimizer.zero_grad(set_to_none=True)  # Clean up to prevent memory leaks
 
         # 7. Log
         if self.verbose:
@@ -231,19 +221,17 @@ class CoLIE(ModelRegisterMixin, nn.Module):
             image_rgb_fixed = image_rgb_fixed.clamp(0.0, 1.0)
 
         # 9. Return final and intermediate results for debugging
-        outputs = { "enhanced": image_rgb_fixed }
-        if save_debug:
-            image_i_res = guided_filter_upsample(lr_image_i_res, lr_image_i, image_i)
-            image_i_fixed = guided_filter_upsample(lr_image_i_fixed, lr_image_i, image_i)
-            outputs |= {
-                "image_h": image_h,
-                "image_s": image_s,
-                "image_i": image_i,
-                "image_i_res": image_i_res,
-                "image_i_fixed": image_i_fixed,
-                "image_r": image_r,
-            }
-        return outputs
+        image_i_res = guided_filter_upsample(lr_image_i_res, lr_image_i, image_i)
+        image_i_fixed = guided_filter_upsample(lr_image_i_fixed, lr_image_i, image_i)
+        return {
+            "enhanced": image_rgb_fixed,
+            "image_h": image_h,
+            "image_s": image_s,
+            "image_i": image_i,
+            "image_i_res": image_i_res,
+            "image_i_fixed": image_i_fixed,
+            "image_r": image_r,
+        }
 
 # endregion
 

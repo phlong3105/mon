@@ -14,6 +14,8 @@ __all__ = [
 
 from typing import Any
 
+from accelerate.test_utils.scripts.external_deps.test_ds_alst_ulysses_sp import \
+    optimizer
 from typing_extensions import override
 
 from mon.core import K, Path, PREDICTORS, Size, TimeProfiler
@@ -71,12 +73,13 @@ class CoLIE_Predictor(Predictor):
 
         # 3. Inference
         timers.infer.tick()
-        model = colie(device=device, **config.model)
+        model = colie(device=device, optimizer=config.optimizer, **config.model)
         outputs = model(
-            image=image,
-            epochs=config.epochs,
-            E=config.loss.E,
-            optimizer=config.optimizer,
+            data={
+                "image": image,
+                "epochs": config.epochs,
+                "E": config.loss.E,
+            },
             save_debug=self.save_debug,
         )
         timers.infer.tock()

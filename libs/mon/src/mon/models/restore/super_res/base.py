@@ -9,7 +9,7 @@ This module defines the base class for super-resolution models.
 from __future__ import annotations
 
 __all__ = [
-    "SuperRes",
+    "SuperResModel",
 ]
 
 from abc import ABC, abstractmethod
@@ -23,7 +23,7 @@ from mon.core import IntOrTuple2, Size
 # region BASE CLASSES
 # ==============================================================================
 
-class SuperRes(nn.Module, ABC):
+class SuperResModel(nn.Module, ABC):
     """Base class for all super-resolution models."""
 
     # --- Callable & Context Manager ---
@@ -42,12 +42,11 @@ class SuperRes(nn.Module, ABC):
         Args:
             x_lr (Tensor): Low-resolution input image of shape (B, C, H0, W0)
                 and values ranging from 0.0 to 1.0.
-            imgsz (Size | IntOrTuple2, optional): Desired output image size.
-                Can be a Size object or a tuple (height, width).
-                Defaults to None.
             y_hr (Tensor, optional): High-resolution guidance image of shape
                 (B, C, H1, W1) and values ranging from 0.0 to 1.0.
                 Defaults to None.
+            imgsz (Size | IntOrTuple2, optional): Desired output image size.
+                Can be a Size object or a tuple (height, width). Defaults to None.
         """
         pass
 

@@ -14,14 +14,15 @@ File Structure:
     ├── head/           # Output heads
     ├── neck/           # Feature aggregators
     ├── repr/           # Representation learning
-    └── mixins/         # Model mixins
+    ├── upsample/       # Feature upsampling methods
+    └── base.py         # Base model and mixins
 """
 
 from __future__ import annotations
 
 from .backbone import *
+from .base import *
 from .head import *
-from .mixins import *
 from .neck import *
 from .repr import *
 from .upsample import *

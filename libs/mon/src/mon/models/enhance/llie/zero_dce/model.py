@@ -26,8 +26,10 @@ __all__ = [
     "zero_dce_pp",
 ]
 
+from typing import override
+
 import torch
-from torch import nn, Tensor
+from torch import nn
 from torch.nn import functional as F
 
 from mon.core import (
@@ -42,6 +44,7 @@ from mon.core import (
     WeightsEnum,
     WeightsLike,
 )
+from mon.models.enhance.base import EnhancementModel
 from mon.nn import ModelRegisterMixin
 from .module import DSConv
 from .utils import weights_init
@@ -54,7 +57,7 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-class ZeroDCE(ModelRegisterMixin, nn.Module):
+class ZeroDCE(ModelRegisterMixin, EnhancementModel):
     """Zero-DCE model for low-light image enhancement.
 
     References:
@@ -125,19 +128,17 @@ class ZeroDCE(ModelRegisterMixin, nn.Module):
                 log(f"Initialized '{name}' from scratch.")
 
     # --- Callable & Context Manager ---
-    def forward(self, image: Tensor, save_debug: bool = False) -> dict:
+    @override
+    def forward_step(self, data: dict, *args, **kwargs) -> dict:
         """Forward the input through the network.
 
         Args:
-            image (Tensor): Image tensor of shape (B, 3, H, W) and values
-                ranging from 0.0 to 1.0.
-            save_debug (bool, optional): If True, return intermediate results
-                for debugging. Defaults to False.
+            data (dict): Input data dictionary.
 
         Returns:
-            dict: Dictionary containing the enhanced image tensor and
-                intermediate results for debugging.
+            dict: Output data dictionary.
         """
+        image = data["image"]
         x1 = self.relu(self.e_conv1(image))
         x2 = self.relu(self.e_conv2(x1))
         x3 = self.relu(self.e_conv3(x2))
@@ -158,21 +159,20 @@ class ZeroDCE(ModelRegisterMixin, nn.Module):
         y8 = y7 + r8 * (torch.pow(y7, 2) - y7)
 
         # Return final and intermediate results for debugging
-        outputs = { "enhanced": y8, "r": r }
-        if save_debug:
-            outputs |= {
-                "y1": y1,
-                "y2": y2,
-                "y3": y3,
-                "y4": y4,
-                "y5": y5,
-                "y6": y6,
-                "y7": y7,
-            }
-        return outputs
+        return {
+            "enhanced": y8,
+            "r": r,
+            "y1": y1,
+            "y2": y2,
+            "y3": y3,
+            "y4": y4,
+            "y5": y5,
+            "y6": y6,
+            "y7": y7,
+        }
 
 
-class ZeroDCEPP(ModelRegisterMixin, nn.Module):
+class ZeroDCEPP(ModelRegisterMixin, EnhancementModel):
     """Zero-DCE++ model for low-light image enhancement.
 
     References:
@@ -244,19 +244,17 @@ class ZeroDCEPP(ModelRegisterMixin, nn.Module):
                 log(f"Initialized '{name}' from scratch.")
 
     # --- Callable & Context Manager ---
-    def forward(self, image: Tensor, save_debug: bool = False) -> dict:
+    @override
+    def forward_step(self, data: dict, *args, **kwargs) -> dict:
         """Forward the input through the network.
 
         Args:
-            image (Tensor): Image tensor of shape (B, 3, H, W) and values
-                ranging from 0.0 to 1.0.
-            save_debug (bool, optional): If True, return intermediate results
-                for debugging. Defaults to False.
+            data (dict): Input data dictionary.
 
         Returns:
-            dict: Dictionary containing the enhanced image tensor and
-                intermediate results for debugging.
+            dict: Output data dictionary.
         """
+        image = data["image"]
         if self.scale_factor == 1:
             x_down = image
         else:
@@ -286,18 +284,17 @@ class ZeroDCEPP(ModelRegisterMixin, nn.Module):
         y8 = y7 + r * (torch.pow(y7, 2) - y7)
 
         # Return final and intermediate results for debugging
-        outputs = { "enhanced": y8, "r": r }
-        if save_debug:
-            outputs |= {
-                "y1": y1,
-                "y2": y2,
-                "y3": y3,
-                "y4": y4,
-                "y5": y5,
-                "y6": y6,
-                "y7": y7,
-            }
-        return outputs
+        return {
+            "enhanced": y8,
+            "r": r,
+            "y1": y1,
+            "y2": y2,
+            "y3": y3,
+            "y4": y4,
+            "y5": y5,
+            "y6": y6,
+            "y7": y7,
+        }
 
 # endregion
 

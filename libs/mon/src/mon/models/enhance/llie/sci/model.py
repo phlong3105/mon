@@ -26,8 +26,9 @@ __all__ = [
     "sci_pp",
 ]
 
+from typing import override
+
 import torch
-from torch import nn, Tensor
 
 from mon.core import (
     is_weights_type,
@@ -41,6 +42,7 @@ from mon.core import (
     WeightsEnum,
     WeightsLike,
 )
+from mon.models.enhance.base import EnhancementModel
 from mon.nn import ModelRegisterMixin
 from .module import (
     CalibrateNetwork,
@@ -58,7 +60,7 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-class SCI(ModelRegisterMixin, nn.Module):
+class SCI(ModelRegisterMixin, EnhancementModel):
     """SCI model for low-light image enhancement.
 
     References:
@@ -110,20 +112,18 @@ class SCI(ModelRegisterMixin, nn.Module):
                 log(f"Initialized '{name}' from scratch.")
 
     # --- Callable & Context Manager ---
-    def forward(self, image: Tensor, inference: bool = True) -> dict:
+    @override
+    def forward_step(self, data: dict, *args, **kwargs) -> dict:
         """Forward the input through the network.
 
         Args:
-            image (Tensor): Image tensor of shape (B, 3, H, W) and values
-                ranging from 0.0 to 1.0.
-            inference (bool, optional): If True, run in inference mode.
-                Defaults to True.
+            data (dict): Input data dictionary.
 
         Returns:
-            dict: Dictionary containing the enhanced image tensor and
-                intermediate results for debugging.
+            dict: Output data dictionary.
         """
-        x = image
+        x = data["image"]
+        inference = data.get("inference", True)
 
         if inference:
             i = self.enhance(x)
@@ -153,7 +153,7 @@ class SCI(ModelRegisterMixin, nn.Module):
             }
 
 
-class SCI_PP(ModelRegisterMixin, nn.Module):
+class SCI_PP(ModelRegisterMixin, EnhancementModel):
     """SCI++ model for low-light image enhancement.
 
     References:
@@ -206,20 +206,18 @@ class SCI_PP(ModelRegisterMixin, nn.Module):
                 log(f"Initialized '{name}' from scratch.")
 
     # --- Callable & Context Manager ---
-    def forward(self, image: Tensor, inference: bool = True) -> dict:
+    @override
+    def forward_step(self, data: dict, *args, **kwargs) -> dict:
         """Forward the input through the network.
 
         Args:
-            image (Tensor): Image tensor of shape (B, 3, H, W) and values
-                ranging from 0.0 to 1.0.
-            inference (bool, optional): If True, run in inference mode.
-                Defaults to True.
+            data (dict): Input data dictionary.
 
         Returns:
-            dict: Dictionary containing the enhanced image tensor and
-                intermediate results for debugging.
+            dict: Output data dictionary.
         """
-        x = image
+        x = data["image"]
+        inference = data.get("inference", True)
 
         if inference:
             i = self.ha(x)

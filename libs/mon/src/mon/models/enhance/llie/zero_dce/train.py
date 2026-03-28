@@ -97,7 +97,7 @@ class ZeroDCE_Trainer(Trainer):
             image = image.to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(image)
+            outputs = self.model(data={"image": image}, save_debug=self.save_debug)
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
@@ -142,7 +142,6 @@ class ZeroDCE_Trainer(Trainer):
             dict: A dictionary containing the validation metrics and other
                 results for the epoch.
         """
-        config = self.config
         device = self.device
 
         # 1. Define metrics
@@ -168,7 +167,7 @@ class ZeroDCE_Trainer(Trainer):
             target = target.to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(image)
+            outputs = self.model(data={"image": image}, save_debug=self.save_debug)
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]

@@ -97,12 +97,19 @@ class CLODE_Predictor(Predictor):
         timers.preprocess.tick()
         image = datapoint["image"]
         image = image.to(device)
-        time_eval = torch.tensor([0, config.T]).float().to(device)
+        eval_time = torch.tensor([0, config.T]).float().to(device)
         timers.preprocess.tock()
 
         # 2. Inference
         timers.infer.tick()
-        outputs = self.model(image, eval_time=time_eval, inference=True)
+        outputs = self.model(
+            data={
+                "image": image,
+                "eval_time": eval_time,
+                "inference": True,
+            },
+            save_debug=self.save_debug,
+        )
         timers.infer.tock()
 
         return outputs

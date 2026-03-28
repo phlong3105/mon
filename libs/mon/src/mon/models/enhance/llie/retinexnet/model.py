@@ -18,8 +18,9 @@ __all__ = [
     "retinexnet",
 ]
 
+from typing import override
+
 import torch
-from torch import nn, Tensor
 
 from mon.core import (
     is_weights_type,
@@ -33,6 +34,7 @@ from mon.core import (
     WeightsEnum,
     WeightsLike,
 )
+from mon.models.enhance.base import EnhancementModel
 from mon.nn import ModelRegisterMixin
 from .module import DecomNet, EnhanceNet
 
@@ -44,7 +46,7 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-class RetinexNet(ModelRegisterMixin, nn.Module):
+class RetinexNet(ModelRegisterMixin, EnhancementModel):
     """RetinexNet model for low-light image enhancement.
 
     References:
@@ -92,19 +94,19 @@ class RetinexNet(ModelRegisterMixin, nn.Module):
                 log(f"Initialized '{name}' from scratch.")
 
     # --- Callable & Context Manager ---
-    def forward(self, image: Tensor, decom: bool = False) -> dict:
+    @override
+    def forward_step(self, data: dict, *args, **kwargs) -> dict:
         """Forward the input through the network.
 
         Args:
-            image (Tensor): Image tensor of shape (B, 3, H, W) and values
-                ranging from 0.0 to 1.0.
-            decom (bool, optional): If True, run in decomposition mode only.
-                Defaults to False.
+            data (dict): Input data dictionary.
 
         Returns:
-            dict: Dictionary containing the enhanced image tensor and
-                intermediate results for debugging.
+            dict: Output data dictionary.
         """
+        image = data["image"]
+        decom = data.get("decom", False)
+
         # Decomposition
         R, L = self.decom_net(image)
         if decom:
@@ -118,13 +120,12 @@ class RetinexNet(ModelRegisterMixin, nn.Module):
         S = R * L_delta_3
 
         # Return final and intermediate results for debugging
-        outputs = {
+        return {
             "enhanced": S,
             "R": R,
             "L": L,
             "L_delta": L_delta,
         }
-        return outputs
 
 # endregion
 

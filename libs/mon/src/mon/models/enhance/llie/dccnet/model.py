@@ -19,7 +19,7 @@ __all__ = [
     "dccnet",
 ]
 
-from torch import nn, Tensor
+from typing_extensions import override
 
 from mon.core import (
     is_weights_type,
@@ -33,6 +33,7 @@ from mon.core import (
     WeightsEnum,
     WeightsLike,
 )
+from mon.models.enhance.base import EnhancementModel
 from mon.nn import ModelRegisterMixin
 from .module import Net
 
@@ -44,7 +45,7 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-class DCCNet(ModelRegisterMixin, nn.Module):
+class DCCNet(ModelRegisterMixin, EnhancementModel):
     """DCC-Net model for low-light image enhancement.
 
     References:
@@ -95,26 +96,26 @@ class DCCNet(ModelRegisterMixin, nn.Module):
                 log(f"Initialized '{name}' from scratch.")
 
     # --- Callable & Context Manager ---
-    def forward(self, image: Tensor) -> dict:
-        """Forward the input through the network.
+    @override
+    def forward_step(self, data: dict, *args, **kwargs) -> dict:
+        """Perform a single forward step of the model.
+
 
         Args:
-            image (Tensor): Image tensor of shape (B, 3, H, W) and values
-                ranging from 0.0 to 1.0.
+            data (dict): Input data dictionary.
 
         Returns:
-            dict: Dictionary containing the enhanced image tensor and
-                intermediate results for debugging.
+            dict: Output data dictionary.
         """
+        image = data["image"]
         enhanced, gray, color_hist = self.module(image)
 
         # Return final and intermediate results for debugging
-        outputs = {
+        return {
             "enhanced": enhanced,
             "gray": gray,
             "color_hist": color_hist,
         }
-        return outputs
 
 # endregion
 

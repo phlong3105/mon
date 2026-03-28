@@ -91,7 +91,10 @@ class SCI_Trainer(Trainer):
             image = Variable(image, requires_grad=False).to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(image=image, inference=False)
+            outputs = self.model(
+                data={"image": image, "inference": False},
+                save_debug=True,
+            )
 
             # 2.3. Calculate loss
             loss = criterion(**outputs)
@@ -153,7 +156,10 @@ class SCI_Trainer(Trainer):
             target = target.to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(image=image, inference=False)
+            outputs = self.model(
+                data={"image": image, "inference": False},
+                save_debug=True,
+            )
 
             # 2.3. Extract outputs
             enhanced = outputs["H2"][0]

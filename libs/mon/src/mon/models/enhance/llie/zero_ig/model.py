@@ -19,7 +19,10 @@ __all__ = [
     "zero_ig",
 ]
 
+from typing import override
+
 import torch
+from docutils.utils.math.latex2mathml import over
 from torch import nn, Tensor
 
 from mon.core import (
@@ -39,6 +42,7 @@ from mon.ops import pair_downsample
 from .loss import TextureDifference
 from .module import Denoise1, Denoise2, Enhancer
 from .utils import blur
+from mon.models.enhance.base import EnhancementModel
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -48,7 +52,7 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-class ZeroIG(ModelRegisterMixin, nn.Module):
+class ZeroIG(ModelRegisterMixin, EnhancementModel):
     """Zero-IG model for low-light image enhancement.
 
     References:
@@ -100,21 +104,19 @@ class ZeroIG(ModelRegisterMixin, nn.Module):
                 log(f"Initialized '{name}' from scratch.")
 
     # --- Callable & Context Manager ---
-    def forward(self, image: Tensor, inference: bool = True) -> dict:
-        """Forward the input through the network.
+    @override
+    def forward_step(self, data: dict, *args, **kwargs) -> dict:
+        """Perform a single forward step of the model.
 
         Args:
-            image (Tensor): Image tensor of shape (B, 3, H, W) and values
-                ranging from 0.0 to 1.0.
-            inference (bool, optional): If True, run in inference mode.
-                Defaults to True.
+            data (dict): Input data dictionary.
 
         Returns:
-            dict: Dictionary containing the enhanced image tensor and
-                intermediate results for debugging.
+            dict: Output data dictionary.
         """
         eps = 1e-4
-        x = image + eps
+        x = data["image"] + eps
+        inference = data.get("inference", True)
 
         if inference:
             L2 = x - self.denoise_1(x)

@@ -80,7 +80,6 @@ class SCI_Predictor(Predictor):
         Returns:
             dict: The dictionary containing the prediction results.
         """
-        config = self.config
         device = self.device
 
         # 1. Prepare inputs
@@ -91,7 +90,10 @@ class SCI_Predictor(Predictor):
 
         # 2. Inference
         timers.infer.tick()
-        outputs = self.model(image=image, inference=True)
+        outputs = self.model(
+            data={"image": image, "inference": True},
+            save_debug=self.save_debug,
+        )
         timers.infer.tock()
 
         return outputs

@@ -278,7 +278,6 @@ class RetinexNet_Trainer(Trainer):
             dict: A dictionary containing the training loss and other results
                 for the epoch.
         """
-        config = self.config
         device = self.device
 
         # 1. Define losses
@@ -301,10 +300,19 @@ class RetinexNet_Trainer(Trainer):
 
             # 2.2. Forward pass
             if phase == "decom":
-                outputs_low = self.model(image=image, decom=True)
+                outputs_low = self.model(
+                    data={"image": image, "decom": True},
+                    save_debug=True,
+                )
             else:
-                outputs_low = self.model(image=image, decom=False)
-            outputs_high = self.model(image=image, decom=True)
+                outputs_low = self.model(
+                    data={"image": image, "decom": False},
+                    save_debug=True,
+                )
+            outputs_high = self.model(
+                data={"image": image, "decom": True},
+                save_debug=True,
+            )
 
             # 2.3. Extract outputs
             R_low = outputs_low["R"]
@@ -368,7 +376,6 @@ class RetinexNet_Trainer(Trainer):
             dict: A dictionary containing the validation metrics and other
                 results for the epoch.
         """
-        config = self.config
         device = self.device
 
         # 1. Define metrics
@@ -394,7 +401,10 @@ class RetinexNet_Trainer(Trainer):
             target = target.to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(image=image, decom=False)
+            outputs = self.model(
+                data={"image": image, "decom": False},
+                save_debug=True,
+            )
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
