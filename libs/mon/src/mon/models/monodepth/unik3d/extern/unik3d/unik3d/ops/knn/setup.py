@@ -3,7 +3,7 @@ import os
 
 import torch
 from setuptools import find_packages, setup
-from torch.utils.cpp_extension import CUDA_HOME, CppExtension, CUDAExtension
+from torch.utils.cpp_extension import CppExtension, CUDA_HOME, CUDAExtension
 
 requirements = ["torch", "torchvision"]
 

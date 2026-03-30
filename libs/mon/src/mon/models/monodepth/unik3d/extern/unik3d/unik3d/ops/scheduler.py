@@ -1,5 +1,3 @@
-import weakref
-
 import numpy as np
 
 

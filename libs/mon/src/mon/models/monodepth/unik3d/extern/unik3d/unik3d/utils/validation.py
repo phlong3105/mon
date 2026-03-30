@@ -1,18 +1,13 @@
-import json
-import os
 from collections import defaultdict
-from typing import Any, Dict, List, Optional
+from collections import defaultdict
+from typing import Dict
 
 import numpy as np
 import torch
-import torch.distributed as dist
 import torch.utils.data.distributed
 import wandb
-from PIL import Image
 from torch.nn import functional as F
 from torch.utils.data import DataLoader
-from tqdm import tqdm
-
 from unik3d.utils.distributed import barrier, get_world_size, is_main_process
 from unik3d.utils.misc import remove_leading_dim, remove_padding, ssi_helper
 from unik3d.utils.visualization import colorize, image_grid

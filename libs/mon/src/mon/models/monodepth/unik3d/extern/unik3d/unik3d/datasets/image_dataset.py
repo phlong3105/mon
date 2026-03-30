@@ -1,7 +1,6 @@
 import io
 import os
-from time import time
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, Tuple
 
 import numpy as np
 import tables
@@ -9,7 +8,6 @@ import torch
 import torchvision
 import torchvision.transforms.v2.functional as TF
 from PIL import Image
-
 from unik3d.datasets.base_dataset import BaseDataset
 from unik3d.utils import is_main_process
 from unik3d.utils.camera import BatchCamera, Pinhole

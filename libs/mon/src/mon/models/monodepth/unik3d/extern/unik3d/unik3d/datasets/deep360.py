@@ -1,7 +1,5 @@
 from typing import Any
 
-import torch
-
 from unik3d.datasets.pipelines import Compose, PanoCrop, PanoRoll
 from unik3d.datasets.sequence_dataset import SequenceDataset
 

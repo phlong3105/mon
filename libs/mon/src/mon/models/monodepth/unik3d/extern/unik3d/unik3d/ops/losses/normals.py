@@ -3,7 +3,6 @@ import itertools
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from unik3d.utils.geometric import dilate, downsample, erode
 
 from .utils import FNS, masked_mean, masked_quantile

@@ -35,7 +35,7 @@ from .hoi4d import HOI4D
 from .hypersim import HyperSim
 from .ibims import IBims, IBims_F
 from .ken_burns import KenBurns
-from .kitti import KITTI, KITTIRMVD, KITTIBenchmark
+from .kitti import KITTI, KITTIBenchmark, KITTIRMVD
 from .kitti360 import KITTI360
 from .lyft import Lyft
 from .mapillary import Mapillary
@@ -54,8 +54,10 @@ from .nuscenes import Nuscenes
 from .nyuv2 import NYUv2Depth
 from .point_odyssey import PointOdyssey
 from .proteus import Proteus
-from .samplers import (DistributedSamplerNoDuplicate,
-                       DistributedSamplerWrapper, ShardedInfiniteSampler)
+from .samplers import (
+    DistributedSamplerNoDuplicate,
+    DistributedSamplerWrapper, ShardedInfiniteSampler,
+)
 from .scannet import ScanNet
 from .scannetpp import ScanNetpp, ScanNetpp_F
 from .sintel import Sintel
@@ -67,7 +69,7 @@ from .tat_rmvd import TATRMVD
 from .theo import Theo
 from .unrealstereo4k import UnrealStereo4K
 from .urbansyn import UrbanSyn
-from .utils import ConcatDataset, collate_fn, get_weights
+from .utils import collate_fn, ConcatDataset, get_weights
 from .vkitti import VKITTI
 from .void import VOID
 from .waymo import Waymo

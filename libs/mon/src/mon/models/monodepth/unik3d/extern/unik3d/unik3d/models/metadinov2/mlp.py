@@ -11,7 +11,7 @@
 
 from typing import Callable, Optional
 
-from torch import Tensor, nn
+from torch import nn, Tensor
 
 
 class Mlp(nn.Module):

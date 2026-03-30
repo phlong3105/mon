@@ -81,7 +81,6 @@ class ZS_N2N(ModelRegisterMixin, RestorationModel):
                 Defaults to torch.device("cpu").
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
-        # Satisfy PyTorch's empty signature first.
         super().__init__()
 
         # Assign attributes
@@ -315,7 +314,6 @@ class IZS_N2N(ModelRegisterMixin, RestorationModel):
                 Defaults to torch.device("cpu").
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
-        # Satisfy PyTorch's empty signature first.
         super().__init__()
 
         # Assign attributes

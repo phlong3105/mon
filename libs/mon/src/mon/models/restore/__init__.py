@@ -9,3 +9,4 @@ This package contains various image restoration models.
 from __future__ import annotations
 
 from .denoise import *
+from .super_res import *

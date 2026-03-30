@@ -1,14 +1,19 @@
 import io
 
-import cv2
 import numpy as np
 import torch
 import torchvision
 import torchvision.transforms.v2.functional as TF
 from PIL import Image
-
-from unik3d.utils.camera import (EUCM, MEI, OPENCV, BatchCamera, Fisheye624,
-                                 Pinhole, Spherical)
+from unik3d.utils.camera import (
+    BatchCamera,
+    EUCM,
+    Fisheye624,
+    MEI,
+    OPENCV,
+    Pinhole,
+    Spherical,
+)
 
 
 def decode_depth(results, h5file, value, idx, depth_scale, name="depth", **kwargs):

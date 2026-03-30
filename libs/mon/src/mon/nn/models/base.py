@@ -15,7 +15,7 @@ __all__ = [
 
 from abc import ABC, abstractmethod
 
-from torch import nn, Tensor
+from torch import nn
 
 from mon.core import is_list_of, is_valid_str, Path, PathLike, Task
 
@@ -91,7 +91,7 @@ class Model(nn.Module, ABC):
         data = data or {}
         if not isinstance(data, dict):
             raise TypeError(
-                f"Expected `data` to be a dict, but got {type(data).__name__}."
+                f"Expected 'data' to be a dict, but got {type(data).__name__}."
             )
 
         # 1. The escape hatch for simple inference, check **kwargs
@@ -118,7 +118,7 @@ class Model(nn.Module, ABC):
                 )
         else:
             raise TypeError(
-                f"Expected `outputs` to be a dict, but got {type(outputs).__name__}."
+                f"Expected 'outputs' to be a dict, but got {type(outputs).__name__}."
             )
 
         # 5. Return outputs

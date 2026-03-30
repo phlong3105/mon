@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-from einops import rearrange
 
 from unik3d.utils.constants import VERBOSE
 from unik3d.utils.misc import profile_method

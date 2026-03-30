@@ -57,7 +57,7 @@ from mon.core import (
     WeightsEnum,
     WeightsLike,
 )
-from mon.nn.models.mixins import ModelRegisterMixin
+from mon.nn.models.base import ModelRegisterMixin
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]

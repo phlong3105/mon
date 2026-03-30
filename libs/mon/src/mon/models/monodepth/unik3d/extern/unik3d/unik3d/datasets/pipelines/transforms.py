@@ -1,14 +1,12 @@
 import os
 import random
 from copy import deepcopy
-from math import ceil, exp, log, log2, log10, tanh
-from typing import Dict, List, Tuple
+from math import ceil, tanh
 
 import numpy as np
 import torch
 import torch.nn.functional as F
 import torchvision.transforms.v2.functional as TF
-
 from unik3d.utils.geometric import downsample
 
 

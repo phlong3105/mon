@@ -6,14 +6,17 @@ from typing import Any, Dict, Tuple
 
 import numpy as np
 import torch
-from torch.utils.data import Dataset
-
 import unik3d.datasets.pipelines as pipelines
-from unik3d.utils import (eval_3d, eval_depth, identity, is_main_process,
-                          recursive_index, sync_tensor_across_gpus)
-from unik3d.utils.constants import (IMAGENET_DATASET_MEAN,
-                                    IMAGENET_DATASET_STD, OPENAI_DATASET_MEAN,
-                                    OPENAI_DATASET_STD)
+from torch.utils.data import Dataset
+from unik3d.utils import (
+    eval_3d, eval_depth, identity, is_main_process,
+    recursive_index, sync_tensor_across_gpus,
+)
+from unik3d.utils.constants import (
+    IMAGENET_DATASET_MEAN,
+    IMAGENET_DATASET_STD, OPENAI_DATASET_MEAN,
+    OPENAI_DATASET_STD,
+)
 
 
 class BaseDataset(Dataset):

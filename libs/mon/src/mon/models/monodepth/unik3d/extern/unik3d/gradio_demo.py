@@ -17,7 +17,6 @@ import trimesh
 from PIL import Image
 
 from unik3d.models import UniK3D
-from unik3d.utils.camera import OPENCV, Fisheye624, Pinhole, Spherical
 
 
 def predictions_to_glb(

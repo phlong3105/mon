@@ -6,7 +6,6 @@ import torch
 import torch.nn.functional as F
 import wandb
 from PIL import Image
-
 from unik3d.utils.distributed import get_rank
 from unik3d.utils.misc import ssi_helper
 

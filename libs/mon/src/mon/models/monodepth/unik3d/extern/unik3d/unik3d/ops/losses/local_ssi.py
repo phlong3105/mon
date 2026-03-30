@@ -2,13 +2,11 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
-
 from unik3d.utils.constants import VERBOSE
 from unik3d.utils.geometric import downsample, erode
 from unik3d.utils.misc import profile_method
 
-from .utils import (FNS, REGRESSION_DICT, ind2sub, masked_mean,
-                    masked_quantile, ssi, ssi_nd)
+from .utils import (FNS, ind2sub, masked_mean, masked_quantile, REGRESSION_DICT)
 
 
 def sample_strong_edges(edges_img, quantile=0.95, reshape=8):

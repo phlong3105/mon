@@ -3,9 +3,12 @@ from functools import partial
 import torch
 import torch.nn as nn
 from timm.models.vision_transformer import _cfg
-
-from unik3d.models.backbones import (ConvNeXt, ConvNeXtV2, SwinTransformerV2,
-                                     _make_dinov2_model)
+from unik3d.models.backbones import (
+    _make_dinov2_model,
+    ConvNeXt,
+    ConvNeXtV2,
+    SwinTransformerV2,
+)
 
 
 def swin2_tiny(

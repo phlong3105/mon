@@ -1406,9 +1406,6 @@ __all__ = [
     "rsh_cart_8",
 ]
 
-
-from typing import Optional
-
 import torch
 
 

@@ -3,16 +3,19 @@ Author: Luigi Piccinelli
 Licensed under the CC BY-NC-SA 4.0 license (http://creativecommons.org/licenses/by-nc-sa/4.0/)
 """
 
-from math import tanh
-
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from einops import rearrange
 from timm.layers import trunc_normal_
-
-from unik3d.layers import (MLP, AttentionBlock, AttentionLayer, GradChoker,
-                           PositionEmbeddingSine, ResUpsampleBil)
+from unik3d.layers import (
+    AttentionBlock,
+    AttentionLayer,
+    GradChoker,
+    MLP,
+    PositionEmbeddingSine,
+    ResUpsampleBil,
+)
 from unik3d.utils.coordinate import coords_grid
 from unik3d.utils.geometric import flat_interpolate
 from unik3d.utils.misc import get_params

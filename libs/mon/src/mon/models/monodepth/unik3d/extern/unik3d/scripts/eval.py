@@ -9,18 +9,18 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.utils.data.distributed
+import unik3d.datasets as datasets
 from torch import distributed as dist
-from torch.nn import functional as F
 from torch.nn.parallel.distributed import DistributedDataParallel
 from torch.utils.data import DataLoader, SequentialSampler
-
-import unik3d.datasets as datasets
-from unik3d.datasets import DistributedSamplerNoDuplicate, collate_fn
+from unik3d.datasets import collate_fn, DistributedSamplerNoDuplicate
 from unik3d.models import UniK3D
 from unik3d.utils import is_main_process, validate
-from unik3d.utils.distributed import (create_local_process_group,
-                                      local_broadcast_process_authkey,
-                                      setup_multi_processes, setup_slurm)
+from unik3d.utils.distributed import (
+    create_local_process_group,
+    local_broadcast_process_authkey,
+    setup_multi_processes, setup_slurm,
+)
 
 
 def main_worker(args: argparse.Namespace, config_file: str | None = None):

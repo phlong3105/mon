@@ -3,12 +3,16 @@ import os
 
 import numpy as np
 import torch
-import torch.nn as nn
 from PIL import Image
-
 from unik3d.models import UniK3D
-from unik3d.utils.camera import (MEI, OPENCV, BatchCamera, Fisheye624, Pinhole,
-                                 Spherical)
+from unik3d.utils.camera import (
+    BatchCamera,
+    Fisheye624,
+    MEI,
+    OPENCV,
+    Pinhole,
+    Spherical,
+)
 from unik3d.utils.visualization import colorize, save_file_ply
 
 SAVE = False

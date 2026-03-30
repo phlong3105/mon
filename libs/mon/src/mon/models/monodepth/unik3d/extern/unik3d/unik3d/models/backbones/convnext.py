@@ -1,13 +1,22 @@
-from collections import OrderedDict
 from functools import partial
-from typing import Callable, Optional, Sequence, Tuple, Union
+from functools import partial
+from typing import Callable, Optional, Tuple, Union
 
 import torch
 import torch.nn as nn
-from timm.layers import (AvgPool2dSame, DropPath, GlobalResponseNormMlp,
-                         LayerNorm, LayerNorm2d, Mlp, create_conv2d,
-                         get_act_layer, make_divisible, to_ntuple,
-                         trunc_normal_)
+from timm.layers import (
+    AvgPool2dSame,
+    create_conv2d,
+    DropPath,
+    get_act_layer,
+    GlobalResponseNormMlp,
+    LayerNorm,
+    LayerNorm2d,
+    make_divisible,
+    Mlp,
+    to_ntuple,
+    trunc_normal_,
+)
 from torch.utils.checkpoint import checkpoint
 
 

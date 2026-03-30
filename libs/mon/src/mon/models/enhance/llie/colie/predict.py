@@ -14,8 +14,6 @@ __all__ = [
 
 from typing import Any
 
-from accelerate.test_utils.scripts.external_deps.test_ds_alst_ulysses_sp import \
-    optimizer
 from typing_extensions import override
 
 from mon.core import K, Path, PREDICTORS, Size, TimeProfiler

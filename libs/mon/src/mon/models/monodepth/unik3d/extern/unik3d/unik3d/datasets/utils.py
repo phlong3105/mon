@@ -1,16 +1,16 @@
 import copy
 import multiprocessing as mp
 import pickle
-import random
 from collections import defaultdict
 from typing import Any, Dict, List
 
 import numpy as np
 import torch
 import torch.utils.data
-
-from unik3d.utils.distributed import (all_gather, get_local_rank,
-                                      get_local_size, get_rank, get_world_size)
+from unik3d.utils.distributed import (
+    all_gather, get_local_rank,
+    get_local_size, get_rank, get_world_size,
+)
 
 
 class ConcatDataset(torch.utils.data.ConcatDataset):

@@ -4,11 +4,9 @@ import platform
 import subprocess
 import warnings
 
-import cv2
 import torch
 import torch.utils.data.distributed
-from torch import distributed as dist
-from torch import multiprocessing as mp
+from torch import distributed as dist, multiprocessing as mp
 
 _LOCAL_PROCESS_GROUP = None
 

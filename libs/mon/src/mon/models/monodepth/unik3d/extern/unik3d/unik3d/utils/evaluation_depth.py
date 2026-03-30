@@ -5,7 +5,6 @@ import torch
 import torch.nn.functional as F
 import torchvision.transforms.v2.functional as TF
 from PIL import Image
-
 from unik3d.utils.chamfer_distance import ChamferDistance
 from unik3d.utils.constants import DEPTH_BINS
 

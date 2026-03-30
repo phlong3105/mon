@@ -9,4 +9,4 @@ This package contains various super-resolution models.
 from __future__ import annotations
 
 from .base import *
-from .gf_upsample import *
+from .upsample import *

@@ -8,13 +8,14 @@ import numpy as np
 import tables
 import torch
 import torchvision.transforms.v2.functional as TF
-
 from unik3d.datasets.base_dataset import BaseDataset
 from unik3d.datasets.utils import DatasetFromList
-from unik3d.datasets.utils_decode import (decode_camera, decode_depth,
-                                          decode_flow, decode_K, decode_mask,
-                                          decode_numpy, decode_rgb,
-                                          decode_tensor)
+from unik3d.datasets.utils_decode import (
+    decode_camera, decode_depth,
+    decode_flow, decode_K, decode_mask,
+    decode_numpy, decode_rgb,
+    decode_tensor,
+)
 from unik3d.utils.distributed import is_main_process
 
 

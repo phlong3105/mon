@@ -17,7 +17,7 @@ from typing import Any
 import torch
 from typing_extensions import override
 
-from mon.core import K, MODELS, Path, Size, TimeProfiler, PREDICTORS
+from mon.core import K, MODELS, Path, PREDICTORS, Size, TimeProfiler
 from mon.dataset import transform as T
 from mon.runners import Predictor
 # noinspection PyUnusedImports

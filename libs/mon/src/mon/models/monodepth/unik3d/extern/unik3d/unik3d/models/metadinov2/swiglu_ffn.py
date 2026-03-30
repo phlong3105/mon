@@ -7,7 +7,7 @@
 from typing import Callable, Optional
 
 import torch.nn.functional as F
-from torch import Tensor, nn
+from torch import nn, Tensor
 
 
 class SwiGLUFFN(nn.Module):

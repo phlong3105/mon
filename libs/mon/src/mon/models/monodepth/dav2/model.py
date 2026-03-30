@@ -26,8 +26,9 @@ __all__ = [
 import sys
 
 import torch
-from torch import nn, Tensor
 from numpy import ndarray
+from torch import nn, Tensor
+
 from mon.core import (
     is_weights_type,
     K,

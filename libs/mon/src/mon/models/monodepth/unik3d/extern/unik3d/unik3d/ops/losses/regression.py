@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 
-from .utils import FNS, REGRESSION_DICT, masked_mean, masked_quantile
+from .utils import FNS, masked_mean, masked_quantile, REGRESSION_DICT
 
 
 class Regression(nn.Module):

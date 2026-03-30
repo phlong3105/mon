@@ -20,12 +20,11 @@ __all__ = [
 from typing import override
 
 import torch
-from torch import nn, Tensor
 
 from mon.core import MODELS, Path, Task
+from mon.models.bgsubtract.base import BackgroundSubtractionModel
 from mon.nn import ModelRegisterMixin
 from .module import HVR
-from mon.models.bgsubtract.base import BackgroundSubtractionModel
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]

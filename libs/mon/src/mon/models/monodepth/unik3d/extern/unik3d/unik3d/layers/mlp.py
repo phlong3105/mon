@@ -1,6 +1,5 @@
 import torch
 import torch.nn as nn
-
 from unik3d.utils.misc import default
 
 from .activation import SwiGLU

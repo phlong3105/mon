@@ -1,4 +1,4 @@
-from math import log, pi
+from math import pi
 from typing import Optional
 
 import torch

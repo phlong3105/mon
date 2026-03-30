@@ -9,9 +9,7 @@ import os
 from math import ceil
 
 import huggingface_hub
-import torch.nn.functional as F
 import torch.onnx
-
 from unik3d.models.unik3d import UniK3D
 
 

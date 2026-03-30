@@ -1,10 +1,9 @@
 import torch
 import torch.nn as nn
-
 from unik3d.utils.constants import VERBOSE
 from unik3d.utils.misc import profile_method
 
-from .utils import FNS, REGRESSION_DICT, masked_mean, masked_quantile
+from .utils import FNS, masked_mean, masked_quantile, REGRESSION_DICT
 
 
 class Scale(nn.Module):

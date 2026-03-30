@@ -1,5 +1,4 @@
 import contextlib
-import logging
 import math
 from functools import partial
 from typing import Callable, Sequence
@@ -7,9 +6,10 @@ from typing import Callable, Sequence
 import torch
 import torch.nn as nn
 from torch.nn.init import trunc_normal_
-
-from unik3d.models.metadinov2 import (Block, MemEffAttention, Mlp, PatchEmbed,
-                                      SwiGLUFFNFused)
+from unik3d.models.metadinov2 import (
+    Block, MemEffAttention, Mlp, PatchEmbed,
+    SwiGLUFFNFused,
+)
 
 
 def named_apply(

@@ -1,7 +1,6 @@
 from typing import Any
 
 import torch
-
 from unik3d.datasets.sequence_dataset import SequenceDataset
 
 
