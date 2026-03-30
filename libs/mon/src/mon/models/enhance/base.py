@@ -24,8 +24,8 @@ from mon.nn import Model
 class EnhancementModel(Model, ABC):
     """A base class for all enhancement models."""
 
-    requires: dict = {"image"}
-    provides: dict = {"enhanced"}
+    requires: set = {"image"}
+    provides: set = {"enhanced"}
 
 # endregion
 

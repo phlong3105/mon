@@ -24,8 +24,8 @@ from mon.nn import Model
 class BackgroundSubtractionModel(Model, ABC):
     """A base class for all background subtraction models."""
 
-    requires: dict = {"image"}
-    provides: dict = {"background", "foreground"}
+    requires: set = {"image"}
+    provides: set = {"background", "foreground"}
 
 # endregion
 

@@ -3,13 +3,13 @@
 
 """Base Models.
 
-This module defines the base class for multiple-exposure fusion models.
+This module defines the base class for restoration models.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "MEFModel",
+    "RestorationModel",
 ]
 
 from abc import ABC
@@ -21,11 +21,11 @@ from mon.nn import Model
 # region BASE CLASSES
 # ==============================================================================
 
-class MEFModel(Model, ABC):
-    """A base class for all multiple-exposure fusion models."""
+class RestorationModel(Model, ABC):
+    """A base class for all restoration models."""
 
-    requires: set = {"images"}
-    provides: set = {"enhanced"}
+    requires: set = {"image"}
+    provides: set = {"restored"}
 
 # endregion
 

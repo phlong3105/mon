@@ -19,7 +19,7 @@ __all__ = [
     "ZS_N2N",
 ]
 
-import copy
+from typing import override
 
 import torch
 from torch import nn, Tensor
@@ -28,6 +28,7 @@ from torch.optim import Adam
 from torch.optim.lr_scheduler import StepLR
 
 from mon.core import DictLike, MODELS, OPTIMIZERS, Path, SCHEDULERS, Task
+from mon.models.restore.base import RestorationModel
 from mon.nn import ModelRegisterMixin
 from .module import DenoiseNetwork, ImprovedDenoiseNetwork
 
@@ -40,7 +41,7 @@ current_dir = current_file.parents[0]
 # ==============================================================================
 
 @MODELS.register(name="zs_n2n")
-class ZS_N2N(ModelRegisterMixin, nn.Module):
+class ZS_N2N(ModelRegisterMixin, RestorationModel):
     """ZS-N2N model for zero-shot image denoising.
 
     References:
@@ -99,20 +100,21 @@ class ZS_N2N(ModelRegisterMixin, nn.Module):
         self._default_state_dict = self.model.state_dict()
 
      # --- Callable & Context Manager ---
-    def forward(self, image: Tensor, *args, **kwargs) -> dict:
+    @override
+    def forward_step(self, data: dict, *args, **kwargs) -> dict:
         """Forward the input through the network.
 
         If ``self.fit_enabled`` is True, perform single-image optimization.
         Otherwise, perform standard training.
 
         Args:
-            image (Tensor): Image tensor of shape (B, 3, H, W) and values
-                ranging from 0.0 to 1.0.
+            data (dict): Input data dictionary.
 
         Returns:
-            dict: Dictionary containing the enhanced image tensor and
-                intermediate results for debugging.
+            dict: Output data dictionary.
         """
+        image = data["image"]
+
         # 1. Scenario 1: Single-Image Optimization
         if self.fit_enabled:
             return self.fit(image=image, *args, **kwargs)
@@ -122,11 +124,19 @@ class ZS_N2N(ModelRegisterMixin, nn.Module):
             loss = self.denoise_loss(image)
             noise = self.model(image)
             restored = image - noise
-            return {"restored": restored, "noise": noise,  "loss": loss}
+            return {
+                "restored": restored,
+                "noise": noise,
+                "loss": loss,
+            }
         else:
             noise = self.model(image)
             restored = torch.clamp(image - noise, 0, 1)
-            return {"restored": restored, "noise": noise,  "loss": None}
+            return {
+                "restored": restored,
+                "noise": noise,
+                "loss": None,
+            }
 
     def fit(
         self,
@@ -266,7 +276,7 @@ class ZS_N2N(ModelRegisterMixin, nn.Module):
 
 
 @MODELS.register(name="izs_n2n")
-class IZS_N2N(ModelRegisterMixin, nn.Module):
+class IZS_N2N(ModelRegisterMixin, RestorationModel):
     """IZS-N2N model for zero-shot image denoising.
 
     References:
@@ -324,20 +334,18 @@ class IZS_N2N(ModelRegisterMixin, nn.Module):
         self._default_state_dict = self.model.state_dict()
 
      # --- Callable & Context Manager ---
-    def forward(self, image: Tensor, *args, **kwargs) -> dict:
-        """Forward the input through the network.
-
-        If ``self.fit_enabled`` is True, perform single-image optimization.
-        Otherwise, perform standard training.
+    @override
+    def forward_step(self, data: dict, *args, **kwargs) -> dict:
+        """Perform a single forward step of the model.
 
         Args:
-            image (Tensor): Image tensor of shape (B, 3, H, W) and values
-                ranging from 0.0 to 1.0.
+            data (dict): Input data dictionary.
 
         Returns:
-            dict: Dictionary containing the enhanced image tensor and
-                intermediate results for debugging.
+            dict: Output data dictionary.
         """
+        image = data["image"]
+
         # 1. Scenario 1: Single-Image Optimization
         if self.fit_enabled:
             return self.fit(image=image, *args, **kwargs)

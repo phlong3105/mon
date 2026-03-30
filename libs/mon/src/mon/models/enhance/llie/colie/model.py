@@ -53,7 +53,7 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
     name: str = "colie"
     tasks: list[Task] = [Task.LLIE]
     model_dir: Path = current_dir
-    requires: dict = {"image", "E"}
+    requires: set = {"image", "E"}
 
     # --- Lifecycle & Initialization ---
     def __init__(

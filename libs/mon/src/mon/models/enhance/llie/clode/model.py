@@ -58,7 +58,7 @@ class CLODE(ModelRegisterMixin, EnhancementModel):
     name: str = "clode"
     tasks: list[Task] = [Task.LLIE]
     model_dir: Path = current_dir
-    requires: dict = {"image", "eval_time"}
+    requires: set = {"image", "eval_time"}
 
     # --- Lifecycle & Initialization ---
     def __init__(

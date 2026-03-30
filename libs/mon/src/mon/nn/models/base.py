@@ -28,16 +28,16 @@ class Model(nn.Module, ABC):
     """A base class for all deep learning models.
 
     Attributes:
-        requires (dict): A dictionary specifying the required input keys and their
+        requires (set): A dictionary specifying the required input keys and their
             expected types. Subclasses should override this to define their input
             requirements.
-        provides (dict): A dictionary specifying the output keys and their expected
+        provides (set): A dictionary specifying the output keys and their expected
             types that the model will produce. Subclasses should override this to
             define their output specifications.
     """
 
-    requires: dict = {}
-    provides: dict = {}
+    requires: set = {}  # Use set to ensure unique keys and order
+    provides: set = {}
 
     # --- Lifecycle & Initialization ---
     def __init_subclass__(cls, *args, **kwargs):
@@ -56,25 +56,48 @@ class Model(nn.Module, ABC):
                     f"(defined locally or inherited)."
                 )
 
+    # --- Representation ---
+    def __repr__(self) -> str:
+        """Return the official string representation for developers."""
+        cls_name = self.__class__.__name__
+        req = sorted(list(self.requires))
+        pro = sorted(list(self.provides))
+
+        return (
+            f"{cls_name}(\n"
+            f"  [Contract]\n"
+            f"    requires: {req}\n"
+            f"    provides: {pro}\n"
+            f")"
+        )
+
     # --- Callable & Context Manager ---
-    def forward(self, data: dict, save_debug: bool = False, *args, **kwargs) -> dict:
+    def forward(self, data: dict | None = None, save_debug: bool = False, *args, **kwargs) -> dict:
         """Forward the input through the model.
 
         Args:
-            data (dict | Tensor): Input data dictionary or input tensor of
-                shape (B, ...) and values ranging from 0.0 to 1.0.
+            data (dict, optional): Input data dictionary. Defaults to None.
             save_debug (bool, optional): If True, return intermediate results
                 for debugging. Defaults to False.
+            **kwargs: Direct keyword arguments to pass to the forward step.
+                Useful for simple inference, but should be used with caution as
+                it bypasses the input validation. It's recommended to use the
+                ``data`` dictionary for structured inputs.
 
         Returns:
             dict: Output dictionary.
         """
         # Validate inputs
+        data = data or {}
         if not isinstance(data, dict):
             raise TypeError(
                 f"Expected `data` to be a dict, but got {type(data).__name__}."
             )
 
+        # 1. The escape hatch for simple inference, check **kwargs
+        data |= kwargs
+
+        # 2. The enforcement
         missing_inputs = self.requires - data.keys()
         if missing_inputs:
             raise KeyError(
@@ -82,10 +105,10 @@ class Model(nn.Module, ABC):
                 f"Provided keys: {list(data.keys())}"
             )
 
-        # Execute forward pass logic
-        outputs = self.forward_step(data=data)
+        # 3. Execute forward pass logic
+        outputs = self.forward_step(data=data, *args, **kwargs)
 
-        # Validate outputs
+        # 4. Validate outputs
         if isinstance(outputs, dict):
             missing_outputs = self.provides - outputs.keys()
             if missing_outputs:
@@ -98,7 +121,7 @@ class Model(nn.Module, ABC):
                 f"Expected `outputs` to be a dict, but got {type(outputs).__name__}."
             )
 
-        # Return outputs
+        # 5. Return outputs
         if not save_debug:
             # Filter outputs to only include keys defined in `provides`
             outputs = {k: v for k, v in outputs.items() if k in self.provides}

@@ -21,6 +21,7 @@ __all__ = [
     "PREDICTORS",
     "SCHEDULERS",
     "TRAINERS",
+    "UPSAMPLERS",
     "WEIGHTS",
     "WeightsFactory",
 ]
