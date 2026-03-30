@@ -19,7 +19,7 @@ __all__ = [
     "ZS_N2N",
 ]
 
-from typing import override
+from typing import Any, override
 
 import torch
 from torch import nn, Tensor
@@ -100,7 +100,7 @@ class ZS_N2N(ModelRegisterMixin, RestorationModel):
 
      # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict, *args, **kwargs) -> dict:
+    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
         """Forward the input through the network.
 
         If ``self.fit_enabled`` is True, perform single-image optimization.
@@ -333,7 +333,7 @@ class IZS_N2N(ModelRegisterMixin, RestorationModel):
 
      # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict, *args, **kwargs) -> dict:
+    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
         """Perform a single forward step of the model.
 
         Args:

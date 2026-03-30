@@ -38,7 +38,7 @@ class DICM(ImageDataset, DatasetRegisterMixin):
     """LOL-v1 dataset."""
 
     name: str = "dicm"
-    tasks: list[Task] = [Task.LLIE]
+    tasks: list[Task] = [Task.LLE]
     dirname: str = "unpaired_lol"
     subdir: str = "dicm"
     splits: list[Split] = [Split.TEST]
@@ -54,7 +54,7 @@ class Fusion(ImageDataset, DatasetRegisterMixin):
     """Fusion dataset."""
 
     name: str = "fusion"
-    tasks: list[Task] = [Task.LLIE]
+    tasks: list[Task] = [Task.LLE]
     dirname: str = "unpaired_lol"
     subdir: str = "fusion"
     splits: list[Split] = [Split.TEST]
@@ -70,7 +70,7 @@ class LIME(ImageDataset, DatasetRegisterMixin):
     """LIME dataset."""
 
     name: str = "lime"
-    tasks: list[Task] = [Task.LLIE]
+    tasks: list[Task] = [Task.LLE]
     dirname: str = "unpaired_lol"
     subdir: str = "lime"
     splits: list[Split] = [Split.TEST]
@@ -86,7 +86,7 @@ class MEF(ImageDataset, DatasetRegisterMixin):
     """MEF dataset."""
 
     name: str = "mef"
-    tasks: list[Task] = [Task.LLIE]
+    tasks: list[Task] = [Task.LLE]
     dirname: str = "unpaired_lol"
     subdir: str = "mef"
     splits: list[Split] = [Split.TEST]
@@ -102,7 +102,7 @@ class NPE(ImageDataset, DatasetRegisterMixin):
     """NPE dataset."""
 
     name: str = "npe"
-    tasks: list[Task] = [Task.LLIE]
+    tasks: list[Task] = [Task.LLE]
     dirname: str = "unpaired_lol"
     subdir: str = "npe"
     splits: list[Split] = [Split.TEST]
@@ -118,7 +118,7 @@ class VV(ImageDataset, DatasetRegisterMixin):
     """VV dataset."""
 
     name: str = "vv"
-    tasks: list[Task] = [Task.LLIE]
+    tasks: list[Task] = [Task.LLE]
     dirname: str = "unpaired_lol"
     subdir: str = "vv"
     splits: list[Split] = [Split.TEST]

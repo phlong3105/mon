@@ -268,7 +268,7 @@ def main():
     trainer = SLICE_Trainer.from_cli(
         root=resolve_project_root(current_dir),
         config_file="slice_sice_me.yaml",
-        task=Task.LLIE,
+        task=Task.LLE,
         mode=RunMode.TRAIN,
         arch="slice",
         model="slice",

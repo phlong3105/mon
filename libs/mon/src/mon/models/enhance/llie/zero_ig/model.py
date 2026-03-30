@@ -19,7 +19,7 @@ __all__ = [
     "zero_ig",
 ]
 
-from typing import override
+from typing import Any, override
 
 import torch
 from torch import nn
@@ -62,7 +62,7 @@ class ZeroIG(ModelRegisterMixin, EnhancementModel):
 
     arch: str = "zero_ig"
     name: str = "zero_ig"
-    tasks: list[Task] = [Task.LLIE]
+    tasks: list[Task] = [Task.LLE]
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
@@ -104,7 +104,7 @@ class ZeroIG(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict, *args, **kwargs) -> dict:
+    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
         """Perform a single forward step of the model.
 
         Args:

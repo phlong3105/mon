@@ -14,6 +14,7 @@ __all__ = [
 ]
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 from torch import nn
 
@@ -129,7 +130,7 @@ class Model(nn.Module, ABC):
         return outputs
 
     @abstractmethod
-    def forward_step(self, data: dict, *args, **kwargs) -> dict:
+    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
         """Perform a single forward step of the model.
 
         This method should be implemented by all subclasses.

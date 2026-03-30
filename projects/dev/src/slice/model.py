@@ -71,7 +71,7 @@ class SLICE(ModelRegisterMixin, nn.Module):
 
     arch: str = "slice"
     name: str = "slice"
-    tasks: list[Task] = [Task.LLIE]
+    tasks: list[Task] = [Task.LLE]
     model_dir: Path = current_dir
     methods = [
         "iter8", "iter5", "iter4", "dopri8", "dopri5", "bosh3", "fehlberg2",

@@ -95,6 +95,10 @@ data: ~  # (list[str]) List of data names or paths for prediction.
 
 eval_imgsz: 512  # (int | list[int]) Image size for evaluation.
 eval_resize: True  # (bool) Resize the image to the evaluation size.
+
+upsampler:
+  name: "interpolation"
+
 benchmark: False  # (bool) Benchmark the model.
 
 # --- Saving & Visualization ---

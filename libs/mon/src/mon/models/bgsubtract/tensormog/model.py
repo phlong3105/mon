@@ -17,7 +17,7 @@ __all__ = [
     "tensormog",
 ]
 
-from typing import override
+from typing import Any, override
 
 import torch
 
@@ -102,7 +102,7 @@ class TensorMOG(ModelRegisterMixin, BackgroundSubtractionModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict, *args, **kwargs) -> dict:
+    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
         """Forward the input through the network.
 
         Args:

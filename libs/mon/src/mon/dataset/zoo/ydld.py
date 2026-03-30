@@ -32,7 +32,7 @@ class YDLD(ImageDataset, DatasetRegisterMixin):
     """YDLD dataset."""
 
     name: str = "ydld"
-    tasks: list[Task] = [Task.LLIE, Task.DETECT]
+    tasks: list[Task] = [Task.LLE, Task.DETECT]
     dirname: str = "ydld"
     subdir: str = "ydld"
     splits: list[Split] = [Split.TRAIN, Split.TEST]

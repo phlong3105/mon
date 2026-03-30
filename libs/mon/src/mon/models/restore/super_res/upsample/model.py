@@ -13,7 +13,7 @@ __all__ = [
     "InterUpsample",
 ]
 
-from typing import override
+from typing import Any, override
 
 import cv2
 from numpy import ndarray
@@ -33,17 +33,17 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-@UPSAMPLERS.register(name="inter")
+@UPSAMPLERS.register(name="interpolation")
 class InterUpsample(ModelRegisterMixin, SuperResolutionModel):
     """Interpolation model for super-resolution."""
 
-    arch: str = "inter"
-    name: str = "inter"
+    arch: str = "interpolation"
+    name: str = "interpolation"
     tasks: list[Task] = [Task.SUPER_RES]
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
-    def __init__(self,  verbose: bool = True, *args, **kwargs):
+    def __init__(self, verbose: bool = True, *args, **kwargs):
         """Initialize a new instance.
 
         Args:
@@ -56,7 +56,7 @@ class InterUpsample(ModelRegisterMixin, SuperResolutionModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict, *args, **kwargs) -> dict:
+    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
         """Perform a single forward step of the model.
 
         Args:
@@ -73,7 +73,7 @@ class InterUpsample(ModelRegisterMixin, SuperResolutionModel):
             _, c, _, _ = x_lr.shape
             is_depth = (c == 1)
             mode = InterpolationMode.NEAREST_EXACT if is_depth else InterpolationMode.BICUBIC
-            y_hr = F_tv.resize(
+            x_hr = F_tv.resize(
                 img=x_lr,
                 size=list(imgsz.hw),
                 interpolation=mode,
@@ -85,7 +85,7 @@ class InterUpsample(ModelRegisterMixin, SuperResolutionModel):
             _, _, c = x_lr.shape
             is_depth = (c == 1)
             mode = cv2.INTER_NEAREST if is_depth else cv2.INTER_CUBIC
-            y_hr = cv2.resize(src=x_lr, dsize=imgsz.wh, interpolation=mode)
+            x_hr = cv2.resize(src=x_lr, dsize=imgsz.wh, interpolation=mode)
 
         # 3. Error: Unsupported type
         else:
@@ -95,7 +95,7 @@ class InterUpsample(ModelRegisterMixin, SuperResolutionModel):
             )
 
         # Return final and intermediate results for debugging
-        return { "y_hr": y_hr }
+        return { "x_hr": x_hr }
 
 
 @MODELS.register(name="guided_filter_upsample")
@@ -124,7 +124,7 @@ class GuidedFilterUpsample(ModelRegisterMixin, SuperResolutionModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict, *args, **kwargs) -> dict:
+    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
         """Perform a single forward step of the model.
 
         Args:
@@ -136,10 +136,10 @@ class GuidedFilterUpsample(ModelRegisterMixin, SuperResolutionModel):
         x_lr = data["x_lr"]
         y_hr = data["y_hr"]
         y_lr = data.get("y_lr", None)
-        y_hr = guided_filter_upsample(x_lr=x_lr, y_lr=y_lr, y_hr=y_hr, r=self.radius)
+        x_hr = guided_filter_upsample(x_lr=x_lr, y_lr=y_lr, y_hr=y_hr, r=self.radius)
 
         # Return final and intermediate results for debugging
-        return { "y_hr": y_hr }
+        return { "x_hr": x_hr }
 
 # endregion
 

@@ -32,7 +32,7 @@ class DarkFace(ImageDataset, DatasetRegisterMixin):
     """DarkFace dataset."""
 
     name: str = "darkface"
-    tasks: list[Task] = [Task.LLIE, Task.DETECT]
+    tasks: list[Task] = [Task.LLE, Task.DETECT]
     dirname: str = "darkface"
     subdir: str = "darkface"
     splits: list[Split] = [Split.TEST]

@@ -68,7 +68,7 @@ class RetinexNet_Predictor(Predictor):
     # --- Prediction ---
     @override
     @torch.inference_mode()
-    def _predict_step(self, datapoint: dict, timers: TimeProfiler) -> dict:
+    def _predict_step(self, datapoint: dict[str, Any], timers: TimeProfiler) -> dict[str, Any]:
         """Predict the output of the model for a single data point.
 
         Args:
@@ -107,11 +107,14 @@ class RetinexNet_Predictor(Predictor):
             outputs (dict): The dictionary containing the main prediction results.
                 Each key in the dictionary is a batched of prediction results.
         """
-        meta = datapoint["meta"]
-        for i, meta_i in enumerate(meta):
-            path = Path(meta_i["path"])
-            size = Size.from_value(meta_i["imgsz"])
-            self._save_image(outputs["enhanced"][i:i+1], size, path, dirname=K.PRED_DIR)
+        self._save_batch_image(
+            keys=["enhanced"],
+            datapoint=datapoint,
+            outputs=outputs,
+            dirname=K.PRED_DIR,
+            subdirname="",
+            use_stem=False,
+        )
 
     @override
     def _save_debug(self, datapoint: dict[str, Any], outputs: dict[str, Any]):
@@ -122,17 +125,14 @@ class RetinexNet_Predictor(Predictor):
             outputs (dict): The dictionary containing the main prediction results.
                 Each key in the dictionary is a batched of prediction results.
         """
-        meta = datapoint["meta"]
-        for i, meta_i in enumerate(meta):
-            path = Path(meta_i["path"])
-            size = Size.from_value(meta_i["imgsz"])
-            debug_images = {
-                "R": outputs["R"][i:i+1],
-                "L": outputs["L"][i:i+1],
-                "L_delta": outputs["L_delta"][i:i+1],
-            }
-            for stem, image in debug_images.items():
-                self._save_image(image, size, path, dirname=K.DEBUG_DIR, stem=stem)
+        self._save_batch_image(
+            keys=["R", "L", "L_delta"],
+            datapoint=datapoint,
+            outputs=outputs,
+            dirname=K.DEBUG_DIR,
+            subdirname="",
+            use_stem=True,
+        )
 
 # endregion
 

@@ -12,6 +12,8 @@ __all__ = [
     "RetinexNet_Trainer",
 ]
 
+from typing import Any
+
 import pyiqa
 import torch
 from rich.progress import Progress
@@ -441,7 +443,12 @@ class RetinexNet_Trainer(Trainer):
 
     # --- Output ---
     @override
-    def _save_debug(self, epoch: int, train_outputs: dict, val_outputs: dict):
+    def _save_debug(
+        self,
+        epoch: int,
+        train_outputs: dict[str, Any],
+        val_outputs: dict[str, Any]
+    ):
         """Save debugging results for visualization.
 
         Args:

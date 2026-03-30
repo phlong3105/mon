@@ -36,7 +36,7 @@ class MSEC(ImageDataset, DatasetRegisterMixin):
     """MSEC dataset."""
 
     name: str = "msec"
-    tasks: list[Task] = [Task.LLIE]
+    tasks: list[Task] = [Task.LLE]
     dirname: str = "msec"
     subdir: str = "msec"
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]

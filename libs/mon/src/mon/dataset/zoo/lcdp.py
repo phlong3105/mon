@@ -36,7 +36,7 @@ class LCDP(ImageDataset, DatasetRegisterMixin):
     """LCDP dataset."""
 
     name: str = "lcdp"
-    tasks: list[Task] = [Task.LLIE]
+    tasks: list[Task] = [Task.LLE]
     dirname: str = "lcdp"
     subdir: str = "lcdp"
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]

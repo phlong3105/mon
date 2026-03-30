@@ -12,7 +12,7 @@ __all__ = [
     "TVDenoise",
 ]
 
-from typing import override
+from typing import Any, override
 
 from mon.core import MODELS, Path, Task
 from mon.models.restore.base import RestorationModel
@@ -62,7 +62,7 @@ class TVDenoise(ModelRegisterMixin, RestorationModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict, *args, **kwargs) -> dict:
+    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
         """Perform a single forward step of the model.
 
         Args:

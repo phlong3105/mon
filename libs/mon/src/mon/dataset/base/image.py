@@ -50,7 +50,7 @@ from .mixins import DatasetCollationMixin
 class AlbumentationsDataset(Dataset, ABC):
     """Base class for datasets that use albumentations for transformations."""
 
-    transformed_suffix: str = "T"
+    origin_suffix: str = "orig"
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -101,11 +101,13 @@ class AlbumentationsDataset(Dataset, ABC):
             transformed = transforms(**kv)
 
             if self.keep_original:
-                # Add the transformed items with a suffix to their keys (e.g., 'image' -> 'image_T')
-                transformed = {f"{k}_{self.transformed_suffix}": v for k, v in transformed.items()}
                 # Apply basic transformations to the original data
                 basic_transforms = self.basic_transforms
-                transformed |= basic_transforms(**kv)
+                transformed_orig = basic_transforms(**kv)
+                # Add suffix to the original items (e.g., 'image' -> 'image_orig')
+                transformed_orig = {f"{k}_{self.origin_suffix}": v for k, v in transformed_orig.items()}
+                # Combine the original and transformed items
+                transformed |= transformed_orig
 
             # Update the datapoint with the transformed values
             datapoint.update(transformed)

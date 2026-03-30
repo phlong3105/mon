@@ -19,7 +19,7 @@ __all__ = [
     "clode",
 ]
 
-from typing import override
+from typing import Any, override
 
 from mon.core import (
     is_weights_type,
@@ -56,7 +56,7 @@ class CLODE(ModelRegisterMixin, EnhancementModel):
 
     arch: str = "clode"
     name: str = "clode"
-    tasks: list[Task] = [Task.LLIE]
+    tasks: list[Task] = [Task.LLE]
     model_dir: Path = current_dir
     requires: set = {"image", "eval_time"}
 
@@ -104,7 +104,7 @@ class CLODE(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict, *args, **kwargs) -> dict:
+    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
         """Forward the input through the network.
 
         Args:

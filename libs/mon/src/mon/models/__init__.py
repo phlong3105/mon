@@ -12,19 +12,19 @@ Taxonomy:
     ├── Low-Level
     │   ├── Restoration
     │   │   ├── Deblurring
-    │   │   ├── Dehazing
-    │   │   ├── Demoireing
-    │   │   ├── Demosaicing
     │   │   ├── Denoising
+    │   │   ├── Dehazing
     │   │   ├── Deraining
     │   │   ├── Desnowing
+    │   │   ├── Demoireing
+    │   │   ├── Demosaicing
     │   │   ├── Image Inpainting
     │   │   └── Super-Resolution
     │   ├── Enhancement
+    │   │   ├── Low-Light Enhancement
+    │   │   ├── Multi-Exposure Fusion
     │   │   ├── Color Correction
     │   │   ├── Colorization
-    │   │   ├── Low-Light Image Enhancement
-    │   │   ├── Multiple-Exposure Fusion
     │   │   ├── Retouching
     │   │   ├── Sharpening
     │   │   ├── Style Transfer
@@ -61,7 +61,6 @@ from .bgsubtract import *
 from .classify import *
 from .detect import *
 from .enhance import *
-from .fusion import *
 from .monodepth import *
 from .restore import *
 from .segment import *

@@ -15,10 +15,9 @@ __all__ = [
 from abc import ABC, abstractmethod
 from typing import Any
 
-import cv2
 from numpy import ndarray
 from rich.progress import Progress
-from torch import Tensor
+from torch import nn, Tensor
 
 from mon.core import (
     Config,
@@ -36,6 +35,7 @@ from mon.core import (
     sys_ctx,
     TensorOrArray,
     TimeProfiler,
+    UPSAMPLERS,
 )
 from mon.dataset import (
     build_dataloader,
@@ -67,14 +67,20 @@ class Predictor(Runner, ABC):
         """
         super().__init__(config=config)
         # Allocate resources
-        # These attributes will be initialized later to avoid a long
-        # initialization time
+        # These attributes will be initialized later to avoid a long initialization time
         self._transforms: T.Compose | None = None
+        self._upsampler: nn.Module | None = None
 
     @abstractmethod
     def _init_transforms(self):
         """Initialize ``self._transforms`` attribute."""
         pass
+
+    def _init_upsampler(self):
+        """Initialize ``self._upsampler`` for upsampling the output images if
+        necessary.
+        """
+        self._upsampler = UPSAMPLERS.build(**self.config.upsampler)
 
     def _init_data(
         self,
@@ -107,12 +113,17 @@ class Predictor(Runner, ABC):
     @property
     def keep_original(self) -> bool:
         """Whether to keep the original data alongside the transformed data."""
-        return False
+        return True
 
     @property
     def transforms(self) -> T.Compose | None:
         """Return the transforms object."""
         return self._transforms
+
+    @property
+    def upsampler(self) -> nn.Module | None:
+        """Return the upsampler object."""
+        return self._upsampler
 
     # --- Creation ---
     @classmethod
@@ -145,8 +156,9 @@ class Predictor(Runner, ABC):
         if self.model is None:
             log(f"'model' is not initialized.")
 
-        # 4. Define transforms
+        # 4. Define transforms & upsampler (if eval_resize is True)
         self._init_transforms()
+        self._init_upsampler()
         if self.transforms is None:
             if self.verbose:
                 log(f"'transforms' is not initialized.")
@@ -211,9 +223,7 @@ class Predictor(Runner, ABC):
         pbar.remove_task(task)
 
     @abstractmethod
-    def _predict_step(
-        self, datapoint: dict[str, Any], timers: TimeProfiler
-    ) -> dict[str, Any]:
+    def _predict_step(self, datapoint: dict[str, Any], timers: TimeProfiler) -> dict[str, Any]:
         """Predict the output of the model for a single data point.
 
         Args:
@@ -249,22 +259,85 @@ class Predictor(Runner, ABC):
         """
         pass
 
+    # --- Utilities ---
+    def _save_batch_image(
+        self,
+        keys: list[str],
+        datapoint: dict[str, Any],
+        outputs: dict[str, Any],
+        dirname: str = K.PRED_DIR,
+        subdirname: str = "",
+        use_stem: bool = False
+    ):
+        """Save a batch of image-based outputs.
+
+        Args:
+            keys (list[str]): The list of keys in the outputs dictionary that
+                correspond to the images to be post-processed.
+            datapoint (dict): The dictionary containing the input data.
+            outputs (dict): The dictionary containing the main prediction results.
+                Each key in the dictionary is a batched of prediction results.
+            dirname (str): The directory name for the output files.
+                Defaults to K.PRED_DIR.
+            subdirname (str, optional): Subdirectory name to append to the
+                output path (e.g., 'debug'/'mask'). Defaults to "".
+            use_stem (bool, optional): Whether to use the source file name stem
+                for the output file name. If False, the output file name will
+                be the same as the source file name. Defaults to False.
+        """
+        metas = datapoint.get("meta", [])
+
+        # Pre-extract the batches for the requested keys to avoid dict lookups
+        # in the loop
+        batch_y_hr = datapoint["image_orig"]
+        batch_images_dict = {k: outputs[k] for k in keys if k in outputs}
+
+        for i, meta_i in enumerate(metas):
+            path = Path(meta_i["path"])
+            y_hr = batch_y_hr[i:i + 1]
+            size = Size.from_value(meta_i["imgsz"])
+
+            for k, images in batch_images_dict.items():
+                # Slice once per key per item
+                image = images[i:i + 1]
+
+                # Resize the image if needed
+                imgsz = Size.from_value(image)
+                if imgsz != size:
+                    image = self.upsampler(x_lr=image, y_hr=y_hr, imgsz=size)["y_hr"]
+
+                # Convert to array
+                if isinstance(image, Tensor):
+                    image = to_image_array(image)
+                if not isinstance(image, ndarray):
+                    raise TypeError(
+                        f"Expected 'image' to be an array, "
+                        f"but got {type(image).__name__}."
+                    )
+
+                # Use the key as the stem only if requested (for debug)
+                stem = k if use_stem else None
+                self._save_image(
+                    image=image,
+                    src_path=path,
+                    dirname=dirname,
+                    subdirname=subdirname,
+                    stem=stem,
+                )
+
     def _save_image(
         self,
         image: TensorOrArray,
-        size: Size,
         src_path: Path,
         dirname: str = K.PRED_DIR,
         subdirname: str = "",
-        stem: str = ""
+        stem: str = "",
     ):
-        """Save a debug image for visualization.
+        """Save a single image for visualization.
 
         Args:
             image (TensorOrArray): The image to be saved, which can be a tensor
                 or an array.
-            size (Size): The original size of the input image, used for resizing
-                the image if necessary.
             src_path (Path): The source path, used to determine the output file
                 path.
             dirname (str, optional): The directory name for the output file.
@@ -278,26 +351,22 @@ class Predictor(Runner, ABC):
         """
         config = self.config
 
-        # Convert the input image to an array
-        if isinstance(image, Tensor):
-            image = to_image_array(image)
-        if not isinstance(image, ndarray):
-            raise TypeError(
-                f"Expected 'image' to be an array, but got {type(image).__name__}."
-            )
-
-        # Resize the image if necessary
-        imgsz = Size.from_value(image)
-        if imgsz != size:
-            image = cv2.resize(image, size.wh, interpolation=cv2.INTER_LINEAR)
-
-        # Save the image
+        # Determine the save path based on the source path and the provided parameters
         if stem:
-            save_dir = config.resolve_save_dir(dirname=dirname, subdirname=subdirname, src_path=src_path)
+            save_dir = config.resolve_save_dir(
+                dirname=dirname,
+                subdirname=subdirname,
+                src_path=src_path,
+            )
             save_path = save_dir / f"{src_path.stem}_{stem}{K.IMAGE_EXT}"
         else:
-            save_path = config.resolve_save_file(dirname=dirname, subdirname=subdirname, src_path=src_path)
+            save_path = config.resolve_save_file(
+                dirname=dirname,
+                subdirname=subdirname,
+                src_path=src_path,
+            )
 
+        # Save the image
         write_image(image=image, path=save_path)
 
 # endregion

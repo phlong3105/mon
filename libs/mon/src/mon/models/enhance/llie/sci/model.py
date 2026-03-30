@@ -26,7 +26,7 @@ __all__ = [
     "sci_pp",
 ]
 
-from typing import override
+from typing import Any, override
 
 import torch
 
@@ -71,7 +71,7 @@ class SCI(ModelRegisterMixin, EnhancementModel):
 
     arch: str = "sci"
     name: str = "sci"
-    tasks: list[Task] = [Task.LLIE]
+    tasks: list[Task] = [Task.LLE]
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
@@ -113,7 +113,7 @@ class SCI(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict, *args, **kwargs) -> dict:
+    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
         """Forward the input through the network.
 
         Args:
@@ -164,7 +164,7 @@ class SCI_PP(ModelRegisterMixin, EnhancementModel):
 
     arch: str = "sci"
     name: str = "sci++"
-    tasks: list[Task] = [Task.LLIE]
+    tasks: list[Task] = [Task.LLE]
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
@@ -207,7 +207,7 @@ class SCI_PP(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict, *args, **kwargs) -> dict:
+    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
         """Forward the input through the network.
 
         Args:

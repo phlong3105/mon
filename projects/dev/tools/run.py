@@ -36,7 +36,7 @@ def main(args: argparse.Namespace):
         config_ctx = ConfigContext.from_cli(
             root=resolve_project_root(current_dir),
             config_file=args.config,
-            task=Task.LLIE,
+            task=Task.LLE,
             mode=RunMode.TRAIN,
             device="auto",
             save=True,
@@ -51,7 +51,7 @@ def main(args: argparse.Namespace):
         config_ctx = ConfigContext.from_cli(
             root=resolve_project_root(current_dir),
             config_file=args.config,
-            task=Task.LLIE,
+            task=Task.LLE,
             mode=RunMode.PREDICT,
             device="auto",
             save=True,

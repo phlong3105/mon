@@ -35,7 +35,7 @@ class ExDark(ImageDataset, DatasetRegisterMixin):
     """ExDark dataset."""
 
     name: str = "exdark"
-    tasks: list[Task] = [Task.LLIE, Task.DETECT]
+    tasks: list[Task] = [Task.LLE, Task.DETECT]
     dirname: str = "exdark"
     subdir: str = "exdark"
     splits: list[Split] = [Split.TEST]

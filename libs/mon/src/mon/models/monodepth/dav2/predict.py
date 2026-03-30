@@ -102,7 +102,7 @@ class DAV2_Predictor(Predictor):
     # --- Prediction ---
     @override
     @torch.inference_mode()
-    def _predict_step(self, datapoint: dict, timers: TimeProfiler) -> dict:
+    def _predict_step(self, datapoint: dict[str, Any], timers: TimeProfiler) -> dict[str, Any]:
         """Predict the output of the model for a single data point.
 
         Args:
@@ -142,12 +142,19 @@ class DAV2_Predictor(Predictor):
             outputs (dict): The dictionary containing the main prediction results.
                 Each key in the dictionary is a batched of prediction results.
         """
-        meta = datapoint["meta"]
+        meta = datapoint["meta"][0]
         path = Path(meta["path"])
         size = Size.from_value(meta["imgsz"])
+
         depth = outputs["depth"]
         depth = np.repeat(depth[..., np.newaxis], 3, axis=-1)
-        self._save_image(depth, size, path, dirname=K.PRED_DIR)
+
+        # Resize the image if needed
+        imgsz = Size.from_value(depth)
+        if imgsz != size:
+            depth = self._upsampler(x_lr=depth, imgsz=size)["y_hr"]
+
+        self._save_image(depth, path, dirname=K.PRED_DIR)
 
     @override
     def _save_debug(self, datapoint: dict[str, Any], outputs: dict[str, Any]):
@@ -158,11 +165,18 @@ class DAV2_Predictor(Predictor):
             outputs (dict): The dictionary containing the main prediction results.
                 Each key in the dictionary is a batched of prediction results.
         """
-        meta = datapoint["meta"]
+        meta = datapoint["meta"][0]
         path = Path(meta["path"])
         size = Size.from_value(meta["imgsz"])
+
         depth_c = vis_heatmap(outputs["depth"], colormap="Spectral_r")
-        self._save_image(depth_c, size, path, dirname=K.DEBUG_DIR, stem="depth_c")
+
+        # Resize the image if needed
+        imgsz = Size.from_value(depth_c)
+        if imgsz != size:
+            depth_c = self._upsampler(x_lr=depth_c, imgsz=size)["y_hr"]
+
+        self._save_image(depth_c, path, dirname=K.DEBUG_DIR, stem="depth_c")
 
 # endregion
 

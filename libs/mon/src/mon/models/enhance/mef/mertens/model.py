@@ -17,7 +17,7 @@ __all__ = [
     "Mertens",
 ]
 
-from typing import override
+from typing import Any, override
 
 from mon.core import MODELS, Path, Task
 from mon.models.enhance.mef.base import MEFModel
@@ -44,7 +44,7 @@ class Mertens(ModelRegisterMixin, MEFModel):
 
     arch: str = "mertens"
     name: str = "mertens"
-    tasks: list[Task] = [Task.LLIE]
+    tasks: list[Task] = [Task.LLE]
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
@@ -81,7 +81,7 @@ class Mertens(ModelRegisterMixin, MEFModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict, *args, **kwargs) -> dict:
+    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
         """Forward the input through the network.
 
         Args:

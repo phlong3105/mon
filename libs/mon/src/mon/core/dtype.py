@@ -184,43 +184,44 @@ class Task(MultiStrEnum):
     # --- Computer Vision ---
     # -- Low-Level --
     # Restoration
-    DEBLUR = "deblur"          # Deblurring
-    DEHAZE = "dehaze"          # Dehazing
-    DEMOIRE = "demoire"        # Demoireing
-    DEMOSAIC = "demosaic"      # Demosaicing
-    DENOISE = "denoise"        # Denoising
-    DERAIN = "derain"          # Deraining
-    DESNOW = "desnow"          # Desnowing
-    INPAINT = "inpaint"        # Image Inpainting
-    SUPER_RES = "super_res"    # Super-Resolution
+    DEBLUR = "deblur", "deblurring"
+    DENOISE = "denoise", "denoising"
+    DEHAZE = "dehaze", "dehazing"
+    DERAIN = "derain", "deraining"
+    DESNOW = "desnow", "desnowing"
+    DEMOIRE = "demoire", "demoireing"
+    DEMOSAIC = "demosaic", "demosaicing"
+    INPAINT = "inpaint", "inpainting"
+    SUPER_RES = "super_res", "super_resolution"
 
     # Enhancement
-    CC = "cc"                  # Color Correction
-    CE = "ce"                  # Contrast Enhancement
-    COLORIZATION = "colorization"
-    LLIE = "llie"              # Low-Light Image Enhancement
-    MEF = "mef"                # Multi-Exposure Fusion
-    RETOUCH = "retouch"        # Image Retouching
-    SHARPEN = "sharpen"        # Image Sharpening
+    LLE = "lle", "low_light_enhancement"
+    MEF = "mef", "multi_exposure_fusion"
+    # CC = "cc", "color_correction"
+    # CE = "ce", "contrast_enhancement"
+    # COLORIZATION = "colorization"
+    # RETOUCH = "retouch", "image_retouching"
+    # SHARPEN = "sharpen", "image_sharpening
     STYLE_TRANSFER = "style_transfer"
-    TONE_MAPPING = "tone_mapping"
+    # TONE_MAPPING = "tone_mapping"
 
     # -- Mid-Level --
-    # Keypoint
-    POSE = "pose"              # Pose Estimation
+    SEGMENT = "segment", "segmentation"
 
-    BGSUBTRACT = "bgsubtract"  # Background Subtraction
-    MONODEPTH = "monodepth"    # Monocular-Depth Estimation
+    # Depth & Geometry
+    MONODEPTH = "monodepth", "monocular_depth_estimation"
+
+    # Motion
+    BGSUBTRACT = "bgsubtract", "background_subtraction"
     OPTICAL_FLOW = "optical_flow"
-    SEGMENT = "segment"        # Semantic Segmentation
-    TRACK = "track"            # Tracking
+    TRACK = "track", "tracking", "object_tracking"
+
+    # Keypoint
+    POSE = "pose", "pose_estimation"
 
     # -- High-Level --
-    CLASSIFY = "classify"      # Classification
-    DETECT = "detect"          # Object Detection
-
-    # --- Generative AI ---
-    IMG2IMG = "img2img"        # Image-to-Image Translation
+    CLASSIFY = "classify", "classification"
+    DETECT = "detect", "object_detection"
 
 
 class Precision(MultiStrEnum):

@@ -19,6 +19,8 @@ __all__ = [
     "dccnet",
 ]
 
+from typing import Any
+
 from typing_extensions import override
 
 from mon.core import (
@@ -56,7 +58,7 @@ class DCCNet(ModelRegisterMixin, EnhancementModel):
 
     arch: str = "dccnet"
     name: str = "dccnet"
-    tasks: list[Task] = [Task.LLIE]
+    tasks: list[Task] = [Task.LLE]
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
@@ -97,7 +99,7 @@ class DCCNet(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict, *args, **kwargs) -> dict:
+    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
         """Perform a single forward step of the model.
 
 

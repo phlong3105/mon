@@ -118,11 +118,14 @@ class SLICE_Predictor(Predictor):
             outputs (dict): The dictionary containing the main prediction results.
                 Each key in the dictionary is a batched of prediction results.
         """
-        meta = datapoint["meta"]
-        for i, meta_i in enumerate(meta):
-            path = Path(meta_i["path"])
-            size = Size.from_value(meta_i["imgsz"])
-            self._save_image(outputs["enhanced"][i:i+1], size, path, dirname=K.PRED_DIR)
+        self._save_batch_image(
+            keys=["enhanced"],
+            datapoint=datapoint,
+            outputs=outputs,
+            dirname=K.PRED_DIR,
+            subdirname="",
+            use_stem=False,
+        )
 
     @override
     def _save_debug(self, datapoint: dict[str, Any], outputs: dict[str, Any]):
@@ -148,7 +151,7 @@ def main():
         prompt=True,
         root=resolve_project_root(current_dir),
         config_file="slice_sice_me.yaml",
-        task=Task.LLIE,
+        task=Task.LLE,
         mode=RunMode.PREDICT,
         arch="slice",
         model="slice",
