@@ -481,7 +481,7 @@ class Config:
             # self._config.root = resolve_project_root(Path.cwd())
 
     @property
-    def output_dir(self) -> Path | None:
+    def output_dir(self) -> Path:
         """Return the output directory."""
         return self._config.output_dir
 

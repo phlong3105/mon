@@ -66,6 +66,15 @@ class K(SimpleNamespace):
     IMAGE_EXT = ImageExtension.JPG
     WEIGHTS_EXT = WeightExtension.PT
 
+    # --- Values ---
+    EPS = 1e-8
+    INF = 1e8
+    NAN = float("nan")
+    PI = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679
+
+    # --- Strings ---
+    ORIGINAL = "orig"
+
     # --- Logging ---
     VERBOSE = True
 

@@ -26,6 +26,7 @@ from mon.core import (
     build_classlist,
     ClassList,
     create_progress_bar,
+    K,
     Metadata,
     MetadataDictList,
     Path,
@@ -50,7 +51,7 @@ from .mixins import DatasetCollationMixin
 class AlbumentationsDataset(Dataset, ABC):
     """Base class for datasets that use albumentations for transformations."""
 
-    origin_suffix: str = "orig"
+    origin_suffix: str = K.ORIGINAL
 
     # --- Lifecycle & Initialization ---
     def __init__(

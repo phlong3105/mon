@@ -77,10 +77,19 @@ class Predictor(Runner, ABC):
         pass
 
     def _init_upsampler(self):
-        """Initialize ``self._upsampler`` for upsampling the output images if
-        necessary.
+        """Initialize ``self._upsampler`` attribute for upsampling the output
+        images if necessary.
         """
-        self._upsampler = UPSAMPLERS.build(**self.config.upsampler)
+        config = self.config
+
+        if config.eval_resize and config.upsampler:
+            # Only build the upsampler if ``eval_resize`` is True and an
+            # upsampler config is provided
+            upsampler = UPSAMPLERS.build(**self.config.upsampler)
+        else:
+            upsampler = None
+
+        self._upsampler = upsampler
 
     def _init_data(
         self,
@@ -100,7 +109,7 @@ class Predictor(Runner, ABC):
                 dataset/dataloader and the dataset/dataloader object itself.
         """
         # Apply pre-processing transforms inside the dataset or dataloader
-        return build_dataloader(
+        name, dataloader = build_dataloader(
             src=source,
             dataset_dir=self.config.data_dir,
             split=split,
@@ -108,6 +117,15 @@ class Predictor(Runner, ABC):
             keep_original=self.keep_original,
             batch_size=1,
         )
+
+        # Validate
+        if name is None:
+            raise RuntimeError(f"Failed to build dataset/dataloader from source: {source}.")
+        if dataloader is None:
+            raise RuntimeError(f"Failed to build dataloader from source: {source}.")
+
+        # Return the name and dataloader
+        return name, dataloader
 
     # --- Properties ---
     @property
@@ -272,7 +290,7 @@ class Predictor(Runner, ABC):
         """Save a batch of image-based outputs.
 
         Args:
-            keys (list[str]): The list of keys in the outputs dictionary that
+            keys (list[str]): The list of keys in the output dictionary that
                 correspond to the images to be post-processed.
             datapoint (dict): The dictionary containing the input data.
             outputs (dict): The dictionary containing the main prediction results.
@@ -285,11 +303,12 @@ class Predictor(Runner, ABC):
                 for the output file name. If False, the output file name will
                 be the same as the source file name. Defaults to False.
         """
-        metas = datapoint.get("meta", [])
+        upsampler = self.upsampler
 
         # Pre-extract the batches for the requested keys to avoid dict lookups
         # in the loop
-        batch_y_hr = datapoint["image_orig"]
+        metas = datapoint.get("meta", [])
+        batch_y_hr = datapoint[f"image_{K.ORIGINAL}"]  # For upsampler that needs high-res image (e.g., guided filter)
         batch_images_dict = {k: outputs[k] for k in keys if k in outputs}
 
         for i, meta_i in enumerate(metas):
@@ -303,8 +322,8 @@ class Predictor(Runner, ABC):
 
                 # Resize the image if needed
                 imgsz = Size.from_value(image)
-                if imgsz != size:
-                    image = self.upsampler(x_lr=image, y_hr=y_hr, imgsz=size)["y_hr"]
+                if (upsampler is not None) and (imgsz != size):
+                    image = upsampler(x_lr=image, y_hr=y_hr, imgsz=size)["x_hr"]
 
                 # Convert to array
                 if isinstance(image, Tensor):
@@ -316,7 +335,7 @@ class Predictor(Runner, ABC):
                     )
 
                 # Use the key as the stem only if requested (for debug)
-                stem = k if use_stem else None
+                stem = k if use_stem else ""
                 self._save_image(
                     image=image,
                     src_path=path,

@@ -85,7 +85,7 @@ def build_dataset(
     # Validate inputs
     if not isinstance(src, (Path, str)):
         raise TypeError(
-            f"Expected 'src' to be a source path or a dataset name, "
+            f"Expected 'src' to be a source path, or a dataset name, "
             f"but got {type(src).__name__}."
         )
 
@@ -96,14 +96,20 @@ def build_dataset(
         "verbose": verbose,
     }
 
-    src = Path(src).normalize()
+    src: Path = Path(src).normalize()
 
     # 2.1. If src is a registered dataset name, use the corresponding class
     if src.name in DATASETS:
+        data_root = dataset_dir or cwd
+        if data_root is None:
+            raise RuntimeError(
+                "Dataset directory is required to build dataset from name, "
+                "but 'dataset_dir' and 'cwd' are both None."
+            )
         module: Dataset = DATASETS[src.name]
         dataset_dir = resolve_dataset_dir(
             dataset_name=src.name,
-            data_root=dataset_dir or cwd
+            data_root=data_root
         )
         config["root"] = dataset_dir
         return src.name, module.from_config(config)
@@ -176,11 +182,10 @@ def build_dataloader(
             verbose=verbose,
             *args, **kwargs
         )
-        dataloader_ = DataLoader(
-            dataset=dataset_,
-            batch_size=batch_size,
-            *args, **kwargs
-        )
+        if dataset_ is None:
+            raise RuntimeError(f"Failed to build dataset from source: {src}.")
+
+        dataloader_ = DataLoader(dataset=dataset_, batch_size=batch_size, *args, **kwargs)
         return name, dataloader_
 
     # 3. If neither is a dataset nor a dataloader config dict, return None
