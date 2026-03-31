@@ -29,7 +29,7 @@ from mon.core.constants import K
 from mon.core.context import sys_ctx
 from mon.core.data import Size, SizeLike, Weights
 from mon.core.dtype import RunMode, Task
-from mon.core.factory import DATASETS, MODELS, WEIGHTS
+from mon.core.factory import DATASETS, MODELS, WEIGHTS, UPSAMPLERS
 from mon.core.filesystem import (
     resolve_output_dir,
     resolve_save_dir,
@@ -177,9 +177,16 @@ ARGUMENTS = Box({
     "eval_resize": {
         "default": False,
         "action": "store_true",
-        "help": "Resize input image during evaluation.",
+        "help": "Resize the input image during evaluation.",
         "prompt_only": False,
         "prompt_text": "Resize?   ",
+    },
+    "upsampler": {
+        "default": None,
+        "type": _str_or_none,
+        "help": "Upsampling method.",
+        "prompt_only": False,
+        "prompt_text": "Upsampler",
     },
     "benchmark": {
         "default": False,
@@ -553,7 +560,7 @@ class Config:
         elif is_valid_str(value):
             # If the value is a valid string, treat it as a path and create a
             # Weights object
-            self._config.model.weights = Weights(path=value)
+            self._config.model.weights = Weights(path=Path(value))
 
     @property
     def finetune(self) -> Weights | None:
@@ -572,7 +579,7 @@ class Config:
         elif is_valid_str(value):
             # If the value is a valid string, treat it as a path and create a
             # Weights object
-            self._config.model.finetune = Weights(path=value)
+            self._config.model.finetune = Weights(path=Path(value))
 
     @property
     def data(self) -> list[PathLike]:
@@ -630,6 +637,17 @@ class Config:
     def eval_resize(self, value: bool):
         """Set whether to resize the input image during evaluation."""
         self._config.eval_resize = value
+
+    @property
+    def upsampler_name(self) -> str:
+        """Return the upsampling method."""
+        return self._config.upsampler.name
+
+    @upsampler_name.setter
+    def upsampler_name(self, value: str | None):
+        """Set the upsampling method."""
+        if is_valid_str(value):
+            self._config.upsampler.name = value
 
     @property
     def benchmark(self) -> bool:
@@ -728,17 +746,19 @@ class Config:
     def config_files(self) -> list[Path]:
         """Return a list of all configuration files in the current project."""
         model = self.model_name
-        config_dir = self.config_dir
-        config_files = config_dir.files(
-            f"*{model}*.yaml", f"*{model}*.yml",
-            recursive=True
-        ) if config_dir else []
+        config_files = []
 
-        model_dir = self.model_dir
-        config_files += model_dir.files(
-            f"*{model}*.yaml", f"*{model}*.yml",
+        config_files += self.config_dir.files(
+            f"*{model}*.yaml",
+            f"*{model}*.yml",
             recursive=True
-        ) if model_dir else []
+        ) if self.config_dir else []
+
+        config_files += self.model_dir.files(
+            f"*{model}*.yaml",
+            f"*{model}*.yml",
+            recursive=True
+        ) if self.model_dir else []
 
         return sorted(config_files)
 
@@ -747,9 +767,10 @@ class Config:
         """Return a list of all weights files in the current project."""
         model = self.model_name
         run_dir = self.run_dir
+        weights_files = []
 
         # 1. Look for weights files in the current run directory
-        weights_files = run_dir.files(
+        weights_files += run_dir.files(
             f"*{model}*.pt",
             f"*{model}*.pth",
             f"*/*{model}*/*.pt",
@@ -893,8 +914,12 @@ class Config:
         return save_dir / src_path.name
 
     # --- Mutation ---
-    def update_from_yaml(self, path: PathLike):
+    def update_from_yaml(self, path: PathLike | None):
         """Update the current configuration with values from a YAML file."""
+        # Validate inputs
+        if path is None:
+            return
+
         # Normalize inputs
         path = Path(path).normalize()
 
@@ -1139,9 +1164,9 @@ class Config:
             table.add_row("Task", self.task)
             table.add_row("Mode", self.mode)
             table.add_row("Data", "\n".join([truncate_string(d, side="left") for d in self.data]))
-            table.add_row("Weights", truncate_string(self.weights.path))
+            table.add_row("Weights", truncate_string(self.weights.path or ""))
             table.add_row("Save Dir", truncate_string(self.output_dir))
-            table.add_row("Config", truncate_string(self.config_file))
+            table.add_row("Config", truncate_string(self.config_file or ""))
             #
             console.log(table)
             console.rule() # Add a closing line for visual polish
@@ -1199,7 +1224,7 @@ class ConfigContext(Config):
     # --- Container / Sequence Methods ---
     def __len__(self) -> int:
         """Return the total number of interactive steps."""
-        return 18
+        return 19
 
     # --- Creation ---
     @classmethod
@@ -1276,7 +1301,7 @@ class ConfigContext(Config):
                 continue
             kwargs[k] = v
 
-        return cls(root=root, config_file=config_file, prompt=prompt, **kwargs)
+        return cls(root=Path(root), config_file=config_file, prompt=prompt, **kwargs)
 
     # --- Retrieval ---
     def config_for(self, mode: RunModeLike, prompt: bool = False) -> Config:
@@ -1430,48 +1455,59 @@ class ConfigContext(Config):
                 defaults=self.eval_resize,
             )
         if self._index == 10:
+            # Upsampler
+            if self.mode not in [RunMode.PREDICT]:
+                self._next()
+            if not self.eval_resize:
+                self._next()
+            self.upsampler_name = Prompt.ask(
+                prompt=ARGUMENTS.upsampler.prompt_text,
+                choices=list(UPSAMPLERS.keys()),
+                defaults=self.upsampler_name,
+            )
+        if self._index == 11:
             # Benchmark
             self.benchmark = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.benchmark.prompt_text,
                 defaults=self.benchmark,
             )
-        if self._index == 11:
+        if self._index == 12:
             # Save
             self.save = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.save.prompt_text,
                 defaults=self.save,
             )
-        if self._index == 12:
+        if self._index == 13:
             # Save Debug
             self.save_debug = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.save_debug.prompt_text,
                 defaults=self.save_debug,
             )
-        if self._index == 13:
+        if self._index == 14:
             # Keep Subdirs
             self.keep_subdirs = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.keep_subdirs.prompt_text,
                 defaults=self.keep_subdirs,
             )
-        if self._index == 14:
+        if self._index == 15:
             # Near Source
             self.near_src = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.near_src.prompt_text,
                 defaults=self.near_src,
             )
-        if self._index == 15:
+        if self._index == 16:
             # Exist OK
             self.exist_ok = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.exist_ok.prompt_text,
                 defaults=self.exist_ok,
             )
-        if self._index == 16:
+        if self._index == 17:
             # Verbose
             self.verbose = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.verbose.prompt_text,
                 defaults=self.verbose,
             )
-        if self._index == 17:
+        if self._index == 18:
             # Finish
             pprint_dict(self.config, title="Input Arguments")
             finish = ConfirmPrompt.ask(prompt="Finish/Re-input", defaults=True)

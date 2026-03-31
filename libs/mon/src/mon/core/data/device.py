@@ -25,7 +25,7 @@ from torch import nn
 
 from mon.core.base import IndexList
 from mon.core.dtype import DeviceType, MemoryUnit
-from mon.core.typing import Float3
+from mon.core.typing import Float3, MemoryUnitLike
 
 try:
     import pynvml
@@ -117,7 +117,7 @@ class Device:
             return self.type
 
     # --- Retrieval ---
-    def usages(self, unit: MemoryUnit = "GB") -> tuple[float, float, float]:
+    def usages(self, unit: MemoryUnitLike = "GB") -> tuple[float, float, float]:
         """Return the memory usage (total, used, free) for the device.
 
         Args:
@@ -195,7 +195,7 @@ def inspect_model_device(model: nn.Module) -> torch.device:
             return torch.device("cpu")
 
 
-def query_vram_usage(device: int = 0, unit: MemoryUnit = "GB") -> Float3:
+def query_vram_usage(device: int = 0, unit: MemoryUnitLike = "GB") -> Float3:
     """Query NVML for the specified CUDA device memory usage.
 
     Args:
@@ -229,7 +229,7 @@ def query_vram_usage(device: int = 0, unit: MemoryUnit = "GB") -> Float3:
             pass
 
 
-def query_ram_usages(unit: MemoryUnit = "GB") -> Float3:
+def query_ram_usages(unit: MemoryUnitLike = "GB") -> Float3:
     """Query system RAM usage.
 
     Args:

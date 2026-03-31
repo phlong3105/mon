@@ -285,7 +285,7 @@ def resolve_config_file(
     return None
 
 
-def resolve_weights_dir(root: PathLike, weights_path: PathLike) -> Path | None:
+def resolve_weights_dir(root: PathLike, weights_path: PathLike | None) -> Path | None:
     """Resolve the weight directory from the project root and weights' name or
     relative path.
 
@@ -321,7 +321,7 @@ def resolve_weights_dir(root: PathLike, weights_path: PathLike) -> Path | None:
     return None
 
 
-def resolve_weights_file(root: PathLike, weights_file: PathLike) -> Path | None:
+def resolve_weights_file(root: PathLike, weights_file: PathLike | None) -> Path | None:
     """Resolve the weight file from the project root and weights' name or
     relative path.
 

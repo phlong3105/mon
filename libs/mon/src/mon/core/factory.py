@@ -678,7 +678,7 @@ class WeightsFactory(Factory):
         return weights_objs
 
     # --- Discovery ---
-    def find(self, weights_path: PathLike) -> WeightsEnum | None:
+    def find(self, weights_path: PathLike | None) -> WeightsEnum | None:
         """Find the ``WeightsEnum`` object for a given path.
 
         Args:
@@ -687,7 +687,10 @@ class WeightsFactory(Factory):
         Returns:
             WeightsEnum: ``WeightsEnum`` object if found, None otherwise.
         """
-        weights_path = Path(weights_path).normalize() if weights_path else None
+        if weights_path:
+            weights_path = Path(weights_path).normalize()
+        else:
+            weights_path = None
 
         # Global Discovery
         if weights_path:
@@ -699,7 +702,7 @@ class WeightsFactory(Factory):
         # Return None if no match is found
         return None
 
-    def find_weights_obj(self, weights_path: PathLike) -> Weights | None:
+    def find_weights_obj(self, weights_path: PathLike | None) -> Weights | None:
         """Find the ``Weights`` object for a given path.
 
         Args:
@@ -708,7 +711,10 @@ class WeightsFactory(Factory):
         Returns:
             Weights: ``Weights`` object if found, None otherwise.
         """
-        weights_path = Path(weights_path).normalize() if is_valid_str(weights_path) else None
+        if is_valid_str(weights_path):
+            weights_path = Path(weights_path).normalize()
+        else:
+            weights_path = None
 
         # Global Discovery
         if weights_path:
