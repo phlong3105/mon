@@ -300,8 +300,13 @@ def guided_filter_upsample(
         Tensor: Upscaled image of shape (B, C, H2, W2) and values ranging from
             0.0 to 1.0.
     """
+    # Resize y_hr to match x_lr if y_lr is None
     if y_lr is None:
         y_lr = F.interpolate(y_hr, size=x_lr.shape[2:], mode="bilinear", align_corners=False)
+
+    # Move to device
+    y_lr = y_lr.to(x_lr.device)
+    y_hr = y_hr.to(x_lr.device)
 
     gf = FastGuidedFilter(r=r)
     x_hr = gf(x_lr, y_lr, y_hr)

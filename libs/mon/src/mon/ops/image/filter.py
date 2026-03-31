@@ -47,7 +47,7 @@ def _diff_x(image: Tensor, r: int) -> Tensor:
     middle = image[:, :, 2 * r + 1:] - image[:, :, :-2 * r - 1]
     right = image[:, :, -1:] - image[:, :, -2 * r - 1:    -r - 1]
     diff_x = torch.cat([left, middle, right], dim=2)
-    return diff_x
+    return diff_x.to(image.device)
 
 
 def _diff_y(image: Tensor, r: int) -> Tensor:
@@ -71,7 +71,7 @@ def _diff_y(image: Tensor, r: int) -> Tensor:
     middle = image[:, :, :, 2 * r + 1:] - image[:, :, :, :-2 * r - 1]
     right = image[:, :, :, -1:] - image[:, :, :, -2 * r - 1:    -r - 1]
     diff_y = torch.cat([left, middle, right], dim=3)
-    return diff_y
+    return diff_y.to(image.device)
 
 # endregion
 
@@ -109,7 +109,7 @@ class BoxFilter(nn.Module):
         Returns:
             Tensor: The filtered image.
         """
-        return _diff_y(_diff_x(x.cumsum(dim=2), self.r).cumsum(dim=3), self.r)
+        return _diff_y(_diff_x(x.cumsum(dim=2), self.r).cumsum(dim=3), self.r).to(x.device)
 
 # endregion
 
@@ -206,6 +206,7 @@ class FastGuidedFilter(nn.Module):
             Tensor: The filtered high-resolution image tensor of shape
                 (B, C, H1, W1) and values ranging from 0.0 to 1.0.
         """
+        device = x_lr.device
         n_x_lr, c_x_lr, h_x_lr, w_x_lr = x_lr.size()
         n_y_lr, c_y_lr, h_y_lr, w_y_lr = y_lr.size()
         n_y_hr, c_y_hr, h_y_hr, w_y_hr = y_hr.size()
@@ -215,7 +216,9 @@ class FastGuidedFilter(nn.Module):
         assert h_y_lr == h_x_lr and w_y_lr == w_x_lr
         assert h_y_lr > 2 * self.r + 1 and w_y_lr > 2 * self.r + 1
 
-        N = self.box_filter(Variable(y_lr.data.new().resize_((1, 1, h_y_lr, w_y_lr)).fill_(1.0)))
+        N = self.box_filter(
+            Variable(y_lr.data.new().resize_((1, 1, h_y_lr, w_y_lr)).fill_(1.0))
+        ).to(device)
         mean_x = self.box_filter(x_lr) / N
         mean_y = self.box_filter(y_lr) / N
         cov_xy = self.box_filter(y_lr * x_lr) / N - mean_y * mean_x

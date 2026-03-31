@@ -85,7 +85,7 @@ class Predictor(Runner, ABC):
         if config.eval_resize and config.upsampler:
             # Only build the upsampler if ``eval_resize`` is True and an
             # upsampler config is provided
-            upsampler = UPSAMPLERS.build(**self.config.upsampler)
+            upsampler = UPSAMPLERS.build(**self.config.upsampler).to(self.device)
         else:
             upsampler = None
 
@@ -303,12 +303,13 @@ class Predictor(Runner, ABC):
                 for the output file name. If False, the output file name will
                 be the same as the source file name. Defaults to False.
         """
+        device = self.device
         upsampler = self.upsampler
 
         # Pre-extract the batches for the requested keys to avoid dict lookups
         # in the loop
         metas = datapoint.get("meta", [])
-        batch_y_hr = datapoint[f"image_{K.ORIGINAL}"]  # For upsampler that needs high-res image (e.g., guided filter)
+        batch_y_hr = datapoint[f"image_{K.ORIGINAL}"].to(device)  # For upsampler that needs high-res image (e.g., guided filter)
         batch_images_dict = {k: outputs[k] for k in keys if k in outputs}
 
         for i, meta_i in enumerate(metas):
