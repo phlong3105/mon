@@ -215,6 +215,43 @@ class MultiStrEnum(str, MultiValueEnum):
         # _value2member_map_ contains every primary value and alias as its keys
         return list(cls._value2member_map_.keys())
 
+    @classmethod
+    def values_dict(cls) -> dict[str, tuple[str, ...]]:
+        """Returns a dictionary mapping the enum name to all its values."""
+        return {member.name: member._values_ for member in cls}
+
+    @classmethod
+    def values_repr(cls, aligned: bool = True) -> list[str]:
+        """Returns a list of strings formatted as 'primary (extra, ...)'.
+
+        Args:
+            aligned (bool, optional): Whether to align the primary values for
+                better readability. Defaults to True.
+        """
+        # 1. Find the longest primary value to know how much to pad
+        max_len = max(len(member.value) for member in cls)
+
+        formatted_items = []
+        for member in cls:
+            primary = member.value
+            extras = member._values_[1:]  # Get everything after the first value
+
+            padded_primary = ""
+            if aligned:
+                # 2. Pad the primary string with spaces so they all match max_len
+                # e.g., f"{'error':<{max_len}}" becomes "error  "
+                padded_primary = f"{primary:<{max_len}}"
+
+            if extras:
+                # Join the extra values with a comma and space
+                extras_str = ", ".join(extras)
+                formatted_items.append(f"{padded_primary}  ({extras_str})")
+            else:
+                # If there are no aliases, just append the primary value
+                formatted_items.append(f"{padded_primary}")
+
+        return formatted_items
+
 # endregion
 
 

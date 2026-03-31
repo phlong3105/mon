@@ -214,7 +214,7 @@ class Task(MultiStrEnum):
     # Motion
     BGSUBTRACT = "bgsubtract", "background_subtraction"
     OPTICAL_FLOW = "optical_flow"
-    TRACK = "track", "tracking", "object_tracking"
+    TRACK = "track", "object_tracking"
 
     # Keypoint
     POSE = "pose", "pose_estimation"

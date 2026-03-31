@@ -78,6 +78,7 @@ class PromptBase(Generic[PromptType]):
     skip_message: str = "Skip"
 
     choices: list[str] | None = None
+    choices_repr: list[str] | None = None
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -85,6 +86,7 @@ class PromptBase(Generic[PromptType]):
         prompt: str = "",
         *,
         choices: list[str] | None = None,
+        choices_repr: list[str] | None = None,
         defaults: str | int | list[str | int] | None = None,
         password: bool = False,
         multiselect: bool = False,
@@ -102,8 +104,11 @@ class PromptBase(Generic[PromptType]):
         Args:
             prompt (str, optional): Prompt text shown as the header.
                 Defaults to "".
-            choices (List[str], optional): List of selectable options. If
+            choices (list[str], optional): List of selectable options. If
                 None, only free-form direct input is accepted. Defaults to None.
+            choices_repr (list[str], optional): List of selectable options to
+                display, corresponding 1-to-1 with ``choices``. If None,
+                ``choices`` is used for display. Defaults to None.
             defaults (str | int | list[str | int], optional): Pre-selected values.
                 Each item may be a 0-based ``int`` index, a 1-based number string
                 (``"1"``), or the choice value itself. Defaults to None.
@@ -137,8 +142,6 @@ class PromptBase(Generic[PromptType]):
         """
         # Assign attributes
         self.prompt = prompt
-        if choices is not None:
-            self.choices = [self.skip_message] + list(choices) if skip else list(choices)
         self.password = password
         self.multiselect = multiselect
         self.strict = strict
@@ -158,7 +161,31 @@ class PromptBase(Generic[PromptType]):
         self._custom_tokens: list = []
         self._custom_buffer: Buffer = Buffer()
 
+        self._init_choices(choices=choices, choices_repr=choices_repr)
         self._init_defaults(defaults=defaults)
+
+    def _init_choices(
+        self,
+        choices: list[str] | None = None,
+        choices_repr: list[str] | None = None,
+    ):
+        """Initialize the ``self.choices`` and ``self.choices_repr`` attributes."""
+        if choices is not None:
+            choices = [self.skip_message] + list(choices) if self.skip else list(choices)
+
+        if choices_repr is not None:
+            choices_repr = choices_repr
+        else:
+            choices_repr = choices
+
+        if choices is not None and choices_repr is not None:
+            assert len(choices) == len(choices_repr), (
+                f"Mismatch between 'choices' and 'choices_repr' lengths: "
+                f"{len(choices)} != {len(choices_repr)}"
+            )
+
+        self.choices = choices
+        self.choices_repr = choices_repr
 
     def _init_defaults(self, defaults: str | int | list[str | int] | None):
         """Pre-populate the selected set from ``defaults``.
@@ -244,7 +271,8 @@ class PromptBase(Generic[PromptType]):
         cls,
         prompt: str = "",
         *,
-        choices: list[str | int] | None = None,
+        choices: list[str] | None = None,
+        choices_repr: list[str] | None = None,
         defaults: str | int | list[str | int] | None = None,
         password: bool = False,
         multiselect: bool = False,
@@ -262,9 +290,12 @@ class PromptBase(Generic[PromptType]):
         Args:
             prompt (str, optional): Prompt text shown as the header.
                 Defaults to "".
-            choices (List[str], optional): List of selectable options. If
+            choices (list[str], optional): List of selectable options. If
                 None, only free-form direct input is accepted.
                 Defaults to None.
+            choices_repr (list[str], optional): List of selectable options to
+                display, corresponding 1-to-1 with ``choices``. If None,
+                ``choices`` is used for display. Defaults to None.
             defaults (str | int | list[str | int], optional): Pre-selected values.
                 Each item may be a 0-based ``int`` index, a 1-based number string
                 (``"1"``), or the choice value itself. Defaults to None.
@@ -297,7 +328,7 @@ class PromptBase(Generic[PromptType]):
                 Defaults to False.
 
         Returns:
-            str | List[str] | None: One of the following values:
+            str | list[str] | None: One of the following values:
 
                 - ``response_type`` if ``multiselect=False`` and confirmed.
                 - list[``response_type``] if ``multiselect=True`` and confirmed.
@@ -306,6 +337,7 @@ class PromptBase(Generic[PromptType]):
         return cls(
             prompt,
             choices=choices,
+            choices_repr=choices_repr,
             defaults=defaults,
             password=password,
             multiselect=multiselect,
@@ -572,12 +604,13 @@ class PromptBase(Generic[PromptType]):
         typed_indices, _ = self._parse_input(text) if text else (set(), [])
         all_selected = self._selected | typed_indices
 
-        display = self._render_display()
-        num_cols = self._get_num_columns(display=display)
+        choices_repr = self._render_choices_repr()
+        num_cols = self._get_num_columns(display=choices_repr)
         num_rows = self._get_num_rows()
         col_width = os.get_terminal_size().columns // num_cols
 
         reserved = 6
+        padding_0s = len(str(len(self.choices)))
         visible_rows = max(1, os.get_terminal_size().lines - reserved)
         current_row = self._current % num_rows
         scroll = max(0, min(current_row - visible_rows // 2, num_rows - visible_rows))
@@ -596,7 +629,7 @@ class PromptBase(Generic[PromptType]):
                     check = "◉" if i in all_selected else "○"
                 else:
                     check = "◉" if i == self._current else "○"
-                cell = f"{pointer}{check} {i + 1}. {display[i]}".ljust(col_width)[:col_width]
+                cell = f"{pointer}{check} {(i + 1):0{padding_0s}d}. {choices_repr[i]}".ljust(col_width)[:col_width]
 
                 if i in typed_indices and i == self._current:
                     style = "class:typed_focused"
@@ -612,9 +645,14 @@ class PromptBase(Generic[PromptType]):
 
         return lines
 
-    def _render_display(self) -> list:
-        """Render the display of the choices."""
-        return [self._truncate(c) for c in self.choices]
+    def _render_choices_repr(self) -> list:
+        """Render the display of the choices using the ``self.choices_repr``
+        list, applying truncation if needed.
+        """
+        if self.choices_repr is None:
+            return []
+        else:
+            return [self._truncate(c) for c in self.choices_repr]
 
     def _render_input_label(self) -> list:
         """Render the input hint / error line above the buffer."""
@@ -859,7 +897,7 @@ class PromptBase(Generic[PromptType]):
         """Compute how many columns fit in the current terminal width.
 
         Args:
-            display (List[str] | None): Pre-truncated labels. If None, falls
+            display (list[str] | None): Pre-truncated labels. If None, falls
                 back to ``self.choices``.
 
         Returns:
@@ -888,13 +926,16 @@ class PromptBase(Generic[PromptType]):
         Returns:
             str: Truncated string, or original if no truncation is set.
         """
-        if not value or value == self.skip_message or not self.truncate_length :
+        if not value or value == self.skip_message or not self.truncate_length:
             return value or ""
-        return truncate_string(
-            value=value,
-            max_length=self.truncate_length,
-            side=self.truncate_side,
-        )
+        elif value is None:
+            return ""
+        else:
+            return truncate_string(
+                value=value,
+                max_length=self.truncate_length,
+                side=self.truncate_side,
+            )
 
 # endregion
 
@@ -966,7 +1007,7 @@ class PathPrompt(PromptBase[Path]):
         Args:
             prompt (str, optional): Prompt text shown as the header.
             Defaults to "".
-            choices (List[str], optional): List of selectable options. If
+            choices (list[str], optional): List of selectable options. If
                 None, only free-form direct input is accepted.
                 Defaults to None.
             defaults (str | int | list[str | int], optional): Pre-selected values.
@@ -1003,7 +1044,7 @@ class PathPrompt(PromptBase[Path]):
                 Defaults to False.
         """
         # Assign attributes
-        self.commonpath = commonpath
+        self.commonpath = Path(commonpath) if commonpath else None
 
         # Continue the initialization chain
         super().__init__(
@@ -1047,7 +1088,7 @@ class PathPrompt(PromptBase[Path]):
         Args:
             prompt (str, optional): Prompt text shown as the header.
             Defaults to "".
-            choices (List[str], optional): List of selectable options. If
+            choices (list[str], optional): List of selectable options. If
                 None, only free-form direct input is accepted.
                 Defaults to None.
             defaults (str | int | list[str | int], optional): Pre-selected values.
@@ -1084,7 +1125,7 @@ class PathPrompt(PromptBase[Path]):
                 Defaults to False.
 
         Returns:
-            str | List[str] | None: One of the following values:
+            str | list[str] | None: One of the following values:
 
                 - ``response_type`` if ``multiselect=False`` and confirmed.
                 - list[``response_type``] if ``multiselect=True`` and confirmed.
@@ -1110,10 +1151,10 @@ class PathPrompt(PromptBase[Path]):
 
     # --- Visualization ---
     @override
-    def _render_display(self) -> list:
+    def _render_choices_repr(self) -> list:
         """Render the display of the choices."""
         display = []
-        if self.commonpath:
+        if self.commonpath and self.choices:
             for c in self.choices:
                 if c == self.skip_message:
                     display.append(self.skip_message)
@@ -1131,7 +1172,7 @@ class ConfirmPrompt(Prompt):
 
     Example:
         >>> if ConfirmPrompt.ask("Continue training?", default=True):
-        ...     run_training()
+        ...
     """
 
     response_type = bool
@@ -1161,15 +1202,17 @@ class ConfirmPrompt(Prompt):
         """
         # Resolve default → index into ["Yes", "No"]
         if defaults:
-            defaults = [0]  # "Yes"
+            defaults_ = [0]  # "Yes"
         elif not defaults:
-            defaults = [1]  # "No"
+            defaults_ = [1]  # "No"
+        else:
+            defaults_ = defaults
 
         # Continue the initialization chain
         super().__init__(
             prompt,
             choices=["Yes", "No"],
-            defaults=defaults,
+            defaults=defaults_,
             password=False,
             multiselect=False,
             strict=True,

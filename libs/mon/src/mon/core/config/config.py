@@ -123,6 +123,7 @@ ARGUMENTS = Box({
         "default": None,
         "type": _str_or_none,
         "choices": Task.values(),
+        "choices_repr": Task.values_repr(),
         "help": f"Task to run: {Task.values()}.",
         "prompt_only": False,
         "prompt_text": "Task",
@@ -131,6 +132,7 @@ ARGUMENTS = Box({
         "default": None,
         "type": _str_or_none,
         "choices": RunMode.values(),
+        "choices_repr": RunMode.values_repr(),
         "help": f"Run mode: {RunMode.values()}.",
         "prompt_only": False,
         "i_cli_type": str,
@@ -1364,6 +1366,7 @@ class ConfigContext(Config):
             self.task = Prompt.ask(
                 prompt=ARGUMENTS.task.prompt_text,
                 choices=ARGUMENTS.task.choices,
+                choices_repr=ARGUMENTS.task.choices_repr,
                 defaults=self.task,
             )
         if self._index == 1:
@@ -1371,6 +1374,7 @@ class ConfigContext(Config):
             self.mode = Prompt.ask(
                 prompt=ARGUMENTS.mode.prompt_text,
                 choices=ARGUMENTS.mode.choices,
+                choices_repr=ARGUMENTS.mode.choices_repr,
                 defaults=self.mode,
             )
         if self._index == 2:
@@ -1456,9 +1460,8 @@ class ConfigContext(Config):
             )
         if self._index == 10:
             # Upsampler
-            if self.mode not in [RunMode.PREDICT]:
-                self._next()
-            if not self.eval_resize:
+            if (self.mode not in [RunMode.PREDICT]
+                or not self.eval_resize):
                 self._next()
             self.upsampler_name = Prompt.ask(
                 prompt=ARGUMENTS.upsampler.prompt_text,
