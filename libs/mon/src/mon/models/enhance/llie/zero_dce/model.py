@@ -74,7 +74,7 @@ class ZeroDCE(ModelRegisterMixin, EnhancementModel):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        name: str,
+        name: str = "zero_dce",
         in_channels: int = 3,
         out_channels: int = 3,
         hidden_dim: int = 32,
@@ -95,10 +95,7 @@ class ZeroDCE(ModelRegisterMixin, EnhancementModel):
                 Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
-        # Satisfy PyTorch's empty signature first.
         super().__init__(name=name)
-        # Initialize RegistrableMixin
-        # ModelRegisterMixin.__init__(self, name=name)
 
         # Assign attributes
         self.verbose = verbose
@@ -189,7 +186,7 @@ class ZeroDCEPP(ModelRegisterMixin, EnhancementModel):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        name: str,
+        name: str = "zero_dce++",
         in_channels: int = 3,
         out_channels: int = 3,
         hidden_dim: int = 32,

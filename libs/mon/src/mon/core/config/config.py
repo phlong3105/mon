@@ -29,7 +29,7 @@ from mon.core.constants import K
 from mon.core.context import sys_ctx
 from mon.core.data import Size, SizeLike, Weights
 from mon.core.dtype import RunMode, Task
-from mon.core.factory import DATASETS, MODELS, WEIGHTS, UPSAMPLERS
+from mon.core.factory import DATASETS, MODELS, UPSAMPLERS, WEIGHTS
 from mon.core.filesystem import (
     resolve_output_dir,
     resolve_save_dir,

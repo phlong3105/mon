@@ -294,7 +294,7 @@ class Predictor(Runner, ABC):
                 correspond to the images to be post-processed.
             datapoint (dict): The dictionary containing the input data.
             outputs (dict): The dictionary containing the main prediction results.
-                Each key in the dictionary is a batched of prediction results.
+                Each key in the dictionary is a batch of prediction results.
             dirname (str): The directory name for the output files.
                 Defaults to K.PRED_DIR.
             subdirname (str, optional): Subdirectory name to append to the

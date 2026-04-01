@@ -133,9 +133,9 @@ def _inverse_anscombe_torch(z: Tensor, unbiased: bool = False) -> Tensor:
     if unbiased:
         return (
               1.0 / 4.0 * torch.pow(z, 2)
-            + 1.0 / 4.0 * torch.sqrt(3.0 / 2.0) * torch.pow(z, -1.0)
+            + 1.0 / 4.0 * torch.sqrt(torch.tensor(3.0 / 2.0)) * torch.pow(z, -1.0)
             - 11.0 / 8.0 * torch.pow(z, -2.0)
-            + 5.0 / 8.0 * torch.sqrt(3.0 / 2.0) * torch.pow(z, -3.0) - 1.0 / 8.0
+            + 5.0 / 8.0 * torch.sqrt(torch.tensor(3.0 / 2.0)) * torch.pow(z, -3.0) - 1.0 / 8.0
         )
     else:
         return (z - 3.0 / 8.0) / 2.0 ** 0.5
