@@ -19,7 +19,7 @@
 
 [project]
 name            = "mon-workspace"
-version         = "2.10.0"
+version         = "2.11.0"
 description     = "A monorepo centralizing multiple projects and sharing code."
 license         = "MIT"
 readme          = "README.md"
