@@ -197,7 +197,8 @@ class Trainer(Runner, ABC):
         self._init_loggers()
 
         # 7. Run benchmark
-        self.benchmark()
+        if config.benchmark:
+            self.benchmark()
 
         # 8. Main loop
         with create_progress_bar() as pbar:

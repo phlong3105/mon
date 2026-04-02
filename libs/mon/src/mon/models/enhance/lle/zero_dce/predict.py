@@ -144,7 +144,7 @@ class ZeroDCE_Predictor(Predictor):
         if scale_factor:
             imgsz = Size(height=imgsz.h // scale_factor, width=imgsz.w // scale_factor)
 
-        if self.benchmark:
+        if config.benchmark:
             benchmark(self.model, imgsz=imgsz)
 
 # endregion

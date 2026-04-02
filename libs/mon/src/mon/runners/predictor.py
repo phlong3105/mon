@@ -182,7 +182,8 @@ class Predictor(Runner, ABC):
                 log(f"'transforms' is not initialized.")
 
         # 5. Run benchmark
-        self.benchmark()
+        if config.benchmark:
+            self.benchmark()
 
         # 6. Main loop
         with create_progress_bar() as pbar:

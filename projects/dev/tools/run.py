@@ -55,7 +55,7 @@ def main(args: argparse.Namespace):
             mode=RunMode.PREDICT,
             device="auto",
             save=True,
-            save_debug=True,
+            save_debug=False,
             exist_ok=True,
             verbose=True,
         )
