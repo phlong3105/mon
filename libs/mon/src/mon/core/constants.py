@@ -17,6 +17,7 @@ from types import SimpleNamespace
 from .dtype import ImageExtension, WeightExtension
 from .path import Path
 
+
 # ==============================================================================
 # region PATHS
 # ==============================================================================
