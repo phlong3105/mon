@@ -13,7 +13,7 @@ __all__ = [
 ]
 
 from abc import ABC
-from typing import override
+from typing import Any, override
 
 from mon.core import Size
 from mon.nn import Model
@@ -33,10 +33,10 @@ class SuperResolutionModel(Model, ABC):
     @override
     def forward(
         self,
-        data: dict | None = None,
+        data: dict[str, Any] | None = None,
         save_debug: bool = False,
         *args, **kwargs
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Forward the input through the model.
 
         Args:

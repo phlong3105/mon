@@ -46,6 +46,9 @@ def measure():
 
     # 2. Define constants
     root = resolve_project_root(current_dir)
+    if root is None:
+        raise FileNotFoundError(f"Could not find project root from {current_dir}")
+
     data_dir = root / "data"
     run_dir = root / "run" / "predict"
 

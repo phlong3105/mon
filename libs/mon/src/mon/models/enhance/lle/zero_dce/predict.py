@@ -19,7 +19,6 @@ from typing_extensions import override
 
 from mon.core import K, MODELS, Path, PREDICTORS, Size, SizeLike, TimeProfiler
 from mon.dataset import transform as T
-from mon.metrics import benchmark
 from mon.runners import Predictor
 # noinspection PyUnusedImports
 from .model import zero_dce, zero_dce_pp
@@ -145,7 +144,7 @@ class ZeroDCE_Predictor(Predictor):
             imgsz = Size(height=imgsz.h // scale_factor, width=imgsz.w // scale_factor)
 
         if config.benchmark:
-            benchmark(self.model, imgsz=imgsz)
+            self.model.benchmark(imgsz=imgsz, verbose=self.verbose)
 
 # endregion
 

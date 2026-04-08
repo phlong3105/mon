@@ -38,7 +38,6 @@ from mon.dataset import (
     Dataset,
     transform as T,
 )
-from mon.metrics import benchmark
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -180,7 +179,7 @@ class Runner(ABC):
         imgsz = Size.from_value(imgsz or config.eval_imgsz)
 
         if config.benchmark:
-            benchmark(self.model, imgsz=imgsz)
+            self.model.benchmark(imgsz=imgsz, verbose=self.verbose)
 
 
 class Evaluator(ABC):

@@ -43,7 +43,7 @@ from mon.core.typing import (
     RunModeLike,
     TaskLike,
 )
-from mon.core.ui.prompt_toolkit import ConfirmPrompt, PathPrompt, Prompt
+from mon.core.ui.prompt_toolkit import ConfirmPrompt, PathPrompt, Prompt, IntPrompt
 from mon.core.utils import is_valid_str, merge_dicts, truncate_string
 
 # ==============================================================================
@@ -175,6 +175,13 @@ ARGUMENTS = Box({
         "help": "Dataset name or directory.",
         "prompt_only": False,
         "prompt_text": "Predict(s)",
+    },
+    "eval_imgsz": {
+        "default": None,
+        "type": _int_or_none,
+        "help": "Evaluation image size.",
+        "prompt_only": False,
+        "prompt_text": "Eval Image Size",
     },
     "eval_resize": {
         "default": False,
@@ -1226,7 +1233,7 @@ class ConfigContext(Config):
     # --- Container / Sequence Methods ---
     def __len__(self) -> int:
         """Return the total number of interactive steps."""
-        return 19
+        return 20
 
     # --- Creation ---
     @classmethod
@@ -1451,6 +1458,14 @@ class ConfigContext(Config):
                 defaults=sys_ctx.get_device(self.device).name,
             )
         if self._index == 9:
+            # Eval Imgsz
+            if self.mode not in [RunMode.PREDICT]:
+                self._next()
+            self.eval_imgsz = IntPrompt.ask(
+                prompt=ARGUMENTS.eval_imgsz.prompt_text,
+                defaults=self.eval_imgsz.h if self.eval_imgsz else None,
+            )
+        if self._index == 10:
             # Eval Resize
             if self.mode not in [RunMode.PREDICT]:
                 self._next()
@@ -1458,7 +1473,7 @@ class ConfigContext(Config):
                 prompt=ARGUMENTS.eval_resize.prompt_text,
                 defaults=self.eval_resize,
             )
-        if self._index == 10:
+        if self._index == 11:
             # Upsampler
             if (self.mode not in [RunMode.PREDICT]
                 or not self.eval_resize):
@@ -1468,49 +1483,49 @@ class ConfigContext(Config):
                 choices=list(UPSAMPLERS.keys()),
                 defaults=self.upsampler_name,
             )
-        if self._index == 11:
+        if self._index == 12:
             # Benchmark
             self.benchmark = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.benchmark.prompt_text,
                 defaults=self.benchmark,
             )
-        if self._index == 12:
+        if self._index == 13:
             # Save
             self.save = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.save.prompt_text,
                 defaults=self.save,
             )
-        if self._index == 13:
+        if self._index == 14:
             # Save Debug
             self.save_debug = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.save_debug.prompt_text,
                 defaults=self.save_debug,
             )
-        if self._index == 14:
+        if self._index == 15:
             # Keep Subdirs
             self.keep_subdirs = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.keep_subdirs.prompt_text,
                 defaults=self.keep_subdirs,
             )
-        if self._index == 15:
+        if self._index == 16:
             # Near Source
             self.near_src = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.near_src.prompt_text,
                 defaults=self.near_src,
             )
-        if self._index == 16:
+        if self._index == 17:
             # Exist OK
             self.exist_ok = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.exist_ok.prompt_text,
                 defaults=self.exist_ok,
             )
-        if self._index == 17:
+        if self._index == 18:
             # Verbose
             self.verbose = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.verbose.prompt_text,
                 defaults=self.verbose,
             )
-        if self._index == 18:
+        if self._index == 19:
             # Finish
             pprint_dict(self.config, title="Input Arguments")
             finish = ConfirmPrompt.ask(prompt="Finish/Re-input", defaults=True)

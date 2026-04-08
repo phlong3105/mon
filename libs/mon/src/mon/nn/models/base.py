@@ -18,7 +18,7 @@ from typing import Any
 
 from torch import nn
 
-from mon.core import is_list_of, is_valid_str, Path, PathLike, Task
+from mon.core import is_list_of, is_valid_str, Path, PathLike, SizeLike, Task
 
 
 # ==============================================================================
@@ -73,7 +73,12 @@ class Model(nn.Module, ABC):
         )
 
     # --- Callable & Context Manager ---
-    def forward(self, data: dict | None = None, save_debug: bool = False, *args, **kwargs) -> dict:
+    def forward(
+        self,
+        data: dict[str, Any] | None = None,
+        save_debug: bool = False,
+        *args, **kwargs
+    ) -> dict[str, Any]:
         """Forward the input through the model.
 
         Args:
@@ -140,6 +145,23 @@ class Model(nn.Module, ABC):
 
         Returns:
             dict: Output data dictionary.
+        """
+        pass
+
+    # --- Benchmarks ---
+    @abstractmethod
+    def benchmark(self, imgsz: SizeLike, num_runs: int = 10, verbose: bool = True) -> dict[str, Any]:
+        """Perform a single forward step of the model to benchmark its performance.
+
+        Args:
+            imgsz (SizeLike): Input image size.
+            num_runs (int, optional): Number of runs to average for benchmarking.
+                Defaults to 10.
+            verbose (bool, optional): Whether to log the results. Defaults to True.
+
+        Returns:
+            dict: A dictionary containing the benchmark results, such as latency,
+                FLOPs, and parameter count.
         """
         pass
 
