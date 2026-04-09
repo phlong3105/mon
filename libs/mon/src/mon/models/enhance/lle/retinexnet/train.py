@@ -464,7 +464,13 @@ class RetinexNet_Trainer(Trainer):
             "illumination": normalize_minmax(val_outputs["illumination"]),
             "illumination_delta": normalize_minmax(val_outputs["illumination_delta"]),
         }
-        self._save_image(epoch, debug_image, dirname=K.PRED_DIR, stem="debug", column_first=True)
+        self._save_image(
+            epoch=epoch,
+            outputs=debug_image,
+            dirname=K.PRED_DIR,
+            stem="debug",
+            column_first=True,
+        )
 
 # endregion
 

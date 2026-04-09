@@ -218,7 +218,12 @@ class ZeroDCE_Trainer(Trainer):
             "target": val_outputs["target"],
             "enhanced": val_outputs["enhanced"],
         }
-        self._save_image(epoch, debug_image, dirname=K.PRED_DIR, stem="debug")
+        self._save_image(
+            epoch=epoch,
+            outputs=debug_image,
+            dirname=K.PRED_DIR,
+            stem="debug",
+        )
 
 # endregion
 

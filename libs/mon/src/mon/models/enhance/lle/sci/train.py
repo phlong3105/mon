@@ -228,7 +228,13 @@ class SCI_Trainer(Trainer):
             "illumination": val_outputs["illumination"],
             "attention": val_outputs["attention"],
         }
-        self._save_image(epoch, debug_image, dirname=K.PRED_DIR, stem="debug", column_first=True)
+        self._save_image(
+            epoch=epoch,
+            outputs=debug_image,
+            dirname=K.PRED_DIR,
+            stem="debug",
+            column_first=True,
+        )
 
 
 class SCI_Finetuner(Trainer):
@@ -413,7 +419,13 @@ class SCI_Finetuner(Trainer):
             "enhanced": val_outputs["enhanced"],
             "illumination": val_outputs["illumination"],
         }
-        self._save_image(epoch, debug_image, dirname=K.PRED_DIR, stem="debug", column_first=True)
+        self._save_image(
+            epoch=epoch,
+            outputs=debug_image,
+            dirname=K.PRED_DIR,
+            stem="debug",
+            column_first=True,
+        )
 
 
 # --- SCI++ ---
@@ -642,7 +654,13 @@ class SCI_PP_Trainer(Trainer):
             "illumination": val_outputs["illumination"],
             "attention": val_outputs["attention"],
         }
-        self._save_image(epoch, debug_image, dirname=K.PRED_DIR, stem="debug", column_first=True)
+        self._save_image(
+            epoch=epoch,
+            outputs=debug_image,
+            dirname=K.PRED_DIR,
+            stem="debug",
+            column_first=True,
+        )
 
 
 class SCI_PP_Finetuner(SCI_Finetuner):

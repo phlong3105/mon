@@ -237,7 +237,13 @@ class PairLIE_Trainer(Trainer):
             "X": val_outputs["X"],
             "D": val_outputs["D"],
         }
-        self._save_image(epoch, debug_image, dirname=K.PRED_DIR, stem="debug", column_first=True)
+        self._save_image(
+            epoch=epoch,
+            outputs=debug_image,
+            dirname=K.PRED_DIR,
+            stem="debug",
+            column_first=True,
+        )
 
 # endregion
 

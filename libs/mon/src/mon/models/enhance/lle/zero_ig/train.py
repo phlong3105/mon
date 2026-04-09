@@ -213,7 +213,13 @@ class SCI_Trainer(Trainer):
             "enhanced": val_outputs["enhanced"],
             "denoised": val_outputs["denoised"],
         }
-        self._save_image(epoch, debug_image, dirname=K.PRED_DIR, stem="debug", column_first=True)
+        self._save_image(
+            epoch=epoch,
+            outputs=debug_image,
+            dirname=K.PRED_DIR,
+            stem="debug",
+            column_first=True,
+        )
 
 # endregion
 

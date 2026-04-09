@@ -17,9 +17,11 @@ from typing import Any
 import pyiqa
 import torch
 from rich.progress import Progress
+from torch import Tensor
 from typing_extensions import override
 
 from mon.core import (
+    K,
     OPTIMIZERS,
     Path,
     resolve_project_root,
@@ -114,11 +116,18 @@ class SLICE_Trainer(Trainer):
             image = datapoint["image"]
             image = image.to(device)
             depth = datapoint.get("depth", None)
-            depth = depth.to(device) if use_depth else None
-            t = torch.tensor([0.0, config.T]).float().to(device)
+            depth = depth.to(device) if use_depth and isinstance(depth, Tensor) else depth
+            T = torch.tensor([0.0, config.T]).float().to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(image=image, depth=depth, t=t, save_debug=self.save_debug)
+            outputs = self.model(
+                data={
+                    "image": image,
+                    "depth": depth,
+                    "T": T,
+                },
+                save_debug=True,
+            )
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
@@ -196,13 +205,20 @@ class SLICE_Trainer(Trainer):
             image = datapoint["image"]
             image = image.to(device)
             depth = datapoint.get("depth", None)
-            depth = depth.to(device) if use_depth else None
+            depth = depth.to(device) if use_depth and isinstance(depth, Tensor) else depth
             target = datapoint["target"]
             target = target.to(device)
-            t = torch.tensor([0.0, config.T]).float().to(device)
+            T = torch.tensor([0.0, config.T]).float().to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(image=image, depth=depth, t=t, save_debug=True)
+            outputs = self.model(
+            data={
+                "image": image,
+                "depth": depth,
+                "T": T,
+            },
+            save_debug=True,
+        )
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
@@ -260,8 +276,13 @@ class SLICE_Trainer(Trainer):
             "noise_map": normalize_minmax(val_outputs["noise_map"]),
             "denoised": val_outputs["denoised"],
         }
-
-        self._save_image(epoch, debug_image, column_first=True)
+        self._save_image(
+            epoch=epoch,
+            outputs=debug_image,
+            dirname=K.PRED_DIR,
+            stem="debug",
+            column_first=True,
+        )
 
 # endregion
 
