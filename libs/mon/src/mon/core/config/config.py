@@ -18,10 +18,9 @@ __all__ = [
 import argparse
 import copy
 import socket
-from typing import Any, Callable, TypeVar, override
+from typing import Any, Callable, override, TypeVar
 
 import torch
-
 from box import Box
 from rich.table import Table
 

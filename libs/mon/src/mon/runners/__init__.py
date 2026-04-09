@@ -10,6 +10,7 @@ and inference.
 from __future__ import annotations
 
 from .base import *
+from .benchmarker import *
 from .evaluator import *
 from .predictor import *
 from .trainer import *

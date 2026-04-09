@@ -13,6 +13,8 @@ __all__ = []
 import argparse
 import sys
 
+# noinspection PyUnusedImports
+import slice
 from mon.core import (
     ConfigContext,
     Path,
@@ -22,9 +24,82 @@ from mon.core import (
     Task,
     TRAINERS,
 )
+from mon.runners import Benchmarker, IQAEvaluator
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
+
+
+# ==============================================================================
+# region METRIC
+# ==============================================================================
+
+def metric():
+    # 1. Define arguments
+    archs_models = {
+        "clode": ["clode_sice_me", "clode_sice_me_gf"],
+        "colie": ["colie"],
+        "pairlie": ["pairlie_sice", "pairlie_sice_gf"],
+        "retinexnet": ["retinexnet_lol_v1", "retinexnet_lol_v1_gf"],
+        "sci": ["sci++"],
+        "zero_dce": ["zero_dce_sice_me"],
+        "zero_ig": ["zero_ig_lol", "zero_ig_lol_gf"],
+        "slice": ["slice_dopri5_sice_me_v4"],
+    }
+    datasets = [
+        # "dicm", "lime", "mef", "npe", "vv",
+        # "lol_v1",
+        # "lol_v2_real",
+        # "lol_v2_syn",
+        "sice",
+        # "lsrw",
+        # "uhd_ll",
+    ]
+    metrics = ["psnr", "ssim", "ssimc", "lpips", "niqe", "pi"]
+
+    # 2. Define constants
+    root = resolve_project_root(current_dir)
+    if root is None:
+        raise FileNotFoundError(f"Could not find project root from {current_dir}")
+
+    data_dir = root / "data"
+    run_dir = root / "run" / "predict"
+
+    target_dirs = {
+        "lol_v2_real": data_dir / "lol_v2/real/test/target",
+        "lol_v2_syn": data_dir / "lol_v2/syn/test/target",
+        "sice": data_dir / "sice/sice/test/target",
+    }
+
+    # 3. Main loop
+    for data in datasets:
+        # 3.1. Define the target directory
+        if data in target_dirs:
+            target_dir = target_dirs[data]
+        else:
+            target_dir = data_dir / data / "test" / "target"
+        if not target_dir.exists():
+            target_dir = None
+
+        # 3.2. Loop through the architectures and models
+        for arch, models in archs_models.items():
+            for model in models:
+                input_dir = run_dir / arch / model / data / "pred"
+                iqa = IQAEvaluator.from_cli(
+                    input_dir=input_dir,
+                    target_dir=target_dir,
+                    result_file=None,
+                    arch=arch,
+                    model=model,
+                    data=data,
+                    metrics=metrics,
+                    device="cuda:0",
+                    resize=False,
+                    verbose=True,
+                )
+                iqa.measure()
+
+# endregion
 
 
 # ==============================================================================
@@ -32,6 +107,8 @@ current_dir = current_file.parents[0]
 # ==============================================================================
 
 def main(args: argparse.Namespace):
+    """A hub for running models."""
+    # Train
     if args.train:
         config_ctx = ConfigContext.from_cli(
             root=resolve_project_root(current_dir),
@@ -47,6 +124,8 @@ def main(args: argparse.Namespace):
         config = config_ctx.config_for(RunMode.TRAIN, prompt=args.prompt)
         trainer = TRAINERS.build(name=config.model_name, config=config)
         trainer.train()
+
+    # Predict
     elif args.predict:
         config_ctx = ConfigContext.from_cli(
             root=resolve_project_root(current_dir),
@@ -62,6 +141,33 @@ def main(args: argparse.Namespace):
         config = config_ctx.config_for(RunMode.PREDICT, prompt=args.prompt)
         predictor = PREDICTORS.build(name=config.model_name, config=config)
         predictor.predict()
+
+    # Metric
+    elif args.metric:
+        metric()
+
+    # Benchmark
+    elif args.benchmark:
+        models = [
+            "clode",
+            "colie",
+            "pairlie",
+            "retinexnet",
+            "sci++",
+            "zero_dce",
+            "zero_ig",
+            "slice",
+        ]
+        benchmarker = Benchmarker.from_cli(
+            task=Task.LLE,
+            models=models,
+            num_runs=10,
+            device="cuda:0",
+            verbose=True,
+            prompt=args.prompt,
+        )
+        benchmarker.measure()
+
     else:
         raise NotImplementedError("Run mode hasn't been implemented.")
 
@@ -72,7 +178,9 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--train", action="store_true", help="Train the model.")
     parser.add_argument("--test", action="store_true", help="Test the model.")
     parser.add_argument("--predict", action="store_true", help="Predict using the model.")
-    parser.add_argument("--prompt", action="store_true", default="True", help="Prompt for additional inputs.")
+    parser.add_argument("--metric", action="store_true", help="Evaluate the model.")
+    parser.add_argument("--benchmark", action="store_true", help="Benchmark the model.")
+    parser.add_argument("--prompt", action="store_true", help="Prompt for additional inputs.")
     args, remaining = parser.parse_known_args()
     sys.argv = [sys.argv[0]] + remaining
     return args

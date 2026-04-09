@@ -158,7 +158,7 @@ class SLICE(ModelRegisterMixin, EnhancementModel):
             out_channels=self.out_channels,
             hidden_dim=hidden_dim,
             pos_encode=True,
-            mapping_size=imgsz.h,
+            mapping_size=imgsz,
         )
 
         # Load weights
@@ -381,7 +381,13 @@ class SLICE(ModelRegisterMixin, EnhancementModel):
         inputs = {"data": data}
 
         # Benchmark the model
-        return benchmark(model=self, inputs=inputs, num_runs=num_runs, verbose=verbose)
+        return benchmark(
+            model=self,
+            inputs=inputs,
+            num_runs=num_runs,
+            copy=False,
+            verbose=verbose,
+        )
 
 # endregion
 
