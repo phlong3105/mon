@@ -18,10 +18,10 @@ current_dir = current_file.parents[0]
 
 
 # ==============================================================================
-# region CONTROL
+# region MAIN
 # ==============================================================================
 
-def measure():
+def main():
     # 1. Define arguments
     archs_models = {
         "clode": ["clode_sice_me", "clode_sice_me_gf"],
@@ -86,14 +86,7 @@ def measure():
                 )
                 iqa.measure()
 
-# endregion
-
-
-# ==============================================================================
-# region UNIT TEST
-# ==============================================================================
-
 if __name__ == "__main__":
-    measure()
+    main()
 
 # endregion

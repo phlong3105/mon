@@ -30,7 +30,7 @@ def main():
         "sci++",
         "zero_dce",
         "zero_ig",
-        # "slice",
+        "slice",
     ]
     benchmark = BenchmarkEvaluator.from_cli(models=models, device="cuda:0")
     benchmark.measure()
