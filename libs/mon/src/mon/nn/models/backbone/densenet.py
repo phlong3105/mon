@@ -81,8 +81,6 @@ class DenseNetBackBone(ModelRegisterMixin, nn.Module):
             verbose (bool): Verbosity mode. Defaults to True.
         """
         super().__init__(name=name)
-        # Initialize RegistrableMixin
-        # ModelRegisterMixin.__init__(self, name=name)
 
         # Assign attributes
         self.verbose = verbose

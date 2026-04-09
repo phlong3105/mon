@@ -267,7 +267,7 @@ class RetinexNet_Trainer(Trainer):
         epoch: int,
         phase: Literal["decom", "enhance", "whole"],
         pbar: Progress
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Train an epoch.
 
         Args:
@@ -277,8 +277,8 @@ class RetinexNet_Trainer(Trainer):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict: A dictionary containing the training loss and other results
-                for the epoch.
+            dict[str, Any]: A dictionary containing the training loss and other
+                results for the epoch.
         """
         device = self.device
 

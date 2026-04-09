@@ -144,7 +144,7 @@ class ZS_N2N(ModelRegisterMixin, RestorationModel):
         reset_weights: bool = True,
         optimizer: DictLike | None = None,
         scheduler: DictLike | None = None,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Fit the model to a single image using zero-shot optimization.
 
         Args:
@@ -160,7 +160,7 @@ class ZS_N2N(ModelRegisterMixin, RestorationModel):
                 parameters. Defaults to None.
 
         Returns:
-            dict: Dictionary containing the enhanced image tensor and
+            dict[str, Any]: Dictionary containing the enhanced image tensor and
                 intermediate results for debugging.
         """
         epochs = epochs or self.fit_epochs
@@ -197,8 +197,7 @@ class ZS_N2N(ModelRegisterMixin, RestorationModel):
             restored = torch.clamp(image - self.model(image),0,1)
 
         # 6. Return final and intermediate results for debugging
-        outputs = { "restored": restored }
-        return outputs
+        return { "restored": restored }
 
     # --- Denoise ---
     def denoise_loss(self, noisy_image: Tensor) -> Tensor:
@@ -366,7 +365,7 @@ class IZS_N2N(ModelRegisterMixin, RestorationModel):
         reset_weights: bool = True,
         optimizer: DictLike | None = None,
         scheduler: DictLike | None = None,
-    ) -> dict:
+    ) -> dict[str, Any]:
         """Fit the model to a single image using zero-shot optimization.
 
         Args:
@@ -382,7 +381,7 @@ class IZS_N2N(ModelRegisterMixin, RestorationModel):
                 parameters. Defaults to None.
 
         Returns:
-            dict: Dictionary containing the enhanced image tensor and
+            dict[str, Any]: Dictionary containing the enhanced image tensor and
                 intermediate results for debugging.
         """
         epochs = epochs or self.fit_epochs

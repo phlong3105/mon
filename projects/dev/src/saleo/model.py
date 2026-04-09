@@ -96,7 +96,6 @@ class SALEO(ModelRegisterMixin, nn.Module):
                 Defaults to "cpu"."
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
-        # Satisfy PyTorch's empty signature first.
         super().__init__(name=name)
 
         # Assign attributes

@@ -25,7 +25,7 @@ def compute_depth_metrics(
     target: ndarray,
     valid_mask: ndarray | None = None,
     normalize: bool = True,
-) -> dict:
+) -> dict[str, float]:
     """Compute depth metrics between two depth maps.
 
     Args:
@@ -38,7 +38,7 @@ def compute_depth_metrics(
             Defaults to True.
 
     Returns:
-        dict: A dictionary containing the computed depth metrics.
+        dict[str, float]: A dictionary containing the computed depth metrics.
     """
     # Validate inputs
     if pred.shape != target.shape:

@@ -52,7 +52,6 @@ class TVDenoise(ModelRegisterMixin, RestorationModel):
             num_iter (int, optional): Number of iterations. Defaults to 50.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
-        # Satisfy PyTorch's empty signature first.
         super().__init__()
 
         # Assign attributes
