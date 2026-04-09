@@ -71,7 +71,7 @@ def metric():
         "sice": data_dir / "sice/sice/test/target",
     }
 
-    # 3. Main loop
+    # 3. Measure metrics
     for data in datasets:
         # 3.1. Define the target directory
         if data in target_dirs:

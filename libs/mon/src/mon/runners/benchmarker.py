@@ -238,21 +238,27 @@ class Benchmarker(PromptContextMixin):
             dict[str, dict[str, float]]: A dictionary containing the benchmark
                 results of each model.
         """
-        results = {}
+        models = self.models
+        imgsz = self.imgsz
+        num_runs = self.num_runs
+        device = self.device
+
+        # Processing loop
+        results = {m: [] for m in models}
 
         with create_progress_bar(transient=True) as pbar:
             for i, m in pbar.track(
-                sequence=enumerate(self.models),
-                total=len(self.models),
+                sequence=enumerate(models),
+                total=len(models),
                 description="[bright_yellow]Benchmarking",
             ):
                 # Define the model
-                model = MODELS.build(name=m, device=self.device, verbose=False)
-                model = model.to(self.device)
+                model = MODELS.build(name=m, device=device, verbose=False)
+                model = model.to(device)
                 model.eval()
 
                 # Run benchmark
-                stats = model.benchmark(imgsz=self.imgsz, num_runs=self.num_runs, verbose=False)
+                stats = model.benchmark(imgsz=imgsz, num_runs=num_runs, verbose=False)
                 results[m] = stats
 
         return results

@@ -232,7 +232,7 @@ class Evaluator(ABC):
 
     @abstractmethod
     def _init_metrics(self, metrics: list[str]):
-        """Initialize ``self._metrics`` and ``self._metrics_func`` attributes.``"""
+        """Initialize ``self._metrics`` and ``self._metrics_func`` attributes."""
         pass
 
     @abstractmethod

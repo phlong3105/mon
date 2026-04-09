@@ -11,17 +11,20 @@ from __future__ import annotations
 __all__ = [
     "DQAEvaluator",
     "IQAEvaluator",
+    "InstanceIQAEvaluator",
 ]
 
 import argparse
 import logging
 from typing import override
 
+import cv2
 import matplotlib
 import numpy as np
 import pyiqa
 import pyiqa.default_model_configs
 import pyiqa.models.inference_model
+from torch import Tensor
 
 from mon.core import (
     console,
@@ -172,10 +175,10 @@ class IQAEvaluator(Evaluator):
         parser.add_argument("--arch",        type=str, help="Model's architecture.")
         parser.add_argument("--model",       type=str, help="Model's fullname.")
         parser.add_argument("--data",        type=str, help="Source data name.")
+        parser.add_argument("--metric",      type=str, action="append", help="Measuring metric.")
         parser.add_argument("--device",      type=str, help="Running devices.")
         parser.add_argument("--imgsz",       type=int, default=512)
         parser.add_argument("--resize",      action="store_true")
-        parser.add_argument("--metric",      type=str, action="append", help="Measuring metric.")
         parser.add_argument("--use-gt-mean", action="store_true")
         parser.add_argument("--verbose",     action="store_true")
         args = vars(parser.parse_args())
@@ -225,7 +228,7 @@ class IQAEvaluator(Evaluator):
         verbose = self.verbose
 
         # Processing loop
-        values = {m: [] for m in metrics}
+        results = {m: [] for m in metrics}
 
         with create_progress_bar(transient=not verbose) as pbar:
             if use_gt_mean:
@@ -259,13 +262,12 @@ class IQAEvaluator(Evaluator):
                     if target is None and self.all_metrics[m]["metric_mode"] == "FR":
                         continue
                     elif target is not None and self.all_metrics[m]["metric_mode"] == "FR":
-                        values[m].append(metrics_func[m](image, target))
+                        results[m].append(metrics_func[m](image, target))
                     else:
-                        values[m].append(metrics_func[m](image))
+                        results[m].append(metrics_func[m](image))
 
         # Aggregate results
-        results = {}
-        for m, v in values.items():
+        for m, v in results.items():
             if len(v) > 0:
                 results[m] = float(sum(v) / len(v))
             else:
@@ -288,15 +290,16 @@ class IQAEvaluator(Evaluator):
         """Print the measured results."""
         results = self.results
         results_gt_mean = self.results_gt_mean
-
         pad = 10
-        message = ""
+
         # Headers
+        header = ""
         for m, v in results.items():
             if v:
-                message += f"{f'{m}':<{pad}}\t"
-        message += "\n"
+                header += f"{f'{m}':<{pad}}\t"
+
         # Values
+        message = ""
         for i, (m, v) in enumerate(results.items()):
             if v:
                 if i == len(results) - 1:
@@ -309,7 +312,238 @@ class IQAEvaluator(Evaluator):
                     message += f"{v:.{pad}f}\n"
                 else:
                     message += f"{v:.{pad}f}\t"
-        print(f"{message}\n")
+
+        print(f"{header}")
+        print(f"{message}")
+
+
+class InstanceIQAEvaluator(Evaluator):
+    """A runner for measuring image quality evaluation (IQA) metrics of a single
+    image.
+    """
+
+    all_metrics = pyiqa.default_model_configs.DEFAULT_CONFIGS
+    excluded_stems = ["image", "target", "depth"]
+    target_stem = "target"
+
+    # --- Lifecycle & Initialization ---
+    def __init__(
+        self,
+        input_dir: PathLike,
+        result_file: PathLike | None,
+        metrics: list[str],
+        device: DeviceLike,
+        imgsz: SizeLike = 512,
+        resize: bool = False,
+        verbose: bool = True,
+    ):
+        """Initialize a new instance.
+
+        Args:
+            input_dir (PathLike): Input image directory.
+            result_file (PathLike | None): Result file. If None, results will
+                not be saved.
+            metrics (list[str]): List of metrics to measure.
+            device (DeviceLike): Running device.
+            imgsz (SizeLike, optional): Image size for resizing. If resize is
+                False, this will be ignored. Defaults to 512.
+            resize (bool, optional): Whether to resize images to ``imgsz``
+                before measuring metrics. Defaults to False.
+            verbose (bool, optional): Verbosity mode. Defaults to True.
+        """
+        super().__init__(
+            input_dir=input_dir,
+            target_dir=None,
+            result_file=result_file,
+            metrics=metrics,
+            device=device,
+            verbose=verbose
+        )
+
+        # Assign attributes
+        self.imgsz = imgsz
+        self.resize = resize
+
+    @override
+    def _init_metrics(self, metrics: list[str]):
+        """Initialize ``self._metrics`` and ``self._metrics_func`` attributes."""
+        _metrics = []
+        _metrics_func = {}
+        for i, m in enumerate(metrics):
+            if m in self.all_metrics:
+                _metrics.append(m)
+                _metrics_func[m] = pyiqa.create_metric(
+                    metric_name=m, as_loss=False, device=self.device
+                )
+            else:
+                log_error(f"Unsupported metric: {m}. Skipping...")
+
+        self._metrics = _metrics
+        self._metrics_func = _metrics_func
+
+    @override
+    def _init_dataloader(self):
+        """Build a dataloader for the given dataset."""
+        pass
+
+    def _init_transforms(self) -> T.Compose:
+        """Build a dataloader for the given dataset."""
+        transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
+        if self.resize:
+            h, w = self.imgsz.hw
+            transforms = T.Resize(height=h, width=w) + transforms
+
+        return transforms
+
+    # --- Properties ---
+    @property
+    def imgsz(self) -> Size:
+        """Return the image size for resizing."""
+        return self._imgsz
+
+    @imgsz.setter
+    def imgsz(self, value: SizeLike):
+        """Set the image size for resizing."""
+        self._imgsz = Size.from_value(value)
+
+    # --- Creation ---
+    @classmethod
+    def from_cli(cls, **kwargs) -> "IQAEvaluator":
+        """Create an instance of IQAEvaluator from command-line arguments."""
+        parser = argparse.ArgumentParser(description="metric_iqa")
+        parser.add_argument("--input-dir",   type=str, help="Input image directory.")
+        parser.add_argument("--result-file", type=str, help="Result file.")
+        parser.add_argument("--metric",      type=str, action="append", help="Measuring metric.")
+        parser.add_argument("--device",      type=str, help="Running devices.")
+        parser.add_argument("--imgsz",       type=int, default=512)
+        parser.add_argument("--resize",      action="store_true")
+        parser.add_argument("--verbose",     action="store_true")
+        args = vars(parser.parse_args())
+
+        args["metrics"] = args.pop("metric")  # Rename "metric" to "metrics"
+        args |= kwargs  # Override with additional kwargs
+
+        return cls(**args)
+
+    # --- Measure ---
+    @override
+    def measure(self):
+        """Run the metric measurement process."""
+        # Summarize the current run
+        self.log_summary()
+
+        # Processing
+        self._results = self._measure()
+
+        # Print results
+        self.log_results()
+
+    def _measure(self) -> dict[str, float]:
+        """Measure IQA metrics based on the configuration.
+
+        Returns:
+            dict[str, float]: The dictionary of measured results.
+        """
+        # Resolve attributes
+        device = self.device
+        metrics = self.metrics
+        metrics_func = self.metrics_func
+        verbose = self.verbose
+
+        # Define images and target
+        image_files = sorted(list(self.input_dir.rglob(f"*")))
+        image_files = [i for i in image_files if i.stem not in self.excluded_stems]
+        image_files = [i for i in image_files if i.is_image_file(exists=True)]
+
+        target_file = self.input_dir / self.target_stem
+        target_file = target_file.image_file
+        if not target_file.is_image_file(exists=True):
+            target = cv2.imread(str(target_file))
+        else:
+            target = None
+
+        # Define transforms
+        transforms: T.Compose = self._init_transforms()
+
+        # Processing loop
+        results = {i.stem: [] for i in image_files}
+
+        with create_progress_bar(transient=not verbose) as pbar:
+            for i, image_file in pbar.track(
+                sequence=enumerate(image_files),
+                total=len(image_files),
+                description=f"[bright_yellow]Measuring",
+            ):
+                # Read image file
+                image = cv2.imread(str(image_file))
+
+                # Transform image and target
+                transformed = transforms(image=image, target=target)
+                image_t = transformed["image"].unsqueeze(0).to(device)
+                target_t = transformed["target"].unsqueeze(0).to(device) if target is not None else None
+
+                # Sometimes image and target may have different orientations
+                # (H, W) vs (W, H). We check the image and target sizes and
+                # transpose the image if needed.
+                image_sz = image_t.shape[-2:]
+                if isinstance(target_t, Tensor):
+                    target_sz = target_t.shape[-2:]
+                    if image_sz[0] == target_sz[1]:
+                        image_t = image_t.transpose(2, 3)
+
+                # Measure metric
+                values = {}
+                for m in metrics:
+                    if target_t is None and self.all_metrics[m]["metric_mode"] == "FR":
+                        continue
+                    elif target_t is not None and self.all_metrics[m]["metric_mode"] == "FR":
+                        values[m] = metrics_func[m](image_t, target_t)
+                    else:
+                        values[m] = metrics_func[m](image_t)
+
+                # Aggregate results
+                results[image_file.stem] = values
+
+        return results
+
+    # --- Logging ---
+    def log_summary(self):
+        """Log a summary of the current run."""
+        if not self.verbose:
+            logger = logging.getLogger()
+            logger.disabled = True
+        console.rule(f"[bold red] IQA Metric")
+        console.log(f"[bold]Data  : {self.input_dir.name}")
+        console.log(f"[bold]Device: {self.device}")
+
+    @override
+    def log_results(self):
+        """Print the measured results."""
+        results = self.results
+        pad = 10
+
+        # Headers
+        first_item = list(results.values())[0]
+        header = f"{f'Model':<{pad * 2}}\t"
+        for m, v in first_item.items():
+            header += f"{f'{m}':<{pad}}\t"
+        header += "-" * ((pad + 4) * (len(first_item) + 1))
+
+        # Values
+        message = ""
+        for i, (model, values) in enumerate(results.items()):
+            message += f"{f'{model}':<{pad * 2}}\t"
+            for k, v in values.items():
+                if i == len(values) - 1:
+                    message += f"{v:.{pad}f}\n"
+                else:
+                    message += f"{v:.{pad}f}\t"
+
+        print(f"{header}")
+        print(f"{message}")
 
 # endregion
 
@@ -481,7 +715,7 @@ class DQAEvaluator(Evaluator):
         verbose = self.verbose
 
         # Processing loop
-        values = {m: [] for m in metrics}
+        results = {m: [] for m in metrics}
 
         with create_progress_bar(transient=not verbose) as pbar:
             desc = f"[bright_yellow]Measuring {model} | {data}"
@@ -509,12 +743,11 @@ class DQAEvaluator(Evaluator):
                 # Measure metric
                 measured_results = compute_depth_metrics(image, target)
                 for k, v in measured_results.items():
-                    if k in values:
-                        values[k].append(v)
+                    if k in results:
+                        results[k].append(v)
 
         # Aggregate results
-        results = {}
-        for m, v in values.items():
+        for m, v in results.items():
             if len(v) > 0:
                 results[m] = float(sum(v) / len(v))
             else:
