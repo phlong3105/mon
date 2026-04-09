@@ -84,7 +84,6 @@ class UniK3D(ModelRegisterMixin, nn.Module):
                 Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
-        # Satisfy PyTorch's empty signature first.
         super().__init__(name=name)
         # Initialize RegistrableMixin
         # ModelRegisterMixin.__init__(self, name=name)

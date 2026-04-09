@@ -24,7 +24,17 @@ import torch
 from torch.nn import functional as F
 from torch.optim import Adam, Optimizer
 
-from mon.core import DictLike, log, MODELS, OPTIMIZERS, Path, Task
+from mon.core import (
+    DictLike,
+    log,
+    MODELS,
+    OPTIMIZERS,
+    Path,
+    Size,
+    SizeLike,
+    Task,
+)
+from mon.metrics import benchmark
 from mon.models.enhance.base import EnhancementModel
 from mon.nn import ModelRegisterMixin
 from mon.ops import guided_filter_upsample, RgbToHsv
@@ -87,7 +97,6 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
             *args: Additional positional arguments for the INR model.
             **kwargs: Additional keyword arguments for the INR model.
         """
-        # Satisfy PyTorch's empty signature first.
         super().__init__(name=name)
 
         # Assign attributes
@@ -131,10 +140,10 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
         """Perform a single forward step of the model.
 
         Args:
-            data (dict): Input data dictionary.
+            data (dict[str, Any]): Input data dictionary.
 
         Returns:
-            dict: Output data dictionary.
+            dict[str, Any]: Output data dictionary.
         """
         epochs = data.get("epochs", self.epochs)
         window_size = self.window_size
@@ -142,7 +151,7 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
         device = self.device
 
         # 1. Reset the network weights to their initial state
-        self.model.load_state_dict(self._default_state_dict)
+        self.model.load_state_dict(self._default_state_dict, strict=False)
 
         # 2. Move inputs to the corresponding device
         image = data["image"].to(device)
@@ -171,7 +180,7 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
         best_epoch = 0
         best_state_dict = None
 
-        self.model.train()
+        self.train()
         for i in range(epochs):
             # 6.1. Forward pass
             lr_image_i_res = self.model(patches, coords)
@@ -206,7 +215,7 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
 
         # 8. Final inference
         self.model.load_state_dict(best_state_dict)
-        self.model.eval()
+        self.eval()
         with torch.no_grad():
             # 8.1. Forward pass
             lr_image_i_res = self.model(patches, coords)
@@ -232,6 +241,44 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
             "image_i_fixed": image_i_fixed,
             "image_r": image_r,
         }
+
+    # --- Benchmarks ---
+    @override
+    def benchmark(self, imgsz: SizeLike, num_runs: int = 10, verbose: bool = True) -> dict[str, float]:
+        """Perform a single forward step of the model to benchmark its performance.
+
+        Args:
+            imgsz (SizeLike): Input image size.
+            num_runs (int, optional): Number of runs to average for benchmarking.
+                Defaults to 10.
+            verbose (bool, optional): Whether to log the results. Defaults to True.
+
+        Returns:
+            dict[str, float]: A dictionary containing the benchmark results,
+                such as latency, FLOPs, and parameter count.
+        """
+        imgsz = Size.from_value(imgsz)
+        window_size = self.window_size
+        down_size = self.hidden_dim
+        device = next(self.parameters()).device
+
+        # Create dummy inputs
+        dummy_input = torch.randn(1, 1, down_size, down_size).to(device)
+        coords = get_coords(down_size, down_size).to(device)
+        patches = get_patches(dummy_input, window_size).to(device)
+        inputs = {
+            "patch": patches,
+            "spatial": coords,
+        }
+
+        # Benchmark the model
+        return benchmark(
+            model=self.model,
+            inputs=inputs,
+            num_runs=num_runs,
+            copy=False,
+            verbose=verbose,
+        )
 
 # endregion
 

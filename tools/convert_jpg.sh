@@ -8,7 +8,7 @@ clear
 echo "${HOSTNAME}"
 
 # ----- Input -----
-directory="/home/longpham/10_workspace/11_code/mon/projects/enhance/data/lcdp_dataset"
+directory="/Users/longpham/Downloads/sti"
 
 # ----- Directory & File -----
 current_file=$(readlink -f "${0}")
@@ -18,14 +18,14 @@ root_dir=$(dirname "${current_dir}")      # mon/
 # ----- Functions -----
 run_on_linux() {
     cd "${directory}" || exit
-    find . -type f -regex ".*\.\(bmp\|heic\|jpeg\|png\|webp\)" -exec mogrify -format jpg {} \; -print
-    find . -type f -regex ".*\.\(bmp\|heic\|jpeg\|png\|webp\)" -exec rm {} \; -print
+    find . -type f -regex ".*\.\(bmp\|heic\|jpeg\|pgm\|png\|ppm\|webp\)" -exec mogrify -format jpg {} \; -print
+    find . -type f -regex ".*\.\(bmp\|heic\|jpeg\|pgm\|png\|ppm\|webp\)" -exec rm {} \; -print
 }
 
 run_on_darwin() {
     cd "${directory}" || exit
-    find . -type f \( -iname "*.bmp" -o -iname "*.heic" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) -exec mogrify -format jpg {} \; -print
-    find . -type f \( -iname "*.bmp" -o -iname "*.heic" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.webp" \) -exec rm {} \; -print
+    find . -type f \( -iname "*.bmp" -o -iname "*.heic" -o -iname "*.jpeg" -o -iname "*.pgm" -o -iname "*.png" -o -iname "*.ppm" -o -iname "*.webp" \) -exec mogrify -format jpg {} \; -print
+    find . -type f \( -iname "*.bmp" -o -iname "*.heic" -o -iname "*.jpeg" -o -iname "*.pgm" -o -iname "*.png" -o -iname "*.ppm" -o -iname "*.webp" \) -exec rm {} \; -print
 }
 
 run() {

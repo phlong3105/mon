@@ -76,7 +76,6 @@ class MobileNetV3BackBone(ModelRegisterMixin, nn.Module):
                 features from.
             verbose (bool): Verbosity mode. Defaults to True.
         """
-        # Satisfy PyTorch's empty signature first.
         super().__init__(name=name)
         # Initialize RegistrableMixin
         # ModelRegisterMixin.__init__(self, name=name)

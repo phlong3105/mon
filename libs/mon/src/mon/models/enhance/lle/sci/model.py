@@ -117,10 +117,10 @@ class SCI(ModelRegisterMixin, EnhancementModel):
         """Forward the input through the network.
 
         Args:
-            data (dict): Input data dictionary.
+            data (dict[str, Any]): Input data dictionary.
 
         Returns:
-            dict: Output data dictionary.
+            dict[str, Any]: Output data dictionary.
         """
         x = data["image"]
         inference = data.get("inference", True)
@@ -211,10 +211,10 @@ class SCI_PP(ModelRegisterMixin, EnhancementModel):
         """Forward the input through the network.
 
         Args:
-            data (dict): Input data dictionary.
+            data (dict[str, Any]): Input data dictionary.
 
         Returns:
-            dict: Output data dictionary.
+            dict[str, Any]: Output data dictionary.
         """
         x = data["image"]
         inference = data.get("inference", True)

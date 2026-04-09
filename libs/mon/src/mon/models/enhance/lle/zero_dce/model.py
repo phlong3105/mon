@@ -130,10 +130,10 @@ class ZeroDCE(ModelRegisterMixin, EnhancementModel):
         """Forward the input through the network.
 
         Args:
-            data (dict): Input data dictionary.
+            data (dict[str, Any]): Input data dictionary.
 
         Returns:
-            dict: Output data dictionary.
+            dict[str, Any]: Output data dictionary.
         """
         image = data["image"]
         x1 = self.relu(self.e_conv1(image))
@@ -210,7 +210,6 @@ class ZeroDCEPP(ModelRegisterMixin, EnhancementModel):
                 Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
-        # Satisfy PyTorch's empty signature first.
         super().__init__(name=name)
 
         # Assign attributes
@@ -246,10 +245,10 @@ class ZeroDCEPP(ModelRegisterMixin, EnhancementModel):
         """Forward the input through the network.
 
         Args:
-            data (dict): Input data dictionary.
+            data (dict[str, Any]): Input data dictionary.
 
         Returns:
-            dict: Output data dictionary.
+            dict[str, Any]: Output data dictionary.
         """
         image = data["image"]
         if self.scale_factor == 1:

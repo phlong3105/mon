@@ -104,10 +104,10 @@ class DCCNet(ModelRegisterMixin, EnhancementModel):
 
 
         Args:
-            data (dict): Input data dictionary.
+            data (dict[str, Any]): Input data dictionary.
 
         Returns:
-            dict: Output data dictionary.
+            dict[str, Any]: Output data dictionary.
         """
         image = data["image"]
         enhanced, gray, color_hist = self.module(image)

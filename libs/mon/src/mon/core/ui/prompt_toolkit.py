@@ -14,8 +14,10 @@ __all__ = [
     "IntPrompt",
     "PathPrompt",
     "Prompt",
+    "PromptContextMixin",
 ]
 
+from abc import ABC, abstractmethod
 import math
 import os
 from typing import Any, Generic, Literal, override, TypeVar
@@ -33,6 +35,7 @@ from prompt_toolkit.styles import Style
 from mon.core.path import Path
 from mon.core.typing import PathLike
 from mon.core.utils import truncate_string
+
 
 # ==============================================================================
 # region TYPE DEFINITIONS
@@ -1356,6 +1359,50 @@ class ConfirmPrompt(Prompt):
                 "  arrows=navigate  space=select  enter=confirm  esc=cancel\n"
             )
         ]
+
+# endregion
+
+
+# ==============================================================================
+# region MIXINS
+# ==============================================================================
+
+class PromptContextMixin(ABC):
+    """A mixin class that provides CLI prompting context management."""
+
+    # --- Lifecycle & Initialization ---
+    def __init__(self):
+        """Initialize a new instance."""
+        # Assign attributes
+        self._index = 0
+
+    # --- Prompting ---
+    def prompt(self):
+        """Run the interactive menu until completion."""
+        while True:
+            self._display_prompt()
+            if self._index == self.num_prompts:
+                return
+            self._next()
+
+    @abstractmethod
+    def _display_prompt(self):
+        """Display the current prompt at ``self._index``."""
+        pass
+
+    @property
+    @abstractmethod
+    def num_prompts(self) -> int:
+        """Return the total number of interactive steps."""
+        pass
+
+    def _next(self):
+        """Advance the prompt index by one."""
+        self._index = (self._index + 1) % self.num_prompts
+
+    def _prev(self):
+        """Move the prompt index back by one."""
+        self._index = (self._index - 1) % self.num_prompts
 
 # endregion
 

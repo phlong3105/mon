@@ -18,9 +18,10 @@ __all__ = [
 import argparse
 import copy
 import socket
-from typing import Any, Callable, TypeVar
+from typing import Any, Callable, TypeVar, override
 
 import torch
+
 from box import Box
 from rich.table import Table
 
@@ -43,7 +44,13 @@ from mon.core.typing import (
     RunModeLike,
     TaskLike,
 )
-from mon.core.ui.prompt_toolkit import ConfirmPrompt, PathPrompt, Prompt, IntPrompt
+from mon.core.ui.prompt_toolkit import (
+    ConfirmPrompt,
+    IntPrompt,
+    PathPrompt,
+    Prompt,
+    PromptContextMixin,
+)
 from mon.core.utils import is_valid_str, merge_dicts, truncate_string
 
 # ==============================================================================
@@ -243,7 +250,7 @@ ARGUMENTS = Box({
     "verbose": {
         "default": False,
         "action": "store_true",
-        "help": "Verbose mode.",
+        "help": "Verbosity mode.",
         "prompt_only": False,
         "prompt_text": "Verbosity?   ",
     },
@@ -720,12 +727,12 @@ class Config:
 
     @property
     def verbose(self) -> bool:
-        """Return whether to enable verbose mode."""
+        """Return whether to enable Verbosity mode."""
         return self._config.verbose
 
     @verbose.setter
     def verbose(self, value: bool):
-        """Set whether to enable verbose mode."""
+        """Set whether to enable Verbosity mode."""
         self._config.verbose = value
 
     # --- Retrieval ---
@@ -1187,7 +1194,7 @@ class Config:
 # region CONTROL
 # ==============================================================================
 
-class ConfigContext(Config):
+class ConfigContext(Config, PromptContextMixin):
     """A class for managing configuration and performing run-time interactive
     prompting to update the configuration.
     """
@@ -1224,16 +1231,8 @@ class ConfigContext(Config):
         # Continue the initialization chain
         super().__init__(config=config, config_file=config_file, root=root, **kwargs)
 
-        # Assign attributes
-        self._index = 0
-
         # If prompting is enabled, run the interactive menu
         self.prompt() if prompt else None
-
-    # --- Container / Sequence Methods ---
-    def __len__(self) -> int:
-        """Return the total number of interactive steps."""
-        return 20
 
     # --- Creation ---
     @classmethod
@@ -1352,6 +1351,7 @@ class ConfigContext(Config):
         return new_config
 
     # --- Prompting ---
+    @override
     def prompt(self) -> Box:
         """Run the interactive menu until completion."""
         while True:
@@ -1360,6 +1360,7 @@ class ConfigContext(Config):
                 return self.config
             self._next()
 
+    @override
     def _display_prompt(self):
         """Display the current prompt."""
         if self._index == 0:
@@ -1375,6 +1376,7 @@ class ConfigContext(Config):
                 choices=ARGUMENTS.task.choices,
                 choices_repr=ARGUMENTS.task.choices_repr,
                 defaults=self.task,
+                strict=True,
             )
         if self._index == 1:
             # Mode
@@ -1383,6 +1385,7 @@ class ConfigContext(Config):
                 choices=ARGUMENTS.mode.choices,
                 choices_repr=ARGUMENTS.mode.choices_repr,
                 defaults=self.mode,
+                strict=True,
             )
         if self._index == 2:
             # Arch
@@ -1390,6 +1393,7 @@ class ConfigContext(Config):
                 prompt=ARGUMENTS.arch.prompt_text,
                 choices=MODELS.search_archs(self.task),
                 defaults=self.arch,
+                strict=True,
             )
         if self._index == 3:
             # Model
@@ -1397,6 +1401,7 @@ class ConfigContext(Config):
                 prompt=ARGUMENTS.model.prompt_text,
                 choices=MODELS.search(self.arch, self.task),
                 defaults=self.model_name,
+                strict=True,
             )
         if self._index == 4:
             # Config file
@@ -1456,6 +1461,7 @@ class ConfigContext(Config):
                 prompt=ARGUMENTS.device.prompt_text,
                 choices=ARGUMENTS.device.choices,
                 defaults=sys_ctx.get_device(self.device).name,
+                strict=True,
             )
         if self._index == 9:
             # Eval Imgsz
@@ -1482,6 +1488,7 @@ class ConfigContext(Config):
                 prompt=ARGUMENTS.upsampler.prompt_text,
                 choices=list(UPSAMPLERS.keys()),
                 defaults=self.upsampler_name,
+                strict=True,
             )
         if self._index == 12:
             # Benchmark
@@ -1525,20 +1532,18 @@ class ConfigContext(Config):
                 prompt=ARGUMENTS.verbose.prompt_text,
                 defaults=self.verbose,
             )
-        if self._index == 19:
+        if self._index == self.num_prompts - 1:
             # Finish
             pprint_dict(self.config, title="Input Arguments")
             finish = ConfirmPrompt.ask(prompt="Finish/Re-input", defaults=True)
             if finish:
-                self._index = self.__len__()
+                self._index = self.num_prompts
 
-    def _next(self):
-        """Advance the prompt index by one."""
-        self._index = (self._index + 1) % self.__len__()
-
-    def _prev(self):
-        """Move the prompt index back by one."""
-        self._index = (self._index - 1) % self.__len__()
+    @override
+    @property
+    def num_prompts(self) -> int:
+        """Return the total number of interactive steps."""
+        return 20
 
 # endregion
 

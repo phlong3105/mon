@@ -40,7 +40,7 @@ class SuperResolutionModel(Model, ABC):
         """Forward the input through the model.
 
         Args:
-            data (dict, optional): Input data dictionary. Defaults to None.
+            data (dict[str, Any], optional): Input data dictionary. Defaults to None.
             save_debug (bool, optional): If True, return intermediate results
                 for debugging. Defaults to False.
             **kwargs: Direct keyword arguments to pass to the forward step.
@@ -49,7 +49,7 @@ class SuperResolutionModel(Model, ABC):
                 ``data`` dictionary for structured inputs.
 
         Returns:
-            dict: Output dictionary.
+            dict[str, Any]: Output dictionary.
         """
         # Validate inputs
         data = data or {}

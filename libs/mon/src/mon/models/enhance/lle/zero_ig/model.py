@@ -108,10 +108,10 @@ class ZeroIG(ModelRegisterMixin, EnhancementModel):
         """Perform a single forward step of the model.
 
         Args:
-            data (dict): Input data dictionary.
+            data (dict[str, Any]): Input data dictionary.
 
         Returns:
-            dict: Output data dictionary.
+            dict[str, Any]: Output data dictionary.
         """
         eps = 1e-4
         x = data["image"] + eps

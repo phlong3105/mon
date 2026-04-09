@@ -66,10 +66,10 @@ class TVDenoise(ModelRegisterMixin, RestorationModel):
         """Perform a single forward step of the model.
 
         Args:
-            data (dict): Input data dictionary.
+            data (dict[str, Any]): Input data dictionary.
 
         Returns:
-            dict: Output data dictionary.
+            dict[str, Any]: Output data dictionary.
         """
         image = data["image"]
         weight = data.get("weight", self.weight)

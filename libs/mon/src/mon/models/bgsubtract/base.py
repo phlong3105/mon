@@ -13,12 +13,10 @@ __all__ = [
 ]
 
 from abc import ABC
-from typing import Any, override
-
-import torch
+from typing import override
 
 from mon.core import Size, SizeLike
-from mon.metrics import benchmark
+from mon.metrics import benchmark, create_dummy_image
 from mon.nn import Model
 
 
@@ -34,7 +32,7 @@ class BackgroundSubtractionModel(Model, ABC):
 
     # --- Benchmarks ---
     @override
-    def benchmark(self, imgsz: SizeLike, num_runs: int = 10, verbose: bool = True) -> dict[str, Any]:
+    def benchmark(self, imgsz: SizeLike, num_runs: int = 10, verbose: bool = True) -> dict[str, float]:
         """Perform a single forward step of the model to benchmark its performance.
 
         Args:
@@ -44,15 +42,16 @@ class BackgroundSubtractionModel(Model, ABC):
             verbose (bool, optional): Whether to log the results. Defaults to True.
 
         Returns:
-            dict: A dictionary containing the benchmark results, such as latency,
-                FLOPs, and parameter count.
+            dict[str, float]: A dictionary containing the benchmark results,
+                such as latency, FLOPs, and parameter count.
         """
         imgsz = Size.from_value(imgsz)
         device = next(self.parameters()).device
 
         # Create dummy inputs
-        dummy_input = torch.randn(1, 3, imgsz.h, imgsz.w).to(device)
-        inputs = {"image": dummy_input}
+        dummy_input = create_dummy_image(imgsz=imgsz, device=device)
+        data = {"image": dummy_input}
+        inputs = {"data": data}
 
         # Benchmark the model
         return benchmark(model=self, inputs=inputs, num_runs=num_runs, verbose=verbose)

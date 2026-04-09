@@ -246,12 +246,13 @@ class Predictor(Runner, ABC):
         """Predict the output of the model for a single data point.
 
         Args:
-            datapoint (dict): The dictionary containing the data point to predict.
+            datapoint (dict[str, Any]): The dictionary containing the data point
+                to predict.
             timers (TimeProfiler): The time profiler to record timing information
                 during prediction.
 
         Returns:
-            dict: The dictionary containing the prediction results.
+            dict[str, Any]: The dictionary containing the prediction results.
         """
         pass
 
@@ -261,9 +262,10 @@ class Predictor(Runner, ABC):
         """Save the main prediction results to a file.
 
         Args:
-            datapoint (dict): The dictionary containing the input data.
-            outputs (dict): The dictionary containing the main prediction results.
-                Each key in the dictionary is a batched of prediction results.
+            datapoint (dict[str, Any]): The dictionary containing the input data.
+            outputs (dict[str, Any]): The dictionary containing the main
+                prediction results. Each key in the dictionary is a batch of
+                prediction results.
         """
         pass
 
@@ -272,9 +274,10 @@ class Predictor(Runner, ABC):
         """Save debugging results for visualization.
 
         Args:
-            datapoint (dict): The dictionary containing the input data.
-            outputs (dict): The dictionary containing the main prediction results.
-                Each key in the dictionary is a batched of prediction results.
+            datapoint (dict[str, Any]): The dictionary containing the input data.
+            outputs (dict[str, Any]): The dictionary containing the main
+                prediction results. Each key in the dictionary is a batch of
+                prediction results.
         """
         pass
 
@@ -293,9 +296,10 @@ class Predictor(Runner, ABC):
         Args:
             keys (list[str]): The list of keys in the output dictionary that
                 correspond to the images to be post-processed.
-            datapoint (dict): The dictionary containing the input data.
-            outputs (dict): The dictionary containing the main prediction results.
-                Each key in the dictionary is a batch of prediction results.
+            datapoint (dict[str, Any]): The dictionary containing the input data.
+            outputs (dict[str, Any]): The dictionary containing the main
+                prediction results. Each key in the dictionary is a batch of
+                prediction results.
             dirname (str): The directory name for the output files.
                 Defaults to K.PRED_DIR.
             subdirname (str, optional): Subdirectory name to append to the

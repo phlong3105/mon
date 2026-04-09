@@ -12,6 +12,8 @@ __all__ = [
     "SLICE_Trainer",
 ]
 
+from typing import Any
+
 import pyiqa
 import torch
 from rich.progress import Progress
@@ -66,7 +68,7 @@ class SLICE_Trainer(Trainer):
 
     # --- Training ---
     @override
-    def _train_epoch(self, epoch: int, pbar: Progress) -> dict:
+    def _train_epoch(self, epoch: int, pbar: Progress) -> dict[str, Any]:
         """Train an epoch.
 
         Args:
@@ -74,8 +76,8 @@ class SLICE_Trainer(Trainer):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict: A dictionary containing the training loss and other results
-                for the epoch.
+            dict[str, Any]: A dictionary containing the training loss and other
+                results for the epoch.
         """
         config = self.config
         device = self.device
@@ -159,7 +161,7 @@ class SLICE_Trainer(Trainer):
     # --- Validation ---
     @override
     @torch.no_grad()
-    def _val_epoch(self, epoch: int, pbar: Progress) -> dict:
+    def _val_epoch(self, epoch: int, pbar: Progress) -> dict[str, Any]:
         """Validate an epoch.
 
         Args:
@@ -167,8 +169,8 @@ class SLICE_Trainer(Trainer):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict: A dictionary containing the validation metrics and other
-                results for the epoch.
+            dict[str, Any]: A dictionary containing the validation metrics and
+                other results for the epoch.
         """
         config = self.config
         device = self.device
@@ -237,13 +239,18 @@ class SLICE_Trainer(Trainer):
 
     # --- Output ---
     @override
-    def _save_debug(self, epoch: int, train_outputs: dict, val_outputs: dict):
+    def _save_debug(
+        self,
+        epoch: int,
+        train_outputs: dict[str, Any],
+        val_outputs: dict[str, Any]
+    ):
         """Save debugging results for visualization.
 
         Args:
             epoch (int): The current epoch number.
-            train_outputs (dict): The outputs from the training epoch.
-            val_outputs (dict): The outputs from the validation epoch.
+            train_outputs (dict[str, Any]): The outputs from the training epoch.
+            val_outputs (dict[str, Any]): The outputs from the validation epoch.
         """
         debug_image = {
             "image": val_outputs["image"],

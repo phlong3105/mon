@@ -82,7 +82,7 @@ class Model(nn.Module, ABC):
         """Forward the input through the model.
 
         Args:
-            data (dict, optional): Input data dictionary. Defaults to None.
+            data (dict[str, Any], optional): Input data dictionary. Defaults to None.
             save_debug (bool, optional): If True, return intermediate results
                 for debugging. Defaults to False.
             **kwargs: Direct keyword arguments to pass to the forward step.
@@ -91,7 +91,7 @@ class Model(nn.Module, ABC):
                 ``data`` dictionary for structured inputs.
 
         Returns:
-            dict: Output dictionary.
+            dict[str, Any]: Output dictionary.
         """
         # Validate inputs
         data = data or {}
@@ -141,16 +141,16 @@ class Model(nn.Module, ABC):
         This method should be implemented by all subclasses.
 
         Args:
-            data (dict): Input data dictionary.
+            data (dict[str, Any]): Input data dictionary.
 
         Returns:
-            dict: Output data dictionary.
+            dict[str, Any]: Output data dictionary.
         """
         pass
 
     # --- Benchmarks ---
     @abstractmethod
-    def benchmark(self, imgsz: SizeLike, num_runs: int = 10, verbose: bool = True) -> dict[str, Any]:
+    def benchmark(self, imgsz: SizeLike, num_runs: int = 10, verbose: bool = True) -> dict[str, float]:
         """Perform a single forward step of the model to benchmark its performance.
 
         Args:
@@ -160,8 +160,8 @@ class Model(nn.Module, ABC):
             verbose (bool, optional): Whether to log the results. Defaults to True.
 
         Returns:
-            dict: A dictionary containing the benchmark results, such as latency,
-                FLOPs, and parameter count.
+            dict[str, float]: A dictionary containing the benchmark results,
+                such as latency, FLOPs, and parameter count.
         """
         pass
 

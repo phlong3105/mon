@@ -85,10 +85,10 @@ class Mertens(ModelRegisterMixin, MEFModel):
         """Forward the input through the network.
 
         Args:
-            data (dict): Input data dictionary.
+            data (dict[str, Any]): Input data dictionary.
 
         Returns:
-            dict: Output data dictionary.
+            dict[str, Any]: Output data dictionary.
         """
         images = data["images"]
         enhanced = mertens(

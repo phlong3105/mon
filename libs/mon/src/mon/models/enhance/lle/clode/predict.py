@@ -69,13 +69,6 @@ class CLODE_Predictor(Predictor):
 
         self._transforms = transforms
 
-    # --- Properties ---
-    @override
-    @property
-    def keep_original(self) -> bool:
-        """Whether to keep the original data alongside the transformed data."""
-        return True
-
     # --- Prediction ---
     @override
     @torch.inference_mode()
@@ -83,12 +76,13 @@ class CLODE_Predictor(Predictor):
         """Predict the output of the model for a single data point.
 
         Args:
-            datapoint (dict): The dictionary containing the data point to predict.
+            datapoint (dict[str, Any]): The dictionary containing the data point
+                to predict.
             timers (TimeProfiler): The time profiler to record timing information
                 during prediction.
 
         Returns:
-            dict: The dictionary containing the prediction results.
+            dict[str, Any]: The dictionary containing the prediction results.
         """
         config = self.config
         device = self.device
@@ -120,9 +114,10 @@ class CLODE_Predictor(Predictor):
         """Save the main prediction results to a file.
 
         Args:
-            datapoint (dict): The dictionary containing the input data.
-            outputs (dict): The dictionary containing the main prediction results.
-                Each key in the dictionary is a batched of prediction results.
+            datapoint (dict[str, Any]): The dictionary containing the input data.
+            outputs (dict[str, Any]): The dictionary containing the main
+                prediction results. Each key in the dictionary is a batch of
+                prediction results.
         """
         self._save_batch_image(
             keys=["enhanced"],
@@ -138,9 +133,10 @@ class CLODE_Predictor(Predictor):
         """Save debugging results for visualization.
 
         Args:
-            datapoint (dict): The dictionary containing the input data.
-            outputs (dict): The dictionary containing the main prediction results.
-                Each key in the dictionary is a batched of prediction results.
+            datapoint (dict[str, Any]): The dictionary containing the input data.
+            outputs (dict[str, Any]): The dictionary containing the main
+                prediction results. Each key in the dictionary is a batch of
+                prediction results.
         """
         pass
 

@@ -60,10 +60,10 @@ class InterUpsample(ModelRegisterMixin, SuperResolutionModel):
         """Perform a single forward step of the model.
 
         Args:
-            data (dict): Input data dictionary.
+            data (dict[str, Any]): Input data dictionary.
 
         Returns:
-            dict: Output data dictionary.
+            dict[str, Any]: Output data dictionary.
         """
         x_lr = data["x_lr"]
         imgsz: Size = data["imgsz"]
@@ -128,10 +128,10 @@ class GuidedFilterUpsample(ModelRegisterMixin, SuperResolutionModel):
         """Perform a single forward step of the model.
 
         Args:
-            data (dict): Input data dictionary.
+            data (dict[str, Any]): Input data dictionary.
 
         Returns:
-            dict: Output data dictionary.
+            dict[str, Any]: Output data dictionary.
         """
         x_lr = data["x_lr"]
         y_hr = data["y_hr"]

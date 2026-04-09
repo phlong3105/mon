@@ -107,7 +107,6 @@ class DAV2(ModelRegisterMixin, nn.Module):
                 Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
-        # Satisfy PyTorch's empty signature first.
         super().__init__(name=name)
 
         # Assign attributes

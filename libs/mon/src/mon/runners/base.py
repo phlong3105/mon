@@ -195,7 +195,7 @@ class Evaluator(ABC):
         result_file: PathLike | None,
         metrics: list[str],
         device: DeviceLike,
-        verbose: bool,
+        verbose: bool = True,
     ):
         """Initialize a new instance.
 
@@ -207,7 +207,7 @@ class Evaluator(ABC):
                 results. If None, results will not be saved.
             metrics (list[str]): The list of metrics to evaluate.
             device (DeviceLike): The device to use for evaluation.
-            verbose (bool): Whether to print verbose logs during evaluation.
+            verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         # Validate inputs
         if not self.all_metrics:

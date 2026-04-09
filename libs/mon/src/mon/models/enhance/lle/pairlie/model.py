@@ -106,10 +106,10 @@ class PairLIE(ModelRegisterMixin, EnhancementModel):
         """Forward the input through the network.
 
         Args:
-            data (dict): Input data dictionary.
+            data (dict[str, Any]): Input data dictionary.
 
         Returns:
-            dict: Output data dictionary.
+            dict[str, Any]: Output data dictionary.
         """
         image = data["image"]
         X = self.N_net(image)

@@ -367,7 +367,7 @@ class RetinexNet_Trainer(Trainer):
     # --- Validation ---
     @override
     @torch.no_grad()
-    def _val_epoch(self, epoch: int, pbar: Progress) -> dict:
+    def _val_epoch(self, epoch: int, pbar: Progress) -> dict[str, Any]:
         """Validate an epoch.
 
         Args:
@@ -375,8 +375,8 @@ class RetinexNet_Trainer(Trainer):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict: A dictionary containing the validation metrics and other
-                results for the epoch.
+            dict[str, Any]: A dictionary containing the validation metrics and
+                other results for the epoch.
         """
         device = self.device
 
@@ -453,8 +453,8 @@ class RetinexNet_Trainer(Trainer):
 
         Args:
             epoch (int): The current epoch number.
-            train_outputs (dict): The outputs from the training epoch.
-            val_outputs (dict): The outputs from the validation epoch.
+            train_outputs (dict[str, Any]): The outputs from the training epoch.
+            val_outputs (dict[str, Any]): The outputs from the validation epoch.
         """
         debug_image = {
             "image": val_outputs["image"],

@@ -15,6 +15,7 @@ __all__ = [
 from typing import Any
 
 import torch
+from torch import Tensor
 from typing_extensions import override
 
 from mon.core import (
@@ -77,16 +78,17 @@ class SLICE_Predictor(Predictor):
     # --- Prediction ---
     @override
     @torch.inference_mode()
-    def _predict_step(self, datapoint: dict, timers: TimeProfiler) -> dict:
+    def _predict_step(self, datapoint: dict[str, Any], timers: TimeProfiler) -> dict[str, Any]:
         """Predict the output of the model for a single data point.
 
         Args:
-            datapoint (dict): The dictionary containing the data point to predict.
+            datapoint (dict[str, Any]): The dictionary containing the data point
+                to predict.
             timers (TimeProfiler): The time profiler to record timing information
                 during prediction.
 
         Returns:
-            dict: The dictionary containing the prediction results.
+            dict[str, Any]: The dictionary containing the prediction results.
         """
         config = self.config
         device = self.device
@@ -97,13 +99,20 @@ class SLICE_Predictor(Predictor):
         image = datapoint["image"]
         image = image.to(device)
         depth = datapoint.get("depth", None)
-        depth = depth.to(device) if use_depth and depth is not None else None
-        t = torch.tensor([0, config.eval_T]).float().to(device)
+        depth = depth.to(device) if use_depth and isinstance(depth, Tensor) else depth
+        T = torch.tensor([0, config.eval_T]).float().to(device)
         timers.preprocess.tock()
 
         # 2. Inference
         timers.infer.tick()
-        outputs = self.model(image=image, depth=depth, t=t, save_debug=self.save_debug)
+        outputs = self.model(
+            data={
+                "image": image,
+                "depth": depth,
+                "T": T,
+            },
+            save_debug=self.save_debug
+        )
         timers.infer.tock()
 
         return outputs
@@ -114,9 +123,10 @@ class SLICE_Predictor(Predictor):
         """Save the main prediction results to a file.
 
         Args:
-            datapoint (dict): The dictionary containing the input data.
-            outputs (dict): The dictionary containing the main prediction results.
-                Each key in the dictionary is a batched of prediction results.
+            datapoint (dict[str, Any]): The dictionary containing the input data.
+            outputs (dict[str, Any]): The dictionary containing the main
+                prediction results. Each key in the dictionary is a batch of
+                prediction results.
         """
         self._save_batch_image(
             keys=["enhanced"],
@@ -132,9 +142,10 @@ class SLICE_Predictor(Predictor):
         """Save debugging results for visualization.
 
         Args:
-            datapoint (dict): The dictionary containing the input data.
-            outputs (dict): The dictionary containing the main prediction results.
-                Each key in the dictionary is a batched of prediction results.
+            datapoint (dict[str, Any]): The dictionary containing the input data.
+            outputs (dict[str, Any]): The dictionary containing the main
+                prediction results. Each key in the dictionary is a batch of
+                prediction results.
         """
         pass
 

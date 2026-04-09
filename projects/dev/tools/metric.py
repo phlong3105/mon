@@ -72,7 +72,7 @@ def measure():
         for arch, models in archs_models.items():
             for model in models:
                 input_dir = run_dir / arch / model / data / "pred"
-                iqa = IQAEvaluator(
+                iqa = IQAEvaluator.from_cli(
                     input_dir=input_dir,
                     target_dir=target_dir,
                     result_file=None,

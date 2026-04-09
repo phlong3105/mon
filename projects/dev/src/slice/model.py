@@ -18,8 +18,10 @@ __all__ = [
     "slice",
 ]
 
+from typing import Any, override
+
 import torch
-from torch import nn, Tensor
+from torch import Tensor
 from torch.nn import functional as F
 from torchdiffeq import odeint
 
@@ -33,6 +35,7 @@ from mon.core import (
     Task,
     WeightsLike,
 )
+from mon.models.enhance.base import EnhancementModel
 from mon.nn import ModelRegisterMixin
 from .module import DecoderSIREN, Denoiser, Encoder, EnhancementCurveODE
 from .utils import get_coords
@@ -45,7 +48,7 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-class SLICE(ModelRegisterMixin, nn.Module):
+class SLICE(ModelRegisterMixin, EnhancementModel):
     r"""SLICE model.
 
     "What exactly is SLICE?":
@@ -73,6 +76,8 @@ class SLICE(ModelRegisterMixin, nn.Module):
     name: str = "slice"
     tasks: list[Task] = [Task.LLE]
     model_dir: Path = current_dir
+    requires: set = {"image", "T"}
+
     methods = [
         "iter8", "iter5", "iter4", "dopri8", "dopri5", "bosh3", "fehlberg2",
         "adaptive_heun", "euler", "midpoint", "heun2", "heun3", "rk4",
@@ -119,6 +124,7 @@ class SLICE(ModelRegisterMixin, nn.Module):
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         super().__init__(name=name)
+
         # Validate inputs
         if method not in self.methods:
             raise ValueError(
@@ -151,7 +157,7 @@ class SLICE(ModelRegisterMixin, nn.Module):
             out_channels=self.out_channels,
             hidden_dim=hidden_dim,
             pos_encode=True,
-            mapping_size=imgsz,
+            mapping_size=imgsz.h,
         )
 
         # Load weights
@@ -164,35 +170,26 @@ class SLICE(ModelRegisterMixin, nn.Module):
                 log(f"Initialized '{name}' from scratch.")
 
     # --- Callable & Context Manager ---
-    def forward(
-        self,
-        image: Tensor,
-        depth: Tensor | None = None,
-        t: Tensor | None = None,
-        chunk_size: int = 65536,
-        save_debug: bool = False,
-        *args, **kwargs
-    ) -> dict:
+    @override
+    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
         """Forward the input through the network.
 
         Args:
-            image (Tensor): Image tensor of shape (B, 3, H, W) and values
-                ranging from 0.0 to 1.0.
-            depth (Tensor, optional): Depth tensor of shape (B, 1, H, W) and
-                values ranging from 0.0 to 1.0. Defaults to None.
-            t (Tensor, optional): Time tensor. If None, use the original
-                Zero-DCE iteration scheme. Defaults to None.
-            chunk_size (int): Number of pixels to process at once at inference.
-                Defaults to 65,536.
-            save_debug (bool, optional): Whether to save intermediate results for
-                debugging. Defaults to False.
+            data (dict[str, Any]): Input data dictionary.
+
+        Returns:
+            dict[str, Any]: Output data dictionary.
         """
+        image = data["image"]
+        depth = data.get("depth", None)
+        T = data.get("T", None)
+        chunk_size = data.get("chunk_size", 65536)
+
         # 1. Prepare inputs
         x = image
         d = depth
         size0 = Size.from_value(x)
         size1 = self.imgsz
-        chunk_size = chunk_size or self.chunk_size
 
         # Downsample the inputs to self.imgsz so the CNN doesn't cause an OOM
         if size0 != size1:
@@ -222,18 +219,16 @@ class SLICE(ModelRegisterMixin, nn.Module):
             num_iters = int(self.method.split("iter")[-1])
             y = self.enhance_iter(image=image, A=A, num_iters=num_iters)
         else:
-            y = self.enhance_ode(image=image, A=A, t=t)
+            y = self.enhance_ode(image=image, A=A, T=T)
 
         # 7. Return final and intermediate results for debugging
-        outputs = { "enhanced": y }
-        if self.training or save_debug:
-            outputs |= {
-                "curve_map": A,
-                "noise_map": noise,
-                "denoised": p_x,
-                "l_denoise": l_denoise,
-            }
-        return outputs
+        return {
+            "enhanced": y,
+            "curve_map": A,
+            "noise_map": noise,
+            "denoised": p_x,
+            "l_denoise": l_denoise,
+        }
 
     # --- Curve Map ---
     def gen_curve_map(self, features: Tensor, size: Size) -> Tensor:
@@ -283,23 +278,23 @@ class SLICE(ModelRegisterMixin, nn.Module):
         return A
 
     # --- Enhance ---
-    def enhance_ode(self, image: Tensor, A: Tensor, t: Tensor | None = None) -> Tensor:
+    def enhance_ode(self, image: Tensor, A: Tensor, T: Tensor | None = None) -> Tensor:
         """Apply the continuous enhancement via Neural ODE."""
         # 1. Initialize the derivative function with our predicted curve
         ode_func = EnhancementCurveODE(A)
 
         # 2. Define the continuous integration time span
         # t=0.0 is the dark image, t=1.0 is the fully enhanced image
-        if t is None:
-            t_span = torch.tensor([0.0, 3.0], device=image.device)
+        if T is None:
+            T_span = torch.tensor([0.0, 3.0], device=image.device)
         else:
-            t_span = t
+            T_span = T
 
         # 3. Solve the ODE
         trajectory = odeint(
             func=ode_func,
             y0=image,
-            t=t_span,
+            t=T_span,
             rtol=self.tol,
             atol=self.tol,
             method=self.method,

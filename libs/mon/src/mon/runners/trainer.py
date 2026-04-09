@@ -247,7 +247,7 @@ class Trainer(Runner, ABC):
 
     # --- Training ---
     @abstractmethod
-    def _train_epoch(self, epoch: int, pbar: Progress) -> dict:
+    def _train_epoch(self, epoch: int, pbar: Progress) -> dict[str, Any]:
         """Train an epoch.
 
         Args:
@@ -255,14 +255,14 @@ class Trainer(Runner, ABC):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict: A dictionary containing the training loss and other results
-                for the epoch.
+            dict[str, Any]: A dictionary containing the training loss and other
+                results for the epoch.
         """
         pass
 
     # --- Validation ---
     @abstractmethod
-    def _val_epoch(self, epoch: int, pbar: Progress) -> dict:
+    def _val_epoch(self, epoch: int, pbar: Progress) -> dict[str, Any]:
         """Validate an epoch.
 
         Args:
@@ -270,8 +270,8 @@ class Trainer(Runner, ABC):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict: A dictionary containing the validation metrics and other
-                results for the epoch.
+            dict[str, Any]: A dictionary containing the validation metrics and
+                other results for the epoch.
         """
         pass
 
@@ -286,8 +286,8 @@ class Trainer(Runner, ABC):
 
         Args:
             epoch (int): The current epoch number.
-            train_outputs (dict): The outputs from the training epoch.
-            val_outputs (dict): The outputs from the validation epoch.
+            train_outputs (dict[str, Any]): The outputs from the training epoch.
+            val_outputs (dict[str, Any]): The outputs from the validation epoch.
         """
         # 1. Collect all scalars
         log_dict = {
@@ -325,8 +325,8 @@ class Trainer(Runner, ABC):
 
         Args:
             epoch (int): The current epoch number.
-            train_outputs (dict): The outputs from the training epoch.
-            val_outputs (dict): The outputs from the validation epoch.
+            train_outputs (dict[str, Any]): The outputs from the training epoch.
+            val_outputs (dict[str, Any]): The outputs from the validation epoch.
         """
         config = self.config
 
@@ -354,8 +354,8 @@ class Trainer(Runner, ABC):
 
         Args:
             epoch (int): The current epoch number.
-            train_outputs (dict): The outputs from the training epoch.
-            val_outputs (dict): The outputs from the validation epoch.
+            train_outputs (dict[str, Any]): The outputs from the training epoch.
+            val_outputs (dict[str, Any]): The outputs from the validation epoch.
         """
         pass
 
@@ -406,7 +406,8 @@ class Trainer(Runner, ABC):
 
         Args:
             epoch (int): The current epoch number.
-            outputs (dict): A dictionary containing the outputs from the model.
+            outputs (dict[str, TensorOrArray]): A dictionary containing the
+                outputs from the model.
             stem (str, optional): The stem of the output file name.
                 Defaults to "debug".
             dirname (str, optional): The directory name for the output file.

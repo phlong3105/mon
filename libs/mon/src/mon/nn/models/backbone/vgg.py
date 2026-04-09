@@ -84,7 +84,6 @@ class VGGBackBone(ModelRegisterMixin, nn.Module):
                 features from. If None, defaults to [6, 13, 23, 33, 43].
             verbose (bool): Verbosity mode. Defaults to True.
         """
-        # Satisfy PyTorch's empty signature first.
         super().__init__(name=name)
         # Initialize RegistrableMixin
         # ModelRegisterMixin.__init__(self, name=name)
