@@ -104,6 +104,10 @@ def compute_latency(model: nn.Module, inputs: Any, num_runs: int = 10) -> float:
 # endregion
 
 
+# ==============================================================================
+# region BENCHMARK
+# ==============================================================================
+
 def benchmark(
     model: nn.Module,
     inputs: Any,
@@ -185,7 +189,7 @@ def create_dummy_image(imgsz: SizeLike = 512, device = torch.device("cpu")) -> T
 
     # Read dummy image (e.g., Lenna)
     image = read_image(str(K.DUMMY_IMAGE))
-    image = cv2.resize(image, imgsz.wh)
+    image = cv2.resize(image, dsize=imgsz.wh)
     image = to_image_tensor(image, normalize=True).to(device)
     return image
 

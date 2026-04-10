@@ -391,7 +391,7 @@ class InstanceIQAEvaluator(Evaluator):
         transforms = T.Compose([
             T.Normalize(normalization="min_max"),
             T.ToTensorV2(transpose_mask=True),
-        ])
+        ], additional_targets={"target": "image"})
         if self.resize:
             h, w = self.imgsz.hw
             transforms = T.Resize(height=h, width=w) + transforms
@@ -460,7 +460,7 @@ class InstanceIQAEvaluator(Evaluator):
 
         target_file = self.input_dir / self.target_stem
         target_file = target_file.image_file
-        if not target_file.is_image_file(exists=True):
+        if target_file.is_image_file(exists=True):
             target = cv2.imread(str(target_file))
         else:
             target = None
@@ -500,9 +500,9 @@ class InstanceIQAEvaluator(Evaluator):
                     if target_t is None and self.all_metrics[m]["metric_mode"] == "FR":
                         continue
                     elif target_t is not None and self.all_metrics[m]["metric_mode"] == "FR":
-                        values[m] = metrics_func[m](image_t, target_t)
+                        values[m] = metrics_func[m](image_t, target_t).item()
                     else:
-                        values[m] = metrics_func[m](image_t)
+                        values[m] = metrics_func[m](image_t).item()
 
                 # Aggregate results
                 results[image_file.stem] = values
@@ -523,24 +523,23 @@ class InstanceIQAEvaluator(Evaluator):
     def log_results(self):
         """Print the measured results."""
         results = self.results
-        pad = 10
+        pad = 7
 
         # Headers
         first_item = list(results.values())[0]
-        header = f"{f'Model':<{pad * 2}}\t"
+        header = f"{f'Model':<{pad * 4}}\t"
         for m, v in first_item.items():
             header += f"{f'{m}':<{pad}}\t"
-        header += "-" * ((pad + 4) * (len(first_item) + 1))
+        header += "\n"
+        header += "-" * ((pad + 4) * (len(first_item) + 4))
 
         # Values
         message = ""
         for i, (model, values) in enumerate(results.items()):
-            message += f"{f'{model}':<{pad * 2}}\t"
+            message += f"{f'{model}':<{pad * 4}}\t"
             for k, v in values.items():
-                if i == len(values) - 1:
-                    message += f"{v:.{pad}f}\n"
-                else:
-                    message += f"{v:.{pad}f}\t"
+                message += f"{f'{v:6.4f}':<{pad}}\t"
+            message += "\n"
 
         print(f"{header}")
         print(f"{message}")
