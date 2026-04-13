@@ -93,7 +93,6 @@ from aenum import (
     remove_stdlib_integration,
     ReprEnum,
     skip,
-    SqliteEnum,
     StrEnum as StrEnum_,
     Unique,
     unique,

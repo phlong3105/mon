@@ -16,6 +16,7 @@ dependencies:
   - git                                 # Distributed version control system.
   - pip                                 # PyPA recommended tool for installing Python packages.
   - poetry                              # Python dependency management and packaging made easy
+  - uv                                  # An extremely fast Python package and project manager, written in Rust.
   # CUDA
   # - cuda-toolkit=12.8                   # CUDA Toolkit - Including CUDA runtime.
   - cuda-toolkit=13.0                   # CUDA Toolkit - Including CUDA runtime.

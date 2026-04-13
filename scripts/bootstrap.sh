@@ -431,7 +431,7 @@ install_mon_env() {
     else
         poetry install --extras "docs"
     fi
-    rm -rf poetry.lock
+    # rm -rf poetry.lock
     conda update --a --y
     conda clean  --a --y
 }

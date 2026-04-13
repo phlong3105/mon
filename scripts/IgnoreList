@@ -1,4 +1,4 @@
-# IgnoreList is a UTF-8 encoded .txt file that helps you specify single files, paths and rules 
+# IgnoreList is a UTF-8 encoded .txt file that helps you specify single files, paths and rules
 # for ignoring during the synchronization job. It supports "?" and "*" wildcard symbols.
 #
 #
@@ -53,8 +53,8 @@ DfsrPrivate
 
 *.cache
 *.deb
-*.lock
-__pycache__/
-_gsdata_/
+.venv/
 /data/
 /projects/*/data/
+__pycache__/
+_gsdata_/

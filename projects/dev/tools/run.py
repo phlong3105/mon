@@ -158,15 +158,28 @@ def main(args: argparse.Namespace):
             "zero_ig",
             "slice",
         ]
-        benchmarker = Benchmarker.from_cli(
-            task=Task.LLE,
-            models=models,
-            num_runs=10,
-            device="cuda:0",
-            verbose=True,
-            prompt=args.prompt,
-        )
-        benchmarker.measure()
+        resolutions = [
+            (128, 128),
+            (256, 256),
+            (512, 512),
+            (640, 480),
+            (1280, 720),
+            (1920, 1080),
+            (2560, 1440),
+            (3840, 2160),
+            (7680, 4320),
+        ]
+        for res in resolutions:
+            benchmarker = Benchmarker.from_cli(
+                task=Task.LLE,
+                models=models,
+                imgsz=res,
+                num_runs=10,
+                device="cuda:0",
+                verbose=True,
+                prompt=args.prompt,
+            )
+            benchmarker.measure()
 
     else:
         raise NotImplementedError("Run mode hasn't been implemented.")

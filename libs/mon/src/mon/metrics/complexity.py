@@ -12,8 +12,9 @@ from __future__ import annotations
 
 __all__ = [
     "benchmark",
-    "compute_latency",
-    "compute_model_stats",
+    "benchmark_latency",
+    "benchmark_model_stats",
+    "benchmark_vram",
     "create_dummy_image",
 ]
 
@@ -35,7 +36,7 @@ from mon.ops import read_image, to_image_tensor
 # region MODEL COMPLEXITY
 # ==============================================================================
 
-def compute_model_stats(model: nn.Module, inputs: Any, copy: bool = True) -> Float3:
+def benchmark_model_stats(model: nn.Module, inputs: Any, copy: bool = True) -> Float3:
     """Compute the number of parameters, MACs, and FLOPs of a model.
 
     Args:
@@ -52,10 +53,7 @@ def compute_model_stats(model: nn.Module, inputs: Any, copy: bool = True) -> Flo
         inputs = tuple(inputs.values())
     inputs = (inputs, ) if not isinstance(inputs, tuple) else inputs
 
-    # Eval mode is crucial for accurate MACs (e.g., skips Dropout)
-    model.eval()  # NO NEED, some models perform online learning
-
-    with torch.no_grad():
+    with torch.inference_mode():
         # thop.profile often modifies the model with hooks;
         # deepcopy protects the original object
         if copy:
@@ -68,7 +66,39 @@ def compute_model_stats(model: nn.Module, inputs: Any, copy: bool = True) -> Flo
     return params, macs, flops
 
 
-def compute_latency(model: nn.Module, inputs: Any, num_runs: int = 10) -> float:
+def benchmark_vram(model: nn.Module, inputs: Any) -> float:
+    """Measure the vRAM usage of a model.
+
+    Args:
+        model (nn.Module): PyTorch model to benchmark.
+        inputs (Any): Dummy inputs to the model (e.g., a tensor or a dict of tensors).
+
+    Returns:
+        float: Peak vRAM usage in GB.
+    """
+    # Normalize inputs
+    device = next(model.parameters()).device
+
+    # Warmup runs to stabilize memory placement and JIT optimizations
+    with torch.inference_mode():
+        for _ in range(5):
+            _ = model(**inputs)
+
+    baseline_vram = torch.cuda.memory_allocated() / (1024 ** 2)  # MB
+
+    with torch.inference_mode():
+        _ = model(**inputs)
+        if device.type == "cuda":
+            torch.cuda.synchronize()
+
+    peak_vram = torch.cuda.max_memory_allocated() / (1024 ** 2)  # MB
+    torch.cuda.reset_peak_memory_stats()
+
+    used_vram = (peak_vram - baseline_vram) / 1024  # GB
+    return used_vram
+
+
+def benchmark_latency(model: nn.Module, inputs: Any, num_runs: int = 10) -> float:
     """Measure the latency of a model.
 
     Args:
@@ -83,15 +113,14 @@ def compute_latency(model: nn.Module, inputs: Any, num_runs: int = 10) -> float:
     # Normalize inputs
     device = next(model.parameters()).device
 
-    # Eval mode is crucial for accurate MACs (e.g., skips Dropout)
-    model.eval()  # NO NEED, some models perform online learning
-
     # Warmup runs to stabilize memory placement and JIT optimizations
-    for _ in range(5):
-        _ = model(**inputs)
+    with torch.inference_mode():
+        for _ in range(5):
+            _ = model(**inputs)
 
     start_time = time.perf_counter()
-    with torch.no_grad():
+
+    with torch.inference_mode():
         for _ in range(num_runs):
             _ = model(**inputs)
             if device.type == "cuda":
@@ -130,11 +159,22 @@ def benchmark(
         dict[str, float]: A dictionary containing the measured parameters, MACs,
             FLOPs, and latency.
     """
-    # Compute complexity stats
-    params, macs, flops = compute_model_stats(model=model, inputs=inputs, copy=copy)
+    try:
+        # Compute complexity stats
+        params, macs, flops = benchmark_model_stats(model=model, inputs=inputs, copy=copy)
+        # Compute vRAM usage
+        vram = benchmark_vram(model=model, inputs=inputs)
+        # Compute latency
+        latency = benchmark_latency(model=model, inputs=inputs, num_runs=num_runs)
 
-    # Compute latency
-    latency = compute_latency(model=model, inputs=inputs, num_runs=num_runs)
+    except torch.cuda.OutOfMemoryError:
+        # Set all results to 0.0 means OOM
+        params = macs = flops = vram = latency = -1.0
+
+    # Wait for the GPU to finish whatever it was doing when it crashed
+    torch.cuda.synchronize()
+    # NOW empty the cache. Because the GPU is idle, it will successfully clear everything.
+    torch.cuda.empty_cache()
 
     # Log results with human-readable formatting
     if verbose:
@@ -150,17 +190,16 @@ def benchmark(
         log(f"Params      : {_format_unit(params, 'M')}")
         log(f"MACs        : {_format_unit(macs, 'G')}")
         log(f"FLOPs       : {_format_unit(flops, 'G')}")
-        log(f"Latency     : {latency:.2f} ms / image")
+        log(f"VRAM        : {_format_unit(vram)} GB")
+        log(f"Latency     : {_format_unit(latency)} ms / image")
         log("-" * 30)
-        # log(f"Params    : {params:.4f}")
-        # log(f"MACs      : {macs:.4f}")
-        # log(f"FLOPs     : {flops:.4f}")
 
     # Return the measured results for further analysis
     return {
         "params": params,
         "macs": macs,
         "flops": flops,
+        "vram": vram,
         "latency": latency,
     }
 
@@ -171,12 +210,12 @@ def benchmark(
 # region UTILITIES
 # ==============================================================================
 
-def create_dummy_image(imgsz: SizeLike = 512, device = torch.device("cpu")) -> Tensor:
+def create_dummy_image(imgsz: SizeLike = (512, 512), device = torch.device("cpu")) -> Tensor:
     """Create a dummy image tensor for benchmarking.
 
     Args:
         imgsz (SizeLike, optional): Image size (e.g., 512 or (512, 512)).
-            Defaults to 512.
+            Defaults to (512, 512).
         device (torch.device, optional): Device to create the tensor on.
             Defaults to torch.device("cpu").
 
@@ -194,11 +233,15 @@ def create_dummy_image(imgsz: SizeLike = 512, device = torch.device("cpu")) -> T
     return image
 
 
-def _format_unit(value: float, target: str = "M") -> str:
+def _format_unit(value: float, target: str | None = None) -> str:
     """Helper to format large numbers (e.g., 1.2G, 3.5M)."""
+    if value < 0:
+        return "OOM"
+    if target == "M":
+        return f"{value / 1e6:.2f} M"
     if target == "G":
         return f"{value / 1e9:.2f} G"
-    return f"{value / 1e6:.2f} M"
+    return f"{value:.2f}"
 
 # endregion
 

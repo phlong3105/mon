@@ -31,7 +31,7 @@ classifiers     = [
     "Intended Audience :: Developers",
     "Programming Language :: Python",
 ]
-dependencies = ["mon"]
+dependencies = ["mon", "dev"]
 
 [project.urls]
 Homepage      = "https://github.com/phlong3105/mon"
@@ -53,6 +53,21 @@ gui  = [                                # GUI Applications
     "matplotlib",                       # Publication quality figures in Python.
 ]
 
+# --- UV SPECIFIC ---
+[tool.uv]
+package = false  # <--- Add this for monorepo roots
+required-environments = [
+    "sys_platform == 'linux' and platform_machine == 'x86_64'"
+]
+
+[tool.uv.workspace]
+members = ["libs/*", "projects/*"]
+
+[tool.uv.sources]
+mon = { workspace = true }
+dev = { workspace = true }
+
+# --- POETRY SPECIFIC ---
 [tool.poetry]
 package-mode = false                    # If you want to use Poetry only for dependency management but not for packaging.
 # paclage      = [{ include = "", from = "" }]
@@ -60,8 +75,9 @@ include      = []
 exclude      = []
 
 [tool.poetry.dependencies]
-mon = { path = "libs/mon", develop = true }
+mon = { path = "libs/mon",     develop = true }
+dev = { path = "projects/dev", develop = true }
 
 [build-system]
-requires      = ["poetry-core>=2.0.0,<3.0.0"]
+requires      = ["poetry-core>=2.3.2,<3.0.0"]
 build-backend = "poetry.core.masonry.api"

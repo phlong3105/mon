@@ -136,7 +136,7 @@ class Benchmarker(PromptContextMixin):
         """Create an instance of Benchmarker from command-line arguments."""
         parser = argparse.ArgumentParser(description="benchmark")
         parser.add_argument("--model",    type=str, action="append", help="Model fullnames.")
-        parser.add_argument("--imgsz",    type=int, default=512)
+        parser.add_argument("--imgsz",    type=int, default=2048)
         parser.add_argument("--num-runs", type=int, default=10, help="Number of runs for latency measurement.")
         parser.add_argument("--device",   type=str, help="Running devices.")
         parser.add_argument("--verbose",  action="store_true")
@@ -284,9 +284,10 @@ class Benchmarker(PromptContextMixin):
             f"{f'Params (M)':<{pad}}\t"
             f"{f'MACs (G)':<{pad}}\t"
             f"{f'FLOPs (G)':<{pad}}\t"
+            f"{f'VRAM (GB)':<{pad}}\t"
             f"{f'Latency (ms)':<{pad}}\n"
         )
-        header += "-" * ((pad + 4) * 6)
+        header += "-" * ((pad + 4) * 7)
 
         # Rows
         message = ""
@@ -296,7 +297,8 @@ class Benchmarker(PromptContextMixin):
                 f"{self._format_unit(stats["params"], 'M'):<{pad}}\t"
                 f"{self._format_unit(stats["macs"], 'G'):<{pad}}\t"
                 f"{self._format_unit(stats["flops"], 'G'):<{pad}}\t"
-                f"{f'{stats["latency"]:6.4f}':<{pad}}\n"
+                f"{self._format_unit(stats["vram"]):<{pad}}\t"
+                f"{self._format_unit(stats["latency"]):<{pad}}\n"
             )
 
         print(f"{header}")
@@ -304,11 +306,15 @@ class Benchmarker(PromptContextMixin):
 
     # --- Utilities ---
     # noinspection PyMethodMayBeStatic
-    def _format_unit(self, value: float, target: str = "M") -> str:
+    def _format_unit(self, value: float, target: str | None = None) -> str:
         """Helper to format large numbers (e.g., 1.2G, 3.5M)."""
+        if value < 0:
+            return "OOM"
+        if target == "M":
+            return f"{value / 1e6:6.4f}"
         if target == "G":
             return f"{value / 1e9:6.4f}"
-        return f"{value / 1e6:6.4}"
+        return f"{value:6.4f}"
 
 # endregion
 
@@ -318,12 +324,6 @@ class Benchmarker(PromptContextMixin):
 # ==============================================================================
 
 if __name__ == "__main__":
-    benchmark_ = Benchmarker.from_cli(
-        num_runs=10,
-        device="cuda:0",
-        verbose=True,
-        prompt=True,
-    )
-    benchmark_.measure()
+    pass
 
 # endregion

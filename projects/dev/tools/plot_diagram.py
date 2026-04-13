@@ -10,6 +10,8 @@ __all__ = []
 
 import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
+from pandas.plotting import parallel_coordinates
 
 px = 1.0 / plt.rcParams["figure.dpi"]  # Conversion factor
 
@@ -158,6 +160,55 @@ def plot_02():
     plt.tight_layout()
     plt.show()
 
+
+def plot_03():
+    # 1. Define the Data
+    resolutions = ['256p', '512p', '1080p', '4K']
+
+    # Synthetic VRAM Data (in GB)
+    # SLICE stays extremely efficient due to implicit representation
+    vram_slice = [1.2, 1.5, 2.0, 2.5]
+
+    # Heavy CNN grows quadratically/exponentially, hitting OOM at 4K
+    vram_cnn = [2.0, 4.5, 12.0, 26.0]
+
+    # Patch-based methods save memory by cropping, but still scale worse than SLICE
+    vram_patch = [1.8, 2.5, 4.0, 6.5]
+
+    # 2. Set up the plot
+    plt.figure(figsize=(8, 6))
+    plt.style.use('seaborn-v0_8-whitegrid')
+
+    # 3. Plot the lines
+    plt.plot(resolutions, vram_slice, color='#5cb85c', marker='D', markersize=8,
+             linewidth=3.5, label='SLICE (Ours) - Constant Memory')
+
+    plt.plot(resolutions, vram_patch, color='#f0ad4e', marker='^', markersize=8,
+             linewidth=2.5, linestyle='--', label='Patch-Based (Artifact prone)')
+
+    plt.plot(resolutions, vram_cnn, color='#d9534f', marker='s', markersize=8,
+             linewidth=2.5, linestyle='-.', label='Standard CNN (Explodes at 4K)')
+
+    # 4. Add a horizontal line representing a standard GPU limit (e.g., 24GB RTX 3090/4090)
+    plt.axhline(y=24.0, color='red', linestyle=':', linewidth=2)
+    plt.annotate('24GB VRAM Limit (OOM)', xy=(1.5, 24.2), color='red',
+                 fontsize=11, fontweight='bold', ha='center')
+
+    # 5. Formatting and Aesthetics
+    plt.title('Memory Consumption vs. Resolution', fontsize=14, fontweight='bold')
+    plt.xlabel('Inference Resolution', fontsize=12, fontweight='bold')
+    plt.ylabel('VRAM Usage (GB) ↓', fontsize=12, fontweight='bold')
+
+    # Limit Y-axis to just above the max value to keep it clean
+    plt.ylim(0, 30)
+
+    plt.legend(loc='upper left', fontsize=11, frameon=True, shadow=True)
+    plt.tight_layout()
+
+    # Save for your paper
+    plt.savefig('memory_vs_resolution.png', dpi=300, transparent=True)
+    plt.show()
+
 # endregion
 
 
@@ -171,6 +222,7 @@ if __name__ == "__main__":
     # plot_01(metrics={"PSNR": 17.5335, "SSIM": 0.8501, "LPIPS": 0.1795})  # CoLIE
     # plot_01(metrics={"PSNR": 21.2499, "SSIM": 0.8940, "LPIPS": 0.1573})  # SLICE
 
-    plot_02()
+    # plot_02()
+    plot_03()
 
 # endregion

@@ -37,9 +37,23 @@ dependencies    = ["mon"]
 # Repository    = ""
 # Issues        = ""
 
+# --- UV SPECIFIC ---
+[tool.uv]
+package = true
+required-environments = [
+    "sys_platform == 'linux' and platform_machine == 'x86_64'"
+]
+
+[tool.uv.sources]
+mon = { workspace = true }
+
+# --- POETRY SPECIFIC ---
 [tool.poetry]
 # package-mode = false                    # If you want to use Poetry only for dependency management but not for packaging.
-packages = [{ include = "saleo", from = "src" }]
+packages = [
+    { include = "saleo", from = "src" },
+    { include = "slice", from = "src" }
+]
 include  = []
 exclude  = []
 
@@ -47,5 +61,5 @@ exclude  = []
 mon = { path = "../../libs/mon", develop = true }
 
 [build-system]
-requires      = ["poetry-core>=2.0.0,<3.0.0"]
+requires      = ["poetry-core>=2.3.2,<3.0.0"]
 build-backend = "poetry.core.masonry.api"

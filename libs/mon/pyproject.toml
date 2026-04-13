@@ -32,7 +32,7 @@ classifiers     = [
     "Programming Language :: Python",
 ]
 dependencies    = [
-    # ----- Core -----
+    # --- Core ---
     "PyYAML",                           # YAML parser and emitter for Python.
     "aenum",                            # Advanced Enumerations for Python
     "emoji",                            # Emoji for Python.
@@ -48,11 +48,11 @@ dependencies    = [
     "tqdm",                             # Fast, Extensible Progress Meter.
     "validators",                       # Python Data Validation for Humans.
     "xmltodict",                        # Makes working with XML feel like you are working with JSON.
-    # ----- Dev -----
+    # --- Dev ---
     "mypy",                             # Optional static typing for Python.
     "pytest",                           # Simple powerful testing with Python.
     "typing-extensions",                # Backported and Experimental Type Hints for Python 3.7+.
-    # ----- NN -----
+    # --- NN ---
     "calflops",                         # A library for calculating the number of floating point operations (FLOPs) in a PyTorch model.
     "einops",                           # A new flavor of deep learning operations.
     "filterpy",                         # Kalman filters and other optimal and non-optimal estimation filters in Python.
@@ -68,11 +68,11 @@ dependencies    = [
     "torchdiffeq",                      # Differentiable ODE solvers with full GPU support and O(1)-memory backpropagation.
     "torchmetrics",                     # Collection of PyTorch native metrics for easy evaluating machine learning models.
     "torchvision",                      # Image and video datasets and models for Torch deep learning.
-    # ----- NN Deployment -----
+    # --- NN Deployment ---
     "onnx",                             # Open Neural Network Exchange.
     "onnxruntime",                      # ONNX Runtime is a performance-focused scoring engine for Open Neural Network Exchange (ONNX) models.
     "openvino",                         # OpenVINO™ is a toolkit for optimizing and deploying AI inference.
-    # ----- Computer Vision -----
+    # --- Computer Vision ---
     "Pillow",                           # Python Imaging Library (Fork).
     "albumentationsx",                  # Next-generation Albumentations.
     "faster-coco-eval",                 # Faster interpretation of the original COCOEval
@@ -86,7 +86,7 @@ dependencies    = [
     "rawpy",                            # rawpy is an easy-to-use Python wrapper for the LibRaw library. It also contains some extra functionality for finding and repairing hot/dead pixels.
     "ultralytics",                      # Ultralytics YOLO 🚀.
     "ultralytics-thop",                 # Profile PyTorch models for FLOPs and parameters, helping to evaluate computational efficiency and memory usage.
-    # ----- Fixes -----
+    # --- Fixes ---
     "bitsandbytes (==0.42.0) ; sys_platform == 'darwin'"
 ]
 
@@ -110,15 +110,25 @@ gui = [                                 # GUI Applications
     "matplotlib",                       # Publication quality figures in Python.
 ]
 
+# --- UV SPECIFIC ---
+[tool.uv]
+required-environments = [
+    "sys_platform == 'linux' and platform_machine == 'x86_64'"
+]
+
+# [tool.uv.sources]
+# ultralytics = { workspace = true }
+
+# --- POETRY SPECIFIC ---
 [tool.poetry]
 # package-mode = false                    # If you want to use Poetry only for dependency management but not for packaging.
-# packages = [{ include = "mon", from = "src" }]
+packages = [{ include = "mon", from = "src" }]
 include  = []
 exclude  = []
 
-[tool.poetry.dependencies]
-ultralytics = { path = "../ultralytics", develop = true }
+# [tool.poetry.dependencies]
+# ultralytics = { path = "../ultralytics", develop = true }
 
 [build-system]
-requires      = ["poetry-core>=2.0.0,<3.0.0"]
+requires      = ["poetry-core>=2.3.2,<3.0.0"]
 build-backend = "poetry.core.masonry.api"

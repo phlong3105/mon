@@ -52,6 +52,7 @@ from mon.core.ui.prompt_toolkit import (
 )
 from mon.core.utils import is_valid_str, merge_dicts, truncate_string
 
+
 # ==============================================================================
 # region CONSTANTS
 # ==============================================================================
