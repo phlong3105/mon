@@ -14,7 +14,6 @@ __all__ = [
 ]
 
 from abc import ABC, abstractmethod
-from typing import Callable
 
 import torch
 from box import Box
@@ -186,8 +185,6 @@ class Runner(ABC):
 class Evaluator(ABC):
     """Base class for all evaluators."""
 
-    all_metrics: dict = {}
-
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
@@ -210,13 +207,6 @@ class Evaluator(ABC):
             device (DeviceLike): The device to use for evaluation.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
-        # Validate inputs
-        if not self.all_metrics:
-            raise NotImplementedError(
-                f"{self.__class__.__name__} must define the 'all_metrics' class "
-                f"attribute."
-            )
-
         # Assign attributes
         self.verbose = verbose
         self.input_dir = input_dir
@@ -225,18 +215,14 @@ class Evaluator(ABC):
         self.device = device
 
         # Allocate resources
-        self._metrics: list[str] = []
-        self._metrics_func: dict = {}
-        self._metrics_meta: dict = {}
+        self._metrics: dict[str, dict] = []
         self._results = {}
 
         self._init_metrics(metrics)
 
     @abstractmethod
     def _init_metrics(self, metrics: list[str]):
-        """Initialize ``self._metrics``, ``self._metrics_func``, and
-        ``self._metrics_meta`` attributes.
-        """
+        """Initialize ``self._metrics`` attributes."""
         pass
 
     @abstractmethod
@@ -275,19 +261,9 @@ class Evaluator(ABC):
         return self.target_dir is not None and self.target_dir.is_dir()
 
     @property
-    def metrics(self) -> list[str]:
-        """Return the list of metrics."""
+    def metrics(self) -> dict[str, dict]:
+        """Return the dictionary of metrics to evaluate."""
         return self._metrics
-
-    @property
-    def metrics_func(self) -> dict[str, Callable]:
-        """Return the dictionary of metric functions."""
-        return self._metrics_func
-
-    @property
-    def metrics_meta(self) -> dict[str, dict]:
-        """Return the dictionary of metric metadata."""
-        return self._metrics_meta
 
     @property
     def device(self) -> torch.device:

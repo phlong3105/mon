@@ -14,14 +14,48 @@ __all__ = [
     "ImageQualityAssessment",
 ]
 
+from pyiqa.archs import _lazy_import_arch
+import pyiqa.default_model_configs
 import torch
 from pyiqa.archs.lpips_arch import LPIPS
 from pyiqa.archs.psnr_arch import PSNR
 from pyiqa.archs.ssim_arch import SSIM
+from pyiqa.utils.registry import ARCH_REGISTRY
 from torch import nn, Tensor
 
 from mon.core import METRICS
 from .base import Metric
+
+
+# ==============================================================================
+# region REGISTRY & FACTORY
+# ==============================================================================
+
+def __register_metrics():
+    """Register all metric classes from the given module and its submodules."""
+    for k, v in pyiqa.default_model_configs.DEFAULT_CONFIGS.items():
+        try:
+            type = v["metric_opts"]["metric_opts"]
+            _lazy_import_arch(type)
+            func = ARCH_REGISTRY.get(type)
+        except Exception as e:
+            func = None
+
+        METRICS[k] = {
+            "name": k,
+            "module": func,
+            "metric_opts": v["metric_opts"],
+            "metric_mode": v["metric_mode"],
+            "lower_better": v.get("lower_better", False),
+            "score_range": v["score_range"],
+        }
+
+
+__register_metrics()
+del __register_metrics
+METRICS.sort()
+
+# endregion
 
 
 # ==============================================================================
@@ -119,7 +153,7 @@ class CompositeImageQualityScore(Metric):
     metric_opts: dict = {}
     metric_mode: str = "FR"             # ["FR" or "NR"]
     lower_better: bool = False          # True if lower score is better
-    score_range: tuple[float, float] = (0.0, 1.0)  # (min, max)
+    score_range: str = "0, 1"           # (min, max)
 
     # --- Lifecycle & Initialization ---
     def __init__(self, device: torch.device = torch.device("cpu")):
@@ -174,7 +208,7 @@ class GeometricImageQualityScore(Metric):
     metric_opts: dict = {}
     metric_mode: str = "FR"             # ["FR" or "NR"]
     lower_better: bool = False          # True if lower score is better
-    score_range: tuple[float, float] = (0.0, 1.0)  # (min, max)
+    score_range: str = "0, 1"           # (min, max)
 
     # --- Lifecycle & Initialization ---
     def __init__(self, device: torch.device = torch.device("cpu")):

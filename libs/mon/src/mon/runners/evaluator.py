@@ -24,14 +24,15 @@ import numpy as np
 import pyiqa
 import pyiqa.default_model_configs
 import pyiqa.models.inference_model
+import torch
 from torch import Tensor
 
 from mon.core import (
     console,
     create_progress_bar,
     DeviceLike,
-    METRICS,
     log_error,
+    METRICS,
     Path,
     PathLike,
     Size,
@@ -51,8 +52,6 @@ current_dir = current_file.parents[0]
 
 class IQAEvaluator(Evaluator):
     """A runner for measuring image quality evaluation (IQA) metrics."""
-
-    all_metrics = pyiqa.default_model_configs.DEFAULT_CONFIGS
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -113,38 +112,25 @@ class IQAEvaluator(Evaluator):
 
     @override
     def _init_metrics(self, metrics: list[str]):
-        """Initialize ``self._metrics``, ``self._metrics_func``, and
-        ``self._metrics_meta`` attributes.
-        """
-        _metrics = []
-        _metrics_func = {}
-        _metrics_meta = {}
+        """Initialize ``self._metrics`` attributes."""
+        _metrics: dict[str, dict] = {}
 
         for i, m in enumerate(metrics):
-            if m in self.all_metrics:
-                _metrics.append(m)
-                _metrics_func[m] = pyiqa.create_metric(
-                    metric_name=m,
-                    as_loss=False,
-                    device=self.device,
-                )
-                _metrics_meta[m] = self.all_metrics[m]
+            if m in pyiqa.default_model_configs.DEFAULT_CONFIGS:
+                func = pyiqa.create_metric(metric_name=m, as_loss=False, device=self.device)
             elif m in METRICS:
-                _metrics.append(m)
-                _metric_func = METRICS.build(name=m, device=self.device)
-                _metrics_func[m] = _metric_func
-                _metrics_meta[m] = {
-                    "metric_opts": _metric_func.metric_opts,
-                    "metric_mode": _metric_func.metric_mode,
-                    "lower_better": _metric_func.lower_better,
-                    "score_range": _metric_func.score_range,
-                }
+                func = METRICS.build(name=m, device=self.device)
             else:
                 log_error(f"Unsupported metric: {m}. Skipping...")
 
+            _metrics[m] = {
+                "func": func,
+                "metric_mode": METRICS[m]["metric_mode"],
+                "lower_better": METRICS[m]["lower_better"],
+                "score_range": METRICS[m]["score_range"],
+            }
+
         self._metrics = _metrics
-        self._metrics_func = _metrics_func
-        self._metrics_meta = _metrics_meta
 
     @override
     def _init_dataloader(self) -> DataLoader:
@@ -227,7 +213,11 @@ class IQAEvaluator(Evaluator):
         # Print results
         self.log_results()
 
-    def _measure(self, dataloader: DataLoader, use_gt_mean: bool = False) -> dict[str, float]:
+    def _measure(
+        self,
+        dataloader: DataLoader,
+        use_gt_mean: bool = False,
+    ) -> dict[str, float]:
         """Measure IQA metrics based on the configuration.
 
         Args:
@@ -243,12 +233,10 @@ class IQAEvaluator(Evaluator):
         data = self.data
         device = self.device
         metrics = self.metrics
-        metrics_func = self.metrics_func
-        metrics_meta = self.metrics_meta
         verbose = self.verbose
 
         # Processing loop
-        results = {m: [] for m in metrics}
+        results = {m: [] for m in metrics.keys()}
 
         with create_progress_bar(transient=not verbose) as pbar:
             if use_gt_mean:
@@ -279,12 +267,14 @@ class IQAEvaluator(Evaluator):
 
                 # Measure metric
                 for m in metrics:
-                    if target is None and metrics_meta[m]["metric_mode"] == "FR":
+                    if target is None and metrics[m]["metric_mode"] == "FR":
                         continue
-                    elif target is not None and metrics_meta[m]["metric_mode"] == "FR":
-                        results[m].append(metrics_func[m](image, target))
+
+                    func = metrics[m]["func"]
+                    if metrics[m]["metric_mode"] == "FR":
+                        results[m].append(func(image, target).item())
                     else:
-                        results[m].append(metrics_func[m](image))
+                        results[m].append(func(image).item())
 
         # Aggregate results
         for m, v in results.items():
@@ -386,38 +376,25 @@ class InstanceIQAEvaluator(Evaluator):
 
     @override
     def _init_metrics(self, metrics: list[str]):
-        """Initialize ``self._metrics``, ``self._metrics_func``, and
-        ``self._metrics_meta`` attributes.
-        """
-        _metrics = []
-        _metrics_func = {}
-        _metrics_meta = {}
+        """Initialize ``self._metrics`` attributes."""
+        _metrics: dict[str, dict] = {}
 
         for i, m in enumerate(metrics):
-            if m in self.all_metrics:
-                _metrics.append(m)
-                _metrics_func[m] = pyiqa.create_metric(
-                    metric_name=m,
-                    as_loss=False,
-                    device=self.device,
-                )
-                _metrics_meta[m] = self.all_metrics[m]
+            if m in pyiqa.default_model_configs.DEFAULT_CONFIGS:
+                func = pyiqa.create_metric(metric_name=m, as_loss=False, device=self.device)
             elif m in METRICS:
-                _metrics.append(m)
-                _metric_func = METRICS.build(name=m, device=self.device)
-                _metrics_func[m] = _metric_func
-                _metrics_meta[m] = {
-                    "metric_opts": _metric_func.metric_opts,
-                    "metric_mode": _metric_func.metric_mode,
-                    "lower_better": _metric_func.lower_better,
-                    "score_range": _metric_func.score_range,
-                }
+                func = METRICS.build(name=m, device=self.device)
             else:
                 log_error(f"Unsupported metric: {m}. Skipping...")
 
+            _metrics[m] = {
+                "func": func,
+                "metric_mode": METRICS[m]["metric_mode"],
+                "lower_better": METRICS[m]["lower_better"],
+                "score_range": METRICS[m]["score_range"],
+            }
+
         self._metrics = _metrics
-        self._metrics_func = _metrics_func
-        self._metrics_meta = _metrics_meta
 
     @override
     def _init_dataloader(self):
@@ -479,6 +456,7 @@ class InstanceIQAEvaluator(Evaluator):
         # Print results
         self.log_results()
 
+    @torch.inference_mode()
     def _measure(self) -> dict[str, float]:
         """Measure IQA metrics based on the configuration.
 
@@ -488,8 +466,6 @@ class InstanceIQAEvaluator(Evaluator):
         # Resolve attributes
         device = self.device
         metrics = self.metrics
-        metrics_func = self.metrics_func
-        metrics_meta = self.metrics_meta
         verbose = self.verbose
 
         # Define images and target
@@ -534,14 +510,16 @@ class InstanceIQAEvaluator(Evaluator):
                         image_t = image_t.transpose(2, 3)
 
                 # Measure metric
-                values = {}
+                values = {m: [] for m in metrics.keys()}
                 for m in metrics:
-                    if target_t is None and metrics_meta[m]["metric_mode"] == "FR":
+                    if target is None and metrics[m]["metric_mode"] == "FR":
                         continue
-                    elif target_t is not None and metrics_meta[m]["metric_mode"] == "FR":
-                        values[m] = metrics_func[m](image_t, target_t).item()
+
+                    func = metrics[m]["func"]
+                    if metrics[m]["metric_mode"] == "FR":
+                        values[m] = func[m](image_t, target_t).item()
                     else:
-                        values[m] = metrics_func[m](image_t).item()
+                        values[m] = func[m](image_t).item()
 
                 # Aggregate results
                 results[image_file.stem] = values

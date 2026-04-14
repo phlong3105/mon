@@ -40,7 +40,7 @@ class Metric(nn.Module, ABC):
     metric_opts: dict = {}
     metric_mode: str = "FR"             # ["FR" or "NR"]
     lower_better: bool = False          # True if lower score is better
-    score_range: tuple[float, float] = (0.0, 1.0)  # (min, max)
+    score_range: str = ""               # (min, max)
 
     # --- Lifecycle & Initialization ---
     def __init__(self, device: torch.device = torch.device("cpu")):

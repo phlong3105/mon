@@ -16,6 +16,7 @@ __all__ = [
     "Factory",
     "METRICS",
     "MODELS",
+    "MetricFactory",
     "ModelFactory",
     "OPTIMIZERS",
     "OptimizerFactory",
@@ -775,6 +776,156 @@ class OptimizerFactory(Factory):
             )
         return self[key](params=params, *args, **kwargs)
 
+
+class MetricFactory(Factory):
+    """Metric Factory that organizes metrics."""
+
+    # --- Registering ---
+    def register(
+        self,
+        name: str = "",
+        module: Any = None,
+        metric_opts: dict | None = None,
+        metric_mode: str | None = None,
+        lower_better: bool | None = None,
+        score_range: str | None = None,
+        metaclass: Any = None,
+        replace: bool = False,
+    ) -> Callable:
+        """Register a class or function.
+
+        Args:
+            name (str, optional): Name to register the ``module``. Defaults to "".
+            module (Any, optional): Class or function to register. Defaults to None.
+            metric_opts (dict, optional): Additional options for the metric.
+                Defaults to None.
+            metric_mode (str, optional): Metric mode (e.g., "FR" or "NR").
+                Defaults to None.
+            lower_better (bool, optional): Whether lower scores are better.
+                Defaults to None.
+            score_range (str, optional): Valid score range (min, max).
+                Defaults to None.
+            metaclass (Any, optional): Metaclass to get metadata from.
+                Defaults to None.
+            replace (bool, optional): If True, overwrite an existing entry.
+                Defaults to False.
+
+        Returns:
+            Callable: Decorator function if ``module`` is None, else None.
+        """
+        def _register(cls):
+            self._register(
+                name=name,
+                module=cls,
+                metric_opts=metric_opts,
+                metric_mode=metric_mode,
+                lower_better=lower_better,
+                score_range=score_range,
+                metaclass=metaclass,
+                replace=replace,
+            )
+            return cls
+
+        return _register(module) if module is not None else _register
+
+    def _register(
+        self,
+        name: str,
+        module: Any,
+        metric_opts: dict | None = None,
+        metric_mode: str | None = None,
+        lower_better: bool | None = None,
+        score_range: str | None = None,
+        metaclass: Any = None,
+        replace: bool = False,
+    ):
+        """Register a class or function.
+
+        Args:
+            name (str): Name to register the ``module``.
+            module (Any): Class or function to register.
+            metric_opts (dict, optional): Additional options for the metric.
+                Defaults to None.
+            metric_mode (str, optional): Metric mode (e.g., "FR" or "NR").
+                Defaults to None.
+            lower_better (bool, optional): Whether lower scores are better.
+                Defaults to None.
+            score_range (str, optional): Valid score range (min, max).
+                Defaults to None.
+            metaclass (Any, optional): Metaclass to get metadata from.
+                Defaults to None.
+            replace (bool, optional): If True, overwrite an existing entry.
+                Defaults to False.
+
+        Raises:
+            TypeError: If ``module`` is not a class or function.
+            KeyError: If ``replace`` is False and the key is already registered.
+        """
+        # Determine the registration key.
+        # Priority: explicit name > class attributes > class name.
+        key = name or self._get_attr(module, metaclass, "name") or module.__name__
+        metric_opts = metric_opts or self._get_attr(module, metaclass, "metric_opts")
+        metric_mode = metric_mode or self._get_attr(module, metaclass, "metric_mode")
+        lower_better = lower_better or self._get_attr(module, metaclass, "lower_better")
+        score_range = score_range or self._get_attr(module, metaclass, "score_range")
+
+        # Normalize key
+        if self.decamelize:
+            key = depascalize(key)
+
+        # Register the module
+        if not replace and key in self:
+            if self.verbose:
+                log_error(
+                    f"'{key}' has been already registered in the '{self.name}' "
+                    f"factory. Skipping registration."
+                )
+            return
+
+        self[key] = {
+            "name": key,
+            "module": module,
+            "metric_opts": metric_opts,
+            "metric_mode": metric_mode,
+            "lower_better": lower_better,
+            "score_range": score_range,
+        }
+
+    # --- Creation ---
+    def build(self, name: str, *args, **kwargs) -> Any:
+        """Instantiate a registered class by name.
+
+        Args:
+            name (str): Name of the registered class to instantiate.
+            *args: Positional arguments to forward to the class constructor.
+            **kwargs: Arguments to forward to the class constructor.
+
+        Returns:
+            Any: Instance of the requested class.
+
+        Raises:
+            ValueError: If the requested ``name`` is not found.
+        """
+        # Validate inputs
+        if not name:
+            raise ValueError(
+                f"Cannot build from an empty name in the '{self.name}' factory."
+            )
+
+        # Normalize name
+        key = depascalize(name) if self.decamelize else name
+        if key not in self:
+            # Fallback for cases where the raw name might match.
+            key = name if name in self else None
+
+        # Create the instance
+        if key is None:
+            raise ValueError(
+                f"'{name}' is not a registered name in the '{self.name}' "
+                f"factory. Available names: {list(self.keys())}."
+            )
+        return self._create_instance(self[key]["module"], name, *args, **kwargs)
+
 # endregion
 
 
@@ -793,7 +944,7 @@ WEIGHTS: WeightsFactory = WeightsFactory(name="Weights", decamelize=False)
 OPTIMIZERS: OptimizerFactory = OptimizerFactory(name="Optimizers", decamelize=False)
 SCHEDULERS: Factory = Factory(name="Schedulers", decamelize=False)
 
-METRICS: Factory = Factory(name="Metrics", decamelize=False)
+METRICS: MetricFactory = MetricFactory(name="Metrics", decamelize=False)
 
 TRAINERS: Factory = Factory(name="Trainers", decamelize=False)
 PREDICTORS: Factory = Factory(name="Predictors", decamelize=False)

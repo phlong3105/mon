@@ -37,13 +37,13 @@ current_dir = current_file.parents[0]
 def metric():
     # 1. Define arguments
     archs_models = {
-        "clode": ["clode_sice_me", "clode_sice_me_gf"],
+        "clode": ["clode_sice_me"],
         "colie": ["colie"],
-        "pairlie": ["pairlie_sice", "pairlie_sice_gf"],
-        "retinexnet": ["retinexnet_lol_v1", "retinexnet_lol_v1_gf"],
+        "pairlie": ["pairlie_sice"],
+        "retinexnet": ["retinexnet_lol_v1"],
         "sci": ["sci++"],
         "zero_dce": ["zero_dce_sice_me"],
-        "zero_ig": ["zero_ig_lol", "zero_ig_lol_gf"],
+        "zero_ig": ["zero_ig_lol"],
         "slice": ["slice_dopri5_sice_me_v4"],
     }
     datasets = [
@@ -55,7 +55,11 @@ def metric():
         # "lsrw",
         # "uhd_ll",
     ]
-    metrics = ["psnr", "ssim", "ssimc", "lpips", "niqe", "pi", "giqs"]
+    metrics = [
+        # "psnr", "ssim", "ssimc", "lpips", "niqe", "pi",
+        # "ciqs",
+        "giqs"
+    ]
 
     # 2. Define constants
     root = resolve_project_root(current_dir)
