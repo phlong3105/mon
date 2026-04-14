@@ -55,7 +55,7 @@ def metric():
         # "lsrw",
         # "uhd_ll",
     ]
-    metrics = ["psnr", "ssim", "ssimc", "lpips", "niqe", "pi"]
+    metrics = ["psnr", "ssim", "ssimc", "lpips", "niqe", "pi", "giqs"]
 
     # 2. Define constants
     root = resolve_project_root(current_dir)

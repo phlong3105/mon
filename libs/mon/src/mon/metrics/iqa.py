@@ -10,23 +10,35 @@ based on various criteria such as exposedness, contrast, and saturation.
 from __future__ import annotations
 
 __all__ = [
+    "GeometricImageQualityScore",
     "ImageQualityAssessment",
 ]
 
 import torch
+from pyiqa.archs.lpips_arch import LPIPS
+from pyiqa.archs.psnr_arch import PSNR
+from pyiqa.archs.ssim_arch import SSIM
 from torch import nn, Tensor
+
+from mon.core import METRICS
+from .base import Metric
 
 
 # ==============================================================================
 # region NON-REFERENCE IAQ
 # ==============================================================================
 
-class ImageQualityAssessment(nn.Module):
+class ImageQualityAssessment(Metric):
     """Image Quality Assessment (IQA) metric.
 
     References:
         - Code: https://github.com/VinAIResearch/PSENet-Image-Enhancement/blob/main/source/iqa.py
     """
+
+    metric_opts: dict = {}
+    metric_mode: str = "NR"             # ["FR" or "NR"]
+    lower_better: bool = False          # True if lower score is better
+    score_range: tuple[float, float] = (0.0, 1.0)  # (min, max)
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -34,6 +46,7 @@ class ImageQualityAssessment(nn.Module):
         exposed_level: float = 0.5,
         pool_size: int = 25,
         eps: float = 1e-6,
+        device: torch.device = torch.device("cpu")
     ):
         """Initialize a new instance.
 
@@ -45,7 +58,8 @@ class ImageQualityAssessment(nn.Module):
             eps (float, optional): Small constant for numerical stability.
                 Defaults to 1e-6.
         """
-        super().__init__()
+        super().__init__(device=device)
+
         # Assign attributes
         self.exposed_level = exposed_level
         self.eps = eps
@@ -55,11 +69,11 @@ class ImageQualityAssessment(nn.Module):
         self.avg_pool = nn.AvgPool2d(pool_size, stride=1)
 
     # --- Callable & Context Manager ---
-    def forward(self, x: Tensor) -> Tensor:
+    def forward(self, input: Tensor, *args, **kwargs) -> Tensor:
         """Compute the IQA score for input.
 
         Args:
-            x (Tensor): Input image tensor of shape (B, C, H, W) and values
+            input (Tensor): Input image tensor of shape (B, C, H, W) and values
                 ranging from 0.0 to 1.0.
 
         Returns:
@@ -67,12 +81,12 @@ class ImageQualityAssessment(nn.Module):
                 0.0 to 1.0.
         """
         # Saturation (Varying intensities across channels)
-        max_rgb, _ = torch.max(x, dim=1, keepdim=True)
-        min_rgb, _ = torch.min(x, dim=1, keepdim=True)
+        max_rgb, _ = torch.max(input, dim=1, keepdim=True)
+        min_rgb, _ = torch.min(input, dim=1, keepdim=True)
         saturation = (max_rgb - min_rgb + self.eps) / (max_rgb + self.eps)
 
         # Local Statistics (Using shared padded input)
-        x_padded = self.pad(x)
+        x_padded = self.pad(input)
         mu = self.avg_pool(x_padded)  # E[X]
         mu2 = self.avg_pool(x_padded ** 2)  # E[X^2]
 
@@ -90,6 +104,122 @@ class ImageQualityAssessment(nn.Module):
         # Reduce spatial dimensions to get a per-image score
         quality_map = (saturation * contrast) / exposedness
         return quality_map.mean(dim=[1, 2, 3], keepdim=True)
+
+# endregion
+
+
+# ==============================================================================
+# region COMBINED IAQ
+# ==============================================================================
+
+@METRICS.register(name="ciqs")
+class CompositeImageQualityScore(Metric):
+    """Composite Image Quality Score (CIQS) metric."""
+
+    metric_opts: dict = {}
+    metric_mode: str = "FR"             # ["FR" or "NR"]
+    lower_better: bool = False          # True if lower score is better
+    score_range: tuple[float, float] = (0.0, 1.0)  # (min, max)
+
+    # --- Lifecycle & Initialization ---
+    def __init__(self, device: torch.device = torch.device("cpu")):
+        """Initialize a new instance."""
+        super().__init__(device=device)
+
+        # Define components
+        self.psnr = PSNR().to(device)
+        self.ssim = SSIM().to(device)
+        self.lpips = LPIPS().to(device)
+
+    # --- Callable & Context Manager ---
+    def forward(self, input: Tensor, target: Tensor, *args, **kwargs) -> Tensor:
+        """Calculate the metric between ``input`` and ``target``.
+
+        Args:
+            input (Tensor): Input (predictions) tensor of shape (B, C, H, W)
+                and values ranging from 0.0 to 1.0.
+            target (Tensor): Target (ground truth) tensor of shape (B, C, H, W)
+                and values ranging from 0.0 to 1.0.
+
+        Returns:
+            Tensor: Metric value.
+        """
+        # Compute individual metrics
+        psnr = self.psnr(input, target)
+        ssim = self.ssim(input, target)
+        lpips = self.lpips(input, target)
+
+        # Normalize metrics
+        epsilon = 1e-6
+        psnr_min = torch.zeros_like(psnr)
+        psnr_max = self.psnr(target, target)
+        psnr = (psnr - psnr_min) / (psnr_max - psnr_min + epsilon)
+
+        lpips = 1.0 - lpips
+
+        # Clamp values to avoid absolute zero
+        psnr = torch.clamp(psnr, 0.0, 1.0)
+        ssim = torch.clamp(ssim, 0.0, 1.0)
+        lpips = torch.clamp(lpips, 0.0, 1.0)
+
+        # Calculate the combined metric
+        ciqs = (psnr + ssim + lpips) / 3.0
+        return ciqs
+
+
+@METRICS.register(name="giqs")
+class GeometricImageQualityScore(Metric):
+    """Geometric Image Quality Score (GIQS) metric."""
+
+    metric_opts: dict = {}
+    metric_mode: str = "FR"             # ["FR" or "NR"]
+    lower_better: bool = False          # True if lower score is better
+    score_range: tuple[float, float] = (0.0, 1.0)  # (min, max)
+
+    # --- Lifecycle & Initialization ---
+    def __init__(self, device: torch.device = torch.device("cpu")):
+        """Initialize a new instance."""
+        super().__init__(device=device)
+
+        # Define components
+        self.psnr = PSNR().to(device)
+        self.ssim = SSIM().to(device)
+        self.lpips = LPIPS().to(device)
+
+    # --- Callable & Context Manager ---
+    def forward(self, input: Tensor, target: Tensor, *args, **kwargs) -> Tensor:
+        """Calculate the metric between ``input`` and ``target``.
+
+        Args:
+            input (Tensor): Input (predictions) tensor of shape (B, C, H, W)
+                and values ranging from 0.0 to 1.0.
+            target (Tensor): Target (ground truth) tensor of shape (B, C, H, W)
+                and values ranging from 0.0 to 1.0.
+
+        Returns:
+            Tensor: Metric value.
+        """
+        # Compute individual metrics
+        psnr = self.psnr(input, target)
+        ssim = self.ssim(input, target)
+        lpips = self.lpips(input, target)
+
+        # Normalize metrics
+        epsilon = 1e-6
+        psnr_min = torch.zeros_like(psnr)
+        psnr_max = self.psnr(target, target)
+        psnr = (psnr - psnr_min) / (psnr_max - psnr_min + epsilon)
+
+        lpips = 1.0 - lpips
+
+        # Clamp values to avoid absolute zero
+        psnr = torch.clamp(psnr, 0.0, 1.0)
+        ssim = torch.clamp(ssim, 0.0, 1.0)
+        lpips = torch.clamp(lpips, 0.0, 1.0)
+
+        # Calculate the combined metric
+        giqs = torch.pow((psnr * ssim * lpips), (1.0 / 3.0))
+        return giqs
 
 # endregion
 

@@ -14,6 +14,7 @@ __all__ = [
 ]
 
 from abc import ABC, abstractmethod
+from typing import Callable
 
 import torch
 from box import Box
@@ -226,13 +227,16 @@ class Evaluator(ABC):
         # Allocate resources
         self._metrics: list[str] = []
         self._metrics_func: dict = {}
+        self._metrics_meta: dict = {}
         self._results = {}
 
         self._init_metrics(metrics)
 
     @abstractmethod
     def _init_metrics(self, metrics: list[str]):
-        """Initialize ``self._metrics`` and ``self._metrics_func`` attributes."""
+        """Initialize ``self._metrics``, ``self._metrics_func``, and
+        ``self._metrics_meta`` attributes.
+        """
         pass
 
     @abstractmethod
@@ -276,9 +280,14 @@ class Evaluator(ABC):
         return self._metrics
 
     @property
-    def metrics_func(self) -> dict:
+    def metrics_func(self) -> dict[str, Callable]:
         """Return the dictionary of metric functions."""
         return self._metrics_func
+
+    @property
+    def metrics_meta(self) -> dict[str, dict]:
+        """Return the dictionary of metric metadata."""
+        return self._metrics_meta
 
     @property
     def device(self) -> torch.device:

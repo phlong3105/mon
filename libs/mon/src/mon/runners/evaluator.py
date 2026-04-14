@@ -30,6 +30,7 @@ from mon.core import (
     console,
     create_progress_bar,
     DeviceLike,
+    METRICS,
     log_error,
     Path,
     PathLike,
@@ -96,7 +97,7 @@ class IQAEvaluator(Evaluator):
             result_file=result_file,
             metrics=metrics,
             device=device,
-            verbose=verbose
+            verbose=verbose,
         )
 
         # Assign attributes
@@ -112,20 +113,38 @@ class IQAEvaluator(Evaluator):
 
     @override
     def _init_metrics(self, metrics: list[str]):
-        """Initialize ``self._metrics`` and ``self._metrics_func`` attributes.``"""
+        """Initialize ``self._metrics``, ``self._metrics_func``, and
+        ``self._metrics_meta`` attributes.
+        """
         _metrics = []
         _metrics_func = {}
+        _metrics_meta = {}
+
         for i, m in enumerate(metrics):
             if m in self.all_metrics:
                 _metrics.append(m)
                 _metrics_func[m] = pyiqa.create_metric(
-                    metric_name=m, as_loss=False, device=self.device
+                    metric_name=m,
+                    as_loss=False,
+                    device=self.device,
                 )
+                _metrics_meta[m] = self.all_metrics[m]
+            elif m in METRICS:
+                _metrics.append(m)
+                _metric_func = METRICS.build(name=m, device=self.device)
+                _metrics_func[m] = _metric_func
+                _metrics_meta[m] = {
+                    "metric_opts": _metric_func.metric_opts,
+                    "metric_mode": _metric_func.metric_mode,
+                    "lower_better": _metric_func.lower_better,
+                    "score_range": _metric_func.score_range,
+                }
             else:
                 log_error(f"Unsupported metric: {m}. Skipping...")
 
         self._metrics = _metrics
         self._metrics_func = _metrics_func
+        self._metrics_meta = _metrics_meta
 
     @override
     def _init_dataloader(self) -> DataLoader:
@@ -225,6 +244,7 @@ class IQAEvaluator(Evaluator):
         device = self.device
         metrics = self.metrics
         metrics_func = self.metrics_func
+        metrics_meta = self.metrics_meta
         verbose = self.verbose
 
         # Processing loop
@@ -259,9 +279,9 @@ class IQAEvaluator(Evaluator):
 
                 # Measure metric
                 for m in metrics:
-                    if target is None and self.all_metrics[m]["metric_mode"] == "FR":
+                    if target is None and metrics_meta[m]["metric_mode"] == "FR":
                         continue
-                    elif target is not None and self.all_metrics[m]["metric_mode"] == "FR":
+                    elif target is not None and metrics_meta[m]["metric_mode"] == "FR":
                         results[m].append(metrics_func[m](image, target))
                     else:
                         results[m].append(metrics_func[m](image))
@@ -366,20 +386,38 @@ class InstanceIQAEvaluator(Evaluator):
 
     @override
     def _init_metrics(self, metrics: list[str]):
-        """Initialize ``self._metrics`` and ``self._metrics_func`` attributes."""
+        """Initialize ``self._metrics``, ``self._metrics_func``, and
+        ``self._metrics_meta`` attributes.
+        """
         _metrics = []
         _metrics_func = {}
+        _metrics_meta = {}
+
         for i, m in enumerate(metrics):
             if m in self.all_metrics:
                 _metrics.append(m)
                 _metrics_func[m] = pyiqa.create_metric(
-                    metric_name=m, as_loss=False, device=self.device
+                    metric_name=m,
+                    as_loss=False,
+                    device=self.device,
                 )
+                _metrics_meta[m] = self.all_metrics[m]
+            elif m in METRICS:
+                _metrics.append(m)
+                _metric_func = METRICS.build(name=m, device=self.device)
+                _metrics_func[m] = _metric_func
+                _metrics_meta[m] = {
+                    "metric_opts": _metric_func.metric_opts,
+                    "metric_mode": _metric_func.metric_mode,
+                    "lower_better": _metric_func.lower_better,
+                    "score_range": _metric_func.score_range,
+                }
             else:
                 log_error(f"Unsupported metric: {m}. Skipping...")
 
         self._metrics = _metrics
         self._metrics_func = _metrics_func
+        self._metrics_meta = _metrics_meta
 
     @override
     def _init_dataloader(self):
@@ -451,6 +489,7 @@ class InstanceIQAEvaluator(Evaluator):
         device = self.device
         metrics = self.metrics
         metrics_func = self.metrics_func
+        metrics_meta = self.metrics_meta
         verbose = self.verbose
 
         # Define images and target
@@ -497,9 +536,9 @@ class InstanceIQAEvaluator(Evaluator):
                 # Measure metric
                 values = {}
                 for m in metrics:
-                    if target_t is None and self.all_metrics[m]["metric_mode"] == "FR":
+                    if target_t is None and metrics_meta[m]["metric_mode"] == "FR":
                         continue
-                    elif target_t is not None and self.all_metrics[m]["metric_mode"] == "FR":
+                    elif target_t is not None and metrics_meta[m]["metric_mode"] == "FR":
                         values[m] = metrics_func[m](image_t, target_t).item()
                     else:
                         values[m] = metrics_func[m](image_t).item()
@@ -531,7 +570,7 @@ class InstanceIQAEvaluator(Evaluator):
         for m, v in first_item.items():
             header += f"{f'{m}':<{pad}}\t"
         header += "\n"
-        header += "-" * ((pad + 4) * (len(first_item) + 4))
+        header += "-" * ((pad + 4) * (len(first_item) + 1))
 
         # Values
         message = ""

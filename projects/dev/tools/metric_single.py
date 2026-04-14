@@ -26,7 +26,7 @@ current_dir = current_file.parents[0]
 
 def main(args: argparse.Namespace):
     # 1. Define arguments
-    metrics = ["psnr", "ssim", "ssimc", "lpips", "niqe", "pi"]
+    metrics = ["psnr", "ssim", "ssimc", "lpips", "niqe", "pi", "ciqs", "giqs"]
 
     # 2. Measure metrics
     iqa = InstanceIQAEvaluator.from_cli(
@@ -43,7 +43,7 @@ def main(args: argparse.Namespace):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser("main")
-    parser.add_argument("--input-dir", type=str, default="/home/longpham/10_workspace/11_code/mon/projects/dev/run/assets/sice_112/")
+    parser.add_argument("--input-dir", type=str, default="/home/longpham/_/code/mon/projects/dev/run/assets/sice_112/")
     parser.add_argument("--imgsz", type=int, default=512)
     parser.add_argument("--resize", action="store_true")
     args, remaining = parser.parse_known_args()
