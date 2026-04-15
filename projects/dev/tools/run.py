@@ -31,20 +31,64 @@ current_dir = current_file.parents[0]
 
 
 # ==============================================================================
-# region METRIC
+# region FUNCTIONS
 # ==============================================================================
 
-def metric():
+def train(args: argparse.Namespace):
+    config_ctx = ConfigContext.from_cli(
+        root=resolve_project_root(current_dir),
+        config_file=args.config,
+        task=Task.LLE,
+        mode=RunMode.TRAIN,
+        device="auto",
+        save=True,
+        save_debug=True,
+        exist_ok=True,
+        verbose=True,
+    )
+    config = config_ctx.config_for(RunMode.TRAIN, prompt=args.prompt)
+    trainer = TRAINERS.build(name=config.model_name, config=config)
+    trainer.train()
+
+
+def predict(args: argparse.Namespace):
+    config_ctx = ConfigContext.from_cli(
+        root=resolve_project_root(current_dir),
+        config_file=args.config,
+        task=Task.LLE,
+        mode=RunMode.PREDICT,
+        device="auto",
+        save=True,
+        save_debug=False,
+        exist_ok=True,
+        verbose=True,
+    )
+    config = config_ctx.config_for(RunMode.PREDICT, prompt=args.prompt)
+    predictor = PREDICTORS.build(name=config.model_name, config=config)
+    predictor.predict()
+
+
+def metric(args: argparse.Namespace):
     # 1. Define arguments
     archs_models = {
-        "clode": ["clode_sice_me"],
-        "colie": ["colie"],
-        "pairlie": ["pairlie_sice"],
-        "retinexnet": ["retinexnet_lol_v1"],
-        "sci": ["sci++"],
-        "zero_dce": ["zero_dce_sice_me"],
-        "zero_ig": ["zero_ig_lol"],
-        "slice": ["slice_dopri5_sice_me_v4"],
+        "clode": [
+            "clode_sice_me_128",
+            "clode_sice_me_256",
+            "clode_sice_me_512",
+            "clode_sice_me_480p",
+            "clode_sice_me_720p",
+            "clode_sice_me_1080p",
+            "clode_sice_me_2k",
+        ],
+        # "colie": ["colie"],
+        # "pairlie": ["pairlie_sice"],
+        # "retinexnet": ["retinexnet_lol_v1"],
+        # "sci": ["sci++"],
+        # "zero_dce": ["zero_dce_sice_me"],
+        # "zero_ig": ["zero_ig_lol"],
+        "slice": [
+            "slice_dopri5_sice_me_v4",
+        ],
     }
     datasets = [
         # "dicm", "lime", "mef", "npe", "vv",
@@ -102,6 +146,41 @@ def metric():
                 )
                 iqa.measure()
 
+
+def benchmark(args: argparse.Namespace):
+    models = [
+        "clode",
+        # "colie",
+        # "pairlie",
+        # "retinexnet",
+        # "sci++",
+        # "zero_dce",
+        # "zero_ig",
+        # "slice",
+    ]
+    resolutions = [
+        (128, 128),
+        (256, 256),
+        (512, 512),
+        (640, 480),    # 480p
+        (1280, 720),   # 720p
+        (1920, 1080),  # 1080p
+        (2560, 1440),  # 2K
+        (3840, 2160),  # 4K
+        (7680, 4320),  # 8K
+    ]
+    for res in resolutions:
+        benchmarker = Benchmarker.from_cli(
+            task=Task.LLE,
+            models=models,
+            imgsz=res,
+            num_runs=10,
+            device="cuda:0",
+            verbose=True,
+            prompt=args.prompt,
+        )
+        benchmarker.measure()
+
 # endregion
 
 
@@ -113,77 +192,16 @@ def main(args: argparse.Namespace):
     """A hub for running models."""
     # Train
     if args.train:
-        config_ctx = ConfigContext.from_cli(
-            root=resolve_project_root(current_dir),
-            config_file=args.config,
-            task=Task.LLE,
-            mode=RunMode.TRAIN,
-            device="auto",
-            save=True,
-            save_debug=True,
-            exist_ok=True,
-            verbose=True,
-        )
-        config = config_ctx.config_for(RunMode.TRAIN, prompt=args.prompt)
-        trainer = TRAINERS.build(name=config.model_name, config=config)
-        trainer.train()
-
+        train(args)
     # Predict
     elif args.predict:
-        config_ctx = ConfigContext.from_cli(
-            root=resolve_project_root(current_dir),
-            config_file=args.config,
-            task=Task.LLE,
-            mode=RunMode.PREDICT,
-            device="auto",
-            save=True,
-            save_debug=False,
-            exist_ok=True,
-            verbose=True,
-        )
-        config = config_ctx.config_for(RunMode.PREDICT, prompt=args.prompt)
-        predictor = PREDICTORS.build(name=config.model_name, config=config)
-        predictor.predict()
-
+        predict(args)
     # Metric
     elif args.metric:
-        metric()
-
+        metric(args)
     # Benchmark
     elif args.benchmark:
-        models = [
-            # "clode",
-            # "colie",
-            # "pairlie",
-            # "retinexnet",
-            # "sci++",
-            # "zero_dce",
-            # "zero_ig",
-            "slice",
-        ]
-        resolutions = [
-            (128, 128),
-            (256, 256),
-            (512, 512),
-            (640, 480),    # 480p
-            (1280, 720),   # 720p
-            (1920, 1080),  # 1080p
-            (2560, 1440),  # 2K
-            (3840, 2160),  # 4K
-            (7680, 4320),  # 8K
-        ]
-        for res in resolutions:
-            benchmarker = Benchmarker.from_cli(
-                task=Task.LLE,
-                models=models,
-                imgsz=res,
-                num_runs=10,
-                device="cuda:0",
-                verbose=True,
-                prompt=args.prompt,
-            )
-            benchmarker.measure()
-
+        benchmark(args)
     else:
         raise NotImplementedError("Run mode hasn't been implemented.")
 

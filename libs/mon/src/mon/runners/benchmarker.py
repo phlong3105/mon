@@ -288,10 +288,11 @@ class Benchmarker(PromptContextMixin):
             f"{f'Params (M)':<{pad}}\t"
             f"{f'MACs (G)':<{pad}}\t"
             f"{f'FLOPs (G)':<{pad}}\t"
-            f"{f'VRAM (GB)':<{pad}}\t"
+            f"{f'Allocated (GB)':<{pad}}\t"
+            f"{f'Reserved (GB)':<{pad}}\t"
             f"{f'Latency (ms)':<{pad}}\n"
         )
-        header += "-" * ((pad + 4) * 7)
+        header += "-" * ((pad + 4) * 8)
 
         # Rows
         message = ""
@@ -301,7 +302,8 @@ class Benchmarker(PromptContextMixin):
                 f"{self._format_unit(stats["params"], 'M'):<{pad}}\t"
                 f"{self._format_unit(stats["macs"], 'G'):<{pad}}\t"
                 f"{self._format_unit(stats["flops"], 'G'):<{pad}}\t"
-                f"{self._format_unit(stats["vram"]):<{pad}}\t"
+                f"{self._format_unit(stats["used_mem"]):<{pad}}\t"
+                f"{self._format_unit(stats["cached_mem"]):<{pad}}\t"
                 f"{self._format_unit(stats["latency"]):<{pad}}\n"
             )
 

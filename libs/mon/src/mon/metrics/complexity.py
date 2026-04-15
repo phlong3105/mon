@@ -14,7 +14,7 @@ __all__ = [
     "benchmark",
     "benchmark_latency",
     "benchmark_model_stats",
-    "benchmark_vram",
+    "benchmark_memory",
     "create_dummy_image",
 ]
 
@@ -28,7 +28,7 @@ import torch
 from box import Box
 from torch import nn, Tensor
 
-from mon.core import Float3, K, log, Size, SizeLike
+from mon.core import Float3, K, log, Size, SizeLike, Float2
 from mon.ops import read_image, to_image_tensor
 
 
@@ -66,36 +66,37 @@ def benchmark_model_stats(model: nn.Module, inputs: Any, copy: bool = True) -> F
     return params, macs, flops
 
 
-def benchmark_vram(model: nn.Module, inputs: Any) -> float:
+def benchmark_memory(model: nn.Module, inputs: Any, num_runs: int = 10) -> Float2:
     """Measure the vRAM usage of a model.
 
     Args:
         model (nn.Module): PyTorch model to benchmark.
         inputs (Any): Dummy inputs to the model (e.g., a tensor or a dict of tensors).
+        num_runs (int, optional): Number of runs for vRAM measurement.
+            Defaults to 10.
 
     Returns:
-        float: Peak vRAM usage in GB.
+        A tuple containing the allocated and reserved vRAM in GB.
     """
     # Normalize inputs
     device = next(model.parameters()).device
 
-    # Warmup runs to stabilize memory placement and JIT optimizations
+    # Reset peak memory stats
+    torch.cuda.reset_peak_memory_stats(device=device)
+
+    # Loop N times to stabilize memory placement and JIT optimizations
     with torch.inference_mode():
-        for _ in range(5):
+        for _ in range(num_runs):
             _ = model(**inputs)
+            if device.type == "cuda":
+                torch.cuda.synchronize()
 
-    baseline_vram = torch.cuda.memory_allocated() / (1024 ** 2)  # MB
+    # Calculate peak memory usage
+    allocated = torch.cuda.max_memory_allocated(device=device) / (1024 ** 3)  # GB
+    reserved = torch.cuda.max_memory_reserved(device=device) / (1024 ** 3)  # GB
+    torch.cuda.reset_peak_memory_stats(device=device)
 
-    with torch.inference_mode():
-        _ = model(**inputs)
-        if device.type == "cuda":
-            torch.cuda.synchronize()
-
-    peak_vram = torch.cuda.max_memory_allocated() / (1024 ** 2)  # MB
-    torch.cuda.reset_peak_memory_stats()
-
-    used_vram = (peak_vram - baseline_vram) / 1024  # GB
-    return used_vram
+    return allocated, reserved
 
 
 def benchmark_latency(model: nn.Module, inputs: Any, num_runs: int = 10) -> float:
@@ -127,7 +128,6 @@ def benchmark_latency(model: nn.Module, inputs: Any, num_runs: int = 10) -> floa
                 torch.cuda.synchronize()
 
     avg_latency = (time.perf_counter() - start_time) / num_runs * 1000  # ms
-
     return avg_latency
 
 # endregion
@@ -163,13 +163,13 @@ def benchmark(
         # Compute complexity stats
         params, macs, flops = benchmark_model_stats(model=model, inputs=inputs, copy=copy)
         # Compute vRAM usage
-        vram = benchmark_vram(model=model, inputs=inputs)
+        used_mem, cached_mem = benchmark_memory(model=model, inputs=inputs, num_runs=num_runs)
         # Compute latency
         latency = benchmark_latency(model=model, inputs=inputs, num_runs=num_runs)
 
     except torch.cuda.OutOfMemoryError:
         # Set all results to 0.0 means OOM
-        params = macs = flops = vram = latency = -1.0
+        params = macs = flops = used_mem = cached_mem = latency = -1.0
 
     # Wait for the GPU to finish whatever it was doing when it crashed
     torch.cuda.synchronize()
@@ -190,7 +190,8 @@ def benchmark(
         log(f"Params      : {_format_unit(params, 'M')}")
         log(f"MACs        : {_format_unit(macs, 'G')}")
         log(f"FLOPs       : {_format_unit(flops, 'G')}")
-        log(f"VRAM        : {_format_unit(vram)} GB")
+        log(f"Allocated   : {_format_unit(used_mem)} GB")
+        log(f"Reserved    : {_format_unit(cached_mem)} GB")
         log(f"Latency     : {_format_unit(latency)} ms / image")
         log("-" * 30)
 
@@ -199,7 +200,8 @@ def benchmark(
         "params": params,
         "macs": macs,
         "flops": flops,
-        "vram": vram,
+        "used_mem": used_mem,
+        "cached_mem": cached_mem,
         "latency": latency,
     }
 
