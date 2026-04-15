@@ -17,9 +17,9 @@ __all__ = [
     "PromptContextMixin",
 ]
 
-from abc import ABC, abstractmethod
 import math
 import os
+from abc import ABC, abstractmethod
 from typing import Any, Generic, Literal, override, TypeVar
 
 from prompt_toolkit import Application
@@ -34,7 +34,7 @@ from prompt_toolkit.styles import Style
 
 from mon.core.path import Path
 from mon.core.typing import PathLike
-from mon.core.utils import truncate_string
+from mon.core.utils import to_float_list, to_int_list, truncate_string
 
 
 # ==============================================================================
@@ -92,7 +92,7 @@ class PromptBase(Generic[PromptType]):
         choices_repr: list[str] | None = None,
         defaults: str | int | list[str | int] | None = None,
         password: bool = False,
-        multiselect: bool = False,
+        multiple: bool = False,
         strict: bool = False,
         skip: bool = False,
         case_sensitive: bool = True,
@@ -118,7 +118,7 @@ class PromptBase(Generic[PromptType]):
             password (bool, optional): Mask typed characters in the input
                 buffer. The live preview shows a count instead of values.
                 Defaults to False.
-            multiselect (bool, optional): Allow selecting multiple values.
+            multiple (bool, optional): Allow inputing/selecting multiple values.
                 Defaults to False.
             strict (bool, optional): When True, only values present in
                 ``choices`` are accepted; free-form input is rejected.
@@ -146,7 +146,7 @@ class PromptBase(Generic[PromptType]):
         # Assign attributes
         self.prompt = prompt
         self.password = password
-        self.multiselect = multiselect
+        self.multiple = multiple
         self.strict = strict
         self.skip = skip
         self.case_sensitive = case_sensitive
@@ -204,14 +204,14 @@ class PromptBase(Generic[PromptType]):
             defaults: Default values or indices.
         """
         if not defaults:
-            if self.multiselect:
+            if self.multiple:
                 return
             else:
                 defaults = [0] if (self.skip or self.choices) else [1]
 
         # Normalize
         defaults = [defaults] if isinstance(defaults, (int, float, str, Path)) else defaults
-        candidates = defaults[:1] if not self.multiselect else defaults
+        candidates = defaults[:1] if not self.multiple else defaults
 
         # Free-input mode — store as pre-filled buffer text
         if self.choices is None:
@@ -245,7 +245,7 @@ class PromptBase(Generic[PromptType]):
 
             # Pre-fill buffer to match resolved defaults —
             # _on_text_changed is not yet registered so write directly
-            if self.multiselect:
+            if self.multiple:
                 text = ", ".join(str(i + 1) for i in sorted(self._selected))
             else:
                 text = str(min(self._selected) + 1)
@@ -256,8 +256,8 @@ class PromptBase(Generic[PromptType]):
         """Run the interactive prompt loop.
 
         Returns:
-            - ``response_type`` if ``multiselect=False`` and confirmed.
-            - list[``response_type``] if ``multiselect=True`` and confirmed.
+            - ``response_type`` if ``multiple=False`` and confirmed.
+            - list[``response_type``] if ``multiple=True`` and confirmed.
             - None if canceled via ``Escape``.
         """
         app = Application(
@@ -278,7 +278,7 @@ class PromptBase(Generic[PromptType]):
         choices_repr: list[str] | None = None,
         defaults: str | int | list[str | int] | None = None,
         password: bool = False,
-        multiselect: bool = False,
+        multiple: bool = False,
         strict: bool = False,
         skip: bool = False,
         case_sensitive: bool = True,
@@ -305,7 +305,7 @@ class PromptBase(Generic[PromptType]):
             password (bool, optional): Mask typed characters in the input
                 buffer. The live preview shows a count instead of values.
                 Defaults to False.
-            multiselect (bool, optional): Allow selecting multiple values.
+            multiple (bool, optional): Allow inputing/selecting multiple values.
                 Defaults to False.
             strict (bool, optional): When True, only values present in
                 ``choices`` are accepted; free-form input is rejected.
@@ -333,8 +333,8 @@ class PromptBase(Generic[PromptType]):
         Returns:
             str | list[str] | None: One of the following values:
 
-                - ``response_type`` if ``multiselect=False`` and confirmed.
-                - list[``response_type``] if ``multiselect=True`` and confirmed.
+                - ``response_type`` if ``multiple=False`` and confirmed.
+                - list[``response_type``] if ``multiple=True`` and confirmed.
                 - None if canceled via ``Escape``.
         """
         return cls(
@@ -343,7 +343,7 @@ class PromptBase(Generic[PromptType]):
             choices_repr=choices_repr,
             defaults=defaults,
             password=password,
-            multiselect=multiselect,
+            multiple=multiple,
             strict=strict,
             skip=skip,
             case_sensitive=case_sensitive,
@@ -423,10 +423,10 @@ class PromptBase(Generic[PromptType]):
         except (ValueError, TypeError):
             return None
 
-        if self.multiselect:
+        if self.multiple:
             predefined = (
                 [self.choices[i] for i in sorted(self._selected | indices)
-                 if not (self.skip and i == 0)]   # ← exclude skip from multiselect
+                 if not (self.skip and i == 0)]  # ← exclude skip from multiple
                 if self.choices else []
             )
             # If skip was explicitly selected, return None immediately
@@ -494,7 +494,7 @@ class PromptBase(Generic[PromptType]):
                     if not self.strict:
                         custom.append(part)
 
-        if not self.multiselect:
+        if not self.multiple:
             indices = {max(indices)} if indices else set()
             custom = custom[-1:] if custom else []
 
@@ -580,7 +580,7 @@ class PromptBase(Generic[PromptType]):
         if self.choices is None:
             mode = "free input"
         else:
-            mode = "multi-select" if self.multiselect else "single-select"
+            mode = "multi-select" if self.multiple else "single-select"
             if self.strict:
                 mode += " · strict"
             if not self.show_choices:
@@ -628,7 +628,7 @@ class PromptBase(Generic[PromptType]):
                     continue
 
                 pointer = "❯ " if i == self._current else "  "
-                if self.multiselect:
+                if self.multiple:
                     check = "◉" if i in all_selected else "○"
                 else:
                     check = "◉" if i == self._current else "○"
@@ -667,12 +667,12 @@ class PromptBase(Generic[PromptType]):
         if self.choices is None:
             hint = (
                 f"  Type value(s) separated by commas{type_hint}: "
-                if self.multiselect else
+                if self.multiple else
                 f"  Type a value{type_hint}: "
             )
         elif self.strict:
             hint = "  Enter an option number or name: "
-        elif self.multiselect:
+        elif self.multiple:
             hint = f"  Enter option numbers or values{type_hint}: "
         else:
             hint = f"  Enter an option number or value{type_hint}: "
@@ -700,7 +700,7 @@ class PromptBase(Generic[PromptType]):
             if not text:
                 return [("class:hint", "  nothing entered\n")]
             _, custom = self._parse_input(text)
-            if not self.multiselect:
+            if not self.multiple:
                 custom = custom[-1:] if custom else []
             return (
                 [("class:preview", f"  → {', '.join(str(c) for c in custom)}\n")]
@@ -716,7 +716,7 @@ class PromptBase(Generic[PromptType]):
         all_names = predefined + [c for c in custom if c not in predefined]
 
         # In single-select mode only show the final resolved value
-        if not self.multiselect:
+        if not self.multiple:
             final = self._get_final()
             return (
                 [("class:preview", f"  → {final}\n")]
@@ -732,7 +732,7 @@ class PromptBase(Generic[PromptType]):
         """Render the key-hint footer."""
         if self.choices is None or not self.show_choices:
             keys = "  (enter=confirm  esc=cancel)"
-        elif self.multiselect:
+        elif self.multiple:
             keys = "  (arrows=navigate  space=toggle  enter=confirm  esc=cancel)"
         else:
             keys = "  (arrows=navigate  space=select  enter=confirm  esc=cancel)"
@@ -756,7 +756,7 @@ class PromptBase(Generic[PromptType]):
 
         # Move cursor to last resolved index
         if indices:
-            self._current = (max(indices) if not self.multiselect else sorted(indices)[-1])
+            self._current = (max(indices) if not self.multiple else sorted(indices)[-1])
 
     def _sync_buffer(self) -> None:
         """Sync the buffer from ``_selected`` + ``_custom_tokens``.
@@ -767,7 +767,7 @@ class PromptBase(Generic[PromptType]):
         if not self.choices:
             return
 
-        if self.multiselect:
+        if self.multiple:
             parts  = [str(i + 1) for i in sorted(self._selected)]
             parts += self._custom_tokens  # ← use tracked tokens, not re-parsed
         else:
@@ -816,7 +816,7 @@ class PromptBase(Generic[PromptType]):
             col, row = divmod(self._current, num_rows)
             row = (row - 1) % num_rows
             self._current = min(col * num_rows + row, len(self.choices) - 1)
-            if not self.multiselect:
+            if not self.multiple:
                 self._selected = {self._current}
                 self._sync_buffer()
 
@@ -829,7 +829,7 @@ class PromptBase(Generic[PromptType]):
             col, row = divmod(self._current, num_rows)
             row = (row + 1) % num_rows
             self._current = min(col * num_rows + row, len(self.choices) - 1)
-            if not self.multiselect:
+            if not self.multiple:
                 self._selected = {self._current}
                 self._sync_buffer()
 
@@ -843,7 +843,7 @@ class PromptBase(Generic[PromptType]):
             col, row = divmod(self._current, num_rows)
             col = (col - 1) % num_cols
             self._current = min(col * num_rows + row, len(self.choices) - 1)
-            if not self.multiselect:
+            if not self.multiple:
                 self._selected = {self._current}
                 self._sync_buffer()
 
@@ -857,7 +857,7 @@ class PromptBase(Generic[PromptType]):
             col, row = divmod(self._current, num_rows)
             col = (col + 1) % num_cols
             self._current = min(col * num_rows + row, len(self.choices) - 1)
-            if not self.multiselect:
+            if not self.multiple:
                 self._selected = {self._current}
                 self._sync_buffer()
 
@@ -867,7 +867,7 @@ class PromptBase(Generic[PromptType]):
             if not self.choices or not self.show_choices:
                 return
             self._error_msg = ""
-            if self.multiselect:
+            if self.multiple:
                 if self._current in self._selected:
                     self._selected.discard(self._current)
                 else:
@@ -967,6 +967,104 @@ class IntPrompt(PromptBase[int]):
     response_type = int
     validate_error_message: str = "Please enter at least one integer"
 
+    # --- Lifecycle & Initialization ---
+    def __init__(
+        self,
+        prompt: str = "",
+        *,
+        defaults: str | int | list[str | int] | None = None,
+        password: bool = False,
+        multiple: bool = False,
+        skip: bool = False,
+        show_default: bool = True,
+    ):
+        """Initialize a new instance.
+
+        Args:
+            prompt (str, optional): Prompt text shown as the header.
+                Defaults to "".
+            defaults (str | int | list[str | int], optional): Pre-selected values.
+                Each item may be a 0-based ``int`` index, a 1-based number string
+                (``"1"``), or the choice value itself. Defaults to None.
+            password (bool, optional): Mask typed characters in the input
+                buffer. The live preview shows a count instead of values.
+                Defaults to False.
+            multiple (bool, optional): Allow inputing/selecting multiple values.
+                Defaults to False.
+            skip (bool, optional): Allow skipping the prompt with a special
+                "Skip" option. When enabled, pressing ``Escape`` returns None.
+                Defaults to False.
+            show_default (bool, optional): Display pre-selected values in
+                the header. Defaults to True.
+        """
+        # Assign attributes
+        defaults = to_int_list(defaults)
+
+        # Continue the initialization chain
+        super().__init__(
+            prompt,
+            choices=None,
+            choices_repr=None,
+            defaults=defaults,
+            password=password,
+            multiple=multiple,
+            strict=False,
+            skip=skip,
+            case_sensitive=False,
+            truncate_length=None,
+            truncate_side="middle",
+            show_default=show_default,
+            show_choices=False,
+            show_column=False,
+        )
+
+    # --- Creation ---
+    @classmethod
+    def ask(
+        cls,
+        prompt: str = "",
+        *,
+        defaults: str | int | list[str | int] | None = None,
+        password: bool = False,
+        multiple: bool = False,
+        skip: bool = False,
+        show_default: bool = True,
+    ) -> int | list[int] | None:
+        """Construct and run the prompt, returning the result.
+
+        Args:
+            prompt (str, optional): Prompt text shown as the header.
+                Defaults to "".
+            defaults (str | int | list[str | int], optional): Pre-selected values.
+                Each item may be a 0-based ``int`` index, a 1-based number string
+                (``"1"``), or the choice value itself. Defaults to None.
+            password (bool, optional): Mask typed characters in the input
+                buffer. The live preview shows a count instead of values.
+                Defaults to False.
+            multiple (bool, optional): Allow inputing/selecting multiple values.
+                Defaults to False.
+            skip (bool, optional): Allow skipping the prompt with a special
+                "Skip" option. When enabled, pressing ``Escape`` returns None.
+                Defaults to False.
+            show_default (bool, optional): Display pre-selected values in
+                the header. Defaults to True.
+
+        Returns:
+            int | list[int] | None: One of the following values:
+
+                - ``response_type`` if ``multiple=False`` and confirmed.
+                - list[``response_type``] if ``multiple=True`` and confirmed.
+                - None if canceled via ``Escape``.
+        """
+        return cls(
+            prompt,
+            defaults=defaults,
+            password=password,
+            multiple=multiple,
+            skip=skip,
+            show_default=show_default,
+        )()
+
 
 class FloatPrompt(PromptBase[float]):
     """A prompt that returns a float.
@@ -977,6 +1075,106 @@ class FloatPrompt(PromptBase[float]):
 
     response_type = float
     validate_error_message: str = "Please enter at least one float"
+
+    # --- Lifecycle & Initialization ---
+    def __init__(
+        self,
+        prompt: str = "",
+        *,
+        defaults: str | int | float | list[str | int | float] | None = None,
+        password: bool = False,
+        multiple: bool = False,
+        skip: bool = False,
+        show_default: bool = True,
+    ):
+        """Initialize a new instance.
+
+        Args:
+            prompt (str, optional): Prompt text shown as the header.
+                Defaults to "".
+            defaults (str | int | float | list[str | int | float], optional):
+                Pre-selected values. Each item may be a 0-based ``int`` index,
+                a 1-based number string (``"1"``), or the choice value itself.
+                Defaults to None.
+            password (bool, optional): Mask typed characters in the input
+                buffer. The live preview shows a count instead of values.
+                Defaults to False.
+            multiple (bool, optional): Allow inputing/selecting multiple values.
+                Defaults to False.
+            skip (bool, optional): Allow skipping the prompt with a special
+                "Skip" option. When enabled, pressing ``Escape`` returns None.
+                Defaults to False.
+            show_default (bool, optional): Display pre-selected values in
+                the header. Defaults to True.
+        """
+        # Assign attributes
+        defaults = to_float_list(defaults)
+
+        # Continue the initialization chain
+        super().__init__(
+            prompt,
+            choices=None,
+            choices_repr=None,
+            defaults=defaults,
+            password=password,
+            multiple=multiple,
+            strict=False,
+            skip=skip,
+            case_sensitive=False,
+            truncate_length=None,
+            truncate_side="middle",
+            show_default=show_default,
+            show_choices=False,
+            show_column=False,
+        )
+
+    # --- Creation ---
+    @classmethod
+    def ask(
+        cls,
+        prompt: str = "",
+        *,
+        defaults: str | int | float | list[str | int | float] | None = None,
+        password: bool = False,
+        multiple: bool = False,
+        skip: bool = False,
+        show_default: bool = True,
+    ) -> float | list[float] | None:
+        """Construct and run the prompt, returning the result.
+
+        Args:
+            prompt (str, optional): Prompt text shown as the header.
+                Defaults to "".
+            defaults (str | int | float | list[str | int | float], optional):
+                Pre-selected values. Each item may be a 0-based ``int`` index,
+                a 1-based number string (``"1"``), or the choice value itself.
+                Defaults to None.
+            password (bool, optional): Mask typed characters in the input
+                buffer. The live preview shows a count instead of values.
+                Defaults to False.
+            multiple (bool, optional): Allow inputing/selecting multiple values.
+                Defaults to False.
+            skip (bool, optional): Allow skipping the prompt with a special
+                "Skip" option. When enabled, pressing ``Escape`` returns None.
+                Defaults to False.
+            show_default (bool, optional): Display pre-selected values in
+                the header. Defaults to True.
+
+        Returns:
+            float | list[float] | None: One of the following values:
+
+                - ``response_type`` if ``multiple=False`` and confirmed.
+                - list[``response_type``] if ``multiple=True`` and confirmed.
+                - None if canceled via ``Escape``.
+        """
+        return cls(
+            prompt,
+            defaults=defaults,
+            password=password,
+            multiple=multiple,
+            skip=skip,
+            show_default=show_default,
+        )()
 
 
 class PathPrompt(PromptBase[Path]):
@@ -994,7 +1192,7 @@ class PathPrompt(PromptBase[Path]):
         choices: list[str] | None = None,
         defaults: str | int | list[str | int] | None = None,
         password: bool = False,
-        multiselect: bool = False,
+        multiple: bool = False,
         strict: bool = False,
         skip: bool = False,
         case_sensitive: bool = True,
@@ -1019,7 +1217,7 @@ class PathPrompt(PromptBase[Path]):
             password (bool, optional): Mask typed characters in the input
                 buffer. The live preview shows a count instead of values.
                 Defaults to False.
-            multiselect (bool, optional): Allow selecting multiple values.
+            multiple (bool, optional): Allow selecting multiple values.
                 Defaults to False.
             strict (bool, optional): When True, only values present in
                 ``choices`` are accepted; free-form input is rejected.
@@ -1055,7 +1253,7 @@ class PathPrompt(PromptBase[Path]):
             choices=choices,
             defaults=defaults,
             password=password,
-            multiselect=multiselect,
+            multiple=multiple,
             strict=strict,
             skip=skip,
             case_sensitive=case_sensitive,
@@ -1075,7 +1273,7 @@ class PathPrompt(PromptBase[Path]):
         choices: list[str] | None = None,
         defaults: str | int | list[str | int] | None = None,
         password: bool = False,
-        multiselect: bool = False,
+        multiple: bool = False,
         strict: bool = False,
         skip: bool = False,
         case_sensitive: bool = True,
@@ -1100,7 +1298,7 @@ class PathPrompt(PromptBase[Path]):
             password (bool, optional): Mask typed characters in the input
                 buffer. The live preview shows a count instead of values.
                 Defaults to False.
-            multiselect (bool, optional): Allow selecting multiple values.
+            multiple (bool, optional): Allow selecting multiple values.
                 Defaults to False.
             strict (bool, optional): When True, only values present in
                 ``choices`` are accepted; free-form input is rejected.
@@ -1130,16 +1328,16 @@ class PathPrompt(PromptBase[Path]):
         Returns:
             str | list[str] | None: One of the following values:
 
-                - ``response_type`` if ``multiselect=False`` and confirmed.
-                - list[``response_type``] if ``multiselect=True`` and confirmed.
+                - ``response_type`` if ``multiple=False`` and confirmed.
+                - list[``response_type``] if ``multiple=True`` and confirmed.
                 - None if canceled via ``Escape``.
         """
-        _prompt = cls(
+        return cls(
             prompt,
             choices=choices,
             defaults=defaults,
             password=password,
-            multiselect=multiselect,
+            multiple=multiple,
             strict=strict,
             skip=skip,
             case_sensitive=case_sensitive,
@@ -1149,8 +1347,7 @@ class PathPrompt(PromptBase[Path]):
             show_default=show_default,
             show_choices=show_choices,
             show_column=show_column,
-        )
-        return _prompt()
+        )()
 
     # --- Visualization ---
     @override
@@ -1217,7 +1414,7 @@ class ConfirmPrompt(Prompt):
             choices=["Yes", "No"],
             defaults=defaults_,
             password=False,
-            multiselect=False,
+            multiple=False,
             strict=True,
             case_sensitive=False,
             show_default=show_default,
@@ -1248,8 +1445,7 @@ class ConfirmPrompt(Prompt):
             bool | None: True if the user confirmed Yes, False if the user,
                 None if canceled via Escape.
         """
-        _prompt = cls(prompt, defaults=defaults, show_default=show_default)
-        return _prompt()
+        return cls(prompt, defaults=defaults, show_default=show_default)()
 
     # --- Validation ---
     @override
@@ -1379,6 +1575,8 @@ class PromptContextMixin(ABC):
     # --- Prompting ---
     def prompt(self):
         """Run the interactive menu until completion."""
+        self._index = 0
+
         while True:
             self._display_prompt()
             if self._index == self.num_prompts:

@@ -39,6 +39,9 @@ class CoLIE_Predictor(Predictor):
         """Initialize ``self._model`` attribute."""
         self._model = None
 
+        # Update model's hidden_dim with eval_imgsz
+        self.config.model.hidden_dim = self.config.eval_imgsz.h
+
     @override
     def _init_transforms(self):
         """Initialize ``self._transforms`` attribute."""

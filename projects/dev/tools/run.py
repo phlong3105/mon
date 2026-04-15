@@ -57,8 +57,7 @@ def metric():
     ]
     metrics = [
         # "psnr", "ssim", "ssimc", "lpips", "niqe", "pi",
-        # "ciqs",
-        "giqs"
+        "ciqs",
     ]
 
     # 2. Define constants
@@ -153,25 +152,25 @@ def main(args: argparse.Namespace):
     # Benchmark
     elif args.benchmark:
         models = [
-            "clode",
-            "colie",
-            "pairlie",
-            "retinexnet",
-            "sci++",
-            "zero_dce",
-            "zero_ig",
+            # "clode",
+            # "colie",
+            # "pairlie",
+            # "retinexnet",
+            # "sci++",
+            # "zero_dce",
+            # "zero_ig",
             "slice",
         ]
         resolutions = [
             (128, 128),
             (256, 256),
             (512, 512),
-            (640, 480),
-            (1280, 720),
-            (1920, 1080),
-            (2560, 1440),
-            (3840, 2160),
-            (7680, 4320),
+            (640, 480),    # 480p
+            (1280, 720),   # 720p
+            (1920, 1080),  # 1080p
+            (2560, 1440),  # 2K
+            (3840, 2160),  # 4K
+            (7680, 4320),  # 8K
         ]
         for res in resolutions:
             benchmarker = Benchmarker.from_cli(

@@ -177,7 +177,7 @@ class Benchmarker(PromptContextMixin):
                 prompt="Models",
                 choices=MODELS.search(task=self.task),
                 defaults=None,
-                multiselect=True,
+                multiple=True,
                 show_column=True,
                 strict=True,
             )
@@ -260,6 +260,10 @@ class Benchmarker(PromptContextMixin):
                 # Run benchmark
                 stats = model.benchmark(imgsz=imgsz, num_runs=num_runs, verbose=False)
                 results[m] = stats
+
+                # Wait for the GPU to finish whatever it was doing when it crashed
+                torch.cuda.synchronize()
+                torch.cuda.empty_cache()
 
         return results
 

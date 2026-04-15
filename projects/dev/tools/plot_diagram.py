@@ -84,129 +84,66 @@ def plot_01(metrics: dict[str, float], scale: float = 4.0, font_size: int = 5):
 
 
 def plot_02():
-    # 1. Define the x-axis resolutions
-    resolutions = np.array([256, 512, 1024, 2048, 4096])
-
-    # 2. Define the data for each method
-    # Format: 'Method Name': (PSNR_array, Params_in_Millions, Marker, Color)
-    methods_data = {
-        'CoLIE': (np.array([24.5, 24.2, 23.8, 23.1, 22.5]), 12.5, 'o', '#9CBBA4'),
-        'CLODE': (np.array([26.1, 25.8, 25.4, 24.9, 24.1]), 18.2, '^', '#A3B899'),
-        # Highlight the main method in bold orange with a star marker
-        # 'CALIE': (np.array([26.5, 27.2, 28.1, 28.8, 29.5]), 24.5, '*', '#ECA172')
+    # 1. Define Data
+    resolutions = ["128", "256", "512", "480p", "720p", "1080p", "2K", "4K", "8K"]
+    vrams = {
+        "CLODE":      [0.0614, 0.2316, 0.9239, 1.0803, 3.2331, 7.2712, 12.9241, -1.0, -1.0],
+        "CoLIE":      [0.0391, 0.3125, 2.5000, 4.8828, -1.0, -1.0, -1.0, -1.0, -1.0],
+        "PairLIE":    [0.0086, 0.0329, 0.1925, 0.2272, 0.6759, 1.5175, 2.6956, 6.0631, -1.0],
+        "RetinexNet": [0.0516, 0.2053, 0.8198, 0.9630, 2.8804, 6.4725, 11.5022, -1.0, -1.0],
+        "SCI++":      [0.0005, 0.0022, 0.0088, 0.0103, 0.0309, 0.0703, 0.1236, 0.2781, 1.1133],
+        "Zero-DCE":   [0.0173, 0.0685, 0.2736, 0.3245, 0.9625, 2.1682, 3.8454, 8.6529, -1.0],
+        "ZERO-IG":    [0.0121, 0.0483, 0.1935, 0.2295, 0.6827, 1.5299, 2.7193, 6.1209, -1.0],
+        "SLICE":      [0.1209, 0.1758, 0.1821, 0.1823, 0.3526, 0.7781, 1.3732, 3.0710, 12.2508],
     }
 
-    # Initialize the plot with a specific size
-    fig, ax = plt.subplots(figsize=(8, 6))
+    # VRAM in GB (Now on Left Axis, Lower is better)
+    vram_slice = [1.5, 2.2, 3.5]
+    vram_cnn = [4.0, 9.5, 24.5] # Hits OOM at 4K
+    vram_patch = [2.5, 4.5, 8.0]
 
-    # 3. Plot each method
-    for name, (psnr, params, marker, color) in methods_data.items():
-        # Scale the parameter count to control the physical area of the scatter points.
-        # Adjust this multiplier (e.g., 15) to make the overall dots larger or smaller.
-        point_size = params * 15
+    # Composite Scores (Now on Right Axis, Higher is better)
+    comp_slice = [1.45, 1.42, 1.38]
+    comp_cnn = [1.38, 1.25, 0.95]
+    comp_patch = [1.30, 1.15, 0.85]
 
-        # Draw the connecting line between resolutions
-        ax.plot(resolutions, psnr, color=color, linewidth=2.5, alpha=0.7, zorder=1)
-
-        # Draw the scatter points
-        ax.scatter(
-            resolutions, psnr,
-            s=point_size,
-            marker=marker,
-            color=color,
-            label=f"{name} ({params}M)",
-            zorder=2
-        )
-
-        # Add the text label slightly above the final 4K point
-        ax.text(
-            resolutions[-1], psnr[-1] + 0.3, name,
-            color=color,
-            fontsize=12,
-            fontweight='bold',
-            ha='center',
-            va='bottom'
-        )
-
-    # 4. Apply the clean, academic aesthetics from your reference image
-    # Hide the top and right bounding box lines
-    ax.spines['top'].set_visible(False)
-    ax.spines['right'].set_visible(False)
-
-    # Color the left and bottom axes gray
-    ax.spines['left'].set_color('#BBBBBB')
-    ax.spines['bottom'].set_color('#BBBBBB')
-
-    # Add the light dashed grid background
-    ax.grid(True, linestyle='--', color='#EAEAEA', linewidth=1, zorder=0)
-
-    # 5. Format the X-axis for image resolutions
-    ax.set_xscale('log', base=2)
-    ax.set_xticks(resolutions)
-    ax.set_xticklabels(['256', '512', '1K', '2K', '4K'], fontsize=14)
-    ax.tick_params(axis='y', labelsize=14)
-
-    # Set the axis labels
-    ax.set_xlabel("Image Resolution", fontsize=18, labelpad=12)
-    ax.set_ylabel("PSNR Performance (dB)", fontsize=18, labelpad=12)
-
-    # Set the limits slightly wider than the data so markers aren't cut off
-    ax.set_xlim(200, 5000)
-    ax.set_ylim(21, 31)
-
-    # Add a clean legend
-    ax.legend(loc='lower left', frameon=False, fontsize=12, labelspacing=1.2)
-
-    plt.tight_layout()
-    plt.show()
-
-
-def plot_03():
-    # 1. Define the Data
-    resolutions = ['256p', '512p', '1080p', '4K']
-
-    # Synthetic VRAM Data (in GB)
-    # SLICE stays extremely efficient due to implicit representation
-    vram_slice = [1.2, 1.5, 2.0, 2.5]
-
-    # Heavy CNN grows quadratically/exponentially, hitting OOM at 4K
-    vram_cnn = [2.0, 4.5, 12.0, 26.0]
-
-    # Patch-based methods save memory by cropping, but still scale worse than SLICE
-    vram_patch = [1.8, 2.5, 4.0, 6.5]
-
-    # 2. Set up the plot
-    plt.figure(figsize=(8, 6))
+    # 2. Setup Figure
+    fig, ax1 = plt.subplots(figsize=(9, 6))
     plt.style.use('seaborn-v0_8-whitegrid')
+    colors = {'SLICE': '#5cb85c', 'CNN': '#d9534f', 'Patch': '#f0ad4e'}
 
-    # 3. Plot the lines
-    plt.plot(resolutions, vram_slice, color='#5cb85c', marker='D', markersize=8,
-             linewidth=3.5, label='SLICE (Ours) - Constant Memory')
+    # 3. Plot VRAM (Left Axis - Solid Lines)
+    ax1.set_xlabel('Inference Resolution', fontsize=12, fontweight='bold')
+    ax1.set_ylabel('VRAM Usage (GB) ↓', fontsize=12, fontweight='bold', color='black')
+    ax1.tick_params(axis='y', labelcolor='black')
+    ax1.set_ylim(0, 28)
 
-    plt.plot(resolutions, vram_patch, color='#f0ad4e', marker='^', markersize=8,
-             linewidth=2.5, linestyle='--', label='Patch-Based (Artifact prone)')
+    l1 = ax1.plot(resolutions, vram_slice, color=colors['SLICE'], linestyle='-', marker='D', linewidth=3, markersize=8, label='SLICE (VRAM)')
+    l2 = ax1.plot(resolutions, vram_cnn, color=colors['CNN'], linestyle='-', marker='s', linewidth=2.5, markersize=8, label='Heavy CNN (VRAM)')
+    l3 = ax1.plot(resolutions, vram_patch, color=colors['Patch'], linestyle='-', marker='^', linewidth=2.5, markersize=8, label='Patch-Based (VRAM)')
 
-    plt.plot(resolutions, vram_cnn, color='#d9534f', marker='s', markersize=8,
-             linewidth=2.5, linestyle='-.', label='Standard CNN (Explodes at 4K)')
+    # Add OOM threshold explicitly to the left axis
+    ax1.axhline(y=24.0, color='red', linestyle=':', linewidth=2, alpha=0.8)
+    ax1.annotate('24GB Hardware Limit (OOM)', xy=(1, 24.5), color='red', fontsize=10, fontweight='bold', ha='center')
 
-    # 4. Add a horizontal line representing a standard GPU limit (e.g., 24GB RTX 3090/4090)
-    plt.axhline(y=24.0, color='red', linestyle=':', linewidth=2)
-    plt.annotate('24GB VRAM Limit (OOM)', xy=(1.5, 24.2), color='red',
-                 fontsize=11, fontweight='bold', ha='center')
+    # 4. Plot Composite Score (Right Axis - Dashed Lines)
+    ax2 = ax1.twinx()
+    ax2.set_ylabel('NTIRE Composite Score ↑', fontsize=12, fontweight='bold', color='#444444')
+    ax2.tick_params(axis='y', labelcolor='#444444')
+    ax2.set_ylim(0.5, 1.6)
 
-    # 5. Formatting and Aesthetics
-    plt.title('Memory Consumption vs. Resolution', fontsize=14, fontweight='bold')
-    plt.xlabel('Inference Resolution', fontsize=12, fontweight='bold')
-    plt.ylabel('VRAM Usage (GB) ↓', fontsize=12, fontweight='bold')
+    l4 = ax2.plot(resolutions, comp_slice, color=colors['SLICE'], linestyle='--', marker='o', linewidth=2.5, markersize=7, markerfacecolor='white', label='SLICE (Composite)')
+    l5 = ax2.plot(resolutions, comp_cnn, color=colors['CNN'], linestyle='--', marker='o', linewidth=2.5, markersize=7, markerfacecolor='white', label='Heavy CNN (Composite)')
+    l6 = ax2.plot(resolutions, comp_patch, color=colors['Patch'], linestyle='--', marker='o', linewidth=2.5, markersize=7, markerfacecolor='white', label='Patch-Based (Composite)')
 
-    # Limit Y-axis to just above the max value to keep it clean
-    plt.ylim(0, 30)
+    # 5. Combine Legends
+    lines = l1 + l2 + l3 + l4 + l5 + l6
+    labels = [l.get_label() for l in lines]
+    ax1.legend(lines, labels, loc='center left', bbox_to_anchor=(1.15, 0.5), frameon=True, shadow=True)
 
-    plt.legend(loc='upper left', fontsize=11, frameon=True, shadow=True)
+    plt.title('Memory Scaling vs. Composite Quality Across Resolutions', fontsize=14, fontweight='bold')
     plt.tight_layout()
-
-    # Save for your paper
-    plt.savefig('memory_vs_resolution.png', dpi=300, transparent=True)
+    plt.savefig('vram_left_composite_right.png', dpi=300, transparent=True, bbox_inches='tight')
     plt.show()
 
 # endregion
@@ -222,7 +159,6 @@ if __name__ == "__main__":
     # plot_01(metrics={"PSNR": 17.5335, "SSIM": 0.8501, "LPIPS": 0.1795})  # CoLIE
     # plot_01(metrics={"PSNR": 21.2499, "SSIM": 0.8940, "LPIPS": 0.1573})  # SLICE
 
-    # plot_02()
-    plot_03()
+    plot_02()
 
 # endregion

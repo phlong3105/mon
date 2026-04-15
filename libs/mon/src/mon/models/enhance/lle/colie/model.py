@@ -21,6 +21,7 @@ __all__ = [
 from typing import Any, override
 
 import torch
+from torch import nn
 from torch.nn import functional as F
 from torch.optim import Adam, Optimizer
 
@@ -107,21 +108,9 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
         self.add_layers = add_layers
         self.epochs = epochs
         self.device = device
+        self.optimizer = optimizer
 
-        # Define network
-        self.model = ResidualINR(
-            patch_dim=self.window_size ** 2,
-            hidden_dim=self.hidden_dim,
-            num_layers=self.num_layers,
-            add_layer=self.add_layers,
-        ).to(self.device)
-
-        self.optimizer = self._build_optimizer(optimizer=optimizer)
-
-        # Store default weights
-        self._default_state_dict = self.model.state_dict()
-
-    def _build_optimizer(self, optimizer: DictLike | None = None) -> Optimizer:
+    def _build_optimizer(self, model: nn.Module, optimizer: DictLike | None = None) -> Optimizer:
         """Build and return the optimizer for the INR model.
 
         Args:
@@ -130,9 +119,9 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
         """
         # Define optimizer
         if optimizer is not None:
-            return OPTIMIZERS.build(params=self.model.parameters(), **optimizer)
+            return OPTIMIZERS.build(params=model.parameters(), **optimizer)
         else:
-            return Adam(self.model.parameters(), lr=1e-5, betas=(0.9, 0.999), weight_decay=3e-4)
+            return Adam(model.parameters(), lr=1e-5, betas=(0.9, 0.999), weight_decay=3e-4)
 
     # --- Callable & Context Manager ---
     @override
@@ -150,8 +139,15 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
         down_size = self.hidden_dim
         device = self.device
 
-        # 1. Reset the network weights to their initial state
-        self.model.load_state_dict(self._default_state_dict, strict=False)
+        # 1. Define the INR network
+        model = ResidualINR(
+            patch_dim=window_size ** 2,
+            hidden_dim=down_size,
+            num_layers=self.num_layers,
+            add_layer=self.add_layers,
+        ).to(device)
+
+        optimizer = self._build_optimizer(model=model, optimizer=self.optimizer)
 
         # 2. Move inputs to the corresponding device
         image = data["image"].to(device)
@@ -180,10 +176,10 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
         best_epoch = 0
         best_state_dict = None
 
-        self.train()
+        model.train()
         for i in range(epochs):
             # 6.1. Forward pass
-            lr_image_i_res = self.model(patches, coords)
+            lr_image_i_res = model(patches, coords)
             lr_image_i_res = lr_image_i_res.view(1, 1, down_size, down_size)
 
             # 6.2. Retinex reconstruction
@@ -198,24 +194,24 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
             loss = l_spa + (20 * l_tv) + (8 * l_exp) + (5 * l_sparsity)
 
             # 6.4. Backward pass
-            self.optimizer.zero_grad()
+            optimizer.zero_grad()
             loss.backward()
-            self.optimizer.step()
+            optimizer.step()
 
             # 6.5. Save best weights
             if loss < best_loss:
                 best_loss = loss
                 best_epoch = i
-                best_state_dict = self.model.state_dict()
-        self.optimizer.zero_grad(set_to_none=True)  # Clean up to prevent memory leaks
+                best_state_dict = model.state_dict()
+        optimizer.zero_grad(set_to_none=True)  # Clean up to prevent memory leaks
 
         # 7. Log
         if self.verbose:
             log(f"Best Epoch: {(best_epoch + 1):03} | Loss = {best_loss:.6f}")
 
         # 8. Final inference
-        self.model.load_state_dict(best_state_dict)
-        self.eval()
+        model.load_state_dict(best_state_dict)
+        model.eval()
         with torch.no_grad():
             # 8.1. Forward pass
             lr_image_i_res = self.model(patches, coords)
@@ -259,8 +255,16 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
         """
         imgsz = Size.from_value(imgsz)
         window_size = self.window_size
-        down_size = self.hidden_dim
-        device = next(self.parameters()).device
+        down_size = imgsz.h
+        device = self.device
+
+        # Define custom model
+        model = ResidualINR(
+            patch_dim=self.window_size ** 2,
+            hidden_dim=down_size,
+            num_layers=self.num_layers,
+            add_layer=self.add_layers,
+        ).to(device)
 
         # Create dummy inputs
         dummy_input = torch.randn(1, 1, down_size, down_size).to(device)
@@ -273,7 +277,7 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
 
         # Benchmark the model
         return benchmark(
-            model=self.model,
+            model=model,
             inputs=inputs,
             num_runs=num_runs,
             copy=False,

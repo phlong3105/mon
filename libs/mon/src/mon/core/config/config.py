@@ -186,9 +186,9 @@ ARGUMENTS = Box({
     "eval_imgsz": {
         "default": None,
         "type": _int_or_none,
-        "help": "Evaluation image size.",
+        "help": "Evaluation image size (H, W).",
         "prompt_only": False,
-        "prompt_text": "Eval Image Size",
+        "prompt_text": "Eval Image Size (H, W)",
     },
     "eval_resize": {
         "default": False,
@@ -1354,9 +1354,11 @@ class ConfigContext(Config, PromptContextMixin):
     @override
     def prompt(self) -> Box:
         """Run the interactive menu until completion."""
+        self._index = 0
+
         while True:
             self._display_prompt()
-            if self._index == self.__len__():
+            if self._index == self.num_prompts:
                 return self.config
             self._next()
 
@@ -1411,7 +1413,7 @@ class ConfigContext(Config, PromptContextMixin):
                 defaults=self.config_file,
                 truncate_side="middle",
                 commonpath=self.root,
-                show_column=True,
+                show_column=False,
             )
             # First, update from a new config file
             self.update_from_yaml(self.config_file)
@@ -1435,7 +1437,7 @@ class ConfigContext(Config, PromptContextMixin):
                 skip=True,
                 truncate_side="middle",
                 commonpath=self.root,
-                show_column=True,
+                show_column=False,
             )
         if self._index == 6:
             # Data
@@ -1446,7 +1448,7 @@ class ConfigContext(Config, PromptContextMixin):
                     prompt=ARGUMENTS.data.prompt_text,
                     choices=DATASETS.search(self.task, self.mode),
                     defaults=self.data,
-                    multiselect=True,
+                    multiple=True,
                     show_column=True,
                 )
         if self._index == 7:
@@ -1469,7 +1471,9 @@ class ConfigContext(Config, PromptContextMixin):
                 self._next()
             self.eval_imgsz = IntPrompt.ask(
                 prompt=ARGUMENTS.eval_imgsz.prompt_text,
-                defaults=self.eval_imgsz.h if self.eval_imgsz else None,
+                defaults=self.eval_imgsz.hw if self.eval_imgsz else None,
+                multiple=True,
+                show_default=True,
             )
         if self._index == 10:
             # Eval Resize
@@ -1543,7 +1547,7 @@ class ConfigContext(Config, PromptContextMixin):
     @property
     def num_prompts(self) -> int:
         """Return the total number of interactive steps."""
-        return 20
+        return 19
 
 # endregion
 

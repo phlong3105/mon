@@ -10,14 +10,14 @@ based on various criteria such as exposedness, contrast, and saturation.
 from __future__ import annotations
 
 __all__ = [
-    "GeometricImageQualityScore",
     "ImageQualityAssessment",
 ]
 
-from pyiqa.archs import _lazy_import_arch
 import pyiqa.default_model_configs
 import torch
+from pyiqa.archs import _lazy_import_arch
 from pyiqa.archs.lpips_arch import LPIPS
+from pyiqa.archs.niqe_arch import NIQE
 from pyiqa.archs.psnr_arch import PSNR
 from pyiqa.archs.ssim_arch import SSIM
 from pyiqa.utils.registry import ARCH_REGISTRY
@@ -148,7 +148,15 @@ class ImageQualityAssessment(Metric):
 
 @METRICS.register(name="ciqs")
 class CompositeImageQualityScore(Metric):
-    """Composite Image Quality Score (CIQS) metric."""
+    """Composite Image Quality Score (CIQS) metric from NTIRE 2025 Challenge on
+    Low Light Image Enhancement.
+
+    Final rank = (0.5 * PSNR) + (0.5 * SSIM) + (0.4 * LPIPS) + (0.2 * NIQE)
+
+    References:
+        - Paper: "NTIRE 2025 Challenge on Low Light Image Enhancement: Methods
+          and Results," CVPRW 2025.
+    """
 
     metric_opts: dict = {}
     metric_mode: str = "FR"             # ["FR" or "NR"]
@@ -164,6 +172,13 @@ class CompositeImageQualityScore(Metric):
         self.psnr = PSNR().to(device)
         self.ssim = SSIM().to(device)
         self.lpips = LPIPS().to(device)
+        self.niqe = NIQE().to(device)
+
+        # Define weights
+        self.w_psnr = 0.5
+        self.w_ssim = 0.5
+        self.w_lpips = 0.4
+        self.w_niqe = 0.2
 
     # --- Callable & Context Manager ---
     def forward(self, input: Tensor, target: Tensor, *args, **kwargs) -> Tensor:
@@ -182,78 +197,24 @@ class CompositeImageQualityScore(Metric):
         psnr = self.psnr(input, target)
         ssim = self.ssim(input, target)
         lpips = self.lpips(input, target)
+        niqe = self.niqe(input)
 
         # Normalize metrics
-        epsilon = 1e-6
         psnr_min = torch.zeros_like(psnr)
-        psnr_max = self.psnr(target, target)
-        psnr = (psnr - psnr_min) / (psnr_max - psnr_min + epsilon)
-
+        psnr_max = torch.ones_like(psnr) * 40.0
+        psnr = (psnr - psnr_min) / (psnr_max - psnr_min + 1e-6)
         lpips = 1.0 - lpips
+        niqe = 1.0 - niqe
 
         # Clamp values to avoid absolute zero
         psnr = torch.clamp(psnr, 0.0, 1.0)
         ssim = torch.clamp(ssim, 0.0, 1.0)
         lpips = torch.clamp(lpips, 0.0, 1.0)
+        niqe = torch.clamp(niqe, 0.0, 1.0)
 
         # Calculate the combined metric
-        ciqs = (psnr + ssim + lpips) / 3.0
+        ciqs = (self.w_psnr * psnr) + (self.w_ssim * ssim) + (self.w_lpips * lpips) + (self.w_niqe * niqe)
         return ciqs
-
-
-@METRICS.register(name="giqs")
-class GeometricImageQualityScore(Metric):
-    """Geometric Image Quality Score (GIQS) metric."""
-
-    metric_opts: dict = {}
-    metric_mode: str = "FR"             # ["FR" or "NR"]
-    lower_better: bool = False          # True if lower score is better
-    score_range: str = "0, 1"           # (min, max)
-
-    # --- Lifecycle & Initialization ---
-    def __init__(self, device: torch.device = torch.device("cpu")):
-        """Initialize a new instance."""
-        super().__init__(device=device)
-
-        # Define components
-        self.psnr = PSNR().to(device)
-        self.ssim = SSIM().to(device)
-        self.lpips = LPIPS().to(device)
-
-    # --- Callable & Context Manager ---
-    def forward(self, input: Tensor, target: Tensor, *args, **kwargs) -> Tensor:
-        """Calculate the metric between ``input`` and ``target``.
-
-        Args:
-            input (Tensor): Input (predictions) tensor of shape (B, C, H, W)
-                and values ranging from 0.0 to 1.0.
-            target (Tensor): Target (ground truth) tensor of shape (B, C, H, W)
-                and values ranging from 0.0 to 1.0.
-
-        Returns:
-            Tensor: Metric value.
-        """
-        # Compute individual metrics
-        psnr = self.psnr(input, target)
-        ssim = self.ssim(input, target)
-        lpips = self.lpips(input, target)
-
-        # Normalize metrics
-        epsilon = 1e-6
-        psnr_min = torch.zeros_like(psnr)
-        psnr_max = self.psnr(target, target)
-        psnr = (psnr - psnr_min) / (psnr_max - psnr_min + epsilon)
-
-        lpips = 1.0 - lpips
-
-        # Clamp values to avoid absolute zero
-        psnr = torch.clamp(psnr, 0.0, 1.0)
-        ssim = torch.clamp(ssim, 0.0, 1.0)
-        lpips = torch.clamp(lpips, 0.0, 1.0)
-
-        # Calculate the combined metric
-        giqs = torch.pow((psnr * ssim * lpips), (1.0 / 3.0))
-        return giqs
 
 # endregion
 

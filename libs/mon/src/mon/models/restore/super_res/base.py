@@ -15,7 +15,8 @@ __all__ = [
 from abc import ABC
 from typing import Any, override
 
-from mon.core import Size
+from mon.core import Size, SizeLike
+from mon.metrics import benchmark, create_dummy_image
 from mon.nn import Model
 
 
@@ -99,6 +100,23 @@ class SuperResolutionModel(Model, ABC):
             outputs = {k: v for k, v in outputs.items() if k in self.provides}
 
         return outputs
+
+    # --- Benchmarks ---
+    @override
+    def benchmark(self, imgsz: SizeLike, num_runs: int = 10, verbose: bool = True) -> dict[str, float]:
+        """Perform a single forward step of the model to benchmark its performance.
+
+        Args:
+            imgsz (SizeLike): Input image size.
+            num_runs (int, optional): Number of runs to average for benchmarking.
+                Defaults to 10.
+            verbose (bool, optional): Whether to log the results. Defaults to True.
+
+        Returns:
+            dict[str, float]: A dictionary containing the benchmark results,
+                such as latency, FLOPs, and parameter count.
+        """
+        pass
 
 # endregion
 

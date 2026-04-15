@@ -26,7 +26,7 @@ current_dir = current_file.parents[0]
 
 def main(args: argparse.Namespace):
     # 1. Define arguments
-    metrics = ["psnr", "ssim", "ssimc", "lpips", "niqe", "pi", "ciqs", "giqs"]
+    metrics = ["psnr", "ssim", "ssimc", "lpips", "niqe", "pi", "ciqs", "ciqs"]
 
     # 2. Measure metrics
     iqa = InstanceIQAEvaluator.from_cli(
