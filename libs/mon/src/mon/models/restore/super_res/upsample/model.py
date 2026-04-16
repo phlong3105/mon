@@ -20,10 +20,10 @@ from numpy import ndarray
 from torch import Tensor
 from torchvision.transforms import functional as F_tv, InterpolationMode
 
-from mon.core import MODELS, Path, Size, Task, UPSAMPLERS
+from mon.core import Backend, BackendLike, MODELS, Path, Size, Task, UPSAMPLERS
 from mon.models.restore.super_res.base import SuperResolutionModel
 from mon.nn import ModelRegisterMixin
-from mon.ops import guided_filter_upsample
+from mon.ops import guided_filter_upsample, to_image_array, to_image_tensor
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -43,16 +43,25 @@ class InterUpsample(ModelRegisterMixin, SuperResolutionModel):
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
-    def __init__(self, verbose: bool = True, *args, **kwargs):
+    def __init__(
+        self,
+        backend: BackendLike = Backend.CV2,
+        verbose: bool = True,
+        *args, **kwargs
+    ):
         """Initialize a new instance.
 
         Args:
+            backend (BackendLike, optional): Backend to use for image resizing.
+                Can be either 'cv2' for OpenCV or 'torchvision' for PyTorch's
+                torchvision. Defaults to Backend.CV2.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         super().__init__()
 
         # Assign attributes
         self.verbose = verbose
+        self.backend = Backend(backend)
 
     # --- Callable & Context Manager ---
     @override
@@ -68,8 +77,19 @@ class InterUpsample(ModelRegisterMixin, SuperResolutionModel):
         x_lr = data["x_lr"]
         imgsz: Size = data["imgsz"]
 
-        # 1. Tensor / TorchVision
-        if isinstance(x_lr, Tensor):
+        # 1. Numpy / OpenCV
+        if self.backend == Backend.CV2:
+            if isinstance(x_lr, Tensor):
+                x_lr = to_image_array(x_lr)
+            _, _, c = x_lr.shape
+            is_depth = (c == 1)
+            mode = cv2.INTER_NEAREST if is_depth else cv2.INTER_CUBIC
+            x_hr = cv2.resize(src=x_lr, dsize=imgsz.wh, interpolation=mode)
+
+        # 2. Tensor / TorchVision
+        elif self.backend == Backend.TORCHVISION:
+            if isinstance(x_lr, ndarray):
+                x_lr = to_image_tensor(x_lr)
             _, c, _, _ = x_lr.shape
             is_depth = (c == 1)
             mode = InterpolationMode.NEAREST_EXACT if is_depth else InterpolationMode.BICUBIC
@@ -80,14 +100,7 @@ class InterUpsample(ModelRegisterMixin, SuperResolutionModel):
                 antialias=False,
             )
 
-        # 2. Numpy / OpenCV
-        elif isinstance(x_lr, ndarray):
-            _, _, c = x_lr.shape
-            is_depth = (c == 1)
-            mode = cv2.INTER_NEAREST if is_depth else cv2.INTER_CUBIC
-            x_hr = cv2.resize(src=x_lr, dsize=imgsz.wh, interpolation=mode)
-
-        # 3. Error: Unsupported type
+        # 3. Error: Unsupported backend
         else:
             raise ValueError(
                 f"Expected 'x_lr' to be a tensor or ndarray, "

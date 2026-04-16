@@ -11,6 +11,7 @@ from __future__ import annotations
 __all__ = [
     "AlbumTargetType",
     "BBoxFormat",
+    "Backend",
     "ConfigExtension",
     "DeviceType",
     "ImageExtension",
@@ -172,6 +173,26 @@ class Split(MultiStrEnum):
     PREDICT = "predict"
 
 
+class Precision(MultiStrEnum):
+    """Enum for common numerical precisions."""
+
+    FP32 = "fp32", "default"  # 32-bit floating point
+    FP16 = "fp16"             # 16-bit floating point
+    FP8 = "fp8"               # 8-bit floating point
+    INT8 = "int8"             # 8-bit integer
+    INT4 = "int4"             # 4-bit integer
+
+
+class Backend(MultiStrEnum):
+    """Enum for common backends."""
+
+    CV2 = "cv2", "opencv", "default"
+    TORCH = "torch"
+    TORCHVISION = "torchvision"
+
+
+# --- Models ---
+
 class Task(MultiStrEnum):
     """Enum for common ML tasks."""
 
@@ -222,16 +243,6 @@ class Task(MultiStrEnum):
     # -- High-Level --
     CLASSIFY = "classify", "classification"
     DETECT = "detect", "object_detection"
-
-
-class Precision(MultiStrEnum):
-    """Enum for common numerical precisions."""
-
-    FP32 = "fp32", "default"  # 32-bit floating point
-    FP16 = "fp16"             # 16-bit floating point
-    FP8 = "fp8"               # 8-bit floating point
-    INT8 = "int8"             # 8-bit integer
-    INT4 = "int4"             # 4-bit integer
 
 # endregion
 

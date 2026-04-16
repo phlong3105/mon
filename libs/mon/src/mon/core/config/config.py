@@ -336,6 +336,10 @@ class Config:
         # --- Prediction ---
         "data": [],
         "eval_imgsz": False,
+        "eval_resize": False,
+        "upsampler": {
+            "name": None,
+        },
         "benchmark": False,
 
         # --- Saving & Visualization ---
@@ -655,15 +659,18 @@ class Config:
         self._config.eval_resize = value
 
     @property
-    def upsampler_name(self) -> str:
+    def upsampler_name(self) -> str | None:
         """Return the upsampling method."""
-        return self._config.upsampler.name
+        if self._config.upsampler is None:
+            return None
+        else:
+            return self._config.upsampler.name
 
     @upsampler_name.setter
     def upsampler_name(self, value: str | None):
         """Set the upsampling method."""
         if is_valid_str(value):
-            self._config.upsampler.name = value
+            self._config.upsampler["name"] = value
 
     @property
     def benchmark(self) -> bool:

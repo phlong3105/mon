@@ -11,6 +11,7 @@ from __future__ import annotations
 
 __all__ = [
     "BBoxFormatLike",
+    "BackendLike",
     "DeviceLike",
     "DictLike",
     "Float2",
@@ -45,7 +46,7 @@ from numpy import ndarray
 from torch import Tensor
 from typing_extensions import TypeAlias
 
-from .dtype import BBoxFormat, MemoryUnit, RunMode, Split, Task
+from .dtype import Backend, BBoxFormat, MemoryUnit, RunMode, Split, Task
 from .path import Path
 
 T = TypeVar("T")
@@ -80,6 +81,7 @@ MISSING = object()
 StrOrList: TypeAlias = Union[str, list[str]]
 
 BBoxFormatLike: TypeAlias = Union[BBoxFormat, str]
+BackendLike: TypeAlias = Union[Backend, str]
 DeviceLike: TypeAlias = Union[torch.device, str, int]
 DictLike: TypeAlias = Union[Box, dict[str, Any]]
 MemoryUnitLike: TypeAlias = Union[MemoryUnit, str]

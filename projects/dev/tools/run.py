@@ -84,7 +84,16 @@ def metric(args: argparse.Namespace):
         # "pairlie": ["pairlie_sice"],
         # "retinexnet": ["retinexnet_lol_v1"],
         # "sci": ["sci++"],
-        # "zero_dce": ["zero_dce_sice_me"],
+        "zero_dce": [
+            "zero_dce_sice_me_128",
+            "zero_dce_sice_me_256",
+            "zero_dce_sice_me_512",
+            "zero_dce_sice_me_480p",
+            "zero_dce_sice_me_720p",
+            "zero_dce_sice_me_1080p",
+            "zero_dce_sice_me_2k",
+            "zero_dce_sice_me_4k",
+        ],
         # "zero_ig": ["zero_ig_lol"],
         "slice": [
             "slice_dopri5_sice_me_v4",

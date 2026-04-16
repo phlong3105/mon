@@ -20,6 +20,7 @@ model:
   add_layers: 2
   weights: ~  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
+  verbose: False
 
 # --- Data ---
 train_dataloader:

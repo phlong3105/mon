@@ -12,6 +12,7 @@ __all__ = [
     "Predictor",
 ]
 
+import gc
 from abc import ABC, abstractmethod
 from typing import Any
 
@@ -116,6 +117,7 @@ class Predictor(Runner, ABC):
             transforms=self.transforms,
             keep_original=self.keep_original,
             batch_size=1,
+            num_workers=1,
         )
 
         # Validate
@@ -193,7 +195,7 @@ class Predictor(Runner, ABC):
                 description=f"[bright_yellow]Data"
             ):
                 # 6.1. Update config
-                config.infer_data = data
+                self.config.infer_data = data
 
                 # 6.2. Predict data
                 timers = TimeProfiler()
@@ -201,7 +203,7 @@ class Predictor(Runner, ABC):
                 timers.total.tock()
 
                 # 6.3. Clean up
-                config.infer_data = None
+                self.config.infer_data = None
 
                 # 6.4. Finish
                 timers.print()
@@ -238,6 +240,7 @@ class Predictor(Runner, ABC):
                 self._save_debug(datapoint=datapoint, outputs=outputs)
             timers.postprocess.tock()
 
+            gc.collect()
             pbar.update(task, advance=1)
         pbar.remove_task(task)
 

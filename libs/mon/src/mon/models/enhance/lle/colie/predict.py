@@ -75,7 +75,11 @@ class CoLIE_Predictor(Predictor):
 
         # 3. Inference
         timers.infer.tick()
-        model = colie(device=device, optimizer=config.optimizer, **config.model)
+        model = colie(
+            device=device,
+            optimizer=config.optimizer,
+            **config.model
+        ).to(device)
         outputs = model(
             data={
                 "image": image,

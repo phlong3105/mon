@@ -214,20 +214,20 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
         model.eval()
         with torch.no_grad():
             # 8.1. Forward pass
-            lr_image_i_res = self.model(patches, coords)
+            lr_image_i_res = model(patches, coords)
             lr_image_i_res = lr_image_i_res.view(1, 1, down_size, down_size)
             # 8.2. Retinex reconstruction
             lr_image_i_fixed = lr_image_i_res + lr_image_i
             lr_image_r = lr_image_i / (lr_image_i_fixed + 1e-4)
             # 8.3. Upsample and convert back to RGB
-            image_r = guided_filter_upsample(lr_image_r, lr_image_i, image_i)
+            image_r = guided_filter_upsample(lr_image_r, image_i, lr_image_i)
             image_hsv_fixed = replace_v_component(image_hsv, image_r)
             image_rgb_fixed = color_func.to_rgb(image_hsv_fixed)
             image_rgb_fixed = image_rgb_fixed.clamp(0.0, 1.0)
 
         # 9. Return final and intermediate results for debugging
-        image_i_res = guided_filter_upsample(lr_image_i_res, lr_image_i, image_i)
-        image_i_fixed = guided_filter_upsample(lr_image_i_fixed, lr_image_i, image_i)
+        image_i_res = guided_filter_upsample(lr_image_i_res, image_i, lr_image_i)
+        image_i_fixed = guided_filter_upsample(lr_image_i_fixed, image_i, lr_image_i)
         return {
             "enhanced": image_rgb_fixed,
             "image_h": image_h,

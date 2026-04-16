@@ -42,10 +42,11 @@ class DataLoader(DataLoader_):
         dataset: Dataset,
         batch_size: int = 1,
         shuffle: bool = False,
-        num_workers: int = 4,
+        num_workers: int = 1,
         collate_fn: Any = None,
         pin_memory: bool = True,
         drop_last: bool = False,
+        persistent_workers: bool = True,
         *args, **kwargs
     ):
         """Initialize a new instance.
@@ -57,7 +58,7 @@ class DataLoader(DataLoader_):
             shuffle (bool, optional): If True, the data will be reshuffled at
                 every epoch. Defaults to False.
             num_workers (int, optional): Number of subprocesses to use for data
-                loading. Defaults to 4.
+                loading. Defaults to 1.
             collate_fn (Callable, optional): Merges a list of samples to form a
                 mini-batch. Defaults to None.
             pin_memory (bool, optional): If True, the data loader will copy
@@ -90,6 +91,7 @@ class DataLoader(DataLoader_):
             drop_last=drop_last,
             collate_fn=collate_fn,
             pin_memory=pin_memory,
+            persistent_workers=persistent_workers,
             *args, **kwargs
         )
 
