@@ -20,6 +20,7 @@ from typing import Any
 import pyiqa
 import torch
 from rich.progress import Progress
+from tensordict import TensorDict
 from torch.autograd import Variable
 from torch.nn import functional as F
 from torch.optim import Adam
@@ -67,7 +68,7 @@ class SCI_Trainer(Trainer):
 
     # --- Training ---
     @override
-    def _train_epoch(self, epoch: int, pbar: Progress) -> dict[str, Any]:
+    def _train_epoch(self, epoch: int, pbar: Progress) -> TensorDict:
         """Train an epoch.
 
         Args:
@@ -75,7 +76,7 @@ class SCI_Trainer(Trainer):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict[str, Any]: A dictionary containing the training loss and other
+            TensorDict: A dictionary containing the training loss and other
                 results for the epoch.
         """
         config = self.config
@@ -100,14 +101,11 @@ class SCI_Trainer(Trainer):
             image = Variable(image, requires_grad=False).to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(
-                data={"image": image, "inference": False},
-                save_debug=True,
-            )
+            outputs = self.model(data={"image": image}, inference=False, save_debug=True)
 
             # 2.3. Extract outputs
-            i_list = outputs["i_list"]
-            x_list = outputs["x_list"]
+            i_list = list(outputs["i_list"])
+            x_list = list(outputs["x_list"])
 
             # 2.4. Calculate loss
             loss = torch.zeros(1, device=device)
@@ -128,12 +126,12 @@ class SCI_Trainer(Trainer):
         train_outputs |= {
             "loss": sum(losses) / len(losses),
         }
-        return train_outputs
+        return TensorDict(train_outputs, batch_size=[]).cpu()
 
     # --- Validation ---
     @override
     @torch.no_grad()
-    def _val_epoch(self, epoch: int, pbar: Progress) -> dict[str, Any]:
+    def _val_epoch(self, epoch: int, pbar: Progress) -> TensorDict:
         """Validate an epoch.
 
         Args:
@@ -141,7 +139,7 @@ class SCI_Trainer(Trainer):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict[str, Any]: A dictionary containing the validation metrics and
+            TensorDict: A dictionary containing the validation metrics and
                 other results for the epoch.
         """
         config = self.config
@@ -164,35 +162,31 @@ class SCI_Trainer(Trainer):
         )
         for i, datapoint in enumerate(self.val_dataloader):
             # 2.1. Prepare inputs
+            datapoint = datapoint.to(device)
             image = datapoint["image"]
-            image = image.to(device)
             target = datapoint["target"]
-            target = target.to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(
-                data={"image": image, "inference": False},
-                save_debug=True,
-            )
+            outputs = self.model(data={"image": image}, inference=False, save_debug=True)
 
             # 2.3. Extract outputs
-            enhanced = outputs["r_list"][0]
-            illumination = outputs["i_list"][0]
-            attention = outputs["a_list"][0]
+            enhanced = list(outputs["r_list"])[0]
+            illumination = list(outputs["i_list"])[0]
+            attention = list(outputs["a_list"])[0]
 
             # 2.4. Calculate metrics
-            psnrs.append(psnr_metric(enhanced, target).detach().cpu())
-            ssims.append(ssim_metric(enhanced, target).detach().cpu())
-            ssimcs.append(ssimc_metric(enhanced, target).detach().cpu())
+            psnrs.append(psnr_metric(enhanced, target).detach())
+            ssims.append(ssim_metric(enhanced, target).detach())
+            ssimcs.append(ssimc_metric(enhanced, target).detach())
 
             # 2.5. Debug outputs
             if i == 0:
                 val_outputs |= {
-                    "image": image.cpu(),
-                    "target": target.cpu(),
-                    "enhanced": enhanced.cpu(),
-                    "illumination": illumination.cpu(),
-                    "attention": attention.cpu(),
+                    "image": image,
+                    "target": target,
+                    "enhanced": enhanced,
+                    "illumination": illumination,
+                    "attention": attention,
                 }
 
             pbar.update(task, advance=1)
@@ -204,22 +198,17 @@ class SCI_Trainer(Trainer):
             "ssim": torch.cat(ssims).mean().item(),
             "ssimc": torch.cat(ssimcs).mean().item(),
         }
-        return val_outputs
+        return TensorDict(val_outputs, batch_size=[]).cpu()
 
     # --- Output ---
     @override
-    def _save_debug(
-        self,
-        epoch: int,
-        train_outputs: dict[str, Any],
-        val_outputs: dict[str, Any]
-    ):
+    def _save_debug(self, epoch: int, train_outputs: TensorDict, val_outputs: TensorDict):
         """Save debugging results for visualization.
 
         Args:
             epoch (int): The current epoch number.
-            train_outputs (dict[str, Any]): The outputs from the training epoch.
-            val_outputs (dict[str, Any]): The outputs from the validation epoch.
+            train_outputs (TensorDict): The outputs from the training epoch.
+            val_outputs (TensorDict): The outputs from the validation epoch.
         """
         debug_image = {
             "image": val_outputs["image"],
@@ -263,7 +252,7 @@ class SCI_Finetuner(Trainer):
 
     # --- Training ---
     @override
-    def _train_epoch(self, epoch: int, pbar: Progress) -> dict[str, Any]:
+    def _train_epoch(self, epoch: int, pbar: Progress) -> TensorDict:
         """Train an epoch.
 
         Args:
@@ -271,7 +260,7 @@ class SCI_Finetuner(Trainer):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict[str, Any]: A dictionary containing the training loss and other
+            TensorDict: A dictionary containing the training loss and other
                 results for the epoch.
         """
         config = self.config
@@ -292,15 +281,11 @@ class SCI_Finetuner(Trainer):
         )
         for i, datapoint in enumerate(self.train_dataloader):
             # 2.1. Prepare inputs
+            datapoint = datapoint.to(device)
             image = datapoint["image"]
-            image = image.to(device)
-            # image = Variable(image, requires_grad=False).to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(
-                data={"image": image, "inference": True},
-                save_debug=True,
-            )
+            outputs = self.model(data=datapoint, inference=True, save_debug=True)
 
             # 2.3. Extract outputs
             illumination = outputs["illumination"]
@@ -322,12 +307,12 @@ class SCI_Finetuner(Trainer):
         train_outputs |= {
             "loss": sum(losses) / len(losses),
         }
-        return train_outputs
+        return TensorDict(train_outputs, batch_size=[]).cpu()
 
     # --- Validation ---
     @override
     @torch.no_grad()
-    def _val_epoch(self, epoch: int, pbar: Progress) -> dict[str, Any]:
+    def _val_epoch(self, epoch: int, pbar: Progress) -> TensorDict:
         """Validate an epoch.
 
         Args:
@@ -335,7 +320,7 @@ class SCI_Finetuner(Trainer):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict[str, Any]: A dictionary containing the validation metrics and
+            TensorDict: A dictionary containing the validation metrics and
                 other results for the epoch.
         """
         config = self.config
@@ -358,33 +343,29 @@ class SCI_Finetuner(Trainer):
         )
         for i, datapoint in enumerate(self.val_dataloader):
             # 2.1. Prepare inputs
+            datapoint = datapoint.to(device)
             image = datapoint["image"]
-            image = image.to(device)
             target = datapoint["target"]
-            target = target.to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(
-                data={"image": image, "inference": True},
-                save_debug=True,
-            )
+            outputs = self.model(data=datapoint, inference=True, save_debug=True)
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
             illumination = outputs["illumination"]
 
             # 2.4. Calculate metrics
-            psnrs.append(psnr_metric(enhanced, target).detach().cpu())
-            ssims.append(ssim_metric(enhanced, target).detach().cpu())
-            ssimcs.append(ssimc_metric(enhanced, target).detach().cpu())
+            psnrs.append(psnr_metric(enhanced, target).detach())
+            ssims.append(ssim_metric(enhanced, target).detach())
+            ssimcs.append(ssimc_metric(enhanced, target).detach())
 
             # 2.5. Debug outputs
             if i == 0:
                 val_outputs |= {
-                    "image": image.cpu(),
-                    "target": target.cpu(),
-                    "enhanced": enhanced.cpu(),
-                    "illumination": illumination.cpu(),
+                    "image": image,
+                    "target": target,
+                    "enhanced": enhanced,
+                    "illumination": illumination,
                 }
 
             pbar.update(task, advance=1)
@@ -396,22 +377,17 @@ class SCI_Finetuner(Trainer):
             "ssim": torch.cat(ssims).mean().item(),
             "ssimc": torch.cat(ssimcs).mean().item(),
         }
-        return val_outputs
+        return TensorDict(val_outputs, batch_size=[]).cpu()
 
     # --- Output ---
     @override
-    def _save_debug(
-        self,
-        epoch: int,
-        train_outputs: dict[str, Any],
-        val_outputs: dict[str, Any]
-    ):
+    def _save_debug(self, epoch: int, train_outputs: TensorDict, val_outputs: TensorDict):
         """Save debugging results for visualization.
 
         Args:
             epoch (int): The current epoch number.
-            train_outputs (dict[str, Any]): The outputs from the training epoch.
-            val_outputs (dict[str, Any]): The outputs from the validation epoch.
+            train_outputs (TensorDict): The outputs from the training epoch.
+            val_outputs (TensorDict): The outputs from the validation epoch.
         """
         debug_image = {
             "image": val_outputs["image"],
@@ -471,7 +447,7 @@ class SCI_PP_Trainer(Trainer):
 
     # --- Training ---
     @override
-    def _train_epoch(self, epoch: int, pbar: Progress) -> dict[str, Any]:
+    def _train_epoch(self, epoch: int, pbar: Progress) -> TensorDict:
         """Train an epoch.
 
         Args:
@@ -479,7 +455,7 @@ class SCI_PP_Trainer(Trainer):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict[str, Any]: A dictionary containing the training loss and other
+            TensorDict: A dictionary containing the training loss and other
                 results for the epoch.
         """
         config = self.config
@@ -501,19 +477,14 @@ class SCI_PP_Trainer(Trainer):
             self.total_step += 1
 
             # 2.1. Prepare inputs
-            image = datapoint["image"]
-            # image = image.to(device)
-            image = Variable(image, requires_grad=False).to(device)
+            datapoint = datapoint.to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(
-                data={"image": image, "inference": False},
-                save_debug=True,
-            )
+            outputs = self.model(data=datapoint, inference=False, save_debug=True)
 
             # 2.3. Extract outputs
-            i_list = outputs["i_list"]
-            x_list = outputs["x_list"]
+            i_list = list(outputs["i_list"])
+            x_list = list(outputs["x_list"])
 
             # 2.4. Calculate loss
             loss_1 = criterion(x_list[0], i_list[0])
@@ -554,12 +525,12 @@ class SCI_PP_Trainer(Trainer):
         train_outputs |= {
             "loss": sum(losses) / len(losses),
         }
-        return train_outputs
+        return TensorDict(train_outputs, batch_size=[]).cpu()
 
     # --- Validation ---
     @override
     @torch.no_grad()
-    def _val_epoch(self, epoch: int, pbar: Progress) -> dict[str, Any]:
+    def _val_epoch(self, epoch: int, pbar: Progress) -> TensorDict:
         """Validate an epoch.
 
         Args:
@@ -567,7 +538,7 @@ class SCI_PP_Trainer(Trainer):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict[str, Any]: A dictionary containing the validation metrics and
+            TensorDict: A dictionary containing the validation metrics and
                 other results for the epoch.
         """
         config = self.config
@@ -590,35 +561,31 @@ class SCI_PP_Trainer(Trainer):
         )
         for i, datapoint in enumerate(self.val_dataloader):
             # 2.1. Prepare inputs
+            datapoint = datapoint.to(device)
             image = datapoint["image"]
-            image = image.to(device)
             target = datapoint["target"]
-            target = target.to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(
-                data={"image": image, "inference": False},
-                save_debug=True,
-            )
+            outputs = self.model(data=datapoint, inference=False, save_debug=True)
 
             # 2.3. Extract outputs
-            enhanced = outputs["r_list"][0]
-            illumination = outputs["i_list"][0]
-            attention = outputs["a_list"][0]
+            enhanced = list(outputs["r_list"])[0]
+            illumination = list(outputs["i_list"])[0]
+            attention = list(outputs["a_list"])[0]
 
             # 2.4. Calculate metrics
-            psnrs.append(psnr_metric(enhanced, target).detach().cpu())
-            ssims.append(ssim_metric(enhanced, target).detach().cpu())
-            ssimcs.append(ssimc_metric(enhanced, target).detach().cpu())
+            psnrs.append(psnr_metric(enhanced, target).detach())
+            ssims.append(ssim_metric(enhanced, target).detach())
+            ssimcs.append(ssimc_metric(enhanced, target).detach())
 
             # 2.5. Debug outputs
             if i == 0:
                 val_outputs |= {
-                    "image": image.cpu(),
-                    "target": target.cpu(),
-                    "enhanced": enhanced.cpu(),
-                    "illumination": illumination.cpu(),
-                    "attention": attention.cpu(),
+                    "image": image,
+                    "target": target,
+                    "enhanced": enhanced,
+                    "illumination": illumination,
+                    "attention": attention,
                 }
 
             pbar.update(task, advance=1)
@@ -630,22 +597,17 @@ class SCI_PP_Trainer(Trainer):
             "ssim": torch.cat(ssims).mean().item(),
             "ssimc": torch.cat(ssimcs).mean().item(),
         }
-        return val_outputs
+        return TensorDict(val_outputs, batch_size=[]).cpu()
 
     # --- Output ---
     @override
-    def _save_debug(
-        self,
-        epoch: int,
-        train_outputs: dict[str, Any],
-        val_outputs: dict[str, Any]
-    ):
+    def _save_debug(self, epoch: int, train_outputs: TensorDict, val_outputs: TensorDict):
         """Save debugging results for visualization.
 
         Args:
             epoch (int): The current epoch number.
-            train_outputs (dict[str, Any]): The outputs from the training epoch.
-            val_outputs (dict[str, Any]): The outputs from the validation epoch.
+            train_outputs (TensorDict): The outputs from the training epoch.
+            val_outputs (TensorDict): The outputs from the validation epoch.
         """
         debug_image = {
             "image": val_outputs["image"],

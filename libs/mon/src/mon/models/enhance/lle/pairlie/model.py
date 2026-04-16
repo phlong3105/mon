@@ -22,6 +22,7 @@ __all__ = [
 from typing import Any, override
 
 import torch
+from tensordict import TensorDict
 
 from mon.core import (
     is_weights_type,
@@ -102,30 +103,34 @@ class PairLIE(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
+    def forward_step(self, data: TensorDict, *args, **kwargs) -> TensorDict:
         """Forward the input through the network.
 
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
+        # 1. Extract input data
         image = data["image"]
+
+        # 2. Network forward
         X = self.N_net(image)
         L = self.L_net(X)
         R = self.R_net(X)
         D = image - X
         I = torch.pow(L, self.alpha) * R  # default=0.2, LOL=0.14.
 
-        # Return final and intermediate results for debugging
-        return {
+        # 3. Return final and intermediate results for debugging
+        outputs = {
             "enhanced": I,
             "L": L,
             "R": R,
             "X": X,
             "D": D,
         }
+        return TensorDict(outputs, batch_size=[])
 
 # endregion
 

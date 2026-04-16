@@ -18,9 +18,10 @@ __all__ = [
     "slice",
 ]
 
-from typing import Any, override
+from typing import override
 
 import torch
+from tensordict import TensorDict
 from torch import Tensor
 from torch.nn import functional as F
 from torchdiffeq import odeint
@@ -77,7 +78,6 @@ class SLICE(ModelRegisterMixin, EnhancementModel):
     name: str = "slice"
     tasks: list[Task] = [Task.LLE]
     model_dir: Path = current_dir
-    requires: set = {"image", "T"}
 
     methods = [
         "iter8", "iter5", "iter4", "dopri8", "dopri5", "bosh3", "fehlberg2",
@@ -141,6 +141,7 @@ class SLICE(ModelRegisterMixin, EnhancementModel):
         self.method = method
         self.tol = tol
         self.ode_options = ode_options
+        self.use_depth = use_depth
 
         # Define network
         self.denoiser = Denoiser(
@@ -172,21 +173,30 @@ class SLICE(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
+    def forward_step(
+        self,
+        data: TensorDict,
+        T: Tensor | None = None,
+        chunk_size: int = 65536,
+        *args, **kwargs
+    ) -> TensorDict:
         """Forward the input through the network.
 
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
+            T (Tensor | None, optional): Time span for the ODE solver.
+                Defaults to None.
+            chunk_size (int, optional): Chunk size for inference on large images.
+                Defaults to 65,536.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
+        # 1. Extract input data
         image = data["image"]
-        depth = data.get("depth", None)
-        T = data.get("T", None)
-        chunk_size = data.get("chunk_size", 65536)
+        depth = data.get("depth", None) if self.use_depth else None
 
-        # 1. Prepare inputs
+        # 2. Prepare inputs
         x = image
         d = depth
         size0 = Size.from_value(x)
@@ -197,39 +207,40 @@ class SLICE(ModelRegisterMixin, EnhancementModel):
             x = F.interpolate(x, size=size1.hw, mode="bilinear", align_corners=True)
             d = F.interpolate(d, size=size1.hw, mode="bilinear", align_corners=True) if d is not None else None
 
-        # 2. Denoise
+        # 3. Denoise
         l_denoise, noise, p_x = self.denoiser(x)
 
-        # 3. Fusion
+        # 4. Fusion
         if d is not None:
             x_in = torch.cat([x, p_x, d], dim=1)
         else:
             x_in = torch.cat([x, p_x], dim=1)
 
-        # 4. Encode global features
+        # 5. Encode global features
         features = self.encoder(x_in)
 
-        # 5. Predict curve parameters
+        # 6. Predict curve parameters
         if size0 == size1:
             A = self.gen_curve_map(features, size1)
         else:
             A = self.gen_curve_map_chunk(features, size0, chunk_size=chunk_size)
 
-        # 6. Enhance
+        # 7. Enhance
         if "iter" in self.method:
             num_iters = int(self.method.split("iter")[-1])
             y = self.enhance_iter(image=image, A=A, num_iters=num_iters)
         else:
             y = self.enhance_ode(image=image, A=A, T=T)
 
-        # 7. Return final and intermediate results for debugging
-        return {
+        # 8. Return final and intermediate results for debugging
+        outputs = {
             "enhanced": y,
             "curve_map": A,
             "noise_map": noise,
             "denoised": p_x,
             "l_denoise": l_denoise,
         }
+        return TensorDict(outputs, batch_size=[])
 
     # --- Curve Map ---
     def gen_curve_map(self, features: Tensor, size: Size) -> Tensor:
@@ -287,7 +298,7 @@ class SLICE(ModelRegisterMixin, EnhancementModel):
         # 2. Define the continuous integration time span
         # t=0.0 is the dark image, t=1.0 is the fully enhanced image
         if T is None:
-            T_span = torch.tensor([0.0, 3.0], device=image.device)
+            T_span = torch.tensor([0.0, 1.0], device=image.device)
         else:
             T_span = T
 
@@ -356,14 +367,13 @@ class SLICE(ModelRegisterMixin, EnhancementModel):
 
     # --- Benchmarks ---
     @override
-    def benchmark(self, imgsz: SizeLike, num_runs: int = 10, verbose: bool = True) -> dict[str, float]:
+    def benchmark(self, imgsz: SizeLike, *args, **kwargs) -> dict[str, float]:
         """Perform a single forward step of the model to benchmark its performance.
 
         Args:
             imgsz (SizeLike): Input image size.
-            num_runs (int, optional): Number of runs to average for benchmarking.
-                Defaults to 10.
-            verbose (bool, optional): Whether to log the results. Defaults to True.
+            **kwargs: Additional arguments for benchmarking, such as number
+                of runs, device, etc.
 
         Returns:
             dict[str, float]: A dictionary containing the benchmark results,
@@ -374,20 +384,11 @@ class SLICE(ModelRegisterMixin, EnhancementModel):
 
         # Create dummy inputs
         dummy_input = create_dummy_image(imgsz=imgsz, device=device)
-        data = {
-            "image": dummy_input,
-            "T": torch.tensor([0, 1]).float().type_as(dummy_input),
-        }
+        data = TensorDict({"image": dummy_input}, batch_size=[])
         inputs = {"data": data}
 
         # Benchmark the model
-        return benchmark(
-            model=self,
-            inputs=inputs,
-            num_runs=num_runs,
-            copy=False,
-            verbose=verbose,
-        )
+        return benchmark(model=self, inputs=inputs, copy=False, *args, **kwargs)
 
 # endregion
 

@@ -20,7 +20,11 @@ import glob
 from abc import ABC
 from typing import Any, override
 
+import numpy as np
+import torch
 from box import Box
+from tensordict import NonTensorData, TensorDict
+from torch import Tensor
 
 from mon.core import (
     build_classlist,
@@ -41,7 +45,6 @@ from mon.dataset.base.modality import (
 )
 from mon.dataset.transform import build_compose, Compose
 from .dataset import Dataset, InputTargetDataset, StandardDataset
-from .mixins import DatasetCollationMixin
 
 
 # ==============================================================================
@@ -71,6 +74,7 @@ class AlbumentationsDataset(Dataset, ABC):
             **kwargs: Keyword arguments for ``Dataset`` constructor.
         """
         super().__init__(*args, **kwargs)
+
         # Assign attributes
         self.transforms = transforms
         self.keep_original = keep_original
@@ -80,30 +84,31 @@ class AlbumentationsDataset(Dataset, ABC):
 
     # --- Container / Sequence Methods ---
     @override
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> TensorDict:
         """Return an item at the given ``index``.
 
         Args:
             index (int): Index of datapoint.
 
         Returns:
-            dict[str, Any]: A datapoint dictionary containing all modalities,
-                each associated with a 'key'.
+            TensorDict: A datapoint dictionary containing all modalities, each
+                associated with a 'key'.
         """
         # 1. Get the datapoint
         datapoint = self.get_underlying_data(index=index)
 
         # 2. Apply transformations
         transforms = self.transforms
-        if transforms:
+        basic_transforms = self.basic_transforms
+
+        if isinstance(transforms, Compose):
             # Create a dictionary of transformable items by filtering out None values
             kv = {k: v for k, v in datapoint.items() if v is not None}
             # Apply transformations
             transformed = transforms(**kv)
 
-            if self.keep_original:
+            if self.keep_original and isinstance(basic_transforms, Compose):
                 # Apply basic transformations to the original data
-                basic_transforms = self.basic_transforms
                 transformed_orig = basic_transforms(**kv)
                 # Add suffix to the original items (e.g., 'image' -> 'image_orig')
                 transformed_orig = {f"{k}_{self.origin_suffix}": v for k, v in transformed_orig.items()}
@@ -113,7 +118,17 @@ class AlbumentationsDataset(Dataset, ABC):
             # Update the datapoint with the transformed values
             datapoint.update(transformed)
 
-        return datapoint
+        # 3. Convert to TensorDict
+        outputs = {}
+        for k, v in datapoint.items():
+            if v is None:
+                continue
+            elif isinstance(v, Tensor):
+                outputs[k] = v
+            else:
+                outputs[k] = NonTensorData(v)
+
+        return TensorDict(outputs, batch_size=[])
 
     # --- Properties ---
     @property
@@ -175,16 +190,12 @@ class AlbumentationsDataset(Dataset, ABC):
         self._transforms = value
 
 
-class ImageDataset(
-    StandardDataset,
-    AlbumentationsDataset,
-    DatasetCollationMixin,
-):
+class ImageDataset(StandardDataset, AlbumentationsDataset):
     """Standard image dataset.
 
-    Extend the base ``StandardDataset`` class with ``DatasetCollationMixin``
-    and ``AlbumentationsDataset`` to support image-based datasets with
-    multiple modalities, splits, and albumentations transformations.
+    Extend the base ``StandardDataset`` class with ``AlbumentationsDataset`` to
+    support image-based datasets with multiple modalities, splits, and
+    albumentations transformations.
     """
 
     dirname: str = ""
@@ -275,16 +286,12 @@ class ImageDataset(
         )
 
 
-class ImageOnlyDataset(
-    StandardDataset,
-    AlbumentationsDataset,
-    DatasetCollationMixin,
-):
+class ImageOnlyDataset(StandardDataset, AlbumentationsDataset):
     """Standard image-only dataset.
 
-    Extend the base ``StandardDataset`` class with ``DatasetCollationMixin``
-    and ``AlbumentationsDataset`` to support image-only datasets with multiple
-    splits and albumentations transformations.
+    Extend the base ``StandardDataset`` class with ``AlbumentationsDataset`` to
+    support image-only datasets with multiple splits and albumentations
+    transformations.
     """
 
     dirname: str = ""
@@ -424,16 +431,12 @@ class ImageOnlyDataset(
         )
 
 
-class IQADataset(
-    InputTargetDataset,
-    AlbumentationsDataset,
-    DatasetCollationMixin,
-):
+class IQADataset(InputTargetDataset, AlbumentationsDataset):
     """Image quality assessment (IQA) dataset.
 
-    Extend the base ``InputTargetDataset`` class with ``DatasetCollationMixin``
-    and ``AlbumentationsDataset`` to support image-based datasets with
-    input and target modalities, and albumentations transformations.
+    Extend the base ``InputTargetDataset`` class with ``AlbumentationsDataset``
+    to support image-based datasets with input and target modalities, and
+    albumentations transformations.
     """
 
     modalities: ModalityList = ModalityList([

@@ -15,6 +15,8 @@ __all__ = [
 from abc import ABC
 from typing import override
 
+from tensordict import TensorDict
+
 from mon.core import Size, SizeLike
 from mon.metrics import benchmark, create_dummy_image
 from mon.nn import Model
@@ -27,19 +29,18 @@ from mon.nn import Model
 class RestorationModel(Model, ABC):
     """A base class for all restoration models."""
 
-    requires: set = {"image"}
-    provides: set = {"restored"}
+    in_keys: set = {"image"}
+    out_keys: set = {"restored"}
 
     # --- Benchmarks ---
     @override
-    def benchmark(self, imgsz: SizeLike, num_runs: int = 10, verbose: bool = True) -> dict[str, float]:
+    def benchmark(self, imgsz: SizeLike, *args, **kwargs) -> dict[str, float]:
         """Perform a single forward step of the model to benchmark its performance.
 
         Args:
             imgsz (SizeLike): Input image size.
-            num_runs (int, optional): Number of runs to average for benchmarking.
-                Defaults to 10.
-            verbose (bool, optional): Whether to log the results. Defaults to True.
+            **kwargs: Additional arguments for benchmarking, such as number
+                of runs, device, etc.
 
         Returns:
             dict[str, float]: A dictionary containing the benchmark results,
@@ -50,11 +51,11 @@ class RestorationModel(Model, ABC):
 
         # Create dummy inputs
         dummy_input = create_dummy_image(imgsz=imgsz, device=device)
-        data = {"image": dummy_input}
+        data = TensorDict({"image": dummy_input}, batch_size=[])
         inputs = {"data": data}
 
         # Benchmark the model
-        return benchmark(model=self, inputs=inputs, num_runs=num_runs, verbose=verbose)
+        return benchmark(model=self, inputs=inputs, *args, **kwargs)
 
 # endregion
 

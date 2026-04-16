@@ -63,8 +63,9 @@ dependencies    = [
     "scikit-learn",                     # A set of python modules for machine learning and data mining.
     "scipy",                            # Scientific Library for Python.
     "tensorboard",                      # TensorFlow's Visualization Toolkit.
-    "torch-fidelity",                   # High-fidelity performance metrics for generative models in PyTorch
+    "tensordict",                       # TensorDict is a pytorch dedicated tensor container.
     "torch (>=2.11.0)",                 # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
+    "torch-fidelity",                   # High-fidelity performance metrics for generative models in PyTorch
     "torchdiffeq",                      # Differentiable ODE solvers with full GPU support and O(1)-memory backpropagation.
     "torchmetrics",                     # Collection of PyTorch native metrics for easy evaluating machine learning models.
     "torchvision",                      # Image and video datasets and models for Torch deep learning.

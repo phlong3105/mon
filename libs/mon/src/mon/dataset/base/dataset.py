@@ -18,6 +18,7 @@ import os
 from abc import ABC, abstractmethod
 from typing import Any, override
 
+from tensordict import TensorDict
 from torch.utils.data.dataset import Dataset as Dataset_
 
 from mon.core import (
@@ -145,15 +146,15 @@ class Dataset(Dataset_, ABC):
         return len(self.metapoints[pk])
 
     @abstractmethod
-    def __getitem__(self, index: int) -> dict[str, Any]:
+    def __getitem__(self, index: int) -> TensorDict:
         """Return an item at the given ``index``.
 
         Args:
             index (int): Index of datapoint.
 
         Returns:
-            dict[str, Any]: A datapoint dictionary containing all modalities,
-                each associated with a 'key'.
+            TensorDict: A datapoint dictionary containing all modalities, each
+                associated with a 'key'.
         """
         pass
 
@@ -206,7 +207,7 @@ class Dataset(Dataset_, ABC):
         # Retrieve the list of metadata for the current modality
         metadata: list[Metadata] = []
         with create_progress_bar(disable=self.disable_pbar) as pbar:
-            paths = sorted(input_dir.rglob("*"))
+            paths: list[Path] = sorted(input_dir.rglob("*"))
             desc = f"Listing {self.__class__.__name__} {name}(s)"
             for path in pbar.track(sequence=paths, description=desc):
                 path = path.normalize()
@@ -242,7 +243,7 @@ class Dataset(Dataset_, ABC):
 
         if base_dir:
             input_dir = Path(base_dir).normalize().resolve_subdir(dirname)
-            replace_kwargs = None
+            replace_kwargs = {}
         else:
             pk_dirname = ref_modality.dirname
             old_part = f"{os.sep}{pk_dirname}{os.sep}"
@@ -620,10 +621,8 @@ class InputTargetDataset(Dataset, ABC):
         """
         if value is not None:
             value = Path(value).normalize()
-            if not value.is_dir():
-                raise FileNotFoundError(
-                    f"Target directory not found at: {value}"
-                )
+            if isinstance(value, Path) and not value.is_dir():
+                raise FileNotFoundError(f"Target directory not found at: {value}")
             self._target_dir = value
         else:
             self._target_dir = None

@@ -17,7 +17,9 @@ __all__ = [
     "Mertens",
 ]
 
-from typing import Any, override
+from typing import override
+
+from tensordict import TensorDict
 
 from mon.core import MODELS, Path, Task
 from mon.models.enhance.mef.base import MEFModel
@@ -81,16 +83,19 @@ class Mertens(ModelRegisterMixin, MEFModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
+    def forward_step(self, data: TensorDict, *args, **kwargs) -> TensorDict:
         """Forward the input through the network.
 
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
+        # 1. Extract input data
         images = data["images"]
+
+        # 2. Network forward
         enhanced = mertens(
             images=images,
             w_sat=self.w_sat,
@@ -98,7 +103,12 @@ class Mertens(ModelRegisterMixin, MEFModel):
             w_exp=self.w_exp,
             n_levels=self.n_levels
         )
-        return { "enhanced": enhanced }
+
+        # 3. Return final and intermediate results for debugging
+        outputs = {
+            "enhanced": enhanced,
+        }
+        return TensorDict(outputs, batch_size=[])
 
 # endregion
 

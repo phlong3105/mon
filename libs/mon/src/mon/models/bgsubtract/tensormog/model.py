@@ -20,6 +20,7 @@ __all__ = [
 from typing import Any, override
 
 import torch
+from tensordict import TensorDict
 
 from mon.core import MODELS, Path, Task
 from mon.models.bgsubtract.base import BackgroundSubtractionModel
@@ -102,23 +103,29 @@ class TensorMOG(ModelRegisterMixin, BackgroundSubtractionModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
+    def forward_step(self, data: TensorDict, *args, **kwargs) -> TensorDict:
         """Forward the input through the network.
 
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
+        # 1. Extract input data
         image = data["image"]
+
+        # 2. Network forward
         self.hvr.update(image)
         background = self.hvr.get_background()
         foreground = self.hvr.get_foreground(image)
-        return {
+
+        # 3. Return final and intermediate results for debugging
+        outputs = {
             "background": background,
             "foreground": foreground,
         }
+        return TensorDict(outputs, batch_size=[])
 
 # endregion
 

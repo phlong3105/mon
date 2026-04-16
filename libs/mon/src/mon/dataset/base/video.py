@@ -31,7 +31,6 @@ from mon.core import (
 from mon.dataset.transform import build_compose, Compose
 from .dataset import Dataset, StandardDataset
 from .image import AlbumentationsDataset
-from .mixins import DatasetCollationMixin
 from .modality import build_modalities, FrameModality, ModalityList
 
 
@@ -39,16 +38,12 @@ from .modality import build_modalities, FrameModality, ModalityList
 # region BASE CLASSES
 # ==============================================================================
 
-class VideoOnlyDataset(
-    DatasetCollationMixin,
-    AlbumentationsDataset,
-    StandardDataset
-):
+class VideoOnlyDataset(StandardDataset, AlbumentationsDataset):
     """Standard video-only dataset.
 
-    Extend the base ``StandardDataset`` class with ``DatasetCollationMixin``
-    and ``AlbumentationsDataset`` to support single-video datasets with multiple
-    splits and albumentations transformations.
+    Extend the base ``StandardDataset`` class with ``AlbumentationsDataset`` to
+    support single-video datasets with multiple splits and albumentations
+    transformations.
     """
 
     dirname: str = ""

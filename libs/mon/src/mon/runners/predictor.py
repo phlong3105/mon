@@ -14,10 +14,10 @@ __all__ = [
 
 import gc
 from abc import ABC, abstractmethod
-from typing import Any
 
 from numpy import ndarray
 from rich.progress import Progress
+from tensordict import TensorDict
 from torch import nn, Tensor
 
 from mon.core import (
@@ -245,40 +245,40 @@ class Predictor(Runner, ABC):
         pbar.remove_task(task)
 
     @abstractmethod
-    def _predict_step(self, datapoint: dict[str, Any], timers: TimeProfiler) -> dict[str, Any]:
+    def _predict_step(self, datapoint: TensorDict, timers: TimeProfiler) -> TensorDict:
         """Predict the output of the model for a single data point.
 
         Args:
-            datapoint (dict[str, Any]): The dictionary containing the data point
+            datapoint (TensorDict): The dictionary containing the data point
                 to predict.
             timers (TimeProfiler): The time profiler to record timing information
                 during prediction.
 
         Returns:
-            dict[str, Any]: The dictionary containing the prediction results.
+            TensorDict: The dictionary containing the prediction results.
         """
         pass
 
     # --- Output ---
     @abstractmethod
-    def _save(self, datapoint: dict[str, Any], outputs: dict[str, Any]):
+    def _save(self, datapoint: TensorDict, outputs: TensorDict):
         """Save the main prediction results to a file.
 
         Args:
-            datapoint (dict[str, Any]): The dictionary containing the input data.
-            outputs (dict[str, Any]): The dictionary containing the main
+            datapoint (TensorDict): The dictionary containing the input data.
+            outputs (TensorDict): The dictionary containing the main
                 prediction results. Each key in the dictionary is a batch of
                 prediction results.
         """
         pass
 
     @abstractmethod
-    def _save_debug(self, datapoint: dict[str, Any], outputs: dict[str, Any]):
+    def _save_debug(self, datapoint: TensorDict, outputs: TensorDict):
         """Save debugging results for visualization.
 
         Args:
-            datapoint (dict[str, Any]): The dictionary containing the input data.
-            outputs (dict[str, Any]): The dictionary containing the main
+            datapoint (TensorDict): The dictionary containing the input data.
+            outputs (TensorDict): The dictionary containing the main
                 prediction results. Each key in the dictionary is a batch of
                 prediction results.
         """
@@ -288,8 +288,8 @@ class Predictor(Runner, ABC):
     def _save_batch_image(
         self,
         keys: list[str],
-        datapoint: dict[str, Any],
-        outputs: dict[str, Any],
+        datapoint: TensorDict,
+        outputs: TensorDict,
         dirname: str = K.PRED_DIR,
         subdirname: str = "",
         use_stem: bool = False
@@ -299,8 +299,8 @@ class Predictor(Runner, ABC):
         Args:
             keys (list[str]): The list of keys in the output dictionary that
                 correspond to the images to be post-processed.
-            datapoint (dict[str, Any]): The dictionary containing the input data.
-            outputs (dict[str, Any]): The dictionary containing the main
+            datapoint (TensorDict): The dictionary containing the input data.
+            outputs (TensorDict): The dictionary containing the main
                 prediction results. Each key in the dictionary is a batch of
                 prediction results.
             dirname (str): The directory name for the output files.
@@ -316,7 +316,7 @@ class Predictor(Runner, ABC):
 
         # Pre-extract the batches for the requested keys to avoid dict lookups
         # in the loop
-        metas = datapoint.get("meta", [])
+        metas = datapoint["meta"]
         batch_y_hr = datapoint[f"image_{K.ORIGINAL}"].to(device)  # For upsampler that needs high-res image (e.g., guided filter)
         batch_images_dict = {k: outputs[k] for k in keys if k in outputs}
 

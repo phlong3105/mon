@@ -14,6 +14,7 @@ __all__ = [
 
 from typing import Any
 
+from tensordict import TensorDict
 from typing_extensions import override
 
 from mon.core import (
@@ -66,17 +67,17 @@ class SALEO_Predictor(Predictor):
 
     # --- Prediction ---
     @override
-    def _predict_step(self, datapoint: dict[str, Any], timers: TimeProfiler) -> dict[str, Any]:
+    def _predict_step(self, datapoint: TensorDict, timers: TimeProfiler) -> TensorDict:
         """Predict the output of the model for a single data point.
 
         Args:
-            datapoint (dict[str, Any]): The dictionary containing the data point
+            datapoint (TensorDict): The dictionary containing the data point
                 to predict.
             timers (TimeProfiler): The time profiler to record timing information
                 during prediction.
 
         Returns:
-            dict[str, Any]: The dictionary containing the prediction results.
+            TensorDict: The dictionary containing the prediction results.
         """
         config = self.config
         device = self.device
@@ -86,10 +87,9 @@ class SALEO_Predictor(Predictor):
 
         # 1. Prepare inputs
         timers.preprocess.tick()
+        datapoint = datapoint.to(device)
         image = datapoint["image"]
-        image = image.to(device)
         depth = datapoint["depth"]
-        depth = depth.to(device) if depth is not None else None
         timers.preprocess.tock()
 
         # 2. Inference
@@ -109,12 +109,12 @@ class SALEO_Predictor(Predictor):
 
     # --- Output ---
     @override
-    def _save(self, datapoint: dict[str, Any], outputs: dict[str, Any]):
+    def _save(self, datapoint: TensorDict, outputs: TensorDict):
         """Save the main prediction results to a file.
 
         Args:
-            datapoint (dict[str, Any]): The dictionary containing the input data.
-            outputs (dict[str, Any]): The dictionary containing the main
+            datapoint (TensorDict): The dictionary containing the input data.
+            outputs (TensorDict): The dictionary containing the main
                 prediction results. Each key in the dictionary is a batch of
                 prediction results.
         """
@@ -128,12 +128,12 @@ class SALEO_Predictor(Predictor):
         )
 
     @override
-    def _save_debug(self, datapoint: dict[str, Any], outputs: dict[str, Any]):
+    def _save_debug(self, datapoint: TensorDict, outputs: TensorDict):
         """Save debugging results for visualization.
 
         Args:
-            datapoint (dict[str, Any]): The dictionary containing the input data.
-            outputs (dict[str, Any]): The dictionary containing the main
+            datapoint (TensorDict): The dictionary containing the input data.
+            outputs (TensorDict): The dictionary containing the main
                 prediction results. Each key in the dictionary is a batch of
                 prediction results.
         """

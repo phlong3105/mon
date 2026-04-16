@@ -19,6 +19,7 @@ from typing import Any
 import numpy as np
 import torch
 from numpy import ndarray
+from tensordict import TensorDict
 from torch import Tensor
 
 from mon.core import is_list_of, is_valid_str, Task
@@ -66,7 +67,7 @@ class DatasetRegisterMixin(ABC):
             self.tasks = list(tasks)
 
         # Continue the initialization chain
-        super().__init__(*args, **kwargs)
+        super().__init__()
 
     def __init_subclass__(cls, *args, **kwargs):
         """Validate subclass attributes on inheritance.
@@ -103,6 +104,11 @@ class DatasetRegisterMixin(ABC):
 
 # --- Structural ---
 
+# TODO: Since we change Dataset's get_item() to TensorDict, we can simply use
+#  torch.stack. Hence, this collate_fn can be simplified to just return
+#  torch.stack(batch, dim=0). We can keep the old collate_fn as a reference
+#  for how to handle more complex cases in the future (like if we want to
+#  support non-TensorDict outputs or have special handling for metadata).
 class DatasetCollationMixin:
     """Batch collation mixin for data containers.
 
@@ -124,7 +130,7 @@ class DatasetCollationMixin:
     # --- Callable & Context Manager ---
     # noinspection PyTypeChecker
     @staticmethod
-    def collate_fn(batch: list[dict]) -> dict[str, Any]:
+    def collate_fn_old(batch: list[dict]) -> dict[str, Any]:
         """Collate a batch of input items.
 
         Args:
@@ -182,6 +188,12 @@ class DatasetCollationMixin:
 
         return collated
 
+    @staticmethod
+    def collate_fn(batch: list[TensorDict]) -> TensorDict:
+        """Collate a batch of TensorDict items into a single batched TensorDict."""
+        # This automatically stacks all tensors, handles NonTensorData (meta),
+        # and preserves the TensorDict structure.
+        return torch.stack(batch, dim=0)
 
 # --- Statistical ---
 

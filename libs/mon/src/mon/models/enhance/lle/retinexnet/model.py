@@ -21,6 +21,8 @@ __all__ = [
 from typing import Any, override
 
 import torch
+from tensordict import TensorDict
+from torch import Tensor
 
 from mon.core import (
     is_weights_type,
@@ -95,37 +97,50 @@ class RetinexNet(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
+    def forward_step(
+        self,
+        data: TensorDict,
+        decom: bool = False,
+        *args, **kwargs
+    ) -> TensorDict:
         """Forward the input through the network.
 
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
+            decom (bool, optional): Whether to perform decomposition only.
+                Defaults to False.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
+        # 1. Extract input data
         image = data["image"]
-        decom = data.get("decom", False)
 
+        # 2. Network forward
         # Decomposition
         R, L = self.decom_net(image)
         if decom:
-            return { "R": R, "L": L }
+            outputs = {
+                "R": R,
+                "L": L,
+            }
+        else:
+            # Relighting
+            L_delta = self.enhance_net(R, L)
+            L_delta_3 = torch.cat((L_delta, L_delta, L_delta), dim=1)
 
-        # Relighting
-        L_delta = self.enhance_net(R, L)
-        L_delta_3 = torch.cat((L_delta, L_delta, L_delta), dim=1)
+            # Reconstruction
+            S = R * L_delta_3
 
-        # Reconstruction
-        S = R * L_delta_3
+            outputs = {
+                "enhanced": S,
+                "R": R,
+                "L": L,
+                "L_delta": L_delta,
+            }
 
-        # Return final and intermediate results for debugging
-        return {
-            "enhanced": S,
-            "R": R,
-            "L": L,
-            "L_delta": L_delta,
-        }
+        # 3. Return final and intermediate results for debugging
+        return TensorDict(outputs, batch_size=[])
 
 # endregion
 

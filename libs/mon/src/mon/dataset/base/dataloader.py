@@ -15,6 +15,7 @@ __all__ = [
 from typing import Any
 
 import cv2
+import torch
 from box import Box
 from torch.utils.data.dataloader import DataLoader as DataLoader_
 
@@ -43,7 +44,7 @@ class DataLoader(DataLoader_):
         batch_size: int = 1,
         shuffle: bool = False,
         num_workers: int = 1,
-        collate_fn: Any = None,
+        collate_fn: Any = torch.stack,
         pin_memory: bool = True,
         drop_last: bool = False,
         persistent_workers: bool = True,
@@ -60,7 +61,7 @@ class DataLoader(DataLoader_):
             num_workers (int, optional): Number of subprocesses to use for data
                 loading. Defaults to 1.
             collate_fn (Callable, optional): Merges a list of samples to form a
-                mini-batch. Defaults to None.
+                mini-batch. Defaults to torch.stack.
             pin_memory (bool, optional): If True, the data loader will copy
                 Tensors into CUDA pinned memory before returning them.
                 Defaults to True.
@@ -76,7 +77,7 @@ class DataLoader(DataLoader_):
 
         # Cache collate_fn to avoid repeated getattr calls
         # We prioritize the dataset's internal collation logic if it exists
-        collate_fn = getattr(dataset, "collate_fn", collate_fn)
+        collate_fn = collate_fn or getattr(dataset, "collate_fn", torch.stack)
 
         # Only pin memory if we are actually using a collate function that
         # returns Tensors (usually implied if collate_fn exists)

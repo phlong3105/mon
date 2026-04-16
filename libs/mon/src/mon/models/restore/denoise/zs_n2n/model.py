@@ -19,9 +19,10 @@ __all__ = [
     "ZS_N2N",
 ]
 
-from typing import Any, override
+from typing import override
 
 import torch
+from tensordict import TensorDict
 from torch import nn, Tensor
 from torch.nn import functional as F
 from torch.optim import Adam
@@ -100,30 +101,28 @@ class ZS_N2N(ModelRegisterMixin, RestorationModel):
 
      # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
+    def forward_step(self, data: TensorDict, *args, **kwargs) -> TensorDict:
         """Forward the input through the network.
 
-        If ``self.fit_enabled`` is True, perform single-image optimization.
-        Otherwise, perform standard training.
-
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
+        # 1. Extract input data
         image = data["image"]
 
-        # 1. Scenario 1: Single-Image Optimization
+        # 2. Scenario 1: Single-Image Optimization
         if self.fit_enabled:
             return self.fit(image=image, *args, **kwargs)
 
-        # 2. Scenario 2: Standard Training
+        # 3. Scenario 2: Standard Training
         if self.training:
             loss = self.denoise_loss(image)
             noise = self.model(image)
             restored = image - noise
-            return {
+            outputs = {
                 "restored": restored,
                 "noise": noise,
                 "loss": loss,
@@ -131,11 +130,14 @@ class ZS_N2N(ModelRegisterMixin, RestorationModel):
         else:
             noise = self.model(image)
             restored = torch.clamp(image - noise, 0, 1)
-            return {
+            outputs = {
                 "restored": restored,
                 "noise": noise,
                 "loss": None,
             }
+
+        # 4. Return final and intermediate results for debugging
+        return TensorDict(outputs, batch_size=[])
 
     def fit(
         self,
@@ -144,7 +146,7 @@ class ZS_N2N(ModelRegisterMixin, RestorationModel):
         reset_weights: bool = True,
         optimizer: DictLike | None = None,
         scheduler: DictLike | None = None,
-    ) -> dict[str, Any]:
+    ) -> TensorDict:
         """Fit the model to a single image using zero-shot optimization.
 
         Args:
@@ -160,7 +162,7 @@ class ZS_N2N(ModelRegisterMixin, RestorationModel):
                 parameters. Defaults to None.
 
         Returns:
-            dict[str, Any]: Dictionary containing the enhanced image tensor and
+            TensorDict: Dictionary containing the enhanced image tensor and
                 intermediate results for debugging.
         """
         epochs = epochs or self.fit_epochs
@@ -197,7 +199,10 @@ class ZS_N2N(ModelRegisterMixin, RestorationModel):
             restored = torch.clamp(image - self.model(image),0,1)
 
         # 6. Return final and intermediate results for debugging
-        return { "restored": restored }
+        outputs = {
+            "restored": restored,
+        }
+        return TensorDict(outputs, batch_size=[])
 
     # --- Denoise ---
     def denoise_loss(self, noisy_image: Tensor) -> Tensor:
@@ -332,31 +337,43 @@ class IZS_N2N(ModelRegisterMixin, RestorationModel):
 
      # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
-        """Perform a single forward step of the model.
+    def forward_step(self, data: TensorDict, *args, **kwargs) -> TensorDict:
+        """Forward the input through the network.
 
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
+        # 1. Extract input data
         image = data["image"]
 
-        # 1. Scenario 1: Single-Image Optimization
+        # 2. Scenario 1: Single-Image Optimization
         if self.fit_enabled:
             return self.fit(image=image, *args, **kwargs)
 
-        # 2. Scenario 2: Standard Training
+        # 3. Scenario 2: Standard Training
         if self.training:
             loss = self.denoise_loss(image)
             noise = self.model(image)
             restored = image - noise
-            return {"restored": restored, "noise": noise,  "loss": loss}
+            outputs = {
+                "restored": restored,
+                "noise": noise,
+                "loss": loss,
+            }
         else:
             noise = self.model(image)
             restored = torch.clamp(image - noise, 0, 1)
-            return {"restored": restored, "noise": noise,  "loss": None}
+            outputs = {
+                "restored": restored,
+                "noise": noise,
+                "loss": None,
+            }
+
+        # 4. Return final and intermediate results for debugging
+        return TensorDict(outputs, batch_size=[])
 
     def fit(
         self,
@@ -365,7 +382,7 @@ class IZS_N2N(ModelRegisterMixin, RestorationModel):
         reset_weights: bool = True,
         optimizer: DictLike | None = None,
         scheduler: DictLike | None = None,
-    ) -> dict[str, Any]:
+    ) -> TensorDict:
         """Fit the model to a single image using zero-shot optimization.
 
         Args:
@@ -381,7 +398,7 @@ class IZS_N2N(ModelRegisterMixin, RestorationModel):
                 parameters. Defaults to None.
 
         Returns:
-            dict[str, Any]: Dictionary containing the enhanced image tensor and
+            TensorDict: Dictionary containing the enhanced image tensor and
                 intermediate results for debugging.
         """
         epochs = epochs or self.fit_epochs
@@ -418,8 +435,10 @@ class IZS_N2N(ModelRegisterMixin, RestorationModel):
             restored = torch.clamp(image - self.model(image),0,1)
 
         # 6. Return final and intermediate results for debugging
-        outputs = { "restored": restored }
-        return outputs
+        outputs = {
+            "restored": restored,
+        }
+        return TensorDict(outputs, batch_size=[])
 
     # --- Denoise ---
     def denoise_loss(self, noisy_image: Tensor) -> Tensor:

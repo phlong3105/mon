@@ -19,8 +19,7 @@ __all__ = [
     "dccnet",
 ]
 
-from typing import Any
-
+from tensordict import TensorDict
 from typing_extensions import override
 
 from mon.core import (
@@ -99,25 +98,28 @@ class DCCNet(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
-        """Perform a single forward step of the model.
-
+    def forward_step(self, data: TensorDict, *args, **kwargs) -> TensorDict:
+        """Forward the input through the network.
 
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
+        # 1. Extract input data
         image = data["image"]
+
+        # 2. Network forward
         enhanced, gray, color_hist = self.module(image)
 
-        # Return final and intermediate results for debugging
-        return {
+        # 3. Return final and intermediate results for debugging
+        outputs = {
             "enhanced": enhanced,
             "gray": gray,
             "color_hist": color_hist,
         }
+        return TensorDict(outputs, batch_size=[])
 
 # endregion
 

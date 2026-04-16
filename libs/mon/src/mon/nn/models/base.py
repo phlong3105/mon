@@ -16,7 +16,9 @@ __all__ = [
 from abc import ABC, abstractmethod
 from typing import Any
 
-from torch import nn
+from tensordict import TensorDict
+from tensordict.tensorclass import NonTensorData
+from torch import nn, Tensor
 
 from mon.core import is_list_of, is_valid_str, Path, PathLike, SizeLike, Task
 
@@ -29,16 +31,16 @@ class Model(nn.Module, ABC):
     """A base class for all deep learning models.
 
     Attributes:
-        requires (set): A dictionary specifying the required input keys and their
-            expected types. Subclasses should override this to define their input
-            requirements.
-        provides (set): A dictionary specifying the output keys and their expected
-            types that the model will produce. Subclasses should override this to
-            define their output specifications.
+        in_keys (set): A set of strings representing the input keys that the
+            model expects. Subclasses should override this to define their
+            input specifications.
+        out_keys (set): A set of strings representing the output keys that the
+            model produces. Subclasses should override this to define their
+            output specifications.
     """
 
-    requires: set = {}  # Use set to ensure unique keys and order
-    provides: set = {}
+    in_keys: set = {}
+    out_keys: set = {}
 
     # --- Lifecycle & Initialization ---
     def __init_subclass__(cls, *args, **kwargs):
@@ -50,7 +52,7 @@ class Model(nn.Module, ABC):
         super().__init_subclass__(*args, **kwargs)
 
         # Check for EXPLICIT definition in the subclass (not inherited)
-        for attr in ["requires", "provides"]:
+        for attr in ["in_keys", "out_keys"]:
             if not getattr(cls, attr):
                 raise AttributeError(
                     f"Class {cls.__name__} must define '{attr}' attribute "
@@ -61,28 +63,25 @@ class Model(nn.Module, ABC):
     def __repr__(self) -> str:
         """Return the official string representation for developers."""
         cls_name = self.__class__.__name__
-        req = sorted(list(self.requires))
-        pro = sorted(list(self.provides))
-
         return (
             f"{cls_name}(\n"
             f"  [Contract]\n"
-            f"    requires: {req}\n"
-            f"    provides: {pro}\n"
+            f"    in_keys : {sorted(list(self.in_keys))}\n"
+            f"    out_keys: {sorted(list(self.out_keys))}\n"
             f")"
         )
 
     # --- Callable & Context Manager ---
     def forward(
         self,
-        data: dict[str, Any] | None = None,
+        data: TensorDict | None = None,
         save_debug: bool = False,
         *args, **kwargs
-    ) -> dict[str, Any]:
+    ) -> TensorDict:
         """Forward the input through the model.
 
         Args:
-            data (dict[str, Any], optional): Input data dictionary. Defaults to None.
+            data (TensorDict, optional): Input data dictionary. Defaults to None.
             save_debug (bool, optional): If True, return intermediate results
                 for debugging. Defaults to False.
             **kwargs: Direct keyword arguments to pass to the forward step.
@@ -91,73 +90,81 @@ class Model(nn.Module, ABC):
                 ``data`` dictionary for structured inputs.
 
         Returns:
-            dict[str, Any]: Output dictionary.
+            TensorDict: Output dictionary.
         """
-        # Validate inputs
-        data = data or {}
-        if not isinstance(data, dict):
+        # 1. Split kwargs into Data (for TensorDict) and Flags (for logic)
+        # data_kwargs go into the TensorDict, flags stay for the method call
+        data_kwargs = {k: v for k, v in kwargs.items() if k in self.in_keys}
+        flags = {k: v for k, v in kwargs.items() if k not in data_kwargs}
+
+        # 2. Convert data input to TensorDict
+        data_kwargs = {
+            k: v if isinstance(v, Tensor) else NonTensorData(v)
+            for k, v in data_kwargs.items()
+        }
+
+        if data is None:
+            data = TensorDict(data_kwargs, batch_size=[])
+        elif isinstance(data, TensorDict):
+            data.update(data_kwargs)
+        else:
             raise TypeError(
-                f"Expected 'data' to be a dict, but got {type(data).__name__}."
+                f"Expected 'data' to be TensorDict, but got {type(data).__name__}."
             )
 
-        # 1. The escape hatch for simple inference, check **kwargs
-        data |= kwargs
-
-        # 2. The enforcement
-        missing_inputs = self.requires - data.keys()
+        # 3. Contract enforcement (Input)
+        missing_inputs = self.in_keys - data.keys()
         if missing_inputs:
             raise KeyError(
                 f"{self.__class__.__name__} missing required inputs: {missing_inputs}. "
                 f"Provided keys: {list(data.keys())}"
             )
 
-        # 3. Execute forward pass logic
-        outputs = self.forward_step(data=data, *args, **kwargs)
+        # 4. Execution
+        outputs = self.forward_step(data=data, **flags)
 
-        # 4. Validate outputs
-        if isinstance(outputs, dict):
-            missing_outputs = self.provides - outputs.keys()
-            if missing_outputs:
-                raise KeyError(
-                    f"{self.__class__.__name__} missing required outputs: {missing_outputs}. "
-                    f"Provided keys: {list(outputs.keys())}"
-                )
-        else:
-            raise TypeError(
-                f"Expected 'outputs' to be a dict, but got {type(outputs).__name__}."
+        # 5. Ensure outputs is a TensorDict
+        if not isinstance(outputs, TensorDict):
+            outputs = TensorDict(outputs, batch_size=[])
+
+        # 6. Contract enforcement (Output)
+        missing_outputs = self.out_keys - outputs.keys()
+        if missing_outputs:
+            raise KeyError(
+                f"{self.__class__.__name__} missing required outputs: {missing_outputs}. "
+                f"Provided keys: {list(outputs.keys())}"
             )
 
-        # 5. Return outputs
+        # 7. Filtering & return
         if not save_debug:
-            # Filter outputs to only include keys defined in `provides`
-            outputs = {k: v for k, v in outputs.items() if k in self.provides}
+            # select() returns a new TensorDict with only the 'provides' keys
+            outputs = outputs.select(*self.out_keys, strict=False)
 
         return outputs
 
     @abstractmethod
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
+    def forward_step(self, data: TensorDict, *args, **kwargs) -> TensorDict:
         """Perform a single forward step of the model.
 
         This method should be implemented by all subclasses.
 
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
         pass
 
     # --- Benchmarks ---
     @abstractmethod
-    def benchmark(self, imgsz: SizeLike, num_runs: int = 10, verbose: bool = True) -> dict[str, float]:
+    def benchmark(self, imgsz: SizeLike, *args, **kwargs) -> dict[str, float]:
         """Perform a single forward step of the model to benchmark its performance.
 
         Args:
             imgsz (SizeLike): Input image size.
-            num_runs (int, optional): Number of runs to average for benchmarking.
-                Defaults to 10.
-            verbose (bool, optional): Whether to log the results. Defaults to True.
+            **kwargs: Additional arguments for benchmarking, such as number
+                of runs, device, etc.
 
         Returns:
             dict[str, float]: A dictionary containing the benchmark results,

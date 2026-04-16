@@ -17,6 +17,7 @@ from typing import Any
 import pyiqa
 import torch
 from rich.progress import Progress
+from tensordict import TensorDict
 from torch import nn
 from typing_extensions import Literal, override
 
@@ -295,26 +296,16 @@ class RetinexNet_Trainer(Trainer):
         )
         for i, datapoint in enumerate(self.train_dataloader):
             # 2.1. Prepare inputs
+            datapoint = datapoint.to(device)
             image = datapoint["image"]
-            image = image.to(device)
             target = datapoint["target"]
-            target = target.to(device)
 
             # 2.2. Forward pass
             if phase == "decom":
-                outputs_low = self.model(
-                    data={"image": image, "decom": True},
-                    save_debug=True,
-                )
+                outputs_low = self.model(data={"image": image}, decom=True, save_debug=True)
             else:
-                outputs_low = self.model(
-                    data={"image": image, "decom": False},
-                    save_debug=True,
-                )
-            outputs_high = self.model(
-                data={"image": image, "decom": True},
-                save_debug=True,
-            )
+                outputs_low = self.model(data={"image": image}, decom=False, save_debug=True)
+            outputs_high = self.model(data={"image": target}, decom=True, save_debug=True)
 
             # 2.3. Extract outputs
             R_low = outputs_low["R"]
@@ -362,12 +353,12 @@ class RetinexNet_Trainer(Trainer):
         train_outputs |= {
             "loss": sum(losses) / len(losses),
         }
-        return train_outputs
+        return TensorDict(train_outputs, batch_size=[]).cpu()
 
     # --- Validation ---
     @override
     @torch.no_grad()
-    def _val_epoch(self, epoch: int, pbar: Progress) -> dict[str, Any]:
+    def _val_epoch(self, epoch: int, pbar: Progress) -> TensorDict:
         """Validate an epoch.
 
         Args:
@@ -375,7 +366,7 @@ class RetinexNet_Trainer(Trainer):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict[str, Any]: A dictionary containing the validation metrics and
+            TensorDict: A dictionary containing the validation metrics and
                 other results for the epoch.
         """
         device = self.device
@@ -397,16 +388,12 @@ class RetinexNet_Trainer(Trainer):
         )
         for i, datapoint in enumerate(self.val_dataloader):
             # 2.1. Prepare inputs
+            datapoint = datapoint.to(device)
             image = datapoint["image"]
-            image = image.to(device)
             target = datapoint["target"]
-            target = target.to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(
-                data={"image": image, "decom": False},
-                save_debug=True,
-            )
+            outputs = self.model(data=datapoint, decom=False, save_debug=True)
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
@@ -415,19 +402,19 @@ class RetinexNet_Trainer(Trainer):
             L_delta = outputs["L_delta"]
 
             # 2.4. Calculate metrics
-            psnrs.append(psnr_metric(enhanced, target).detach().cpu())
-            ssims.append(ssim_metric(enhanced, target).detach().cpu())
-            ssimcs.append(ssimc_metric(enhanced, target).detach().cpu())
+            psnrs.append(psnr_metric(enhanced, target).detach())
+            ssims.append(ssim_metric(enhanced, target).detach())
+            ssimcs.append(ssimc_metric(enhanced, target).detach())
 
             # 2.5. Debug outputs
             if i == 0:
                 val_outputs |= {
-                    "image": image.cpu(),
-                    "target": target.cpu(),
-                    "enhanced": enhanced.cpu(),
-                    "reflectance": R.cpu(),
-                    "illumination": L.cpu(),
-                    "illumination_delta": L_delta.cpu(),
+                    "image": image,
+                    "target": target,
+                    "enhanced": enhanced,
+                    "reflectance": R,
+                    "illumination": L,
+                    "illumination_delta": L_delta,
                 }
 
             pbar.update(task, advance=1)
@@ -439,22 +426,17 @@ class RetinexNet_Trainer(Trainer):
             "ssim": torch.cat(ssims).mean().item(),
             "ssimc": torch.cat(ssimcs).mean().item(),
         }
-        return val_outputs
+        return TensorDict(val_outputs, batch_size=[]).cpu()
 
     # --- Output ---
     @override
-    def _save_debug(
-        self,
-        epoch: int,
-        train_outputs: dict[str, Any],
-        val_outputs: dict[str, Any]
-    ):
+    def _save_debug(self, epoch: int, train_outputs: TensorDict, val_outputs: TensorDict):
         """Save debugging results for visualization.
 
         Args:
             epoch (int): The current epoch number.
-            train_outputs (dict[str, Any]): The outputs from the training epoch.
-            val_outputs (dict[str, Any]): The outputs from the validation epoch.
+            train_outputs (TensorDict): The outputs from the training epoch.
+            val_outputs (TensorDict): The outputs from the validation epoch.
         """
         debug_image = {
             "image": val_outputs["image"],

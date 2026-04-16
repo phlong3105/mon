@@ -12,7 +12,9 @@ __all__ = [
     "TVDenoise",
 ]
 
-from typing import Any, override
+from typing import override
+
+from tensordict import TensorDict
 
 from mon.core import MODELS, Path, Task
 from mon.models.restore.base import RestorationModel
@@ -61,26 +63,42 @@ class TVDenoise(ModelRegisterMixin, RestorationModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
-        """Perform a single forward step of the model.
+    def forward_step(
+        self,
+        data: TensorDict,
+        weight: float | None = None,
+        num_iter: int | None = None,
+        *args, **kwargs
+    ) -> TensorDict:
+        """Forward the input through the network.
 
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
+            weight (float, optional): Weight of the denoised image.
+                Defaults to None, which uses the instance's weight.
+            num_iter (int, optional): Number of iterations. Defaults to None,
+                which uses the instance's num_iter.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
+        # 1. Extract input data
         image = data["image"]
-        weight = data.get("weight", self.weight)
-        num_iter = data.get("num_iter", self.num_iter)
+        weight = weight or self.weight
+        num_iter = num_iter or self.num_iter
+
+        # 2. Network forward
         restored = tv_denoise(
             image=image,
             weight=weight,
             num_iter=num_iter,
         )
 
-        # Return final and intermediate results for debugging
-        return { "restored": restored }
+        # 3. Return final and intermediate results for debugging
+        outputs = {
+            "restored": restored,
+        }
+        return TensorDict(outputs, batch_size=[])
 
 # endregion
 

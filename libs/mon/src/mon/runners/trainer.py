@@ -18,6 +18,7 @@ from typing import Any
 import numpy as np
 import torch
 from rich.progress import Progress
+from tensordict import TensorDict
 from torch import Tensor
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import LRScheduler, ReduceLROnPlateau
@@ -247,7 +248,7 @@ class Trainer(Runner, ABC):
 
     # --- Training ---
     @abstractmethod
-    def _train_epoch(self, epoch: int, pbar: Progress) -> dict[str, Any]:
+    def _train_epoch(self, epoch: int, pbar: Progress) -> TensorDict:
         """Train an epoch.
 
         Args:
@@ -255,14 +256,14 @@ class Trainer(Runner, ABC):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict[str, Any]: A dictionary containing the training loss and other
+            TensorDict: A dictionary containing the training loss and other
                 results for the epoch.
         """
         pass
 
     # --- Validation ---
     @abstractmethod
-    def _val_epoch(self, epoch: int, pbar: Progress) -> dict[str, Any]:
+    def _val_epoch(self, epoch: int, pbar: Progress) -> TensorDict:
         """Validate an epoch.
 
         Args:
@@ -270,24 +271,19 @@ class Trainer(Runner, ABC):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict[str, Any]: A dictionary containing the validation metrics and
+            TensorDict: A dictionary containing the validation metrics and
                 other results for the epoch.
         """
         pass
 
     # --- Logging ---
-    def _log(
-        self,
-        epoch: int,
-        train_outputs: dict[str, Any],
-        val_outputs: dict[str, Any]
-    ):
+    def _log(self, epoch: int, train_outputs: TensorDict, val_outputs: TensorDict):
         """Log the training and validation results for the current epoch.
 
         Args:
             epoch (int): The current epoch number.
-            train_outputs (dict[str, Any]): The outputs from the training epoch.
-            val_outputs (dict[str, Any]): The outputs from the validation epoch.
+            train_outputs (TensorDict): The outputs from the training epoch.
+            val_outputs (TensorDict): The outputs from the validation epoch.
         """
         # 1. Collect all scalars
         log_dict = {
@@ -315,18 +311,13 @@ class Trainer(Runner, ABC):
             self._tb_logger.flush()
 
     # --- Output ---
-    def _save(
-        self,
-        epoch: int,
-        train_outputs: dict[str, Any],
-        val_outputs: dict[str, Any]
-    ):
+    def _save(self, epoch: int, train_outputs: TensorDict, val_outputs: TensorDict):
         """Save the model checkpoint for the current epoch.
 
         Args:
             epoch (int): The current epoch number.
-            train_outputs (dict[str, Any]): The outputs from the training epoch.
-            val_outputs (dict[str, Any]): The outputs from the validation epoch.
+            train_outputs (TensorDict): The outputs from the training epoch.
+            val_outputs (TensorDict): The outputs from the validation epoch.
         """
         config = self.config
 
@@ -344,18 +335,13 @@ class Trainer(Runner, ABC):
                 self._save_best_weights(k, v)
 
     @abstractmethod
-    def _save_debug(
-        self,
-        epoch: int,
-        train_outputs: dict[str, Any],
-        val_outputs: dict[str, Any]
-    ):
+    def _save_debug(self, epoch: int, train_outputs: TensorDict, val_outputs: TensorDict):
         """Save debugging results for visualization.
 
         Args:
             epoch (int): The current epoch number.
-            train_outputs (dict[str, Any]): The outputs from the training epoch.
-            val_outputs (dict[str, Any]): The outputs from the validation epoch.
+            train_outputs (TensorDict): The outputs from the training epoch.
+            val_outputs (TensorDict): The outputs from the validation epoch.
         """
         pass
 

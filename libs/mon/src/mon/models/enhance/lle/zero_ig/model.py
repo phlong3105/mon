@@ -19,9 +19,10 @@ __all__ = [
     "zero_ig",
 ]
 
-from typing import Any, override
+from typing import override
 
 import torch
+from tensordict import TensorDict
 from torch import nn
 
 from mon.core import (
@@ -104,19 +105,27 @@ class ZeroIG(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
-        """Perform a single forward step of the model.
+    def forward_step(
+        self,
+        data: TensorDict,
+        inference: bool = True,
+        *args, **kwargs
+    ) -> TensorDict:
+        """Forward the input through the network.
 
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
+            inference (bool, optional): Whether to run in inference mode.
+                Defaults to True.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
+        # 1. Extract input data
         eps = 1e-4
         x = data["image"] + eps
-        inference = data.get("inference", True)
 
+        # 2. Network forward
         if inference:
             L2 = x - self.denoise_1(x)
             L2 = torch.clamp(L2, eps, 1)
@@ -126,7 +135,7 @@ class ZeroIG(ModelRegisterMixin, EnhancementModel):
             H5_pred = torch.cat([H2, s2], 1).detach() - self.denoise_2(torch.cat([H2, s2], 1))
             H5_pred = torch.clamp(H5_pred, eps, 1)
             H3 = H5_pred[:, :3, :, :]
-            return {
+            outputs = {
                 "enhanced": H2,
                 "denoised": H3,
             }
@@ -172,7 +181,7 @@ class ZeroIG(ModelRegisterMixin, EnhancementModel):
             H2_blur = blur(H1)
             H3_blur = blur(H3)
 
-            return {
+            outputs = {
                 "L_pred1": L_pred1,
                 "L_pred2": L_pred2,
                 "L2": L2,
@@ -195,6 +204,9 @@ class ZeroIG(ModelRegisterMixin, EnhancementModel):
                 "H2_blur": H2_blur,
                 "H3_blur": H3_blur,
             }
+
+        # 3. Return final and intermediate results for debugging
+        return TensorDict(outputs, batch_size=[])
 
 # endregion
 

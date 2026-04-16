@@ -12,10 +12,8 @@ __all__ = [
     "SLICE_Predictor",
 ]
 
-from typing import Any
-
 import torch
-from torch import Tensor
+from tensordict import TensorDict
 from typing_extensions import override
 
 from mon.core import (
@@ -78,53 +76,42 @@ class SLICE_Predictor(Predictor):
     # --- Prediction ---
     @override
     @torch.inference_mode()
-    def _predict_step(self, datapoint: dict[str, Any], timers: TimeProfiler) -> dict[str, Any]:
+    def _predict_step(self, datapoint: TensorDict, timers: TimeProfiler) -> TensorDict:
         """Predict the output of the model for a single data point.
 
         Args:
-            datapoint (dict[str, Any]): The dictionary containing the data point
+            datapoint (TensorDict): The dictionary containing the data point
                 to predict.
             timers (TimeProfiler): The time profiler to record timing information
                 during prediction.
 
         Returns:
-            dict[str, Any]: The dictionary containing the prediction results.
+            TensorDict: The dictionary containing the prediction results.
         """
         config = self.config
         device = self.device
-        use_depth = config.model.use_depth
 
         # 1. Prepare inputs
         timers.preprocess.tick()
-        image = datapoint["image"]
-        image = image.to(device)
-        depth = datapoint.get("depth", None)
-        depth = depth.to(device) if use_depth and isinstance(depth, Tensor) else depth
+        datapoint = datapoint.to(device)
         T = torch.tensor([0, config.eval_T]).float().to(device)
         timers.preprocess.tock()
 
         # 2. Inference
         timers.infer.tick()
-        outputs = self.model(
-            data={
-                "image": image,
-                "depth": depth,
-                "T": T,
-            },
-            save_debug=self.save_debug
-        )
+        outputs = self.model(data=datapoint, T=T, save_debug=self.save_debug)
         timers.infer.tock()
 
         return outputs
 
     # --- Output ---
     @override
-    def _save(self, datapoint: dict[str, Any], outputs: dict[str, Any]):
+    def _save(self, datapoint: TensorDict, outputs: TensorDict):
         """Save the main prediction results to a file.
 
         Args:
-            datapoint (dict[str, Any]): The dictionary containing the input data.
-            outputs (dict[str, Any]): The dictionary containing the main
+            datapoint (TensorDict): The dictionary containing the input data.
+            outputs (TensorDict): The dictionary containing the main
                 prediction results. Each key in the dictionary is a batch of
                 prediction results.
         """
@@ -138,12 +125,12 @@ class SLICE_Predictor(Predictor):
         )
 
     @override
-    def _save_debug(self, datapoint: dict[str, Any], outputs: dict[str, Any]):
+    def _save_debug(self, datapoint: TensorDict, outputs: TensorDict):
         """Save debugging results for visualization.
 
         Args:
-            datapoint (dict[str, Any]): The dictionary containing the input data.
-            outputs (dict[str, Any]): The dictionary containing the main
+            datapoint (TensorDict): The dictionary containing the input data.
+            outputs (TensorDict): The dictionary containing the main
                 prediction results. Each key in the dictionary is a batch of
                 prediction results.
         """

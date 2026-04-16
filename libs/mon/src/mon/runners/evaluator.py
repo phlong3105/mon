@@ -213,11 +213,7 @@ class IQAEvaluator(Evaluator):
         # Print results
         self.log_results()
 
-    def _measure(
-        self,
-        dataloader: DataLoader,
-        use_gt_mean: bool = False,
-    ) -> dict[str, float]:
+    def _measure(self, dataloader: DataLoader, use_gt_mean: bool = False) -> dict[str, float]:
         """Measure IQA metrics based on the configuration.
 
         Args:
@@ -249,6 +245,7 @@ class IQAEvaluator(Evaluator):
                 total=len(dataloader),
                 description=desc,
             ):
+                datapoint = datapoint.to(device)
                 image = datapoint["image"]
                 target = datapoint.get("target", None)
 
@@ -260,10 +257,6 @@ class IQAEvaluator(Evaluator):
                     target_sz = target.shape[-2:]
                     if image_sz[0] == target_sz[1]:
                         image = image.transpose(2, 3)
-
-                # Move tensors to a device
-                image = image.to(device=device)
-                target = target.to(device=device) if target is not None else None
 
                 # Measure metric
                 for m in metrics:

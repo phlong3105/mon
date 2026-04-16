@@ -13,10 +13,11 @@ __all__ = [
     "InterUpsample",
 ]
 
-from typing import Any, override
+from typing import override
 
 import cv2
 from numpy import ndarray
+from tensordict import NonTensorData, TensorDict
 from torch import Tensor
 from torchvision.transforms import functional as F_tv, InterpolationMode
 
@@ -65,19 +66,20 @@ class InterUpsample(ModelRegisterMixin, SuperResolutionModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
-        """Perform a single forward step of the model.
+    def forward_step(self, data: TensorDict, *args, **kwargs) -> TensorDict:
+        """Forward the input through the network.
 
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
+        # 1. Extract input data
         x_lr = data["x_lr"]
         imgsz: Size = data["imgsz"]
 
-        # 1. Numpy / OpenCV
+        # 2. Numpy / OpenCV
         if self.backend == Backend.CV2:
             if isinstance(x_lr, Tensor):
                 x_lr = to_image_array(x_lr)
@@ -85,8 +87,9 @@ class InterUpsample(ModelRegisterMixin, SuperResolutionModel):
             is_depth = (c == 1)
             mode = cv2.INTER_NEAREST if is_depth else cv2.INTER_CUBIC
             x_hr = cv2.resize(src=x_lr, dsize=imgsz.wh, interpolation=mode)
+            x_hr = NonTensorData(x_hr)
 
-        # 2. Tensor / TorchVision
+        # 3. Tensor / TorchVision
         elif self.backend == Backend.TORCHVISION:
             if isinstance(x_lr, ndarray):
                 x_lr = to_image_tensor(x_lr)
@@ -100,15 +103,18 @@ class InterUpsample(ModelRegisterMixin, SuperResolutionModel):
                 antialias=False,
             )
 
-        # 3. Error: Unsupported backend
+        # 4. Error: Unsupported backend
         else:
             raise ValueError(
                 f"Expected 'x_lr' to be a tensor or ndarray, "
                 f"but got {type(x_lr).__name__}."
             )
 
-        # Return final and intermediate results for debugging
-        return { "x_hr": x_hr }
+        # 5. Return final and intermediate results for debugging
+        outputs = {
+            "x_hr": x_hr
+        }
+        return TensorDict(outputs, batch_size=[])
 
 
 @MODELS.register(name="guided_filter_upsample")
@@ -137,22 +143,28 @@ class GuidedFilterUpsample(ModelRegisterMixin, SuperResolutionModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
-        """Perform a single forward step of the model.
+    def forward_step(self, data: TensorDict, *args, **kwargs) -> TensorDict:
+        """Forward the input through the network.
 
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
+        # 1. Extract input data
         x_lr = data["x_lr"]
         y_hr = data["y_hr"]
         y_lr = data.get("y_lr", None)
+
+        # 2. Network forward
         x_hr = guided_filter_upsample(x_lr=x_lr, y_lr=y_lr, y_hr=y_hr, r=self.radius)
 
-        # Return final and intermediate results for debugging
-        return { "x_hr": x_hr }
+        # 3. Return final and intermediate results for debugging
+        outputs = {
+            "x_hr": x_hr
+        }
+        return TensorDict(outputs, batch_size=[])
 
 # endregion
 

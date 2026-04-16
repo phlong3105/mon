@@ -19,9 +19,10 @@ __all__ = [
     "clode",
 ]
 
-from typing import Any, override
+from typing import override
 
-import torch
+from tensordict import TensorDict
+from torch import Tensor
 
 from mon.core import (
     is_weights_type,
@@ -29,15 +30,12 @@ from mon.core import (
     log,
     MODELS,
     Path,
-    Size,
-    SizeLike,
     Task,
     WEIGHTS,
     Weights,
     WeightsEnum,
     WeightsLike,
 )
-from mon.metrics import benchmark, create_dummy_image
 from mon.models.enhance.base import EnhancementModel
 from mon.nn import ModelRegisterMixin
 from .module import NODE
@@ -63,7 +61,6 @@ class CLODE(ModelRegisterMixin, EnhancementModel):
     name: str = "clode"
     tasks: list[Task] = [Task.LLE]
     model_dir: Path = current_dir
-    requires: set = {"image", "eval_time"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -108,48 +105,33 @@ class CLODE(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
+    def forward_step(
+        self,
+        data: TensorDict,
+        eval_time: Tensor | None = None,
+        inference: bool = True,
+        *args, **kwargs
+    ) -> TensorDict:
         """Forward the input through the network.
 
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
+            eval_time (Tensor, optional): Evaluation time for the ODE solver.
+                Defaults to None, which means it will be determined by the model.
+            inference (bool, optional): Whether the forward step is for inference.
+                Defaults to True.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
+        # 1. Extract input data
         x = data["image"]
-        eval_time = data["eval_time"]
-        inference = data.get("inference", False)
-        return self.model(x, eval_time, inference)
 
-    # --- Benchmarks ---
-    @override
-    def benchmark(self, imgsz: SizeLike, num_runs: int = 10, verbose: bool = True) -> dict[str, float]:
-        """Perform a single forward step of the model to benchmark its performance.
+        # 2. Network forward
+        outputs = self.model(x, eval_time, inference)
 
-        Args:
-            imgsz (SizeLike): Input image size.
-            num_runs (int, optional): Number of runs to average for benchmarking.
-                Defaults to 10.
-            verbose (bool, optional): Whether to log the results. Defaults to True.
-
-        Returns:
-            dict[str, float]: A dictionary containing the benchmark results,
-                such as latency, FLOPs, and parameter count.
-        """
-        imgsz = Size.from_value(imgsz)
-        device = next(self.parameters()).device
-
-        # Create dummy inputs
-        dummy_input = create_dummy_image(imgsz=imgsz, device=device)
-        data = {
-            "image": dummy_input,
-            "eval_time": torch.tensor([0, 1]).float().type_as(dummy_input),
-        }
-        inputs = {"data": data}
-
-        # Benchmark the model
-        return benchmark(model=self, inputs=inputs, num_runs=num_runs, verbose=verbose)
+        # 3. Return final and intermediate results for debugging
+        return TensorDict(outputs, batch_size=[])
 
 # endregion
 

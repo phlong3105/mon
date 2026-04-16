@@ -17,6 +17,7 @@ from typing import Any
 import pyiqa
 import torch
 from rich.progress import Progress
+from tensordict import TensorDict
 from torch import Tensor
 from typing_extensions import override
 
@@ -70,7 +71,7 @@ class SLICE_Trainer(Trainer):
 
     # --- Training ---
     @override
-    def _train_epoch(self, epoch: int, pbar: Progress) -> dict[str, Any]:
+    def _train_epoch(self, epoch: int, pbar: Progress) -> TensorDict:
         """Train an epoch.
 
         Args:
@@ -78,12 +79,11 @@ class SLICE_Trainer(Trainer):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict[str, Any]: A dictionary containing the training loss and other
+            TensorDict: A dictionary containing the training loss and other
                 results for the epoch.
         """
         config = self.config
         device = self.device
-        use_depth = config.model.use_depth
 
         # 1. Define losses
         L_tv_A = L.L_tv().to(device)
@@ -113,21 +113,13 @@ class SLICE_Trainer(Trainer):
         )
         for i, datapoint in enumerate(self.train_dataloader):
             # 2.1. Prepare inputs
+            datapoint = datapoint.to(device)
             image = datapoint["image"]
-            image = image.to(device)
             depth = datapoint.get("depth", None)
-            depth = depth.to(device) if use_depth and isinstance(depth, Tensor) else depth
             T = torch.tensor([0.0, config.T]).float().to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(
-                data={
-                    "image": image,
-                    "depth": depth,
-                    "T": T,
-                },
-                save_debug=True,
-            )
+            outputs = self.model(data=datapoint, T=T, save_debug=True)
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
@@ -165,12 +157,12 @@ class SLICE_Trainer(Trainer):
         train_outputs |= {
             "loss": sum(losses) / len(losses),
         }
-        return train_outputs
+        return TensorDict(train_outputs, batch_size=[]).cpu()
 
     # --- Validation ---
     @override
     @torch.no_grad()
-    def _val_epoch(self, epoch: int, pbar: Progress) -> dict[str, Any]:
+    def _val_epoch(self, epoch: int, pbar: Progress) -> TensorDict:
         """Validate an epoch.
 
         Args:
@@ -178,7 +170,7 @@ class SLICE_Trainer(Trainer):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict[str, Any]: A dictionary containing the validation metrics and
+            TensorDict: A dictionary containing the validation metrics and
                 other results for the epoch.
         """
         config = self.config
@@ -202,44 +194,34 @@ class SLICE_Trainer(Trainer):
         )
         for i, datapoint in enumerate(self.val_dataloader):
             # 2.1. Prepare inputs
-            image = datapoint["image"]
-            image = image.to(device)
-            depth = datapoint.get("depth", None)
-            depth = depth.to(device) if use_depth and isinstance(depth, Tensor) else depth
-            target = datapoint["target"]
-            target = target.to(device)
+            datapoint = datapoint.to(device)
             T = torch.tensor([0.0, config.T]).float().to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(
-            data={
-                "image": image,
-                "depth": depth,
-                "T": T,
-            },
-            save_debug=True,
-        )
+            outputs = self.model(data=datapoint, T=T, save_debug=True)
 
             # 2.3. Extract outputs
+            image = datapoint["image"]
+            target = datapoint["target"]
             enhanced = outputs["enhanced"]
             curve_map = outputs["curve_map"]
             noise_map = outputs["noise_map"]
             denoised = outputs["denoised"]
 
             # 2.4. Calculate metrics
-            psnrs.append(psnr_metric(enhanced, target).detach().cpu())
-            ssims.append(ssim_metric(enhanced, target).detach().cpu())
-            ssimcs.append(ssimc_metric(enhanced, target).detach().cpu())
+            psnrs.append(psnr_metric(enhanced, target).detach())
+            ssims.append(ssim_metric(enhanced, target).detach())
+            ssimcs.append(ssimc_metric(enhanced, target).detach())
 
             # 2.5. Debug outputs
             if i == 0:
                 val_outputs |= {
-                    "image": image.detach().cpu(),
-                    "target": target.detach().cpu(),
-                    "enhanced": enhanced.detach().cpu(),
-                    "curve_map": curve_map.detach().cpu(),
-                    "noise_map": noise_map.detach().cpu(),
-                    "denoised": denoised.detach().cpu(),
+                    "image": image.detach(),
+                    "target": target.detach(),
+                    "enhanced": enhanced.detach(),
+                    "curve_map": curve_map.detach(),
+                    "noise_map": noise_map.detach(),
+                    "denoised": denoised.detach(),
                 }
 
             pbar.update(task, advance=1)
@@ -251,22 +233,17 @@ class SLICE_Trainer(Trainer):
             "ssim": torch.cat(ssims).mean().item(),
             "ssimc": torch.cat(ssimcs).mean().item(),
         }
-        return val_outputs
+        return TensorDict(val_outputs, batch_size=[]).cpu()
 
     # --- Output ---
     @override
-    def _save_debug(
-        self,
-        epoch: int,
-        train_outputs: dict[str, Any],
-        val_outputs: dict[str, Any]
-    ):
+    def _save_debug(self, epoch: int, train_outputs: TensorDict, val_outputs: TensorDict):
         """Save debugging results for visualization.
 
         Args:
             epoch (int): The current epoch number.
-            train_outputs (dict[str, Any]): The outputs from the training epoch.
-            val_outputs (dict[str, Any]): The outputs from the validation epoch.
+            train_outputs (TensorDict): The outputs from the training epoch.
+            val_outputs (TensorDict): The outputs from the validation epoch.
         """
         debug_image = {
             "image": val_outputs["image"],

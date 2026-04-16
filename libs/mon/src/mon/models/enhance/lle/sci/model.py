@@ -26,9 +26,10 @@ __all__ = [
     "sci_pp",
 ]
 
-from typing import Any, override
+from typing import override
 
 import torch
+from tensordict import TensorDict
 
 from mon.core import (
     is_weights_type,
@@ -64,7 +65,8 @@ class SCI(ModelRegisterMixin, EnhancementModel):
     """SCI model for low-light image enhancement.
 
     References:
-        - Paper: "Toward Fast, Flexible, and Robust Low-Light Image Enhancement,"
+        - Paper: "Toward Fast, Flexible, and Robust Low-Light Image
+        Enhancement,"
           CVPR 2022.
         - Code: https://github.com/vis-opt-group/SCI
     """
@@ -81,7 +83,7 @@ class SCI(ModelRegisterMixin, EnhancementModel):
         stage: int = 3,
         weights: WeightsLike | None = None,
         verbose: bool = True,
-        *args, **kwargs
+        *args, **kwargs,
     ):
         """Initialize a new instance.
 
@@ -113,23 +115,31 @@ class SCI(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
+    def forward_step(
+        self,
+        data: TensorDict,
+        inference: bool = True,
+        *args, **kwargs
+    ) -> TensorDict:
         """Forward the input through the network.
 
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
+            inference (bool, optional): If True, return enhanced image only.
+                Defaults to True.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
+        # 1. Extract input data
         x = data["image"]
-        inference = data.get("inference", True)
 
+        # 2. Network forward
         if inference:
             i = self.enhance(x)
             r = x / i
             r = torch.clamp(r, 0.0, 1.0)
-            return {
+            outputs = {
                 "enhanced": r,
                 "illumination": i,
             }
@@ -145,12 +155,15 @@ class SCI(ModelRegisterMixin, EnhancementModel):
                 i_list.append(i)
                 r_list.append(r)
                 a_list.append(torch.abs(att))
-            return {
-                "x_list": x_list,
-                "i_list": i_list,
-                "r_list": r_list,
-                "a_list": a_list,
+            outputs = {
+                "x_list": torch.stack(x_list, dim=0),
+                "i_list": torch.stack(i_list, dim=0),
+                "r_list": torch.stack(r_list, dim=0),
+                "a_list": torch.stack(a_list, dim=0),
             }
+
+        # 3. Return final and intermediate results for debugging
+        return TensorDict(outputs, batch_size=[])
 
 
 class SCI_PP(ModelRegisterMixin, EnhancementModel):
@@ -174,7 +187,7 @@ class SCI_PP(ModelRegisterMixin, EnhancementModel):
         stage: int = 3,
         weights: WeightsLike | None = None,
         verbose: bool = True,
-        *args, **kwargs
+        *args, **kwargs,
     ):
         """Initialize a new instance.
 
@@ -207,23 +220,31 @@ class SCI_PP(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
+    def forward_step(
+        self,
+        data: TensorDict,
+        inference: bool = True,
+        *args, **kwargs
+    ) -> TensorDict:
         """Forward the input through the network.
 
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
+            inference (bool, optional): If True, return enhanced image only.
+                Defaults to True.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
+        # 1. Extract input data
         x = data["image"]
-        inference = data.get("inference", True)
 
+        # 2. Network forward
         if inference:
             i = self.ha(x)
             r = x / i
             r = torch.clamp(r, 0.0, 1.0)
-            return {
+            outputs = {
                 "enhanced": r,
                 "illumination": i,
             }
@@ -249,12 +270,16 @@ class SCI_PP(ModelRegisterMixin, EnhancementModel):
                 i_list.append(i)
                 r_list.append(r)
                 a_list.append(torch.abs(att))
-            return {
-                "x_list": x_list,
-                "i_list": i_list,
-                "r_list": r_list,
-                "a_list": a_list,
+
+            outputs = {
+                "x_list": torch.stack(x_list, dim=0),
+                "i_list": torch.stack(i_list, dim=0),
+                "r_list": torch.stack(r_list, dim=0),
+                "a_list": torch.stack(a_list, dim=0),
             }
+
+        # 3. Return final and intermediate results for debugging
+        return TensorDict(outputs, batch_size=[])
 
 # endregion
 
@@ -324,7 +349,6 @@ def sci(weights: WeightsLike = "default", *args, **kwargs):
     )
 
 
-
 @MODELS.register(name="sci++", metaclass=SCI_PP)
 def sci_pp(weights: WeightsLike = "default", *args, **kwargs):
     """Create an SCI++ model.
@@ -341,6 +365,8 @@ def sci_pp(weights: WeightsLike = "default", *args, **kwargs):
         weights=SCI_PP_Weights(weights),
         *args, **kwargs,
     )
+
+
 # endregion
 
 

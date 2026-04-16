@@ -26,9 +26,10 @@ __all__ = [
     "zero_dce_pp",
 ]
 
-from typing import Any, override
+from typing import override
 
 import torch
+from tensordict import TensorDict
 from torch import nn
 from torch.nn import functional as F
 
@@ -126,16 +127,19 @@ class ZeroDCE(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
+    def forward_step(self, data: TensorDict, *args, **kwargs) -> TensorDict:
         """Forward the input through the network.
 
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
+        # 1. Extract input data
         image = data["image"]
+
+        # 2. Network forward
         x1 = self.relu(self.e_conv1(image))
         x2 = self.relu(self.e_conv2(x1))
         x3 = self.relu(self.e_conv3(x2))
@@ -144,29 +148,25 @@ class ZeroDCE(ModelRegisterMixin, EnhancementModel):
         x6 = self.relu(self.e_conv6(torch.cat([x2, x5], 1)))
         r  = F.tanh(self.e_conv7(torch.cat([x1, x6], 1)))
 
-        r1, r2, r3, r4, r5, r6, r7, r8 = torch.split(r, 3, dim=1)
-        y0 = image
-        y1 = y0 + r1 * (torch.pow(y0, 2) - y0)
-        y2 = y1 + r2 * (torch.pow(y1, 2) - y1)
-        y3 = y2 + r3 * (torch.pow(y2, 2) - y2)
-        y4 = y3 + r4 * (torch.pow(y3, 2) - y3)
-        y5 = y4 + r5 * (torch.pow(y4, 2) - y4)
-        y6 = y5 + r6 * (torch.pow(y5, 2) - y5)
-        y7 = y6 + r7 * (torch.pow(y6, 2) - y6)
-        y8 = y7 + r8 * (torch.pow(y7, 2) - y7)
+        # 3. Enhancement logic
+        r_list = torch.split(r, 3, dim=1)
+        y = image
+        intermediates = {}
 
-        # Return final and intermediate results for debugging
-        return {
-            "enhanced": y8,
+        for i, ri in enumerate(r_list):
+            # Using y = y + ... is standard, but keeping track of
+            # intermediates for debug is easier with a loop
+            y = y + ri * (torch.pow(y, 2) - y)
+            if i < len(r_list) - 1: # Don't add y8 to intermediates yet
+                intermediates[f"y{i+1}"] = y
+
+        # 4. Return final and intermediate results for debugging
+        outputs = {
+            "enhanced": y,
             "r": r,
-            "y1": y1,
-            "y2": y2,
-            "y3": y3,
-            "y4": y4,
-            "y5": y5,
-            "y6": y6,
-            "y7": y7,
+            **intermediates
         }
+        return TensorDict(outputs, batch_size=[])
 
 
 class ZeroDCEPP(ModelRegisterMixin, EnhancementModel):
@@ -241,16 +241,19 @@ class ZeroDCEPP(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
+    def forward_step(self, data: TensorDict, *args, **kwargs) -> TensorDict:
         """Forward the input through the network.
 
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
+        # 1. Extract input data
         image = data["image"]
+
+        # 2. Network forward with optional downsampling
         if self.scale_factor == 1:
             x_down = image
         else:
@@ -269,28 +272,24 @@ class ZeroDCEPP(ModelRegisterMixin, EnhancementModel):
         else:
             r = self.upsample(r)
 
-        y0 = image
-        y1 = y0 + r * (torch.pow(y0, 2) - y0)
-        y2 = y1 + r * (torch.pow(y1, 2) - y1)
-        y3 = y2 + r * (torch.pow(y2, 2) - y2)
-        y4 = y3 + r * (torch.pow(y3, 2) - y3)
-        y5 = y4 + r * (torch.pow(y4, 2) - y4)
-        y6 = y5 + r * (torch.pow(y5, 2) - y5)
-        y7 = y6 + r * (torch.pow(y6, 2) - y6)
-        y8 = y7 + r * (torch.pow(y7, 2) - y7)
+        # 3. Enhancement logic
+        y = image
+        intermediates = {}
 
-        # Return final and intermediate results for debugging
-        return {
-            "enhanced": y8,
+        for i in range(8):
+            # Using y = y + ... is standard, but keeping track of
+            # intermediates for debug is easier with a loop
+            y = y + r * (torch.pow(y, 2) - y)
+            if i < 7: # Don't add y8 to intermediates yet
+                intermediates[f"y{i+1}"] = y
+
+        # 4. Return final and intermediate results for debugging
+        outputs = {
+            "enhanced": y,
             "r": r,
-            "y1": y1,
-            "y2": y2,
-            "y3": y3,
-            "y4": y4,
-            "y5": y5,
-            "y6": y6,
-            "y7": y7,
+            **intermediates
         }
+        return TensorDict(outputs, batch_size=[])
 
 # endregion
 

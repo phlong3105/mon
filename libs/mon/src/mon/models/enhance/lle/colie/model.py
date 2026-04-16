@@ -18,9 +18,10 @@ __all__ = [
     "colie",
 ]
 
-from typing import Any, override
+from typing import override
 
 import torch
+from tensordict import TensorDict
 from torch import nn
 from torch.nn import functional as F
 from torch.optim import Adam, Optimizer
@@ -64,7 +65,6 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
     name: str = "colie"
     tasks: list[Task] = [Task.LLE]
     model_dir: Path = current_dir
-    requires: set = {"image", "E"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -125,16 +125,26 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: dict[str, Any], *args, **kwargs) -> dict[str, Any]:
-        """Perform a single forward step of the model.
+    def forward_step(
+        self,
+        data: TensorDict,
+        epochs: int | None = None,
+        E: float = 0.5,
+        *args, **kwargs
+    ) -> TensorDict:
+        """Forward the input through the network.
 
         Args:
-            data (dict[str, Any]): Input data dictionary.
+            data (TensorDict): Input data dictionary.
+            epochs (int, optional): Number of optimization epochs for
+                single-image optimization. If None, uses the default value from
+                initialization. Defaults to None.
+            E (float, optional): Exponential loss parameter. Defaults to 0.5.
 
         Returns:
-            dict[str, Any]: Output data dictionary.
+            TensorDict: Output data dictionary.
         """
-        epochs = data.get("epochs", self.epochs)
+        epochs = epochs or self.epochs
         window_size = self.window_size
         down_size = self.hidden_dim
         device = self.device
@@ -151,7 +161,6 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
 
         # 2. Move inputs to the corresponding device
         image = data["image"].to(device)
-        E = data.get("E", 0.5)
 
         # 3. Convert the image to HSV color space
         color_func = RgbToHsv().to(device)
@@ -228,7 +237,7 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
         # 9. Return final and intermediate results for debugging
         image_i_res = guided_filter_upsample(lr_image_i_res, image_i, lr_image_i)
         image_i_fixed = guided_filter_upsample(lr_image_i_fixed, image_i, lr_image_i)
-        return {
+        outputs = {
             "enhanced": image_rgb_fixed,
             "image_h": image_h,
             "image_s": image_s,
@@ -237,17 +246,17 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
             "image_i_fixed": image_i_fixed,
             "image_r": image_r,
         }
+        return TensorDict(outputs, batch_size=[])
 
     # --- Benchmarks ---
     @override
-    def benchmark(self, imgsz: SizeLike, num_runs: int = 10, verbose: bool = True) -> dict[str, float]:
+    def benchmark(self, imgsz: SizeLike, *args, **kwargs) -> dict[str, float]:
         """Perform a single forward step of the model to benchmark its performance.
 
         Args:
             imgsz (SizeLike): Input image size.
-            num_runs (int, optional): Number of runs to average for benchmarking.
-                Defaults to 10.
-            verbose (bool, optional): Whether to log the results. Defaults to True.
+            **kwargs: Additional arguments for benchmarking, such as number
+                of runs, device, etc.
 
         Returns:
             dict[str, float]: A dictionary containing the benchmark results,
@@ -276,13 +285,7 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
         }
 
         # Benchmark the model
-        return benchmark(
-            model=model,
-            inputs=inputs,
-            num_runs=num_runs,
-            copy=False,
-            verbose=verbose,
-        )
+        return benchmark(model=model, inputs=inputs, copy=False, *args, **kwargs)
 
 # endregion
 

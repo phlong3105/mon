@@ -12,11 +12,10 @@ __all__ = [
     "ZeroDCE_Trainer",
 ]
 
-from typing import Any
-
 import pyiqa
 import torch
 from rich.progress import Progress
+from tensordict import TensorDict
 from typing_extensions import override
 
 from mon.core import K, OPTIMIZERS, Path, TRAINERS
@@ -59,7 +58,7 @@ class ZeroDCE_Trainer(Trainer):
 
     # --- Training ---
     @override
-    def _train_epoch(self, epoch: int, pbar: Progress) -> dict[str, Any]:
+    def _train_epoch(self, epoch: int, pbar: Progress) -> TensorDict:
         """Train an epoch.
 
         Args:
@@ -67,7 +66,7 @@ class ZeroDCE_Trainer(Trainer):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict[str, Any]: A dictionary containing the training loss and other
+            TensorDict: A dictionary containing the training loss and other
                 results for the epoch.
         """
         config = self.config
@@ -95,11 +94,11 @@ class ZeroDCE_Trainer(Trainer):
         )
         for i, datapoint in enumerate(self.train_dataloader):
             # 2.1. Prepare inputs
+            datapoint = datapoint.to(device)
             image = datapoint["image"]
-            image = image.to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(data={"image": image}, save_debug=self.save_debug)
+            outputs = self.model(data=datapoint, save_debug=self.save_debug)
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
@@ -128,12 +127,12 @@ class ZeroDCE_Trainer(Trainer):
         train_outputs |= {
             "loss": sum(losses) / len(losses),
         }
-        return train_outputs
+        return TensorDict(train_outputs, batch_size=[]).cpu()
 
     # --- Validation ---
     @override
     @torch.no_grad()
-    def _val_epoch(self, epoch: int, pbar: Progress) -> dict[str, Any]:
+    def _val_epoch(self, epoch: int, pbar: Progress) -> TensorDict:
         """Validate an epoch.
 
         Args:
@@ -141,7 +140,7 @@ class ZeroDCE_Trainer(Trainer):
             pbar (Progress): The progress bar object.
 
         Returns:
-            dict[str, Any]: A dictionary containing the validation metrics and
+            TensorDict: A dictionary containing the validation metrics and
                 other results for the epoch.
         """
         device = self.device
@@ -163,28 +162,27 @@ class ZeroDCE_Trainer(Trainer):
         )
         for i, datapoint in enumerate(self.val_dataloader):
             # 2.1. Prepare inputs
+            datapoint = datapoint.to(device)
             image = datapoint["image"]
-            image = image.to(device)
             target = datapoint["target"]
-            target = target.to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(data={"image": image}, save_debug=self.save_debug)
+            outputs = self.model(data=datapoint, save_debug=self.save_debug)
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
 
             # 2.4. Calculate metrics
-            psnrs.append(psnr_metric(enhanced, target).detach().cpu())
-            ssims.append(ssim_metric(enhanced, target).detach().cpu())
-            ssimcs.append(ssimc_metric(enhanced, target).detach().cpu())
+            psnrs.append(psnr_metric(enhanced, target).detach())
+            ssims.append(ssim_metric(enhanced, target).detach())
+            ssimcs.append(ssimc_metric(enhanced, target).detach())
 
             # 2.5. Debug outputs
             if i == 0:
                 val_outputs |= {
-                    "image": image.cpu(),
-                    "target": target.cpu(),
-                    "enhanced": enhanced.cpu(),
+                    "image": image,
+                    "target": target,
+                    "enhanced": enhanced,
                 }
 
             pbar.update(task, advance=1)
@@ -196,22 +194,17 @@ class ZeroDCE_Trainer(Trainer):
             "ssim": torch.cat(ssims).mean().item(),
             "ssimc": torch.cat(ssimcs).mean().item(),
         }
-        return val_outputs
+        return TensorDict(val_outputs, batch_size=[]).cpu()
 
     # --- Output ---
     @override
-    def _save_debug(
-        self,
-        epoch: int,
-        train_outputs: dict[str, Any],
-        val_outputs: dict[str, Any]
-    ):
+    def _save_debug(self, epoch: int, train_outputs: TensorDict, val_outputs: TensorDict):
         """Save debugging results for visualization.
 
         Args:
             epoch (int): The current epoch number.
-            train_outputs (dict[str, Any]): The outputs from the training epoch.
-            val_outputs (dict[str, Any]): The outputs from the validation epoch.
+            train_outputs (TensorDict): The outputs from the training epoch.
+            val_outputs (TensorDict): The outputs from the validation epoch.
         """
         debug_image = {
             "image": val_outputs["image"],
