@@ -39,6 +39,7 @@ __all__ = [
     "to_list",
     "to_ntuple",
     "to_str",
+    "to_tensordict",
     "truncate_string",
 ]
 
@@ -51,6 +52,7 @@ from typing import Any, Callable, Iterable, Literal, Sequence
 
 import numpy as np
 from numpy import ndarray
+from tensordict import NonTensorData, TensorDict
 from torch import Tensor
 
 # ==============================================================================
@@ -394,6 +396,20 @@ def to_ntuple(n: int) -> Callable[[Any], tuple]:
         return (x,) * n
 
     return parse
+
+
+def to_tensordict(value: dict, batch_size: list) -> TensorDict:
+    """Convert dict to a TensorDict."""
+    outputs = {}
+    for k, v in value.items():
+        if v is None:
+            continue
+        elif isinstance(v, Tensor):
+            outputs[k] = v
+        else:
+            outputs[k] = NonTensorData(v)
+
+    return TensorDict(outputs, batch_size=batch_size)
 
 
 def pascalize(value: Any) -> Any:

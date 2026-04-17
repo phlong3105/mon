@@ -13,7 +13,6 @@ __all__ = [
 ]
 
 from abc import ABC, abstractmethod
-from typing import Any
 
 import numpy as np
 import torch

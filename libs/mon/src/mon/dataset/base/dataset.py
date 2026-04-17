@@ -100,7 +100,8 @@ class Dataset(Dataset_, ABC):
         Raises:
             TypeError: If ``metapoints`` is not a MetadataDictList or None.
         """
-        super().__init__(*args, **kwargs)
+        super().__init__()
+
         # Assign attributes
         self.verbose = verbose
 

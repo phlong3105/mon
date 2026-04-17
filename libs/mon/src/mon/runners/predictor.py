@@ -199,6 +199,7 @@ class Predictor(Runner, ABC):
 
                 # 6.2. Predict data
                 timers = TimeProfiler()
+                timers.total.tick()
                 self._predict_data(data=data, pbar=pbar, timers=timers)
                 timers.total.tock()
 

@@ -20,11 +20,8 @@ import glob
 from abc import ABC
 from typing import Any, override
 
-import numpy as np
-import torch
 from box import Box
-from tensordict import NonTensorData, TensorDict
-from torch import Tensor
+from tensordict import TensorDict
 
 from mon.core import (
     build_classlist,
@@ -37,6 +34,7 @@ from mon.core import (
     PathLike,
     Split,
     SplitLike,
+    to_tensordict,
 )
 from mon.dataset.base.modality import (
     build_modalities,
@@ -96,39 +94,10 @@ class AlbumentationsDataset(Dataset, ABC):
         """
         # 1. Get the datapoint
         datapoint = self.get_underlying_data(index=index)
-
         # 2. Apply transformations
-        transforms = self.transforms
-        basic_transforms = self.basic_transforms
-
-        if isinstance(transforms, Compose):
-            # Create a dictionary of transformable items by filtering out None values
-            kv = {k: v for k, v in datapoint.items() if v is not None}
-            # Apply transformations
-            transformed = transforms(**kv)
-
-            if self.keep_original and isinstance(basic_transforms, Compose):
-                # Apply basic transformations to the original data
-                transformed_orig = basic_transforms(**kv)
-                # Add suffix to the original items (e.g., 'image' -> 'image_orig')
-                transformed_orig = {f"{k}_{self.origin_suffix}": v for k, v in transformed_orig.items()}
-                # Combine the original and transformed items
-                transformed |= transformed_orig
-
-            # Update the datapoint with the transformed values
-            datapoint.update(transformed)
-
+        datapoint = self.transform_datapoint(datapoint=datapoint)
         # 3. Convert to TensorDict
-        outputs = {}
-        for k, v in datapoint.items():
-            if v is None:
-                continue
-            elif isinstance(v, Tensor):
-                outputs[k] = v
-            else:
-                outputs[k] = NonTensorData(v)
-
-        return TensorDict(outputs, batch_size=[])
+        return to_tensordict(datapoint, batch_size=[])
 
     # --- Properties ---
     @property
@@ -188,6 +157,31 @@ class AlbumentationsDataset(Dataset, ABC):
                     value.add_targets(self.modalities[k].additional_target)
 
         self._transforms = value
+
+    # --- Retrieval ---
+    def transform_datapoint(self, datapoint: dict[str, Any]) -> dict[str, Any]:
+        """Apply transformations to a datapoint dictionary."""
+        transforms = self.transforms
+        basic_transforms = self.basic_transforms
+
+        if isinstance(transforms, Compose):
+            # Create a dictionary of transformable items by filtering out None values
+            kv = {k: v for k, v in datapoint.items() if v is not None}
+            # Apply transformations
+            transformed = transforms(**kv)
+
+            if self.keep_original and isinstance(basic_transforms, Compose):
+                # Apply basic transformations to the original data
+                transformed_orig = basic_transforms(**kv)
+                # Add suffix to the original items (e.g., 'image' -> 'image_orig')
+                transformed_orig = {f"{k}_{self.origin_suffix}": v for k, v in transformed_orig.items()}
+                # Combine the original and transformed items
+                transformed |= transformed_orig
+
+            # Update the datapoint with the transformed values
+            datapoint.update(transformed)
+
+        return datapoint
 
 
 class ImageDataset(StandardDataset, AlbumentationsDataset):
