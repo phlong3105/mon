@@ -16,8 +16,10 @@ from .lol import *
 from .lsrw import *
 from .msec import *
 from .nightcity import *
+from .ntire import *
 from .sice import *
 from .speed import *
 from .uhd_ll import *
+from .uhd_lol import *
 from .unpaired_lol import *
 from .ydld import *

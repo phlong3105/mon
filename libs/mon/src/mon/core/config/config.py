@@ -388,6 +388,8 @@ class Config:
         if self.cli_kwargs:
             # If arguments are given from CLI, update the config
             self.update_from_cli(self.cli_kwargs)
+            # Reset the CLI kwargs to avoid re-processing them
+            self.cli_kwargs = {}
 
     # --- Attribute Access ---
     def __getattr__(self, name: str) -> Any:
@@ -527,7 +529,7 @@ class Config:
     @task.setter
     def task(self, value: TaskLike | None):
         """Set the task type."""
-        if value in Task:
+        if value is not None:
             self._config.task = Task(value)
 
     @property
@@ -538,7 +540,7 @@ class Config:
     @mode.setter
     def mode(self, value: RunModeLike | None):
         """Set the run mode."""
-        if value in RunMode:
+        if value is not None:
             self._config.mode = RunMode(value)
 
     @property

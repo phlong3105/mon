@@ -281,6 +281,7 @@ def write_image(image: TensorOrArray, path: PathLike):
             elif image.shape[-1] == 4:
                 image = cv2.cvtColor(image, cv2.COLOR_RGBA2BGRA)
         cv2.imwrite(str(path), image)
+        print(path)
     else:
         raise TypeError(
             f"Expected 'image' to be a tensor or array, "

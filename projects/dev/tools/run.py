@@ -47,7 +47,7 @@ def train(args: argparse.Namespace):
         verbose=True,
     )
     config = config_ctx.config_for(RunMode.TRAIN, prompt=args.prompt)
-    trainer = TRAINERS.build(name=config.model_name, config=config)
+    trainer = TRAINERS.build(name=config.arch, config=config)
     trainer.train()
 
 
@@ -64,7 +64,7 @@ def predict(args: argparse.Namespace):
         verbose=True,
     )
     config = config_ctx.config_for(RunMode.PREDICT, prompt=args.prompt)
-    predictor = PREDICTORS.build(name=config.model_name, config=config)
+    predictor = PREDICTORS.build(name=config.arch, config=config)
     predictor.predict()
 
 

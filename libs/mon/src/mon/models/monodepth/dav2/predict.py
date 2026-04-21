@@ -145,7 +145,8 @@ class DAV2_Predictor(Predictor):
                 prediction results. Each key in the dictionary is a batch of
                 prediction results.
         """
-        meta = datapoint["meta"][0]
+        meta = datapoint["meta"]
+        meta = meta[0] if isinstance(meta, (list, tuple)) else meta
         path = Path(meta["path"])
         size = Size.from_value(meta["imgsz"])
 
@@ -169,7 +170,8 @@ class DAV2_Predictor(Predictor):
                 prediction results. Each key in the dictionary is a batch of
                 prediction results.
         """
-        meta = datapoint["meta"][0]
+        meta = datapoint["meta"]
+        meta = meta[0] if isinstance(meta, (list, tuple)) else meta
         path = Path(meta["path"])
         size = Size.from_value(meta["imgsz"])
 
