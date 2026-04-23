@@ -21,7 +21,16 @@ from tensordict import NonTensorData, TensorDict
 from torch import Tensor
 from torchvision.transforms import functional as F_tv, InterpolationMode
 
-from mon.core import Backend, BackendLike, MODELS, Path, Size, Task, UPSAMPLERS
+from mon.core import (
+    Backend,
+    BackendLike,
+    MODELS,
+    Path,
+    Size,
+    Strategy,
+    Task,
+    UPSAMPLERS,
+)
 from mon.models.restore.super_res.base import SuperResolutionModel
 from mon.nn import ModelRegisterMixin
 from mon.ops import guided_filter_upsample, to_image_array, to_image_tensor
@@ -41,6 +50,7 @@ class InterUpsample(ModelRegisterMixin, SuperResolutionModel):
     arch: str = "interpolation"
     name: str = "interpolation"
     tasks: list[Task] = [Task.SUPER_RES]
+    strategies: list[Strategy] = [Strategy.NATIVE]
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
@@ -66,7 +76,7 @@ class InterUpsample(ModelRegisterMixin, SuperResolutionModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: TensorDict, *args, **kwargs) -> TensorDict:
+    def forward(self, data: TensorDict) -> TensorDict:
         """Forward the input through the network.
 
         Args:
@@ -125,6 +135,7 @@ class GuidedFilterUpsample(ModelRegisterMixin, SuperResolutionModel):
     arch: str = "guided_filter"
     name: str = "guided_filter_upsample"
     tasks: list[Task] = [Task.SUPER_RES]
+    strategies: list[Strategy] = [Strategy.NATIVE]
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
@@ -143,7 +154,7 @@ class GuidedFilterUpsample(ModelRegisterMixin, SuperResolutionModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: TensorDict, *args, **kwargs) -> TensorDict:
+    def forward(self, data: TensorDict) -> TensorDict:
         """Forward the input through the network.
 
         Args:

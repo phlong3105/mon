@@ -43,6 +43,7 @@ from mon.core import (
     K,
     log,
     Path,
+    Strategy,
     Task,
     WEIGHTS,
     Weights,
@@ -69,6 +70,7 @@ class ResNetBackBone(ModelRegisterMixin, nn.Module):
     arch: str = "resnet"
     name: str = "resnet"
     tasks: list[Task] = [Task.BACKBONE]
+    strategies: list[Strategy] = [Strategy.RESIZE]
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
@@ -77,7 +79,7 @@ class ResNetBackBone(ModelRegisterMixin, nn.Module):
         name: str,
         block: type[Union[BasicBlock, Bottleneck]],
         layers: list[int],
-        weights: WeightsLike | None = None,
+        weights: Weights | None = None,
         out_indices: list[int] | None = None,
         verbose: bool = True,
         *args, **kwargs,
@@ -88,7 +90,7 @@ class ResNetBackBone(ModelRegisterMixin, nn.Module):
             name (str): Name of the model variant.
             block (BasicBlock | Bottleneck): Type of residual block to use.
             layers (list[int]): Number of residual blocks to include in each stage.
-            weights (WeightsLike, optional): Pre-trained weights to load.
+            weights (Weights, optional): Pre-trained weights to load.
                 Defaults to None.
             out_indices (list[int], optional): List of layer indices to extract
                 features from. If None, defaults to [4, 5, 6, 7].
@@ -100,13 +102,13 @@ class ResNetBackBone(ModelRegisterMixin, nn.Module):
         self.verbose = verbose
 
         # Define model
-        if is_weights_type(weights):
+        if weights is not None and is_weights_type(weights):
             kwargs["num_classes"] = weights.num_classes or kwargs["num_classes"]
 
         base_model = ResNet(block=block, layers=layers, *args, **kwargs)
 
         # Load weights
-        if is_weights_type(weights):
+        if weights is not None and is_weights_type(weights):
             base_model.load_state_dict(weights.state_dict())
             if self.verbose:
                 log(f"Initialized '{name}' from weights: '{weights.path}'.")
@@ -607,7 +609,7 @@ def resnet18(
     """Create a ResNet-18 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -631,7 +633,7 @@ def resnet34(
     """Create a ResNet-34 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -655,7 +657,7 @@ def resnet50(
     """Create a ResNet-50 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -679,7 +681,7 @@ def resnet101(
     """Create a ResNet-101 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -703,7 +705,7 @@ def resnet152(
     """Create a ResNet-152 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -727,7 +729,7 @@ def resnext50_32x4d(
     """Create a ResNeXt-50 32x4d backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -753,7 +755,7 @@ def resnext101_32x8d(
     """Create a ResNeXt-101 32x8d backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -779,7 +781,7 @@ def resnext101_64x4d(
     """Create a ResNeXt-101 64x4d backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -805,7 +807,7 @@ def wide_resnet50_2(
     """Create a Wide-ResNet-50-2 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -830,7 +832,7 @@ def wide_resnet101_2(
     """Create a Wide-ResNet-101-2 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.

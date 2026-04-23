@@ -107,16 +107,22 @@ grad_clip_norm: 0.1
 tensorboard_logger: True
 
 # --- Prediction ---
-eval_T: 3.0
+predict:
+  data: ~  # (list[str]) List of data names or paths for prediction.
+  T: 3.0
+  strategy: "default"  # (str) Prediction strategy (e.g., default, resize, patch).
 
-data: ~  # (list[str]) List of data names or paths for prediction.
+  # Resizing strategy: Downsampling -> Inference -> Upsampling.
+  imgsz: 256  # (int | list[int]) Image size for prediction.
+  upscale: True  # (bool) Whether to upscale the image after inference.
+  upsampler:
+    name: "interpolation"  # (str) Upsampler name.
 
-eval_imgsz: 256  # (int | list[int]) Image size for evaluation.
-eval_resize: False  # (bool) Resize the image to the evaluation size.
+  # Patching strategy: Split the image into patches -> Inference on each patch -> Blend the patches.
+  patch_size: 512  # (int) Patch size for patch-based prediction.
+  overlap: 128  # (int) Number of pixels patches should overlap to blend seams.
 
-upsampler:
-  name: "interpolation"
-
+# --- Evaluation ---
 benchmark: False  # (bool) Benchmark the model.
 
 # --- Saving & Visualization ---

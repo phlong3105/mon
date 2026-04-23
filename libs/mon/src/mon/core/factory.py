@@ -476,7 +476,7 @@ class ModelFactory(Factory):
             "arch": arch,
             "name": model,
             "tasks": self._get_attr(module, metaclass, "tasks"),
-            # "mltypes": self._get_attr(module, metaclass, "mltypes"),
+            "strategies": self._get_attr(module, metaclass, "strategies"),
             "model_dir": self._get_attr(module, metaclass, "model_dir"),
             "module": module,
         }
@@ -607,7 +607,7 @@ class ModelFactory(Factory):
         return key in self.models_flat
 
     # --- Retrieval ---
-    def get_model(self, name: str) -> dict[str, Any] | None:
+    def get_model_meta(self, name: str) -> dict[str, Any]:
         """Return the metadata for a registered model by name."""
         # Normalize key
         key = depascalize(name) if self.decamelize else name
@@ -617,12 +617,12 @@ class ModelFactory(Factory):
         if key in flatten:
             return flatten[key]
 
-        return None
+        return {}
 
     def get_model_dir(self, name: str) -> Path | None:
         """Return the absolute path to the model definition directory."""
         # Check if the model is registered
-        model_entry = self.get_model(name=name)
+        model_entry = self.get_model_meta(name=name)
         if not model_entry:
             return None
 

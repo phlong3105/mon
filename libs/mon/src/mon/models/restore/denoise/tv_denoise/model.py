@@ -16,9 +16,10 @@ from typing import override
 
 from tensordict import TensorDict
 
-from mon.core import MODELS, Path, Task
-from mon.models.restore.base import RestorationModel
-from mon.nn import ModelRegisterMixin
+from mon.core import Config, MODELS, Path, Size, Strategy, Task
+from mon.dataset import transform as T
+from mon.metrics import benchmark, create_dummy_image
+from mon.nn import Model, ModelRegisterMixin
 from mon.ops import tv_denoise
 
 current_file = Path(__file__).normalize()
@@ -30,13 +31,17 @@ current_dir = current_file.parents[0]
 # ==============================================================================
 
 @MODELS.register(name="tv_denoise")
-class TVDenoise(ModelRegisterMixin, RestorationModel):
+class TVDenoise(ModelRegisterMixin, Model):
     """TV-Denoise model for image denoising."""
 
     arch: str = "tv_denoise"
     name: str = "tv_denoise"
     tasks: list[Task] = [Task.DENOISE]
+    strategies: list[Strategy] = [Strategy.RESIZE]
     model_dir: Path = current_dir
+
+    in_keys: set = {"image"}
+    out_keys: set = {"restored"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -63,42 +68,79 @@ class TVDenoise(ModelRegisterMixin, RestorationModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(
-        self,
-        data: TensorDict,
-        weight: float | None = None,
-        num_iter: int | None = None,
-        *args, **kwargs
-    ) -> TensorDict:
+    def forward(self, data: TensorDict) -> TensorDict:
         """Forward the input through the network.
 
         Args:
             data (TensorDict): Input data dictionary.
-            weight (float, optional): Weight of the denoised image.
-                Defaults to None, which uses the instance's weight.
-            num_iter (int, optional): Number of iterations. Defaults to None,
-                which uses the instance's num_iter.
 
         Returns:
             TensorDict: Output data dictionary.
         """
         # 1. Extract input data
         image = data["image"]
-        weight = weight or self.weight
-        num_iter = num_iter or self.num_iter
 
         # 2. Network forward
-        restored = tv_denoise(
-            image=image,
-            weight=weight,
-            num_iter=num_iter,
-        )
+        restored = tv_denoise(image=image, weight=self.weight, num_iter=self.num_iter)
 
         # 3. Return final and intermediate results for debugging
         outputs = {
             "restored": restored,
         }
         return TensorDict(outputs, batch_size=[])
+
+    # --- Interfaces ---
+    @override
+    def build_transforms(self, config: Config | None = None) -> T.Compose:
+        """Define the model's transformations.
+
+        Args:
+            config (Config, optional): The configuration object containing any
+                necessary parameters for defining the transformations.
+                Defaults to None.
+
+        Returns:
+            Callable: A callable (e.g., a torchvision transform or a custom
+                function) that takes in the raw input data and returns the
+                transformed data ready for the forward step.
+        """
+        transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
+
+        if config is not None:
+            if config.strategy in [Strategy.RESIZE]:
+                imgsz = config.imgsz
+                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
+                transforms = resize + transforms
+
+        return transforms
+
+    # --- Benchmark ---
+    @override
+    def benchmark(self, imgsz: Size, *args, **kwargs) -> dict[str, float]:
+        """Perform a single forward step of the model to benchmark its performance.
+
+        Args:
+            imgsz (Size): Input image size.
+            **kwargs: Additional arguments for benchmarking, such as number
+                of runs, device, etc.
+
+        Returns:
+            dict[str, float]: A dictionary containing the benchmark results,
+                such as latency, FLOPs, and parameter count.
+        """
+        imgsz = Size.from_value(imgsz)
+        device = next(self.parameters()).device
+
+        # Create dummy inputs
+        dummy_input = create_dummy_image(imgsz=imgsz, device=device)
+        data = TensorDict({"image": dummy_input}, batch_size=[])
+        inputs = {"data": data}
+
+        # Benchmark the model
+        return benchmark(model=self, inputs=inputs, *args, **kwargs)
 
 # endregion
 

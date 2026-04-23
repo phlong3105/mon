@@ -32,6 +32,7 @@ from mon.core import (
     K,
     log,
     Path,
+    Strategy,
     Task,
     WEIGHTS,
     Weights,
@@ -54,6 +55,7 @@ class ViTBackBone(ModelRegisterMixin, nn.Module):
     arch: str = "vit"
     name: str = "vit"
     tasks: list[Task] = [Task.BACKBONE]
+    strategies: list[Strategy] = [Strategy.RESIZE]
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
@@ -65,7 +67,7 @@ class ViTBackBone(ModelRegisterMixin, nn.Module):
         num_heads: int,
         hidden_dim: int,
         mlp_dim: int,
-        weights: WeightsLike | None = None,
+        weights: Weights | None = None,
         out_indices: list[int] | None = None,
         verbose: bool = True,
         *args, **kwargs,
@@ -79,7 +81,7 @@ class ViTBackBone(ModelRegisterMixin, nn.Module):
             num_heads (int): Number of attention heads.
             hidden_dim (int): Dimension of the hidden layers.
             mlp_dim (int): Dimension of the MLP layers.
-            weights (WeightsLike, optional): Pre-trained weights to load.
+            weights (Weights, optional): Pre-trained weights to load.
                 Defaults to None.
             out_indices (list[int], optional): List of layer indices to extract
                 features from. If None, defaults to [2, 5, 8, 11].
@@ -91,7 +93,7 @@ class ViTBackBone(ModelRegisterMixin, nn.Module):
         self.verbose = verbose
 
         # Define model
-        if is_weights_type(weights):
+        if weights is not None and is_weights_type(weights):
             kwargs["num_classes"] = weights.num_classes or kwargs["num_classes"]
             kwargs["image_size"] = weights.meta["min_size"][0]
 
@@ -105,7 +107,7 @@ class ViTBackBone(ModelRegisterMixin, nn.Module):
         )
 
         # Load weights
-        if is_weights_type(weights):
+        if weights is not None and is_weights_type(weights):
             base_model.load_state_dict(weights.state_dict())
             if self.verbose:
                 log(f"Initialized '{name}' from weights: '{weights.path}'.")
@@ -447,7 +449,7 @@ def vit_b_16(
     """Create a ViT-B/16 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -474,7 +476,7 @@ def vit_b_32(
     """Create a ViT-B/32 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -501,7 +503,7 @@ def vit_l_16(
     """Create a ViT-L/16 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -528,7 +530,7 @@ def vit_l_32(
     """Create a ViT-L/32 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -555,7 +557,7 @@ def vit_h_14(
     """Create a ViT-H/14 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.

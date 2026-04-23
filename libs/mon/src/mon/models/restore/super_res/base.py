@@ -18,7 +18,8 @@ from typing import override
 from tensordict import NonTensorData, TensorDict
 from torch import Tensor
 
-from mon.core import Size, SizeLike
+from mon.core import Config, Size
+from mon.dataset import transform as T
 from mon.nn import Model
 
 
@@ -33,8 +34,7 @@ class SuperResolutionModel(Model, ABC):
     out_keys: set = {"x_hr"}
 
     # --- Callable & Context Manager ---
-    @override
-    def forward(
+    def __call__(
         self,
         data: TensorDict | None = None,
         save_debug: bool = False,
@@ -72,7 +72,6 @@ class SuperResolutionModel(Model, ABC):
             k: v if isinstance(v, Tensor) else NonTensorData(v)
             for k, v in data_kwargs.items()
         }
-
         if data is None:
             data = TensorDict(data_kwargs, batch_size=[])
         elif isinstance(data, TensorDict):
@@ -86,12 +85,12 @@ class SuperResolutionModel(Model, ABC):
         missing_inputs = self.in_keys - data.keys()
         if missing_inputs:
             raise KeyError(
-                f"{self.__class__.__name__} missing required inputs: {missing_inputs}. "
-                f"Provided keys: {list(data.keys())}"
+                f"{self.__class__.__name__} missing required inputs: "
+                f"{missing_inputs}. Provided keys: {list(data.keys())}"
             )
 
         # 4. Execution
-        outputs = self.forward_step(data=data, **flags)
+        outputs = super().__call__(data=data, **flags)
 
         # 5. Ensure outputs is a TensorDict
         if not isinstance(outputs, TensorDict):
@@ -101,8 +100,8 @@ class SuperResolutionModel(Model, ABC):
         missing_outputs = self.out_keys - outputs.keys()
         if missing_outputs:
             raise KeyError(
-                f"{self.__class__.__name__} missing required outputs: {missing_outputs}. "
-                f"Provided keys: {list(outputs.keys())}"
+                f"{self.__class__.__name__} missing required outputs: "
+                f"{missing_outputs}. Provided keys: {list(outputs.keys())}"
             )
 
         # 7. Filtering & return
@@ -112,13 +111,34 @@ class SuperResolutionModel(Model, ABC):
 
         return outputs
 
-    # --- Benchmarks ---
+    # --- Interfaces ---
     @override
-    def benchmark(self, imgsz: SizeLike, *args, **kwargs) -> dict[str, float]:
+    def build_transforms(self, config: Config | None = None) -> T.Compose:
+        """Define the model's transformations.
+
+        Args:
+            config (Config, optional): The configuration object containing any
+                necessary parameters for defining the transformations.
+                Defaults to None.
+
+        Returns:
+            Callable: A callable (e.g., a torchvision transform or a custom
+                function) that takes in the raw input data and returns the
+                transformed data ready for the forward step.
+        """
+        transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
+        return transforms
+
+    # --- Benchmark ---
+    @override
+    def benchmark(self, imgsz: Size, *args, **kwargs) -> dict[str, float]:
         """Perform a single forward step of the model to benchmark its performance.
 
         Args:
-            imgsz (SizeLike): Input image size.
+            imgsz (Size): Input image size.
             **kwargs: Additional arguments for benchmarking, such as number
                 of runs, device, etc.
 

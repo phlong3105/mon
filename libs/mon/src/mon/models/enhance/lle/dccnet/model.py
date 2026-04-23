@@ -23,19 +23,23 @@ from tensordict import TensorDict
 from typing_extensions import override
 
 from mon.core import (
+    Config,
     is_weights_type,
     K,
     log,
     MODELS,
     Path,
+    Size,
+    Strategy,
     Task,
     WEIGHTS,
     Weights,
     WeightsEnum,
     WeightsLike,
 )
-from mon.models.enhance.base import EnhancementModel
-from mon.nn import ModelRegisterMixin
+from mon.dataset import transform as T
+from mon.metrics import benchmark, create_dummy_image
+from mon.nn import Model, ModelRegisterMixin
 from .module import Net
 
 current_file = Path(__file__).normalize()
@@ -46,7 +50,7 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-class DCCNet(ModelRegisterMixin, EnhancementModel):
+class DCCNet(ModelRegisterMixin, Model):
     """DCC-Net model for low-light image enhancement.
 
     References:
@@ -58,14 +62,18 @@ class DCCNet(ModelRegisterMixin, EnhancementModel):
     arch: str = "dccnet"
     name: str = "dccnet"
     tasks: list[Task] = [Task.LLE]
+    strategies: list[Strategy] = [Strategy.RESIZE]
     model_dir: Path = current_dir
+
+    in_keys: set = {"image"}
+    out_keys: set = {"enhanced"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
         name: str,
         d_hist: int = 64,
-        weights: WeightsLike | None = None,
+        weights: Weights | None = None,
         verbose: bool = True,
         *args, **kwargs
     ):
@@ -75,7 +83,7 @@ class DCCNet(ModelRegisterMixin, EnhancementModel):
             name (str): Name of the model variant.
             d_hist (int, optional): Number of histogram bins for the C-Net.
                 Defaults to 64.
-            weights (WeightsLike, optional): Pre-trained weights to load.
+            weights (Weights, optional): Pre-trained weights to load.
                 Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
@@ -88,7 +96,7 @@ class DCCNet(ModelRegisterMixin, EnhancementModel):
         self.module = Net(d_hist=d_hist)
 
         # Load weights
-        if is_weights_type(weights):
+        if weights is not None and is_weights_type(weights):
             self.load_state_dict(weights.state_dict())
             if self.verbose:
                 log(f"Initialized '{name}' from weights: '{weights.path}'.")
@@ -98,7 +106,7 @@ class DCCNet(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: TensorDict, *args, **kwargs) -> TensorDict:
+    def forward(self, data: TensorDict) -> TensorDict:
         """Forward the input through the network.
 
         Args:
@@ -120,6 +128,60 @@ class DCCNet(ModelRegisterMixin, EnhancementModel):
             "color_hist": color_hist,
         }
         return TensorDict(outputs, batch_size=[])
+
+    # --- Interfaces ---
+    @override
+    def build_transforms(self, config: Config | None = None) -> T.Compose:
+        """Define the model's transformations.
+
+        Args:
+            config (Config, optional): The configuration object containing any
+                necessary parameters for defining the transformations.
+                Defaults to None.
+
+        Returns:
+            Callable: A callable (e.g., a torchvision transform or a custom
+                function) that takes in the raw input data and returns the
+                transformed data ready for the forward step.
+        """
+        transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
+
+        if config is not None:
+            if config.strategy in [Strategy.RESIZE]:
+                imgsz = config.imgsz
+                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
+            else:
+                resize = T.ResizeDivisibleBy(divisor=32)
+            transforms = resize + transforms
+
+        return transforms
+
+    # --- Benchmark ---
+    @override
+    def benchmark(self, imgsz: Size, *args, **kwargs) -> dict[str, float]:
+        """Perform a single forward step of the model to benchmark its performance.
+
+        Args:
+            imgsz (Size): Input image size.
+            **kwargs: Additional arguments for benchmarking, such as number
+                of runs, device, etc.
+
+        Returns:
+            dict[str, float]: A dictionary containing the benchmark results,
+                such as latency, FLOPs, and parameter count.
+        """
+        device = next(self.parameters()).device
+
+        # Create dummy inputs
+        dummy_input = create_dummy_image(imgsz=imgsz, device=device)
+        data = TensorDict({"image": dummy_input}, batch_size=[])
+        inputs = {"data": data}
+
+        # Benchmark the model
+        return benchmark(model=self, inputs=inputs, *args, **kwargs)
 
 # endregion
 
@@ -150,7 +212,7 @@ def dccnet(weights: WeightsLike = "default", *args, **kwargs):
     """Create a DCC-Net model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "dccnet")

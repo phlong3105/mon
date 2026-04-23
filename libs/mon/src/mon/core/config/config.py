@@ -28,7 +28,7 @@ from mon.core.console import console, log_error, pprint_dict
 from mon.core.constants import K
 from mon.core.context import sys_ctx
 from mon.core.data import Size, SizeLike, Weights
-from mon.core.dtype import RunMode, Task
+from mon.core.dtype import RunMode, Strategy, Task
 from mon.core.factory import DATASETS, MODELS, UPSAMPLERS, WEIGHTS
 from mon.core.filesystem import (
     resolve_output_dir,
@@ -41,6 +41,7 @@ from mon.core.typing import (
     DictLike,
     PathLike,
     RunModeLike,
+    StrategyLike,
     TaskLike,
 )
 from mon.core.ui.prompt_toolkit import (
@@ -51,7 +52,6 @@ from mon.core.ui.prompt_toolkit import (
     PromptContextMixin,
 )
 from mon.core.utils import is_valid_str, merge_dicts, truncate_string
-
 
 # ==============================================================================
 # region CONSTANTS
@@ -181,35 +181,52 @@ ARGUMENTS = Box({
         "type": _str_or_none,
         "help": "Dataset name or directory.",
         "prompt_only": False,
-        "prompt_text": "Predict(s)",
+        "prompt_text": "Predict Data",
     },
-    "eval_imgsz": {
+    "strategy": {
+        "default": "default",
+        "type": _str_or_none,
+        "choices": Strategy.values(),
+        "choices_repr": Strategy.values_repr(),
+        "help": f"Task to run: {Strategy.values()}.",
+        "prompt_only": False,
+        "prompt_text": "Prediction Strategy",
+    },
+    "imgsz": {
         "default": None,
         "type": _int_or_none,
-        "help": "Evaluation image size (H, W).",
+        "help": "Image size (H, W).",
         "prompt_only": False,
-        "prompt_text": "Eval Image Size (H, W)",
+        "prompt_text": "Image Size (H, W)",
     },
-    "eval_resize": {
+    "upscale": {
         "default": False,
         "action": "store_true",
-        "help": "Resize the input image during evaluation.",
+        "help": "Upscale the results after inference.",
         "prompt_only": False,
-        "prompt_text": "Resize?   ",
+        "prompt_text": "Upscale?",
     },
     "upsampler": {
-        "default": None,
+        "default": "interpolation",
         "type": _str_or_none,
         "help": "Upsampling method.",
         "prompt_only": False,
-        "prompt_text": "Upsampler",
+        "prompt_text": "Upsampling method",
     },
+    "patch_size": {
+        "default": None,
+        "type": _int_or_none,
+        "help": "Patch size.",
+        "prompt_only": False,
+        "prompt_text": "Patch size",
+    },
+    # Evaluation
     "benchmark": {
         "default": False,
         "action": "store_true",
         "help": "Enable benchmark mode.",
         "prompt_only": False,
-        "prompt_text": "Benchmark?   ",
+        "prompt_text": "Benchmark?",
     },
     # Saving & Visualization
     "save": {
@@ -217,14 +234,14 @@ ARGUMENTS = Box({
         "action": "store_true",
         "help": "Save results.",
         "prompt_only": False,
-        "prompt_text": "Save Result? ",
+        "prompt_text": "Save Result?",
     },
     "save_debug": {
         "default": False,
         "action": "store_true",
         "help": "Save debug information.",
         "prompt_only": False,
-        "prompt_text": "Save Debug?  ",
+        "prompt_text": "Save Debug?",
     },
     "keep_subdirs": {
         "default": False,
@@ -238,21 +255,21 @@ ARGUMENTS = Box({
         "action": "store_true",
         "help": "Save the results near the source directory.",
         "prompt_only": False,
-        "prompt_text": "Near Source? ",
+        "prompt_text": "Near Source?",
     },
     "exist_ok": {
         "default": False,
         "action": "store_true",
         "help": "Keep existing directories.",
         "prompt_only": False,
-        "prompt_text": "Exist OK?    ",
+        "prompt_text": "Exist OK?",
     },
     "verbose": {
         "default": False,
         "action": "store_true",
         "help": "Verbosity mode.",
         "prompt_only": False,
-        "prompt_text": "Verbosity?   ",
+        "prompt_text": "Verbosity?",
     },
 })
 
@@ -334,12 +351,19 @@ class Config:
         "tensorboard_logger": True,
 
         # --- Prediction ---
-        "data": [],
-        "eval_imgsz": False,
-        "eval_resize": False,
-        "upsampler": {
-            "name": None,
+        "predict": {
+            "data": [],
+            "strategy": "native",
+            "imgsz": 512,
+            "upscale": False,
+            "upsampler": {
+                "name": "interpolation",
+            },
+            "patch_size": 512,
+            "overlap": 128,
         },
+
+        # --- Evaluation ---
         "benchmark": False,
 
         # --- Saving & Visualization ---
@@ -362,8 +386,8 @@ class Config:
         """Initialize a new instance.
 
         Args:
-            config (DictLike | None): A Box-like dictionary containing the
-                initial configuration. Defaults to None.
+            config (DictLike | None): A dictionary containing the initial
+                configuration. Defaults to None.
             config_file (PathLike | None): Path to the configuration file.
                 If given, it will be loaded and used to override the default
                 configuration. Defaults to None.
@@ -604,9 +628,19 @@ class Config:
             self._config.model.finetune = Weights(path=Path(value))
 
     @property
+    def device(self) -> torch.device:
+        """Return the device to use for computation."""
+        return self._config.device
+
+    @device.setter
+    def device(self, value: DeviceLike):
+        """Set the device to use for computation."""
+        self._config.device = sys_ctx.get_torch_device(value)
+
+    @property
     def data(self) -> list[PathLike]:
         """Return the list of inference data sources."""
-        return self._config.data
+        return self._config.predict.data
 
     @data.setter
     def data(self, value: list[PathLike] | PathLike | None):
@@ -627,52 +661,61 @@ class Config:
                 # Dataset name
                 data[i] = d
 
-        self._config.data = data
+        self._config.predict.data = data
 
     @property
-    def device(self) -> torch.device:
-        """Return the device to use for computation."""
-        return self._config.device
+    def strategy(self) -> Strategy:
+        """Return the prediction strategy."""
+        return self._config.predict.strategy
 
-    @device.setter
-    def device(self, value: DeviceLike):
-        """Set the device to use for computation."""
-        self._config.device = sys_ctx.get_torch_device(value)
-
-    @property
-    def eval_imgsz(self) -> Size | None:
-        """Return the evaluation image size."""
-        return self._config.eval_imgsz
-
-    @eval_imgsz.setter
-    def eval_imgsz(self, value: SizeLike | None):
-        """Set the evaluation image size."""
+    @strategy.setter
+    def strategy(self, value: StrategyLike | None):
+        """Set the prediction strategy."""
         if value is not None:
-            self._config.eval_imgsz = Size.from_value(value)
+            self._config.predict.strategy = Strategy(value)
 
     @property
-    def eval_resize(self) -> bool:
-        """Return whether to resize the input image during evaluation."""
-        return self._config.eval_resize
+    def imgsz(self) -> Size:
+        """Return the image size for prediction."""
+        return self._config.predict.imgsz
 
-    @eval_resize.setter
-    def eval_resize(self, value: bool):
-        """Set whether to resize the input image during evaluation."""
-        self._config.eval_resize = value
+    @imgsz.setter
+    def imgsz(self, value: SizeLike | None):
+        """Set the image size for prediction."""
+        if value is not None:
+            self._config.predict.imgsz = Size.from_value(value)
 
     @property
-    def upsampler_name(self) -> str | None:
+    def upscale(self) -> bool:
+        """Return whether to upscale the image after inference."""
+        return self._config.predict.upscale
+
+    @upscale.setter
+    def upscale(self, value: bool):
+        """Set whether to upscale the image after inference."""
+        self._config.predict.upscale = value
+
+    @property
+    def upsampler_name(self) -> str:
         """Return the upsampling method."""
-        if self._config.upsampler is None:
-            return None
-        else:
-            return self._config.upsampler.name
+        return self._config.predict.upsampler.name
 
     @upsampler_name.setter
     def upsampler_name(self, value: str | None):
         """Set the upsampling method."""
         if is_valid_str(value):
-            self._config.upsampler["name"] = value
+            self._config.predict.upsampler.name = value
+
+    @property
+    def patch_size(self) -> Size:
+        """Return the patch size for patch-based prediction."""
+        return self._config.predict.patch_size
+
+    @patch_size.setter
+    def patch_size(self, value: SizeLike | None):
+        """Set the patch size for patch-based prediction."""
+        if value is not None:
+            self._config.predict.patch_size = Size.from_value(value)
 
     @property
     def benchmark(self) -> bool:
@@ -834,6 +877,7 @@ class Config:
         else:
             return self._current_data.name
 
+    # --- Interfaces ---
     def resolve_save_dir(
         self,
         dirname: str,
@@ -888,7 +932,7 @@ class Config:
         self,
         dirname: str,
         src_path: PathLike,
-        subdirname: str = "",
+        subdirname: str = ""
     ) -> Path:
         """Compute the saving file path for an output type based on the output
         directory and optional components.
@@ -961,7 +1005,7 @@ class Config:
         self.update_from_dict(new_config)
         self.config_file = path
 
-    def update_from_cli(self, value: dict):
+    def update_from_cli(self, value: DictLike):
         """Update the current configuration with values from CLI arguments."""
         for k, v in value.items():
             if (
@@ -1005,6 +1049,7 @@ class Config:
 
         self._force_validation(
             "task", "mode", "arch", "model", "weights", "finetune",
+            "imgsz", "patch_size"
         )
 
     def prepare_for_train(self):
@@ -1212,7 +1257,7 @@ class ConfigContext(Config, PromptContextMixin):
     def __init__(
         self,
         root: PathLike,
-        config: Box | None = None,
+        config: DictLike | None = None,
         config_file: PathLike | None = None,
         prompt: bool = False,
         **kwargs
@@ -1221,7 +1266,7 @@ class ConfigContext(Config, PromptContextMixin):
 
         Args:
             root (PathLike): Project root directory.
-            config (Box, optional): Initial configuration to override the
+            config (DictLike, optional): Initial configuration to override the
                 default config. Defaults to None.
             config_file (PathLike, optional): Path to the configuration file.
                 If given, it will be loaded and used to override the default
@@ -1308,6 +1353,7 @@ class ConfigContext(Config, PromptContextMixin):
         # 3. Create a new instance
         prompt = args.pop("prompt")
         root = args.pop("root") or root or Path.cwd()
+        root = Path(root).normalize()
         config_file = args.pop("config") or config_file
 
         # If the argument is not provided or is None, we don't include it in
@@ -1318,7 +1364,7 @@ class ConfigContext(Config, PromptContextMixin):
                 continue
             kwargs[k] = v
 
-        return cls(root=Path(root), config_file=config_file, prompt=prompt, **kwargs)
+        return cls(root=root, config_file=config_file, prompt=prompt, **kwargs)
 
     # --- Retrieval ---
     def config_for(self, mode: RunModeLike, prompt: bool = False) -> Config:
@@ -1475,71 +1521,109 @@ class ConfigContext(Config, PromptContextMixin):
                 strict=True,
             )
         if self._index == 9:
-            # Eval Imgsz
-            if self.mode not in [RunMode.PREDICT]:
+            # Prediction Strategy
+            if self.mode in [RunMode.PREDICT]:
+                # Get model's supported strategies
+                meta_ = MODELS.get_model_meta(name=self.model_name)
+                self.strategy = Prompt.ask(
+                    prompt=ARGUMENTS.strategy.prompt_text,
+                    choices=meta_.get("strategies", ARGUMENTS.strategy.choices),
+                    defaults=self.strategy,
+                    strict=True,
+                )
+            else:
                 self._next()
-            self.eval_imgsz = IntPrompt.ask(
-                prompt=ARGUMENTS.eval_imgsz.prompt_text,
-                defaults=self.eval_imgsz.hw if self.eval_imgsz else None,
-                multiple=True,
-                show_default=True,
-            )
         if self._index == 10:
-            # Eval Resize
-            if self.mode not in [RunMode.PREDICT]:
+            # Imgsz
+            if (
+                self.mode in [RunMode.PREDICT]
+                and self.strategy in [Strategy.RESIZE]
+            ):
+                self.imgsz = IntPrompt.ask(
+                    prompt=ARGUMENTS.imgsz.prompt_text,
+                    defaults=self.imgsz.hw if self.imgsz else None,
+                    multiple=True,
+                    show_default=True,
+                )
+            else:
                 self._next()
-            self.eval_resize = ConfirmPrompt.ask(
-                prompt=ARGUMENTS.eval_resize.prompt_text,
-                defaults=self.eval_resize,
-            )
         if self._index == 11:
-            # Upsampler
-            if (self.mode not in [RunMode.PREDICT]
-                or not self.eval_resize):
+            # Upscale
+            if (
+                self.mode in [RunMode.PREDICT]
+                and self.strategy in [Strategy.RESIZE]
+            ):
+                self.upscale = ConfirmPrompt.ask(
+                    prompt=ARGUMENTS.upscale.prompt_text,
+                    defaults=self.upscale,
+                )
+            else:
                 self._next()
-            self.upsampler_name = Prompt.ask(
-                prompt=ARGUMENTS.upsampler.prompt_text,
-                choices=list(UPSAMPLERS.keys()),
-                defaults=self.upsampler_name,
-                strict=True,
-            )
         if self._index == 12:
+            # Upsampler
+            if (
+                self.mode in [RunMode.PREDICT]
+                and self.strategy in [Strategy.RESIZE]
+            ):
+                self.upsampler_name = Prompt.ask(
+                    prompt=ARGUMENTS.upsampler.prompt_text,
+                    choices=list(UPSAMPLERS.keys()),
+                    defaults=self.upsampler_name,
+                    strict=True,
+                )
+            else:
+                self._next()
+        if self._index == 13:
+            # Patch Size
+            if (
+                self.mode in [RunMode.PREDICT]
+                and self.strategy in [Strategy.PATCH]
+            ):
+                self.patch_size = IntPrompt.ask(
+                    prompt=ARGUMENTS.patch_size.prompt_text,
+                    defaults=self.patch_size.hw if self.patch_size else None,
+                    multiple=True,
+                    show_default=True,
+                )
+            else:
+                self._next()
+        if self._index == 14:
             # Benchmark
             self.benchmark = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.benchmark.prompt_text,
                 defaults=self.benchmark,
             )
-        if self._index == 13:
+        if self._index == 15:
             # Save
             self.save = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.save.prompt_text,
                 defaults=self.save,
             )
-        if self._index == 14:
+        if self._index == 16:
             # Save Debug
             self.save_debug = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.save_debug.prompt_text,
                 defaults=self.save_debug,
             )
-        if self._index == 15:
+        if self._index == 17:
             # Keep Subdirs
             self.keep_subdirs = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.keep_subdirs.prompt_text,
                 defaults=self.keep_subdirs,
             )
-        if self._index == 16:
+        if self._index == 18:
             # Near Source
             self.near_src = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.near_src.prompt_text,
                 defaults=self.near_src,
             )
-        if self._index == 17:
+        if self._index == 19:
             # Exist OK
             self.exist_ok = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.exist_ok.prompt_text,
                 defaults=self.exist_ok,
             )
-        if self._index == 18:
+        if self._index == 20:
             # Verbose
             self.verbose = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.verbose.prompt_text,
@@ -1556,7 +1640,7 @@ class ConfigContext(Config, PromptContextMixin):
     @property
     def num_prompts(self) -> int:
         """Return the total number of interactive steps."""
-        return 19
+        return 21
 
 # endregion
 

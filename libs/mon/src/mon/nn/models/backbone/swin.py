@@ -33,6 +33,7 @@ from mon.core import (
     K,
     log,
     Path,
+    Strategy,
     Task,
     WEIGHTS,
     Weights,
@@ -55,6 +56,7 @@ class SwinBackBone(ModelRegisterMixin, nn.Module):
     arch: str = "swin"
     name: str = "swin"
     tasks: list[Task] = [Task.BACKBONE]
+    strategies: list[Strategy] = [Strategy.RESIZE]
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
@@ -67,7 +69,7 @@ class SwinBackBone(ModelRegisterMixin, nn.Module):
         num_heads: list[int],
         window_size: list[int],
         stochastic_depth_prob: float,
-        weights: WeightsLike | None = None,
+        weights: Weights | None = None,
         out_indices: list[int] | None = None,
         verbose: bool = True,
         *args, **kwargs,
@@ -83,7 +85,7 @@ class SwinBackBone(ModelRegisterMixin, nn.Module):
             window_size (list[int]): Window size of the Swin Transformer.
             stochastic_depth_prob (float): Probability of dropping a depth unit
                 in each stage.
-            weights (WeightsLike, optional): Pre-trained weights to load.
+            weights (Weights, optional): Pre-trained weights to load.
                 Defaults to None.
             out_indices (list[int], optional): List of layer indices to extract
                 features from. If None, defaults to [1, 3, 5, 7].
@@ -95,7 +97,7 @@ class SwinBackBone(ModelRegisterMixin, nn.Module):
         self.verbose = verbose
 
         # Define model
-        if is_weights_type(weights):
+        if weights is not None and is_weights_type(weights):
             kwargs["num_classes"] = weights.num_classes or kwargs["num_classes"]
 
         base_model = SwinTransformer(
@@ -109,7 +111,7 @@ class SwinBackBone(ModelRegisterMixin, nn.Module):
         )
 
         # Load weights
-        if is_weights_type(weights):
+        if weights is not None and is_weights_type(weights):
             base_model.load_state_dict(weights.state_dict())
             if self.verbose:
                 log(f"Initialized '{name}' from weights: '{weights.path}'.")
@@ -339,7 +341,7 @@ def swin_t(
     """Create a Swin-T backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -367,7 +369,7 @@ def swin_s(
     """Create a Swin-S backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -395,7 +397,7 @@ def swin_b(
     """Create a Swin-B backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -423,7 +425,7 @@ def swin_v2_t(
     """Create a Swin-V2-T backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -451,7 +453,7 @@ def swin_v2_s(
     """Create a Swin-V2-S backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -479,7 +481,7 @@ def swin_v2_b(
     """Create a Swin-V2-B backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.

@@ -12,14 +12,11 @@ __all__ = [
     "ZeroIG_Predictor",
 ]
 
-from typing import Any
-
 import torch
 from tensordict import TensorDict
 from typing_extensions import override
 
-from mon.core import K, MODELS, Path, PREDICTORS, Size, TimeProfiler
-from mon.dataset import transform as T
+from mon.core import K, MODELS, Path, PREDICTORS, TimeProfiler
 from mon.runners import Predictor
 # noinspection PyUnusedImports
 from .model import zero_ig
@@ -48,23 +45,6 @@ class ZeroIG_Predictor(Predictor):
         model = model.to(device)
         model.eval()
         self._model = model
-
-    @override
-    def _init_transforms(self):
-        """Initialize ``self._transforms`` attribute."""
-        config = self.config
-
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
-
-        if config.eval_resize:
-            imgsz = Size.from_value(config.eval_imgsz)
-            resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-            transforms = resize + transforms
-
-        self._transforms = transforms
 
     # --- Prediction ---
     @override

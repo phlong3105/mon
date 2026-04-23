@@ -25,7 +25,7 @@ import kornia
 import torch
 from torch import nn, Tensor
 
-from mon.core import log, MODELS, Path, SizeLike, Task
+from mon.core import log, MODELS, Path, SizeLike, Strategy, Task
 from mon.models.restore import ZS_N2N
 from mon.nn import loss as L, ModelRegisterMixin
 from .loss import ConfidenceGatedDepthLoss
@@ -65,6 +65,7 @@ class SALEO(ModelRegisterMixin, nn.Module):
     arch: str = "saleo"
     name: str = "saleo"
     tasks: list[Task] = [Task.LLE]
+    strategies: list[Strategy] = []
     model_dir: Path = current_dir
 
     color_funcs: dict = {

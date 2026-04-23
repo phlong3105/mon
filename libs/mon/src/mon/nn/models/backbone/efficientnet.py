@@ -51,6 +51,7 @@ from mon.core import (
     K,
     log,
     Path,
+    Strategy,
     Task,
     WEIGHTS,
     Weights,
@@ -73,6 +74,7 @@ class EfficientNetBackBone(ModelRegisterMixin, nn.Module):
     arch: str = "efficientnet"
     name: str = "efficientnet"
     tasks: list[Task] = [Task.BACKBONE]
+    strategies: list[Strategy] = [Strategy.RESIZE]
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
@@ -82,7 +84,7 @@ class EfficientNetBackBone(ModelRegisterMixin, nn.Module):
         inverted_residual_setting: Sequence[Union[MBConvConfig, FusedMBConvConfig]],
         dropout: float,
         last_channel: int | None,
-        weights: WeightsLike | None = None,
+        weights: Weights | None = None,
         out_indices: list[int] | None = None,
         verbose: bool = True,
         *args, **kwargs,
@@ -95,7 +97,7 @@ class EfficientNetBackBone(ModelRegisterMixin, nn.Module):
             dropout (float): Dropout probability for the final classifier layer.
             last_channel (int, optional): Number of output channels for the
                 last layer.
-            weights (WeightsLike, optional): Pre-trained weights to load.
+            weights (Weights, optional): Pre-trained weights to load.
                 Defaults to None.
             out_indices (list[int], optional): List of layer indices to extract
                 features from. If None, defaults to [2, 3, 5, 8].
@@ -107,7 +109,7 @@ class EfficientNetBackBone(ModelRegisterMixin, nn.Module):
         self.verbose = verbose
 
         # Define model
-        if is_weights_type(weights):
+        if weights is not None and is_weights_type(weights):
             kwargs["num_classes"] = weights.num_classes or kwargs["num_classes"]
 
         base_model = EfficientNet(
@@ -118,7 +120,7 @@ class EfficientNetBackBone(ModelRegisterMixin, nn.Module):
         )
 
         # Load weights
-        if is_weights_type(weights):
+        if weights is not None and is_weights_type(weights):
             base_model.load_state_dict(weights.state_dict())
             if self.verbose:
                 log(f"Initialized '{name}' from weights: '{weights.path}'.")
@@ -511,7 +513,7 @@ def efficientnet_b0(
     """Create an EfficientNet-B0 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -541,7 +543,7 @@ def efficientnet_b1(
     """Create an EfficientNet-B1 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -571,7 +573,7 @@ def efficientnet_b2(
     """Create an EfficientNet-B2 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -601,7 +603,7 @@ def efficientnet_b3(
     """Create an EfficientNet-B3 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -631,7 +633,7 @@ def efficientnet_b4(
     """Create an EfficientNet-B4 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -661,7 +663,7 @@ def efficientnet_b5(
     """Create an EfficientNet-B5 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -692,7 +694,7 @@ def efficientnet_b6(
     """Create an EfficientNet-B6 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -723,7 +725,7 @@ def efficientnet_b7(
     """Create an EfficientNet-B7 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -754,7 +756,7 @@ def efficientnet_v2_s(
     """Create an EfficientNet-V2-S backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -781,7 +783,7 @@ def efficientnet_v2_m(
     """Create an EfficientNet-V2-M backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -808,7 +810,7 @@ def efficientnet_v2_l(
     """Create an EfficientNet-V2-L backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.

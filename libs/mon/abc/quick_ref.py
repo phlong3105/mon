@@ -235,6 +235,9 @@ class Foo:
     def value(self, value: Any):
         self._value = value
 
+    # --- Interfaces ---
+
+
 # endregion
 
 

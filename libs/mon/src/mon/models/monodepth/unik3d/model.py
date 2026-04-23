@@ -72,7 +72,7 @@ class UniK3D(ModelRegisterMixin, nn.Module):
     def __init__(
         self,
         name: str,
-        weights: WeightsLike | None = None,
+        weights: Weights | None = None,
         verbose: bool = True,
         *args, **kwargs
     ):
@@ -80,7 +80,7 @@ class UniK3D(ModelRegisterMixin, nn.Module):
 
         Args:
             name (str): Name of the model.
-            weights (WeightsLike, optional): Pre-trained weights to load.
+            weights (Weights, optional): Pre-trained weights to load.
                 Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
@@ -161,7 +161,7 @@ def unik3d_vits(weights: WeightsLike = "default", *args, **kwargs):
     """Create an UniK3D model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     return UniK3D(
@@ -176,7 +176,7 @@ def unik3d_vitb(weights: WeightsLike = "default", *args, **kwargs):
     """Create an UniK3D model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     return UniK3D(
@@ -191,7 +191,7 @@ def unik3d_vitl(weights: WeightsLike = "default", *args, **kwargs):
     """Create an UniK3D model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     return UniK3D(

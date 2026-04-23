@@ -53,23 +53,6 @@ class CLODE_Predictor(Predictor):
         model.eval()
         self._model = model
 
-    @override
-    def _init_transforms(self):
-        """Initialize ``self._transforms`` attribute."""
-        config = self.config
-
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
-
-        if config.eval_resize:
-            imgsz = config.eval_imgsz
-            resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-            transforms = resize + transforms
-
-        self._transforms = transforms
-
     # --- Prediction ---
     @override
     @torch.inference_mode()

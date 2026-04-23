@@ -29,6 +29,7 @@ from mon.core import (
     K,
     log,
     Path,
+    Strategy,
     Task,
     WEIGHTS,
     Weights,
@@ -51,6 +52,7 @@ class ConvNeXtBackBone(ModelRegisterMixin, nn.Module):
     arch: str = "convnext"
     name: str = "convnext"
     tasks: list[Task] = [Task.BACKBONE]
+    strategies: list[Strategy] = [Strategy.RESIZE]
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
@@ -59,7 +61,7 @@ class ConvNeXtBackBone(ModelRegisterMixin, nn.Module):
         name: str,
         block_setting: list[CNBlockConfig],
         stochastic_depth_prob: float,
-        weights: WeightsLike | None = None,
+        weights: Weights | None = None,
         out_indices: list[int] | None = None,
         verbose: bool = True,
         *args, **kwargs
@@ -72,7 +74,7 @@ class ConvNeXtBackBone(ModelRegisterMixin, nn.Module):
                 ConvNeXt model.
             stochastic_depth_prob (float): Probability of applying stochastic
                 depth to the model.
-            weights (WeightsLike, optional): Pre-trained weights to load.
+            weights (Weights, optional): Pre-trained weights to load.
                 Defaults to None.
             out_indices (list[int], optional): List of layer indices to extract
                 features from. If None, defaults to [1, 3, 5, 7].
@@ -84,7 +86,7 @@ class ConvNeXtBackBone(ModelRegisterMixin, nn.Module):
         self.verbose = verbose
 
         # Define model
-        if is_weights_type(weights):
+        if weights is not None and is_weights_type(weights):
             kwargs["num_classes"] = weights.num_classes or kwargs["num_classes"]
 
         base_model = ConvNeXt(
@@ -94,7 +96,7 @@ class ConvNeXtBackBone(ModelRegisterMixin, nn.Module):
         )
 
         # Load weights
-        if is_weights_type(weights):
+        if weights is not None and is_weights_type(weights):
             base_model.load_state_dict(weights.state_dict())
             if self.verbose:
                 log(f"Initialized '{name}' from weights: '{weights.path}'.")
@@ -280,7 +282,7 @@ def convnext_tiny(
     """Create a ConvNeXt-Tiny backbone.
 
     Args:
-         weights (WeightsLike, optional): Pre-trained weights to load.
+         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -311,7 +313,7 @@ def convnext_small(
     """Create a ConvNeXt-Small backbone.
 
     Args:
-         weights (WeightsLike, optional): Pre-trained weights to load.
+         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -342,7 +344,7 @@ def convnext_base(
     """Create a ConvNeXt-Base backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -373,7 +375,7 @@ def convnext_large(
     """Create a ConvNeXt-Large backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.

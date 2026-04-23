@@ -12,13 +12,10 @@ __all__ = [
     "ZS_N2N_Predictor",
 ]
 
-from typing import Any
-
 from tensordict import TensorDict
 from typing_extensions import override
 
 from mon.core import K, Path, PREDICTORS, TimeProfiler
-from mon.dataset import transform as T
 from mon.runners import Predictor
 from .model import ZS_N2N
 
@@ -45,22 +42,6 @@ class ZS_N2N_Predictor(Predictor):
         model = model.to(device)
         model.train()
         self._model = model
-
-    @override
-    def _init_transforms(self):
-        """Initialize ``self._transforms`` attribute."""
-        config = self.config
-
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
-        if config.eval_resize:
-            imgsz = config.eval_imgsz
-            resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-            transforms = resize + transforms
-
-        self._transforms = transforms
 
     # --- Prediction ---
     @override

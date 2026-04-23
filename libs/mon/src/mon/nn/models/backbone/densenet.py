@@ -29,6 +29,7 @@ from mon.core import (
     K,
     log,
     Path,
+    Strategy,
     Task,
     WEIGHTS,
     Weights,
@@ -51,6 +52,7 @@ class DenseNetBackBone(ModelRegisterMixin, nn.Module):
     arch: str = "densenet"
     name: str = "densenet"
     tasks: list[Task] = [Task.BACKBONE]
+    strategies: list[Strategy] = [Strategy.RESIZE]
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
@@ -60,7 +62,7 @@ class DenseNetBackBone(ModelRegisterMixin, nn.Module):
         growth_rate: int,
         block_config: tuple[int, int, int, int],
         num_init_features: int,
-        weights: WeightsLike | None = None,
+        weights: Weights | None = None,
         out_indices: list[int] | None = None,
         verbose: bool = True,
         *args, **kwargs
@@ -74,7 +76,7 @@ class DenseNetBackBone(ModelRegisterMixin, nn.Module):
                 pooling block.
             num_init_features (int): The number of filters to learn in the
                 first convolution layer.
-            weights (WeightsLike, optional): Pre-trained weights to load.
+            weights (Weights, optional): Pre-trained weights to load.
                 Defaults to None.
             out_indices (list[int], optional): List of layer indices to extract
                 features from. If None, defaults to [3, 5, 7, 11].
@@ -86,7 +88,7 @@ class DenseNetBackBone(ModelRegisterMixin, nn.Module):
         self.verbose = verbose
 
         # Define model
-        if is_weights_type(weights):
+        if weights is not None and is_weights_type(weights):
             kwargs["num_classes"] = weights.num_classes or kwargs["num_classes"]
 
         base_model = DenseNet(
@@ -97,7 +99,7 @@ class DenseNetBackBone(ModelRegisterMixin, nn.Module):
         )
 
         # Load weights
-        if is_weights_type(weights):
+        if weights is not None and is_weights_type(weights):
             base_model.load_state_dict(weights.state_dict())
             if self.verbose:
                 log(f"Initialized '{name}' from weights: '{weights.path}'.")
@@ -267,7 +269,7 @@ def densenet121(
     """Create a DenseNet-121 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to DenseNet121_Weights.DEFAULT.
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -292,7 +294,7 @@ def densenet161(
     """Create a DenseNet-161 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -317,7 +319,7 @@ def densenet169(
     """Create a DenseNet-169 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -342,7 +344,7 @@ def densenet201(
     """Create a DenseNet-201 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.

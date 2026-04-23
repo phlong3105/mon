@@ -34,6 +34,7 @@ __all__ = [
     "RunModeLike",
     "SplitLike",
     "StrOrList",
+    "StrategyLike",
     "TaskLike",
     "TensorOrArray",
 ]
@@ -46,7 +47,15 @@ from numpy import ndarray
 from torch import Tensor
 from typing_extensions import TypeAlias
 
-from .dtype import Backend, BBoxFormat, MemoryUnit, RunMode, Split, Task
+from .dtype import (
+    Backend,
+    BBoxFormat,
+    MemoryUnit,
+    RunMode,
+    Split,
+    Strategy,
+    Task,
+)
 from .path import Path
 
 T = TypeVar("T")
@@ -88,5 +97,6 @@ MemoryUnitLike: TypeAlias = Union[MemoryUnit, str]
 PathLike: TypeAlias = Union[Path, str]
 RunModeLike: TypeAlias = Union[RunMode, str]
 SplitLike: TypeAlias = Union[Split, str]
+StrategyLike: TypeAlias = Union[Strategy, str]
 TaskLike: TypeAlias = Union[Task, str]
 TensorOrArray: TypeAlias = Union[Tensor, ndarray]

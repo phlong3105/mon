@@ -27,18 +27,20 @@ from torch.nn import functional as F
 from torchdiffeq import odeint
 
 from mon.core import (
+    Config,
     is_weights_type,
     log,
     MODELS,
     Path,
     Size,
     SizeLike,
+    Strategy,
     Task,
-    WeightsLike,
+    Weights,
 )
+from mon.dataset import transform as T
 from mon.metrics import benchmark, create_dummy_image
-from mon.models.enhance.base import EnhancementModel
-from mon.nn import ModelRegisterMixin
+from mon.nn import Model, ModelRegisterMixin
 from .module import DecoderSIREN, Denoiser, Encoder, EnhancementCurveODE
 from .utils import get_coords
 
@@ -50,7 +52,7 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-class SLICE(ModelRegisterMixin, EnhancementModel):
+class SLICE(ModelRegisterMixin, Model):
     r"""SLICE model.
 
     "What exactly is SLICE?":
@@ -77,7 +79,11 @@ class SLICE(ModelRegisterMixin, EnhancementModel):
     arch: str = "slice"
     name: str = "slice"
     tasks: list[Task] = [Task.LLE]
+    strategies: list[Strategy] = [Strategy.NATIVE]
     model_dir: Path = current_dir
+
+    in_keys: set = {"image"}
+    out_keys: set = {"enhanced"}
 
     methods = [
         "iter8", "iter5", "iter4", "dopri8", "dopri5", "bosh3", "fehlberg2",
@@ -98,7 +104,7 @@ class SLICE(ModelRegisterMixin, EnhancementModel):
         noise_level: float | None = None,
         use_depth: bool = False,
         use_anscombe: bool = False,
-        weights: WeightsLike | None = None,
+        weights: Weights | None = None,
         verbose: bool = True,
         *args, **kwargs
     ):
@@ -120,7 +126,7 @@ class SLICE(ModelRegisterMixin, EnhancementModel):
                 input channel. Defaults to False.
             use_anscombe (bool, optional): Whether to apply the Anscombe
                 transform to the input before denoising. Defaults to False.
-            weights (WeightsLike, optional): Pre-trained weights to load.
+            weights (Weights, optional): Pre-trained weights to load.
                 Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
@@ -163,7 +169,7 @@ class SLICE(ModelRegisterMixin, EnhancementModel):
         )
 
         # Load weights
-        if is_weights_type(weights):
+        if weights is not None and is_weights_type(weights):
             self.load_state_dict(weights.state_dict())
             if self.verbose:
                 log(f"Initialized '{name}' from weights: '{weights.path}'.")
@@ -173,12 +179,11 @@ class SLICE(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(
+    def forward(
         self,
         data: TensorDict,
         T: Tensor | None = None,
         chunk_size: int = 65536,
-        *args, **kwargs
     ) -> TensorDict:
         """Forward the input through the network.
 
@@ -365,13 +370,41 @@ class SLICE(ModelRegisterMixin, EnhancementModel):
 
         return loss_equi
 
-    # --- Benchmarks ---
+    # --- Interfaces ---
     @override
-    def benchmark(self, imgsz: SizeLike, *args, **kwargs) -> dict[str, float]:
+    def build_transforms(self, config: Config | None = None) -> T.Compose:
+        """Define the model's transformations.
+
+        Args:
+            config (Config, optional): The configuration object containing any
+                necessary parameters for defining the transformations.
+                Defaults to None.
+
+        Returns:
+            Callable: A callable (e.g., a torchvision transform or a custom
+                function) that takes in the raw input data and returns the
+                transformed data ready for the forward step.
+        """
+        transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
+
+        if config is not None:
+            if config.strategy in [Strategy.RESIZE]:
+                imgsz = config.imgsz
+                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
+                transforms = resize + transforms
+
+        return transforms
+
+    # --- Benchmark ---
+    @override
+    def benchmark(self, imgsz: Size, *args, **kwargs) -> dict[str, float]:
         """Perform a single forward step of the model to benchmark its performance.
 
         Args:
-            imgsz (SizeLike): Input image size.
+            imgsz (Size): Input image size.
             **kwargs: Additional arguments for benchmarking, such as number
                 of runs, device, etc.
 
@@ -379,7 +412,6 @@ class SLICE(ModelRegisterMixin, EnhancementModel):
             dict[str, float]: A dictionary containing the benchmark results,
                 such as latency, FLOPs, and parameter count.
         """
-        imgsz = Size.from_value(imgsz)
         device = next(self.parameters()).device
 
         # Create dummy inputs

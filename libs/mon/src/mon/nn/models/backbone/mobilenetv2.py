@@ -22,6 +22,7 @@ from mon.core import (
     K,
     log,
     Path,
+    Strategy,
     Task,
     WEIGHTS,
     Weights,
@@ -42,15 +43,16 @@ class MobileNetV2BackBone(ModelRegisterMixin, nn.Module):
     """MobileNetV2 backbone."""
 
     arch: str = "mobilenet"
-    name: str = "mobilenet"
+    name: str = "mobilenetv2"
     tasks: list[Task] = [Task.BACKBONE]
+    strategies: list[Strategy] = [Strategy.RESIZE]
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
         name: str,
-        weights: WeightsLike | None = None,
+        weights: Weights | None = None,
         out_indices: list[int] | None = None,
         verbose: bool = True,
         *args, **kwargs,
@@ -59,7 +61,7 @@ class MobileNetV2BackBone(ModelRegisterMixin, nn.Module):
 
         Args:
             name (str): Name of the model variant.
-            weights (WeightsLike, optional): Pre-trained weights to load.
+            weights (Weights, optional): Pre-trained weights to load.
                 Defaults to None.
             out_indices (list[int], optional): List of layer indices to extract
                 features from. If None, defaults to [3, 6, 13, 18].
@@ -181,7 +183,7 @@ def mobilenet_v2(
     """Create a MobileNetV2 backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.

@@ -4,7 +4,7 @@ exp_name: "dccnet_lol_v1"  # (str) Experiment name.
 root: ~  # (str) Root path of the project.
 output_dir: ~  # (str) Output directory.
 
-task: "enhance"  # (str) Task name (e.g., detect, segment, classify).
+task: "lle"  # (str) Task name (e.g., detect, segment, classify).
 mode: "predict"  # (str) Run mode (e.g., train, predict).
 
 device: 0  # (int | str | list) device: 0 or [0,1,2,3] for CUDA, 'cpu'/'mps'
@@ -78,14 +78,21 @@ loss: ~
 tensorboard_logger: True
 
 # --- Prediction ---
-data: ~  # (list[str]) List of data names or paths for prediction.
+predict:
+  data: ~  # (list[str]) List of data names or paths for prediction.
+  strategy: "resize"  # (str) Prediction strategy (e.g., default, resize, patch).
 
-eval_imgsz: 512  # (int | list[int]) Image size for evaluation.
-eval_resize: True  # (bool) Resize the image to the evaluation size.
+  # Resizing strategy: Downsampling -> Inference -> Upsampling.
+  imgsz: 512  # (int | list[int]) Image size for prediction.
+  upscale: True  # (bool) Whether to upscale the image after inference.
+  upsampler:
+    name: "interpolation"  # (str) Upsampler name.
 
-upsampler:
-  name: "interpolation"
+  # Patching strategy: Split the image into patches -> Inference on each patch -> Blend the patches.
+  patch_size: 512  # (int) Patch size for patch-based prediction.
+  overlap: 128  # (int) Number of pixels patches should overlap to blend seams.
 
+# --- Evaluation ---
 benchmark: False  # (bool) Benchmark the model.
 
 # --- Saving & Visualization ---

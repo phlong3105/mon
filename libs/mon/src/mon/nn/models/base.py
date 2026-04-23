@@ -14,13 +14,21 @@ __all__ = [
 ]
 
 from abc import ABC, abstractmethod
-from typing import Any
+from typing import Callable
 
 from tensordict import TensorDict
 from tensordict.tensorclass import NonTensorData
 from torch import nn, Tensor
 
-from mon.core import is_list_of, is_valid_str, Path, PathLike, SizeLike, Task
+from mon.core import (
+    Config,
+    is_list_of,
+    is_valid_str,
+    Path,
+    Size,
+    Strategy,
+    Task,
+)
 
 
 # ==============================================================================
@@ -72,16 +80,11 @@ class Model(nn.Module, ABC):
         )
 
     # --- Callable & Context Manager ---
-    def forward(
-        self,
-        data: TensorDict | None = None,
-        save_debug: bool = False,
-        *args, **kwargs
-    ) -> TensorDict:
-        """Forward the input through the model.
+    def __call__(self, data: TensorDict, save_debug: bool = False, *args, **kwargs) -> TensorDict:
+        """Override the call method to forward the input through the model.
 
         Args:
-            data (TensorDict, optional): Input data dictionary. Defaults to None.
+            data (TensorDict): Input data dictionary.
             save_debug (bool, optional): If True, return intermediate results
                 for debugging. Defaults to False.
             **kwargs: Direct keyword arguments to pass to the forward step.
@@ -102,7 +105,6 @@ class Model(nn.Module, ABC):
             k: v if isinstance(v, Tensor) else NonTensorData(v)
             for k, v in data_kwargs.items()
         }
-
         if data is None:
             data = TensorDict(data_kwargs, batch_size=[])
         elif isinstance(data, TensorDict):
@@ -116,12 +118,12 @@ class Model(nn.Module, ABC):
         missing_inputs = self.in_keys - data.keys()
         if missing_inputs:
             raise KeyError(
-                f"{self.__class__.__name__} missing required inputs: {missing_inputs}. "
-                f"Provided keys: {list(data.keys())}"
+                f"{self.__class__.__name__} missing required inputs: "
+                f"{missing_inputs}. Provided keys: {list(data.keys())}"
             )
 
         # 4. Execution
-        outputs = self.forward_step(data=data, **flags)
+        outputs = super().__call__(data=data, **flags)
 
         # 5. Ensure outputs is a TensorDict
         if not isinstance(outputs, TensorDict):
@@ -131,8 +133,8 @@ class Model(nn.Module, ABC):
         missing_outputs = self.out_keys - outputs.keys()
         if missing_outputs:
             raise KeyError(
-                f"{self.__class__.__name__} missing required outputs: {missing_outputs}. "
-                f"Provided keys: {list(outputs.keys())}"
+                f"{self.__class__.__name__} missing required outputs: "
+                f"{missing_outputs}. Provided keys: {list(outputs.keys())}"
             )
 
         # 7. Filtering & return
@@ -143,7 +145,7 @@ class Model(nn.Module, ABC):
         return outputs
 
     @abstractmethod
-    def forward_step(self, data: TensorDict, *args, **kwargs) -> TensorDict:
+    def forward(self, data: TensorDict) -> TensorDict:
         """Perform a single forward step of the model.
 
         This method should be implemented by all subclasses.
@@ -156,13 +158,34 @@ class Model(nn.Module, ABC):
         """
         pass
 
-    # --- Benchmarks ---
+    # --- Interfaces ---
     @abstractmethod
-    def benchmark(self, imgsz: SizeLike, *args, **kwargs) -> dict[str, float]:
+    def build_transforms(self, config: Config | None = None) -> Callable:
+        """Define the model's transformations.
+
+        This method should be implemented by all subclasses to define any
+        necessary data transformations (e.g., normalization, augmentation)
+        that should be applied to the inputs before forwarding through the model.
+
+        Args:
+            config (Config, optional): The configuration object containing any
+                necessary parameters for defining the transformations.
+                Defaults to None.
+
+        Returns:
+            Callable: A callable (e.g., a torchvision transform or a custom
+                function) that takes in the raw input data and returns the
+                transformed data ready for the forward step.
+        """
+        pass
+
+    # --- Benchmark ---
+    @abstractmethod
+    def benchmark(self, imgsz: Size, *args, **kwargs) -> dict[str, float]:
         """Perform a single forward step of the model to benchmark its performance.
 
         Args:
-            imgsz (SizeLike): Input image size.
+            imgsz (Size): Input image size.
             **kwargs: Additional arguments for benchmarking, such as number
                 of runs, device, etc.
 
@@ -192,6 +215,7 @@ class ModelRegisterMixin(ABC):
     arch: str = ""
     name: str = ""
     tasks: list[Task] = []
+    strategies: list[Strategy] = []
     model_dir: Path = None
 
     # --- Lifecycle & Initialization ---
@@ -200,7 +224,8 @@ class ModelRegisterMixin(ABC):
         arch: str = "",
         name: str = "",
         tasks: list[Task] | None = None,
-        model_dir: PathLike | None = None,
+        strategies: list[Strategy] | None = None,
+        model_dir: Path | None = None,
         *args, **kwargs,
     ):
         """Initialize a new instance.
@@ -212,9 +237,10 @@ class ModelRegisterMixin(ABC):
                 overrides the class-level default. Defaults to "".
             tasks (list[Task], optional): List of supported tasks. If provided,
                 it overrides the class-level default. Defaults to None.
-            model_dir (PathLike, optional): Directory where the model is
-                defined. If provided, it overrides the class-level default.
-                Defaults to None.
+            strategies (list[Strategy], optional): List of supported strategies.
+                If provided, it overrides the class-level default. Defaults to None.
+            model_dir (Path, optional): Directory where the model is defined.
+                If provided, it overrides the class-level default. Defaults to None.
             *args: Positional arguments to forward to the superclass constructor.
             **kwargs: Keyword arguments to forward to the superclass constructor.
         """
@@ -226,10 +252,12 @@ class ModelRegisterMixin(ABC):
         if is_list_of(tasks, Task):
             # We use list() to create a copy, preventing shared state bugs
             self.tasks = list(tasks)
+        if is_list_of(strategies, Strategy):
+            self.strategies = list(strategies)
         if is_valid_str(model_dir):
-            model_dir = Path(model_dir).normalize()
-            if model_dir.is_dir():
-                self.model_dir = model_dir
+            model_dir_ = Path(model_dir).normalize()
+            if model_dir_.is_dir():
+                self.model_dir = model_dir_
 
         # Continue the initialization chain
         super().__init__(*args, **kwargs)
@@ -238,13 +266,13 @@ class ModelRegisterMixin(ABC):
         """Validate subclass attributes on inheritance.
 
         Raises:
-            AttributeError: If the subclass does not define ``name`` or ``tasks``
-                attributes (either locally or inherited).
+            AttributeError: If the subclass does not define ``name``, ``tasks``,
+                ``strategies``, or ``model_dir`` attributes.
         """
         super().__init_subclass__(*args, **kwargs)
 
         # Check for EXPLICIT definition in the subclass (not inherited)
-        for attr in ["name", "tasks", "model_dir"]:
+        for attr in ["name", "tasks", "strategies", "model_dir"]:
             if not getattr(cls, attr):
                 raise AttributeError(
                     f"Class {cls.__name__} must define '{attr}' attribute "

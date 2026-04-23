@@ -22,11 +22,9 @@ from mon.core import (
     PREDICTORS,
     resolve_project_root,
     RunMode,
-    Size,
     Task,
     TimeProfiler,
 )
-from mon.dataset import transform as T
 from mon.runners import Predictor
 # noinspection PyUnusedImports
 from .model import slice
@@ -55,23 +53,6 @@ class SLICE_Predictor(Predictor):
         model = model.to(device)
         model.eval()
         self._model = model
-
-    @override
-    def _init_transforms(self):
-        """Initialize ``self._transforms`` attribute."""
-        config = self.config
-
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
-
-        if config.eval_resize:
-            imgsz = Size.from_value(config.eval_imgsz)
-            resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-            transforms = resize + transforms
-
-        self._transforms = transforms
 
     # --- Prediction ---
     @override

@@ -43,6 +43,7 @@ from mon.core import (
     K,
     MODELS,
     Path,
+    Strategy,
     Task,
     WEIGHTS,
     Weights,
@@ -74,13 +75,14 @@ class SAM(ModelRegisterMixin, nn.Module):
     arch: str = "sam"
     name: str = "sam"
     tasks: list[Task] = [Task.SEGMENT]
+    strategies: list[Strategy] = [Strategy.RESIZE]
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
         name: str,
-        weights: WeightsLike | None = None,
+        weights: Weights | None = None,
         verbose: bool = True,
         *args, **kwargs
     ):
@@ -88,7 +90,7 @@ class SAM(ModelRegisterMixin, nn.Module):
 
         Args:
             name (str): Name of the model variant.
-            weights (WeightsLike, optional): Pre-trained weights to load.
+            weights (Weights, optional): Pre-trained weights to load.
                 Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
@@ -271,7 +273,7 @@ def sam_b(weights: WeightsLike = "default", *args, **kwargs):
     """Create a SAM model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "sam_b")
@@ -283,7 +285,7 @@ def sam_l(weights: WeightsLike = "default", *args, **kwargs):
     """Create a SAM model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "sam_l")
@@ -295,7 +297,7 @@ def sam2_t(weights: WeightsLike = "default", *args, **kwargs):
     """Create a SAM model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "sam2_t")
@@ -307,7 +309,7 @@ def sam2_s(weights: WeightsLike = "default", *args, **kwargs):
     """Create a SAM model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "sam2_s")
@@ -319,7 +321,7 @@ def sam2_b(weights: WeightsLike = "default", *args, **kwargs):
     """Create a SAM model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "sam2_b")
@@ -331,7 +333,7 @@ def sam2_l(weights: WeightsLike = "default", *args, **kwargs):
     """Create a SAM model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "sam2_l")
@@ -343,7 +345,7 @@ def sam2_1_t(weights: WeightsLike = "default", *args, **kwargs):
     """Create a SAM model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "sam2.1_t")
@@ -355,7 +357,7 @@ def sam2_1_s(weights: WeightsLike = "default", *args, **kwargs):
     """Create a SAM model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "sam2.1_s")
@@ -367,7 +369,7 @@ def sam2_1_b(weights: WeightsLike = "default", *args, **kwargs):
     """Create a SAM model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "sam2.1_b")
@@ -379,7 +381,7 @@ def sam2_1_l(weights: WeightsLike = "default", *args, **kwargs):
     """Create a SAM model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "sam2.1_l")
@@ -391,7 +393,7 @@ def sam3(weights: WeightsLike = "default", *args, **kwargs):
     """Create a SAM model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "sam3")

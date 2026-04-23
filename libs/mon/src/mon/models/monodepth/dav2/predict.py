@@ -18,8 +18,6 @@ __all__ = [
     "DAV2_Predictor",
 ]
 
-from typing import Any
-
 import numpy as np
 import torch
 from tensordict import TensorDict
@@ -67,13 +65,7 @@ class DAV2_Predictor(Predictor):
         self._model = model
 
     @override
-    def _init_transforms(self):
-        """Initialize ``self._transforms`` attribute."""
-        # No transforms needed for DAV2, everything is done in the model
-        self._transforms = None
-
-    @override
-    def _init_data(
+    def _build_dataloader(
         self,
         source: DictLike | PathLike,
         split: SplitLike = Split.TEST,
@@ -116,7 +108,7 @@ class DAV2_Predictor(Predictor):
             TensorDict: The dictionary containing the prediction results.
         """
         config = self.config
-        imgsz = config.eval_imgsz
+        imgsz = config.imgsz
 
         # 1. Prepare inputs
         timers.preprocess.tick()
@@ -125,11 +117,7 @@ class DAV2_Predictor(Predictor):
 
         # 2. Inference
         timers.infer.tick()
-        depth = self.model(image, imgsz.h)
-        # depth = (depth - depth.min()) / (depth.max() - depth.min()) * 255.0
-        depth = normalize_minmax(depth) * 255.0
-        depth = depth.astype(np.uint8)
-        outputs = {"depth": depth}
+        outputs = self.model(image, imgsz.h)
         timers.infer.tock()
 
         return outputs

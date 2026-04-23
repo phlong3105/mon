@@ -14,6 +14,7 @@ __all__ = [
 
 import gc
 from abc import ABC, abstractmethod
+from typing import override
 
 from numpy import ndarray
 from rich.progress import Progress
@@ -32,7 +33,7 @@ from mon.core import (
     RunMode,
     Size,
     Split,
-    SplitLike,
+    Strategy,
     sys_ctx,
     TensorOrArray,
     TimeProfiler,
@@ -41,7 +42,6 @@ from mon.core import (
 from mon.dataset import (
     build_dataloader,
     DataLoader,
-    Dataset,
     transform as T,
 )
 from mon.ops import to_image_array, write_image
@@ -67,15 +67,44 @@ class Predictor(Runner, ABC):
                 parameters for training.
         """
         super().__init__(config=config)
+
         # Allocate resources
         # These attributes will be initialized later to avoid a long initialization time
         self._transforms: T.Compose | None = None
         self._upsampler: nn.Module | None = None
 
-    @abstractmethod
+    @override
+    def _setup(self):
+        """Setup the runner ready for inference."""
+        config = self.config
+
+        # Setup environment
+        config.output_dir.mkdir(exist_ok=True, parents=True)
+        sys_ctx.set_random_seed(config.seed)
+
+        # Define model
+        self._init_model()
+        if self.model is None:
+            if self.verbose:
+                log(f"'model' is not initialized.")
+
+        # Define transforms & upsampler
+        self._init_transforms()
+        self._init_upsampler()
+        if self.transforms is None:
+            if self.verbose:
+                log(f"'transforms' is not initialized.")
+
     def _init_transforms(self):
-        """Initialize ``self._transforms`` attribute."""
-        pass
+        """Initialize ``self._transforms`` attribute for pre-processing the
+        input data.
+        """
+        if self.model is None:
+            transforms = None
+        else:
+            transforms = self.model.build_transforms(config=self.config)
+
+        self._transforms = transforms
 
     def _init_upsampler(self):
         """Initialize ``self._upsampler`` attribute for upsampling the output
@@ -83,58 +112,21 @@ class Predictor(Runner, ABC):
         """
         config = self.config
 
-        if config.eval_resize and config.upsampler:
-            # Only build the upsampler if ``eval_resize`` is True and an
-            # upsampler config is provided
+        if (
+            config.strategy in [Strategy.RESIZE]
+            and config.upscale
+            and config.upsampler
+        ):
+            # Only build the upsampler if the strategy is RESIZE and upscaling
+            # is requested, since other strategies (e.g., NATIVE, PATCH) do not
+            # require upsampling
             upsampler = UPSAMPLERS.build(**self.config.upsampler).to(self.device)
         else:
             upsampler = None
 
         self._upsampler = upsampler
 
-    def _init_data(
-        self,
-        source: DictLike | PathLike,
-        split: SplitLike = Split.TEST,
-    ) -> tuple[str, Dataset | DataLoader]:
-        """Initialize and return a dataset or dataloader.
-
-        Args:
-            source (DictLike | PathLike): A dataset/dataloader configuration
-                dictionary or a source path.
-            split (SplitLike, optional): The data split to use.
-                Defaults to Split.TEST.
-
-        Returns:
-            tuple[str, Dataset | DataLoader]: A tuple containing the name of the
-                dataset/dataloader and the dataset/dataloader object itself.
-        """
-        # Apply pre-processing transforms inside the dataset or dataloader
-        name, dataloader = build_dataloader(
-            src=source,
-            dataset_dir=self.config.data_dir,
-            split=split,
-            transforms=self.transforms,
-            keep_original=self.keep_original,
-            batch_size=1,
-            num_workers=1,
-        )
-
-        # Validate
-        if name is None:
-            raise RuntimeError(f"Failed to build dataset/dataloader from source: {source}.")
-        if dataloader is None:
-            raise RuntimeError(f"Failed to build dataloader from source: {source}.")
-
-        # Return the name and dataloader
-        return name, dataloader
-
     # --- Properties ---
-    @property
-    def keep_original(self) -> bool:
-        """Whether to keep the original data alongside the transformed data."""
-        return True
-
     @property
     def transforms(self) -> T.Compose | None:
         """Return the transforms object."""
@@ -163,50 +155,37 @@ class Predictor(Runner, ABC):
         """Predict the output of the model."""
         config = self.config
 
-        # 1. Summarize the current run
+        # 1. Setup
+        self._setup()
+
+        # 2. Summarize the current run
         if config.verbose:
-            config.log_summary()
+            self.log_summary()
 
-        # 2. Setup environment
-        config.output_dir.mkdir(exist_ok=True, parents=True)
-        sys_ctx.set_random_seed(config.seed)
-
-        # 3. Define model
-        self._init_model()
-        if self.model is None:
-            log(f"'model' is not initialized.")
-
-        # 4. Define transforms & upsampler (if eval_resize is True)
-        self._init_transforms()
-        self._init_upsampler()
-        if self.transforms is None:
-            if self.verbose:
-                log(f"'transforms' is not initialized.")
-
-        # 5. Run benchmark
+        # 3. Run benchmark (if requested)
         if config.benchmark:
             self.benchmark()
 
-        # 6. Main loop
+        # 4. Main loop
         with create_progress_bar() as pbar:
             for data in pbar.track(
                 sequence=config.data,
                 total=len(config.data),
                 description=f"[bright_yellow]Data"
             ):
-                # 6.1. Update config
+                # 4.1. Update config
                 self.config.infer_data = data
 
-                # 6.2. Predict data
+                # 4.2. Predict data
                 timers = TimeProfiler()
                 timers.total.tick()
                 self._predict_data(data=data, pbar=pbar, timers=timers)
                 timers.total.tock()
 
-                # 6.3. Clean up
+                # 4.3. Clean up
                 self.config.infer_data = None
 
-                # 6.4. Finish
+                # 4.4. Finish
                 timers.print()
 
     # --- Prediction ---
@@ -219,10 +198,8 @@ class Predictor(Runner, ABC):
             timers (TimeProfiler): The time profiler to record timing information
                 during prediction.
         """
-        config = self.config
-
         # 1. Build dataset
-        data_name, dataloader = self._init_data(source=data, split=Split.TEST)
+        data_name, dataloader = self._build_dataloader(source=data)
 
         # 2. Main processing loop
         task = pbar.add_task(
@@ -241,6 +218,7 @@ class Predictor(Runner, ABC):
                 self._save_debug(datapoint=datapoint, outputs=outputs)
             timers.postprocess.tock()
 
+            # 2.3 Clean up
             gc.collect()
             pbar.update(task, advance=1)
         pbar.remove_task(task)
@@ -259,6 +237,37 @@ class Predictor(Runner, ABC):
             TensorDict: The dictionary containing the prediction results.
         """
         pass
+
+    def _build_dataloader(self, source: DictLike | PathLike) -> tuple[str, DataLoader]:
+        """Initialize and return a dataset or dataloader.
+
+        Args:
+            source (DictLike | PathLike): A dataloader configuration dictionary
+                or a source path.
+
+        Returns:
+            tuple[str, DataLoader]: A tuple containing the name of the
+                dataloader and the dataset/dataloader object itself.
+        """
+        # Apply pre-processing transforms inside the dataset or dataloader
+        name, dataloader = build_dataloader(
+            src=source,
+            dataset_dir=self.config.data_dir,
+            split=Split.TEST,
+            transforms=self.transforms,
+            keep_original=True,
+            batch_size=1,
+            num_workers=1,
+        )
+
+        # Validate
+        if name is None and dataloader is None:
+            raise RuntimeError(
+                f"Failed to build dataset/dataloader from the source: {source}."
+            )
+
+        # Return the name and dataloader
+        return name, dataloader
 
     # --- Output ---
     @abstractmethod
@@ -284,6 +293,12 @@ class Predictor(Runner, ABC):
                 prediction results.
         """
         pass
+
+    # --- Logging ---
+    @override
+    def log_summary(self):
+        """Log a summary of the current run."""
+        self.config.log_summary()
 
     # --- Utilities ---
     def _save_batch_image(

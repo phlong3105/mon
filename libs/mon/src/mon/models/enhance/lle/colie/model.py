@@ -27,18 +27,19 @@ from torch.nn import functional as F
 from torch.optim import Adam, Optimizer
 
 from mon.core import (
+    Config,
     DictLike,
     log,
     MODELS,
     OPTIMIZERS,
     Path,
     Size,
-    SizeLike,
+    Strategy,
     Task,
 )
+from mon.dataset import transform as T
 from mon.metrics import benchmark
-from mon.models.enhance.base import EnhancementModel
-from mon.nn import ModelRegisterMixin
+from mon.nn import Model, ModelRegisterMixin
 from mon.ops import guided_filter_upsample, RgbToHsv
 from . import loss as L
 from .module import ResidualINR
@@ -52,7 +53,7 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-class CoLIE(ModelRegisterMixin, EnhancementModel):
+class CoLIE(ModelRegisterMixin, Model):
     """CoLIE model for low-light image enhancement.
 
     References:
@@ -64,7 +65,11 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
     arch: str = "colie"
     name: str = "colie"
     tasks: list[Task] = [Task.LLE]
+    strategies: list[Strategy] = [Strategy.RESIZE]
     model_dir: Path = current_dir
+
+    in_keys: set = {"image"}
+    out_keys: set = {"enhanced"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -110,27 +115,13 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
         self.device = device
         self.optimizer = optimizer
 
-    def _build_optimizer(self, model: nn.Module, optimizer: DictLike | None = None) -> Optimizer:
-        """Build and return the optimizer for the INR model.
-
-        Args:
-            optimizer (DictLike, optional): Dictionary containing optimizer
-                parameters. Defaults to None.
-        """
-        # Define optimizer
-        if optimizer is not None:
-            return OPTIMIZERS.build(params=model.parameters(), **optimizer)
-        else:
-            return Adam(model.parameters(), lr=1e-5, betas=(0.9, 0.999), weight_decay=3e-4)
-
     # --- Callable & Context Manager ---
     @override
-    def forward_step(
+    def forward(
         self,
         data: TensorDict,
         epochs: int | None = None,
         E: float = 0.5,
-        *args, **kwargs
     ) -> TensorDict:
         """Forward the input through the network.
 
@@ -157,7 +148,7 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
             add_layer=self.add_layers,
         ).to(device)
 
-        optimizer = self._build_optimizer(model=model, optimizer=self.optimizer)
+        optimizer = self.build_optimizer(model=model, optimizer=self.optimizer)
 
         # 2. Move inputs to the corresponding device
         image = data["image"].to(device)
@@ -248,13 +239,47 @@ class CoLIE(ModelRegisterMixin, EnhancementModel):
         }
         return TensorDict(outputs, batch_size=[])
 
-    # --- Benchmarks ---
+    # --- Interfaces ---
     @override
-    def benchmark(self, imgsz: SizeLike, *args, **kwargs) -> dict[str, float]:
+    def build_transforms(self, config: Config | None = None) -> T.Compose:
+        """Define the model's transformations.
+
+        Args:
+            config (Config, optional): The configuration object containing any
+                necessary parameters for defining the transformations.
+                Defaults to None.
+
+        Returns:
+            Callable: A callable (e.g., a torchvision transform or a custom
+                function) that takes in the raw input data and returns the
+                transformed data ready for the forward step.
+        """
+        transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
+        return transforms
+
+    def build_optimizer(self, model: nn.Module, optimizer: DictLike | None = None) -> Optimizer:
+        """Build and return the optimizer for the INR model.
+
+        Args:
+            optimizer (DictLike, optional): Dictionary containing optimizer
+                parameters. Defaults to None.
+        """
+        # Define optimizer
+        if optimizer is not None:
+            return OPTIMIZERS.build(params=model.parameters(), **optimizer)
+        else:
+            return Adam(model.parameters(), lr=1e-5, betas=(0.9, 0.999), weight_decay=3e-4)
+
+    # --- Benchmark ---
+    @override
+    def benchmark(self, imgsz: Size, *args, **kwargs) -> dict[str, float]:
         """Perform a single forward step of the model to benchmark its performance.
 
         Args:
-            imgsz (SizeLike): Input image size.
+            imgsz (Size): Input image size.
             **kwargs: Additional arguments for benchmarking, such as number
                 of runs, device, etc.
 

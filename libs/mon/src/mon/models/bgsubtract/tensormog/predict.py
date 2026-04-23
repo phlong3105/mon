@@ -12,13 +12,10 @@ __all__ = [
     "TensorMOG_Predictor",
 ]
 
-from typing import Any
-
 from tensordict import TensorDict
 from typing_extensions import override
 
-from mon.core import K, MODELS, Path, PREDICTORS, Size, TimeProfiler
-from mon.dataset import transform as T
+from mon.core import K, MODELS, Path, PREDICTORS, TimeProfiler
 from mon.runners import Predictor
 
 current_file = Path(__file__).normalize()
@@ -40,7 +37,7 @@ class TensorMOG_Predictor(Predictor):
         config = self.config
         device = self.device
 
-        imgsz = config.eval_imgsz
+        imgsz = config.imgsz
         model = MODELS.build(
             **config.model | {
                 "height": imgsz.h,
@@ -50,19 +47,6 @@ class TensorMOG_Predictor(Predictor):
         )
         model = model.to(device)
         self._model = model
-
-    @override
-    def _init_transforms(self):
-        """Initialize ``self._transforms`` attribute."""
-        config = self.config
-
-        imgsz = Size.from_value(config.eval_imgsz)
-        transforms = T.Compose([
-            T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32),
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
-        self._transforms = transforms
 
     # --- Prediction ---
     @override

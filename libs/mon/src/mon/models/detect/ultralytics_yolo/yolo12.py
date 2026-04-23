@@ -162,7 +162,7 @@ def yolo12n(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12n")
@@ -174,7 +174,7 @@ def yolo12s(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12s")
@@ -186,7 +186,7 @@ def yolo12m(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12m")
@@ -198,7 +198,7 @@ def yolo12l(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12l")
@@ -210,7 +210,7 @@ def yolo12x(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12x")
@@ -297,7 +297,7 @@ def yolo12n_seg(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12n_seg")
@@ -309,7 +309,7 @@ def yolo12s_seg(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12s_seg")
@@ -321,7 +321,7 @@ def yolo12m_seg(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12m_seg")
@@ -333,7 +333,7 @@ def yolo12l_seg(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12l_seg")
@@ -345,7 +345,7 @@ def yolo12x_seg(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12x_seg")
@@ -432,7 +432,7 @@ def yolo12n_cls(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12n_cls")
@@ -444,7 +444,7 @@ def yolo12s_cls(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12s_cls")
@@ -456,7 +456,7 @@ def yolo12m_cls(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12m_cls")
@@ -468,7 +468,7 @@ def yolo12l_cls(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12l_cls")
@@ -480,7 +480,7 @@ def yolo12x_cls(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12x_cls")
@@ -567,7 +567,7 @@ def yolo12n_pose(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12n_pose")
@@ -579,7 +579,7 @@ def yolo12s_pose(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12s_pose")
@@ -591,7 +591,7 @@ def yolo12m_pose(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12m_pose")
@@ -603,7 +603,7 @@ def yolo12l_pose(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12l_pose")
@@ -615,7 +615,7 @@ def yolo12x_pose(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12x_pose")
@@ -702,7 +702,7 @@ def yolo12n_obb(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12n_obb")
@@ -714,7 +714,7 @@ def yolo12s_obb(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12s_obb")
@@ -726,7 +726,7 @@ def yolo12m_obb(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12m_obb")
@@ -738,7 +738,7 @@ def yolo12l_obb(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12l_obb")
@@ -750,7 +750,7 @@ def yolo12x_obb(weights: WeightsLike = "default", *args, **kwargs):
     """Create an Ultralytics YOLO model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "yolo12x_obb")

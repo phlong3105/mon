@@ -13,6 +13,7 @@ __all__ = [
 ]
 
 from abc import ABC, abstractmethod
+from typing import override
 
 import numpy as np
 import torch
@@ -61,6 +62,7 @@ class Trainer(Runner, ABC):
                 parameters for training.
         """
         super().__init__(config=config)
+
         # Allocate resources
         # We will initialize these attributes later to avoid a long
         # initialization time
@@ -72,6 +74,35 @@ class Trainer(Runner, ABC):
         self._best: dict[str, float] = {
             "loss": float("inf"),
         }
+
+    @override
+    def _setup(self):
+        """Setup the runner ready for training."""
+        config = self.config
+
+        # Setup environment
+        config.output_dir.mkdir(exist_ok=True, parents=True)
+        config.config_file.copy_to(config.output_dir / config.config_file.name)
+        sys_ctx.set_random_seed(config.seed)
+
+        # Define model
+        self._init_model()
+        if self.model is None:
+            raise RuntimeError(f"'model' is not initialized.")
+
+        # Define optimizer & scheduler
+        self._init_optimizer()
+        if self.optimizer is None:
+            raise RuntimeError(f"'optimizer' is not initialized.")
+
+        # Define data
+        self._init_train_dataloader()
+        self._init_val_dataloader()
+        if self.train_dataloader is None:
+            raise RuntimeError(f"'train_dataloader' is not initialized.")
+
+        # Define loggers
+        self._init_loggers()
 
     @abstractmethod
     def _init_optimizer(self):
@@ -166,48 +197,26 @@ class Trainer(Runner, ABC):
         """Train the model."""
         config = self.config
 
-        # 1. Summarize the current run
+        # 1. Setup
+        self._setup()
+
+        # 2. Summarize the current run
         if config.verbose:
-            config.log_summary()
+            self.log_summary()
 
-        # 2. Setup environment
-        config.output_dir.mkdir(exist_ok=True, parents=True)
-        config.config_file.copy_to(config.output_dir / config.config_file.name)
-
-        sys_ctx.set_random_seed(config.seed)
-        epochs = config.epochs
-
-        # 3. Define model
-        self._init_model()
-        if self.model is None:
-            raise RuntimeError(f"'model' is not initialized.")
-
-        # 4. Define optimizer & scheduler
-        self._init_optimizer()
-        if self.optimizer is None:
-            raise RuntimeError(f"'optimizer' is not initialized.")
-
-        # 5. Define data
-        self._init_train_dataloader()
-        self._init_val_dataloader()
-        if self.train_dataloader is None:
-            raise RuntimeError(f"'train_dataloader' is not initialized.")
-
-        # 6. Define loggers
-        self._init_loggers()
-
-        # 7. Run benchmark
+        # 3. Run benchmark
         if config.benchmark:
             self.benchmark()
 
-        # 8. Main loop
+        # 4. Main loop
+        epochs = config.epochs
         with create_progress_bar() as pbar:
             for epoch in pbar.track(
                 sequence=range(epochs),
                 total=epochs,
                 description=f"[bright_yellow]Training"
             ):
-                # 8.1. Train epoch
+                # 4.1. Train epoch
                 self.model.train()
                 train_outputs = self._train_epoch(epoch=epoch, pbar=pbar)
                 if "loss" not in train_outputs:
@@ -216,13 +225,13 @@ class Trainer(Runner, ABC):
                         f"but got {train_outputs.keys()}."
                     )
 
-                # 8.2. Val epoch
+                # 4.2. Val epoch
                 val_outputs = {}
                 if self.val_dataloader is not None:
                     self.model.eval()
                     val_outputs = self._val_epoch(epoch=epoch, pbar=pbar)
 
-                # 8.3. Scheduler Step
+                # 4.3. Scheduler Step
                 if self.scheduler is not None:
                     if isinstance(self.scheduler, ReduceLROnPlateau):
                         # If it's a Plateau scheduler, it needs a metric (usually Val Loss)
@@ -233,15 +242,15 @@ class Trainer(Runner, ABC):
                         # For all other standard schedulers (StepLR, CosineAnnealing, etc.)
                         self.scheduler.step()
 
-                # 8.4. Log
+                # 4.4. Log
                 if self.verbose:
                     self._log(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
 
-                # 8.5. Save
+                # 4.5. Save
                 if self.save:
                     self._save(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
 
-                # 8.6. Save debug
+                # 4.6. Save debug
                 if self.save_debug:
                     self._save_debug(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
 
@@ -276,6 +285,11 @@ class Trainer(Runner, ABC):
         pass
 
     # --- Logging ---
+    @override
+    def log_summary(self):
+        """Log a summary of the current run."""
+        self.config.log_summary()
+
     def _log(self, epoch: int, train_outputs: TensorDict, val_outputs: TensorDict):
         """Log the training and validation results for the current epoch.
 

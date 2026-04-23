@@ -12,13 +12,10 @@ __all__ = [
     "CoLIE_Predictor",
 ]
 
-from typing import Any
-
 from tensordict import TensorDict
 from typing_extensions import override
 
 from mon.core import K, Path, PREDICTORS, TimeProfiler
-from mon.dataset import transform as T
 from mon.runners import Predictor
 from .model import colie
 
@@ -41,15 +38,7 @@ class CoLIE_Predictor(Predictor):
         self._model = None
 
         # Update model's hidden_dim with eval_imgsz
-        self.config.model.hidden_dim = self.config.eval_imgsz.h
-
-    @override
-    def _init_transforms(self):
-        """Initialize ``self._transforms`` attribute."""
-        self._transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
+        self.config.model.hidden_dim = self.config.imgsz.h
 
     # --- Prediction ---
     @override

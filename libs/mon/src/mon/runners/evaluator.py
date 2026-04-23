@@ -132,27 +132,6 @@ class IQAEvaluator(Evaluator):
 
         self._metrics = _metrics
 
-    @override
-    def _init_dataloader(self) -> DataLoader:
-        """Build a dataloader for the given dataset."""
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
-        if self.resize:
-            h, w = self.imgsz.hw
-            transforms = T.Resize(height=h, width=w) + transforms
-
-        return DataLoader(
-            dataset=IQADataset(
-                input_dir=self.input_dir,
-                target_dir=self.target_dir,
-                transforms=transforms,
-                verbose=False,
-            ),
-            batch_size=1,
-        )
-
     # --- Properties ---
     @property
     def imgsz(self) -> Size:
@@ -202,7 +181,7 @@ class IQAEvaluator(Evaluator):
 
         # Resolve dataloader
         # We don't persist the dataset to avoid memory consumption
-        dataloader = self._init_dataloader()
+        dataloader = self._build_dataloader()
 
         # Processing
         self._results = self._measure(dataloader=dataloader, use_gt_mean=False)
@@ -277,7 +256,29 @@ class IQAEvaluator(Evaluator):
                 results[m] = None
         return results
 
+    @override
+    def _build_dataloader(self) -> DataLoader:
+        """Build a dataloader for the given dataset."""
+        transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
+        if self.resize:
+            h, w = self.imgsz.hw
+            transforms = T.Resize(height=h, width=w) + transforms
+
+        return DataLoader(
+            dataset=IQADataset(
+                input_dir=self.input_dir,
+                target_dir=self.target_dir,
+                transforms=transforms,
+                verbose=False,
+            ),
+            batch_size=1,
+        )
+
     # --- Logging ---
+    @override
     def log_summary(self):
         """Log a summary of the current run."""
         if not self.verbose:
@@ -389,23 +390,6 @@ class InstanceIQAEvaluator(Evaluator):
 
         self._metrics = _metrics
 
-    @override
-    def _init_dataloader(self):
-        """Build a dataloader for the given dataset."""
-        pass
-
-    def _init_transforms(self) -> T.Compose:
-        """Build a dataloader for the given dataset."""
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ], additional_targets={"target": "image"})
-        if self.resize:
-            h, w = self.imgsz.hw
-            transforms = T.Resize(height=h, width=w) + transforms
-
-        return transforms
-
     # --- Properties ---
     @property
     def imgsz(self) -> Size:
@@ -474,7 +458,7 @@ class InstanceIQAEvaluator(Evaluator):
             target = None
 
         # Define transforms
-        transforms: T.Compose = self._init_transforms()
+        transforms: T.Compose = self._build_transforms()
 
         # Processing loop
         results = {i.stem: [] for i in image_files}
@@ -519,7 +503,25 @@ class InstanceIQAEvaluator(Evaluator):
 
         return results
 
+    def _build_transforms(self) -> T.Compose:
+        """Build a dataloader for the given dataset."""
+        transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ], additional_targets={"target": "image"})
+        if self.resize:
+            h, w = self.imgsz.hw
+            transforms = T.Resize(height=h, width=w) + transforms
+
+        return transforms
+
+    @override
+    def _build_dataloader(self):
+        """Build a dataloader for the given dataset."""
+        pass
+
     # --- Logging ---
+    @override
     def log_summary(self):
         """Log a summary of the current run."""
         if not self.verbose:
@@ -636,25 +638,6 @@ class DQAEvaluator(Evaluator):
         self._metrics = [m.lower() for m in self.all_metrics]
         self._metrics_func = {}
 
-    @override
-    def _init_dataloader(self) -> DataLoader:
-        """Build a dataloader for the given dataset."""
-        if self.resize:
-            h, w = self.imgsz.hw
-            transforms = T.Compose([T.Resize(height=h, width=w)])
-        else:
-            transforms = None
-
-        return DataLoader(
-            dataset=IQADataset(
-                input_dir=self.input_dir,
-                target_dir=self.target_dir,
-                transforms=transforms,
-                verbose=False,
-            ),
-            batch_size=1,
-        )
-
     # --- Properties ---
     @property
     def imgsz(self) -> Size:
@@ -698,7 +681,7 @@ class DQAEvaluator(Evaluator):
 
         # Resolve dataloader
         # We don't persist the dataset to avoid memory consumption
-        dataloader = self._init_dataloader()
+        dataloader = self._build_dataloader()
 
         # Processing
         self._results = self._measure(dataloader=dataloader)
@@ -763,7 +746,27 @@ class DQAEvaluator(Evaluator):
                 results[m] = None
         return results
 
+    @override
+    def _build_dataloader(self) -> DataLoader:
+        """Build a dataloader for the given dataset."""
+        if self.resize:
+            h, w = self.imgsz.hw
+            transforms = T.Compose([T.Resize(height=h, width=w)])
+        else:
+            transforms = None
+
+        return DataLoader(
+            dataset=IQADataset(
+                input_dir=self.input_dir,
+                target_dir=self.target_dir,
+                transforms=transforms,
+                verbose=False,
+            ),
+            batch_size=1,
+        )
+
     # --- Logging ---
+    @override
     def log_summary(self):
         """Log a summary of the current run."""
         if not self.verbose:

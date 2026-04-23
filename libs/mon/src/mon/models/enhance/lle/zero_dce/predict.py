@@ -12,12 +12,11 @@ __all__ = [
     "ZeroDCE_Predictor",
 ]
 
-from typing import Any
-
 import torch
 from tensordict import TensorDict
 from typing_extensions import override
 
+from mon import Strategy
 from mon.core import K, MODELS, Path, PREDICTORS, Size, SizeLike, TimeProfiler
 from mon.dataset import transform as T
 from mon.runners import Predictor
@@ -44,30 +43,10 @@ class ZeroDCE_Predictor(Predictor):
         device = self.device
         weights = config.weights or config.finetune
 
-        model = MODELS.build(**config.model | { "weights": weights})
+        model = MODELS.build(**config.model | { "weights": weights })
         model = model.to(device)
         model.eval()
         self._model = model
-
-    @override
-    def _init_transforms(self):
-        """Initialize ``self._transforms`` attribute."""
-        config = self.config
-
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
-
-        if config.eval_resize:
-            imgsz = Size.from_value(config.eval_imgsz)
-            scale_factor = config.model.get("scale_factor")
-            if scale_factor:
-                imgsz = Size(height=imgsz.h // scale_factor, width=imgsz.w // scale_factor)
-            resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-            transforms = resize + transforms
-
-        self._transforms = transforms
 
     # --- Prediction ---
     @override
@@ -84,6 +63,7 @@ class ZeroDCE_Predictor(Predictor):
         Returns:
             TensorDict: The dictionary containing the prediction results.
         """
+        config = self.config
         device = self.device
 
         # 1. Prepare inputs
@@ -93,7 +73,11 @@ class ZeroDCE_Predictor(Predictor):
 
         # 2. Inference
         timers.infer.tick()
-        outputs = self.model(data=datapoint, save_debug=self.save_debug)
+        outputs = self.model(
+            data=datapoint,
+            use_patch=(config.strategy == Strategy.PATCH),
+            save_debug=self.save_debug,
+        )
         timers.infer.tock()
 
         return outputs
@@ -129,25 +113,6 @@ class ZeroDCE_Predictor(Predictor):
                 prediction results.
         """
         pass
-
-    # --- Utilities ---
-    @override
-    def benchmark(self, imgsz: SizeLike | None = None):
-        """Run the benchmark for the model.
-
-        Args:
-            imgsz (SizeLike, optional): The input image size for benchmarking.
-                Defaults to None, which means using the default size.
-        """
-        config = self.config
-        imgsz = Size.from_value(imgsz or config.eval_imgsz)
-
-        scale_factor = config.model.get("scale_factor")
-        if scale_factor:
-            imgsz = Size(height=imgsz.h // scale_factor, width=imgsz.w // scale_factor)
-
-        if config.benchmark:
-            self.model.benchmark(imgsz=imgsz, verbose=self.verbose)
 
 # endregion
 

@@ -19,6 +19,7 @@ __all__ = [
     "Precision",
     "RunMode",
     "Split",
+    "Strategy",
     "Task",
     "VideoExtension",
     "WeightExtension",
@@ -154,7 +155,25 @@ class AlbumTargetType(MultiStrEnum):
     VOLUMES = "volumes"      # Multiple 3D volumes (e.g., (N, D, H, W, C)). Processed like volume across the first dimension.
 
 
-# --- Machine Learning ---
+# --- Operations ---
+
+class Backend(MultiStrEnum):
+    """Enum for common backends."""
+
+    CV2 = "cv2", "opencv", "default"
+    TORCH = "torch"
+    TORCHVISION = "torchvision"
+
+
+class Precision(MultiStrEnum):
+    """Enum for common numerical precisions."""
+
+    FP32 = "fp32", "default"  # 32-bit floating point
+    FP16 = "fp16"             # 16-bit floating point
+    FP8 = "fp8"               # 8-bit floating point
+    INT8 = "int8"             # 8-bit integer
+    INT4 = "int4"             # 4-bit integer
+
 
 class RunMode(MultiStrEnum):
     """Enum for common ML run modes."""
@@ -173,25 +192,13 @@ class Split(MultiStrEnum):
     PREDICT = "predict"
 
 
-class Precision(MultiStrEnum):
-    """Enum for common numerical precisions."""
+class Strategy(MultiStrEnum):
+    """Enum for processing strategies."""
 
-    FP32 = "fp32", "default"  # 32-bit floating point
-    FP16 = "fp16"             # 16-bit floating point
-    FP8 = "fp8"               # 8-bit floating point
-    INT8 = "int8"             # 8-bit integer
-    INT4 = "int4"             # 4-bit integer
+    NATIVE = "native"
+    RESIZE = "resize", "resizing", "default"
+    PATCH = "patch", "patching"
 
-
-class Backend(MultiStrEnum):
-    """Enum for common backends."""
-
-    CV2 = "cv2", "opencv", "default"
-    TORCH = "torch"
-    TORCHVISION = "torchvision"
-
-
-# --- Models ---
 
 class Task(MultiStrEnum):
     """Enum for common ML tasks."""

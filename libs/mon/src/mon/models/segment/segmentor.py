@@ -47,7 +47,7 @@ class Segmentor(ABC):
     def __init__(
         self,
         name: str,
-        weights: WeightsLike | None = None,
+        weights: Weights | None = None,
         fg_color: Int3 = (255, 255, 255),
         bg_color: Int3 = (0, 0, 0),
         device: DeviceLike = "cpu",
@@ -58,7 +58,7 @@ class Segmentor(ABC):
 
         Args:
             name (str): Name of the model variant.
-            weights (WeightsLike, optional): Pre-trained weights to load.
+            weights (Weights, optional): Pre-trained weights to load.
                 Defaults to None.
             fg_color (Int3, optional): Foreground color for masks.
                 Defaults to (255, 255, 255).

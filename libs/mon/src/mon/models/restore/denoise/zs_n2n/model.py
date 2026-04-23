@@ -28,9 +28,20 @@ from torch.nn import functional as F
 from torch.optim import Adam
 from torch.optim.lr_scheduler import StepLR
 
-from mon.core import DictLike, MODELS, OPTIMIZERS, Path, SCHEDULERS, Task
-from mon.models.restore.base import RestorationModel
-from mon.nn import ModelRegisterMixin
+from mon.core import (
+    Config,
+    DictLike,
+    MODELS,
+    OPTIMIZERS,
+    Path,
+    SCHEDULERS,
+    Size,
+    Strategy,
+    Task,
+)
+from mon.dataset import transform as T
+from mon.metrics import benchmark, create_dummy_image
+from mon.nn import Model, ModelRegisterMixin
 from .module import DenoiseNetwork, ImprovedDenoiseNetwork
 
 current_file = Path(__file__).normalize()
@@ -42,7 +53,7 @@ current_dir = current_file.parents[0]
 # ==============================================================================
 
 @MODELS.register(name="zs_n2n")
-class ZS_N2N(ModelRegisterMixin, RestorationModel):
+class ZS_N2N(ModelRegisterMixin, Model):
     """ZS-N2N model for zero-shot image denoising.
 
     References:
@@ -54,7 +65,11 @@ class ZS_N2N(ModelRegisterMixin, RestorationModel):
     arch: str = "zs_n2n"
     name: str = "zs_n2n"
     tasks: list[Task] = [Task.DENOISE]
+    strategies: list[Strategy] = [Strategy.RESIZE]
     model_dir: Path = current_dir
+
+    in_keys: set = {"image"}
+    out_keys: set = {"restored"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -99,9 +114,9 @@ class ZS_N2N(ModelRegisterMixin, RestorationModel):
         # single image, so we need to reset the weights before each new image.
         self._default_state_dict = self.model.state_dict()
 
-     # --- Callable & Context Manager ---
+    # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: TensorDict, *args, **kwargs) -> TensorDict:
+    def forward(self, data: TensorDict, *args, **kwargs) -> TensorDict:
         """Forward the input through the network.
 
         Args:
@@ -204,7 +219,60 @@ class ZS_N2N(ModelRegisterMixin, RestorationModel):
         }
         return TensorDict(outputs, batch_size=[])
 
-    # --- Denoise ---
+    # --- Interfaces ---
+    @override
+    def build_transforms(self, config: Config | None = None) -> T.Compose:
+        """Define the model's transformations.
+
+        Args:
+            config (Config, optional): The configuration object containing any
+                necessary parameters for defining the transformations.
+                Defaults to None.
+
+        Returns:
+            Callable: A callable (e.g., a torchvision transform or a custom
+                function) that takes in the raw input data and returns the
+                transformed data ready for the forward step.
+        """
+        transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
+
+        if config is not None:
+            if config.strategy in [Strategy.RESIZE]:
+                imgsz = config.imgsz
+                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
+                transforms = resize + transforms
+
+        return transforms
+
+    # --- Benchmark ---
+    @override
+    def benchmark(self, imgsz: Size, *args, **kwargs) -> dict[str, float]:
+        """Perform a single forward step of the model to benchmark its performance.
+
+        Args:
+            imgsz (Size): Input image size.
+            **kwargs: Additional arguments for benchmarking, such as number
+                of runs, device, etc.
+
+        Returns:
+            dict[str, float]: A dictionary containing the benchmark results,
+                such as latency, FLOPs, and parameter count.
+        """
+        imgsz = Size.from_value(imgsz)
+        device = next(self.parameters()).device
+
+        # Create dummy inputs
+        dummy_input = create_dummy_image(imgsz=imgsz, device=device)
+        data = TensorDict({"image": dummy_input}, batch_size=[])
+        inputs = {"data": data}
+
+        # Benchmark the model
+        return benchmark(model=self, inputs=inputs, *args, **kwargs)
+
+    # --- Utilities ---
     def denoise_loss(self, noisy_image: Tensor) -> Tensor:
         """Calculate the ZS-N2N denoising loss."""
         L = nn.MSELoss()  # Vanilla loss function
@@ -226,7 +294,6 @@ class ZS_N2N(ModelRegisterMixin, RestorationModel):
 
         return loss
 
-    # --- Utilities ---
     # noinspection PyMethodMayBeStatic
     def add_noise(self, x: Tensor, noise_level: float) -> Tensor:
         """Add noise to the image."""
@@ -279,7 +346,7 @@ class ZS_N2N(ModelRegisterMixin, RestorationModel):
 
 
 @MODELS.register(name="izs_n2n")
-class IZS_N2N(ModelRegisterMixin, RestorationModel):
+class IZS_N2N(ModelRegisterMixin, Model):
     """IZS-N2N model for zero-shot image denoising.
 
     References:
@@ -290,7 +357,11 @@ class IZS_N2N(ModelRegisterMixin, RestorationModel):
     arch: str = "zsn2n"
     name: str = "izs_n2n"
     tasks: list[Task] = [Task.DENOISE]
+    strategies: list[Strategy] = [Strategy.RESIZE]
     model_dir: Path = current_dir
+
+    in_keys: set = {"image"}
+    out_keys: set = {"restored"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -335,9 +406,9 @@ class IZS_N2N(ModelRegisterMixin, RestorationModel):
         # single image, so we need to reset the weights before each new image.
         self._default_state_dict = self.model.state_dict()
 
-     # --- Callable & Context Manager ---
+    # --- Callable & Context Manager ---
     @override
-    def forward_step(self, data: TensorDict, *args, **kwargs) -> TensorDict:
+    def forward(self, data: TensorDict, *args, **kwargs) -> TensorDict:
         """Forward the input through the network.
 
         Args:
@@ -440,7 +511,60 @@ class IZS_N2N(ModelRegisterMixin, RestorationModel):
         }
         return TensorDict(outputs, batch_size=[])
 
-    # --- Denoise ---
+    # --- Interfaces ---
+    @override
+    def build_transforms(self, config: Config | None = None) -> T.Compose:
+        """Define the model's transformations.
+
+        Args:
+            config (Config, optional): The configuration object containing any
+                necessary parameters for defining the transformations.
+                Defaults to None.
+
+        Returns:
+            Callable: A callable (e.g., a torchvision transform or a custom
+                function) that takes in the raw input data and returns the
+                transformed data ready for the forward step.
+        """
+        transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
+
+        if config is not None:
+            if config.strategy in [Strategy.RESIZE]:
+                imgsz = config.imgsz
+                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
+                transforms = resize + transforms
+
+        return transforms
+
+    # --- Benchmark ---
+    @override
+    def benchmark(self, imgsz: Size, *args, **kwargs) -> dict[str, float]:
+        """Perform a single forward step of the model to benchmark its performance.
+
+        Args:
+            imgsz (Size): Input image size.
+            **kwargs: Additional arguments for benchmarking, such as number
+                of runs, device, etc.
+
+        Returns:
+            dict[str, float]: A dictionary containing the benchmark results,
+                such as latency, FLOPs, and parameter count.
+        """
+        imgsz = Size.from_value(imgsz)
+        device = next(self.parameters()).device
+
+        # Create dummy inputs
+        dummy_input = create_dummy_image(imgsz=imgsz, device=device)
+        data = TensorDict({"image": dummy_input}, batch_size=[])
+        inputs = {"data": data}
+
+        # Benchmark the model
+        return benchmark(model=self, inputs=inputs, *args, **kwargs)
+
+    # --- Utilities ---
     def denoise_loss(self, noisy_image: Tensor) -> Tensor:
         """Calculate the ZS-N2N denoising loss."""
         L = nn.SmoothL1Loss()  # Improved loss function
@@ -461,7 +585,6 @@ class IZS_N2N(ModelRegisterMixin, RestorationModel):
 
         return loss
 
-    # --- Utilities ---
     # noinspection PyMethodMayBeStatic
     def add_noise(self, x: Tensor, noise_level: float) -> Tensor:
         """Add noise to the image."""

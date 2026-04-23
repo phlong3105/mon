@@ -24,25 +24,33 @@ __all__ = [
 ]
 
 import sys
+from typing import override
 
+import numpy as np
 import torch
 from numpy import ndarray
-from torch import nn, Tensor
+from tensordict import TensorDict
+from tensordict.tensorclass import NonTensorData
+from torch import Tensor
 
 from mon.core import (
+    Config,
     is_weights_type,
     K,
     log,
     MODELS,
     Path,
+    Size,
+    Strategy,
     Task,
-    TensorOrArray,
     WEIGHTS,
     Weights,
     WeightsEnum,
     WeightsLike,
 )
-from mon.nn import ModelRegisterMixin
+from mon.dataset import transform as T
+from mon.nn import Model, ModelRegisterMixin
+from mon.ops import normalize_minmax
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -61,7 +69,7 @@ except ImportError:
 # region BASE CLASSES
 # ==============================================================================
 
-class DAV2(ModelRegisterMixin, nn.Module):
+class DAV2(ModelRegisterMixin, Model):
     """DAV2 model for monocular depth estimation.
 
     References:
@@ -73,7 +81,11 @@ class DAV2(ModelRegisterMixin, nn.Module):
     arch: str = "dav2"
     name: str = "dav2"
     tasks: list[Task] = [Task.MONODEPTH]
+    strategies: list[Strategy] = [Strategy.RESIZE]
     model_dir: Path = current_dir
+
+    in_keys: set = {"image"}
+    out_keys: set = {"depth"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -85,7 +97,7 @@ class DAV2(ModelRegisterMixin, nn.Module):
         use_bn: bool = False,
         use_clstoken: bool = False,
         device: torch.device = torch.device("cpu"),
-        weights: WeightsLike | None = None,
+        weights: Weights | None = None,
         verbose: bool = True,
         *args, **kwargs
     ):
@@ -103,7 +115,7 @@ class DAV2(ModelRegisterMixin, nn.Module):
                 Defaults to False.
             device (torch.device, optional): The device to load the model on.
                 Defaults to CPU.
-            weights (WeightsLike, optional): Pre-trained weights to load.
+            weights (Weights, optional): Pre-trained weights to load.
                 Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
@@ -123,7 +135,7 @@ class DAV2(ModelRegisterMixin, nn.Module):
         ).to(device)
 
         # Load weights
-        if is_weights_type(weights):
+        if weights is not None and is_weights_type(weights):
             base_model.load_state_dict(weights.state_dict(weights_only=True))
             if self.verbose:
                 log(f"Initialized '{name}' from weights: '{weights.path}'.")
@@ -135,20 +147,70 @@ class DAV2(ModelRegisterMixin, nn.Module):
         self.model = base_model
 
     # --- Callable & Context Manager ---
-    def forward(self, x: TensorOrArray, *args, **kwargs):
+    @override
+    def forward(self, data: TensorDict, *args, **kwargs):
         """Forward the input through the network.
 
-        Simply delegates the call to the underlying model.
+        Args:
+            data (TensorDict): Input data dictionary.
+
+        Returns:
+            TensorDict: Output data dictionary.
         """
+        # 1. Extract input data
+        x = data["image"]
+
+        # 2. Network forward
         if isinstance(x, Tensor):
-            return self.model(x)
+            depth = self.model(x)
         elif isinstance(x, ndarray):
-            return self.model.infer_image(x, *args, **kwargs)
+            depth = self.model.infer_image(x, *args, **kwargs)
         else:
             raise TypeError(
                 f"Expected input to be a Tensor or ndarray, "
                 f"but got {type(x).__name__}."
             )
+
+        # 3. Return final and intermediate results for debugging
+        depth = normalize_minmax(depth) * 255.0
+        depth = depth.astype(np.uint8)
+        outputs = {
+            "depth": NonTensorData(depth),
+        }
+        return TensorDict(outputs, batch_size=[])
+
+    # --- Interfaces ---
+    @override
+    def build_transforms(self, config: Config | None = None) -> T.Compose | None:
+        """Define the model's transformations.
+
+        Args:
+            config (Config, optional): The configuration object containing any
+                necessary parameters for defining the transformations.
+                Defaults to None.
+
+        Returns:
+            Callable: A callable (e.g., a torchvision transform or a custom
+                function) that takes in the raw input data and returns the
+                transformed data ready for the forward step.
+        """
+        return None
+
+    # --- Benchmark ---
+    @override
+    def benchmark(self, imgsz: Size, *args, **kwargs) -> dict[str, float]:
+        """Perform a single forward step of the model to benchmark its performance.
+
+        Args:
+            imgsz (Size): Input image size.
+            **kwargs: Additional arguments for benchmarking, such as number
+                of runs, device, etc.
+
+        Returns:
+            dict[str, float]: A dictionary containing the benchmark results,
+                such as latency, FLOPs, and parameter count.
+        """
+        pass
 
 # endregion
 
@@ -205,7 +267,7 @@ def dav2_vits(weights: WeightsLike = "default", *args, **kwargs):
     """Create a DAV2 model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     return DAV2(
@@ -223,7 +285,7 @@ def dav2_vitb(weights: WeightsLike = "default", *args, **kwargs):
     """Create a DAV2 model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     return DAV2(
@@ -241,7 +303,7 @@ def dav2_vitl(weights: WeightsLike = "default", *args, **kwargs):
     """Create a DAV2 model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     return DAV2(

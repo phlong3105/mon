@@ -10,8 +10,6 @@ __all__ = []
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-from pandas.plotting import parallel_coordinates
 
 px = 1.0 / plt.rcParams["figure.dpi"]  # Conversion factor
 

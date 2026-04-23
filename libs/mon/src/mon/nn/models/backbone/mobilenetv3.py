@@ -29,6 +29,7 @@ from mon.core import (
     K,
     log,
     Path,
+    Strategy,
     Task,
     WEIGHTS,
     Weights,
@@ -49,8 +50,9 @@ class MobileNetV3BackBone(ModelRegisterMixin, nn.Module):
     """MobileNetV3 backbone."""
 
     arch: str = "mobilenet"
-    name: str = "mobilenet"
+    name: str = "mobilenetv3"
     tasks: list[Task] = [Task.BACKBONE]
+    strategies: list[Strategy] = [Strategy.RESIZE]
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
@@ -59,7 +61,7 @@ class MobileNetV3BackBone(ModelRegisterMixin, nn.Module):
         name: str,
         inverted_residual_setting: list[InvertedResidualConfig],
         last_channel: int,
-        weights: WeightsLike | None = None,
+        weights: Weights | None = None,
         out_indices: list[int] | None = None,
         verbose: bool = True,
         *args, **kwargs,
@@ -70,7 +72,7 @@ class MobileNetV3BackBone(ModelRegisterMixin, nn.Module):
             name (str): Name of the model variant.
             inverted_residual_setting: Network structure configuration.
             last_channel (int): Number of output channels for the last layer.
-            weights (WeightsLike, optional): Pre-trained weights to load.
+            weights (Weights, optional): Pre-trained weights to load.
                 Defaults to None.
             out_indices (list[int], optional): List of layer indices to extract
                 features from.
@@ -82,7 +84,7 @@ class MobileNetV3BackBone(ModelRegisterMixin, nn.Module):
         self.verbose = verbose
 
         # Define model
-        if is_weights_type(weights):
+        if weights is not None and is_weights_type(weights):
             kwargs["num_classes"] = weights.num_classes or kwargs["num_classes"]
 
         base_model = MobileNetV3(
@@ -92,7 +94,7 @@ class MobileNetV3BackBone(ModelRegisterMixin, nn.Module):
         )
 
         # Load weights
-        if is_weights_type(weights):
+        if weights is not None and is_weights_type(weights):
             base_model.load_state_dict(weights.state_dict())
             if self.verbose:
                 log(f"Initialized '{name}' from weights: '{weights.path}'.")
@@ -228,7 +230,7 @@ def mobilenet_v3_large(
     """Create a MobileNetV3-Large backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.
@@ -256,7 +258,7 @@ def mobilenet_v3_small(
     """Create a MobileNetV3 Small backbone.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
         out_indices (list[int], optional): List of layer indices to extract
             features from. Defaults to None.

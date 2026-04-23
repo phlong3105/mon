@@ -17,7 +17,7 @@ __all__ = [
 
 from torch import nn
 
-from mon.core import Path, Task, WeightsLike
+from mon.core import Path, Strategy, Task, Weights
 from mon.nn import ModelRegisterMixin
 
 try:
@@ -43,13 +43,14 @@ class YOLO(ModelRegisterMixin, nn.Module):
     arch: str = "yolo"
     name: str = "yolo"
     tasks: list[Task] = [Task.CLASSIFY, Task.DETECT, Task.SEGMENT, Task.POSE]
+    strategies: list[Strategy] = [Strategy.RESIZE]
     model_dir: Path = current_dir
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
         name: str,
-        weights: WeightsLike | None = None,
+        weights: Weights | None = None,
         verbose: bool = True,
         *args, **kwargs
     ):
@@ -57,7 +58,7 @@ class YOLO(ModelRegisterMixin, nn.Module):
 
         Args:
             name (str): Name of the model variant.
-            weights (WeightsLike, optional): Pre-trained weights to load.
+            weights (Weights, optional): Pre-trained weights to load.
                 Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """

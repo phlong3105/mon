@@ -25,19 +25,23 @@ from tensordict import TensorDict
 from torch import Tensor
 
 from mon.core import (
+    Config,
     is_weights_type,
     K,
     log,
     MODELS,
     Path,
+    Size,
+    Strategy,
     Task,
     WEIGHTS,
     Weights,
     WeightsEnum,
     WeightsLike,
 )
-from mon.models.enhance.base import EnhancementModel
-from mon.nn import ModelRegisterMixin
+from mon.dataset import transform as T
+from mon.metrics import benchmark, create_dummy_image
+from mon.nn import Model, ModelRegisterMixin
 from .module import NODE
 
 current_file = Path(__file__).normalize()
@@ -48,7 +52,7 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-class CLODE(ModelRegisterMixin, EnhancementModel):
+class CLODE(ModelRegisterMixin, Model):
     """CLODE model for low-light image enhancement.
 
     References:
@@ -60,7 +64,11 @@ class CLODE(ModelRegisterMixin, EnhancementModel):
     arch: str = "clode"
     name: str = "clode"
     tasks: list[Task] = [Task.LLE]
+    strategies: list[Strategy] = [Strategy.RESIZE]
     model_dir: Path = current_dir
+
+    in_keys: set = {"image"}
+    out_keys: set = {"enhanced"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -69,7 +77,7 @@ class CLODE(ModelRegisterMixin, EnhancementModel):
         num_filters: int = 32,
         tol: float = 1e-5,
         adjoint: bool = True,
-        weights: WeightsLike | None = None,
+        weights: Weights | None = None,
         verbose: bool = True,
         *args, **kwargs
     ):
@@ -82,7 +90,7 @@ class CLODE(ModelRegisterMixin, EnhancementModel):
             tol (float, optional): Tolerance for ODE solver. Defaults to 1e-5.
             adjoint (bool, optional): Whether to use the adjoint method for
                 backpropagation. Defaults to True.
-            weights (WeightsLike, optional): Pre-trained weights to load.
+            weights (Weights, optional): Pre-trained weights to load.
                 Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
@@ -95,7 +103,7 @@ class CLODE(ModelRegisterMixin, EnhancementModel):
         self.model = NODE(num_filters=num_filters, tol=tol, adjoint=adjoint)
 
         # Load weights
-        if is_weights_type(weights):
+        if weights is not None and is_weights_type(weights):
             self.model.load_state_dict(weights.state_dict())
             if self.verbose:
                 log(f"Initialized '{name}' from weights: '{weights.path}'.")
@@ -105,12 +113,11 @@ class CLODE(ModelRegisterMixin, EnhancementModel):
 
     # --- Callable & Context Manager ---
     @override
-    def forward_step(
+    def forward(
         self,
         data: TensorDict,
         eval_time: Tensor | None = None,
         inference: bool = True,
-        *args, **kwargs
     ) -> TensorDict:
         """Forward the input through the network.
 
@@ -132,6 +139,58 @@ class CLODE(ModelRegisterMixin, EnhancementModel):
 
         # 3. Return final and intermediate results for debugging
         return TensorDict(outputs, batch_size=[])
+
+    # --- Interfaces ---
+    @override
+    def build_transforms(self, config: Config | None = None) -> T.Compose:
+        """Define the model's transformations.
+
+        Args:
+            config (Config, optional): The configuration object containing any
+                necessary parameters for defining the transformations.
+                Defaults to None.
+
+        Returns:
+            Callable: A callable (e.g., a torchvision transform or a custom
+                function) that takes in the raw input data and returns the
+                transformed data ready for the forward step.
+        """
+        transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
+
+        if config is not None:
+            if config.strategy in [Strategy.RESIZE]:
+                imgsz = config.imgsz
+                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
+                transforms = resize + transforms
+
+        return transforms
+
+    # --- Benchmark ---
+    @override
+    def benchmark(self, imgsz: Size, *args, **kwargs) -> dict[str, float]:
+        """Perform a single forward step of the model to benchmark its performance.
+
+        Args:
+            imgsz (Size): Input image size.
+            **kwargs: Additional arguments for benchmarking, such as number
+                of runs, device, etc.
+
+        Returns:
+            dict[str, float]: A dictionary containing the benchmark results,
+                such as latency, FLOPs, and parameter count.
+        """
+        device = next(self.parameters()).device
+
+        # Create dummy inputs
+        dummy_input = create_dummy_image(imgsz=imgsz, device=device)
+        data = TensorDict({"image": dummy_input}, batch_size=[])
+        inputs = {"data": data}
+
+        # Benchmark the model
+        return benchmark(model=self, inputs=inputs, *args, **kwargs)
 
 # endregion
 
@@ -176,7 +235,7 @@ def clode(weights: WeightsLike = "default", *args, **kwargs):
     """Create a CLODE model.
 
     Args:
-        weights (WeightsLike, optional): Pre-trained weights to load.
+        weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
     """
     _ = kwargs.pop("name", "clode")
