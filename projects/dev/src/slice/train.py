@@ -12,13 +12,10 @@ __all__ = [
     "SLICE_Trainer",
 ]
 
-from typing import Any
-
 import pyiqa
 import torch
 from rich.progress import Progress
 from tensordict import TensorDict
-from torch import Tensor
 from typing_extensions import override
 
 from mon.core import (
@@ -119,7 +116,7 @@ class SLICE_Trainer(Trainer):
             T = torch.tensor([0.0, config.T]).float().to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(data=datapoint, T=T, save_debug=True)
+            outputs = self.model.forward_train( image=image, depth=depth, T=T)
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
@@ -195,10 +192,12 @@ class SLICE_Trainer(Trainer):
         for i, datapoint in enumerate(self.val_dataloader):
             # 2.1. Prepare inputs
             datapoint = datapoint.to(device)
+            image = datapoint["image"]
+            depth = datapoint.get("depth", None) if use_depth else None
             T = torch.tensor([0.0, config.T]).float().to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(data=datapoint, T=T, save_debug=True)
+            outputs = self.model.forward_train( image=image, depth=depth, T=T)
 
             # 2.3. Extract outputs
             image = datapoint["image"]

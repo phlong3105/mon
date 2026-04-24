@@ -17,8 +17,6 @@ __all__ = [
     "CLODE_Predictor",
 ]
 
-from typing import Any
-
 import torch
 from tensordict import TensorDict
 from typing_extensions import override
@@ -53,6 +51,26 @@ class CLODE_Predictor(Predictor):
         model.eval()
         self._model = model
 
+    @override
+    def _init_transforms(self):
+        """Initialize ``self._transforms`` attribute for pre-processing the
+        input data.
+        """
+        config = self.config
+
+        transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
+
+        if config is not None:
+            if config.use_resize:
+                imgsz = config.imgsz
+                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
+                transforms = resize + transforms
+
+        self._transforms = transforms
+
     # --- Prediction ---
     @override
     @torch.inference_mode()
@@ -74,7 +92,7 @@ class CLODE_Predictor(Predictor):
         # 1. Prepare inputs
         timers.preprocess.tick()
         datapoint = datapoint.to(device)
-        eval_time = torch.tensor([0, config.T]).float().to(device)
+        eval_time = torch.tensor([0, config.predict.T]).float().to(device)
         timers.preprocess.tock()
 
         # 2. Inference

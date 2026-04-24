@@ -27,7 +27,6 @@ from torch.nn import functional as F
 from torchdiffeq import odeint
 
 from mon.core import (
-    Config,
     is_weights_type,
     log,
     MODELS,
@@ -38,7 +37,6 @@ from mon.core import (
     Task,
     Weights,
 )
-from mon.dataset import transform as T
 from mon.metrics import benchmark, create_dummy_image
 from mon.nn import Model, ModelRegisterMixin
 from .module import DecoderSIREN, Denoiser, Encoder, EnhancementCurveODE
@@ -84,6 +82,7 @@ class SLICE(ModelRegisterMixin, Model):
 
     in_keys: set = {"image"}
     out_keys: set = {"enhanced"}
+    debug_keys: set = {"curve_map", "noise_map", "denoised"}
 
     methods = [
         "iter8", "iter5", "iter4", "dopri8", "dopri5", "bosh3", "fehlberg2",
@@ -181,63 +180,92 @@ class SLICE(ModelRegisterMixin, Model):
     @override
     def forward(
         self,
-        data: TensorDict,
+        image: Tensor,
+        depth: Tensor | None = None,
         T: Tensor | None = None,
         chunk_size: int = 65536,
-    ) -> TensorDict:
-        """Forward the input through the network.
+    ) -> tuple[Tensor, ...]:
+        """Route the inputs through the model's different forward methods based
+        on the context.
 
         Args:
-            data (TensorDict): Input data dictionary.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            depth (Tensor | None, optional): Input depth map tensor of shape
+                (B, 1, H, W) and values ranging from 0.0 to 1.0. If None, depth
+                is not used. Defaults to None.
             T (Tensor | None, optional): Time span for the ODE solver.
                 Defaults to None.
             chunk_size (int, optional): Chunk size for inference on large images.
                 Defaults to 65,536.
 
         Returns:
-            TensorDict: Output data dictionary.
-        """
-        # 1. Extract input data
-        image = data["image"]
-        depth = data.get("depth", None) if self.use_depth else None
+            tuple[Tensor, ...]: A tuple containing:
 
-        # 2. Prepare inputs
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - curve_map (Tensor): The estimated curve parameters of shape
+                  (B, C, H, W) and values ranging from -1.0 to 1.0.
+                - noise_map (Tensor): The estimated noise map of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - denoised (Tensor): The denoised image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+        """
+        return self.forward_step(image=image, depth=depth, T=T, chunk_size=chunk_size)
+
+    def forward_train(
+        self,
+        image: Tensor,
+        depth: Tensor | None = None,
+        T: Tensor | None = None,
+    ) -> TensorDict:
+        """Perform a single forward step of the model during training.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            depth (Tensor | None, optional): Input depth map tensor of shape
+                (B, 1, H, W) and values ranging from 0.0 to 1.0. If None, depth
+                is not used. Defaults to None.
+            T (Tensor | None, optional): Time span for the ODE solver.
+                Defaults to None.
+
+        Returns:
+            tuple[Tensor, ...]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - r (Tensor): The estimated curve parameters of shape (B, C*8, H, W)
+                  and values ranging from -1.0 to 1.0.
+        """
+        # 1. Prepare inputs
         x = image
-        d = depth
-        size0 = Size.from_value(x)
+        d = depth if self.use_depth else None
         size1 = self.imgsz
 
-        # Downsample the inputs to self.imgsz so the CNN doesn't cause an OOM
-        if size0 != size1:
-            x = F.interpolate(x, size=size1.hw, mode="bilinear", align_corners=True)
-            d = F.interpolate(d, size=size1.hw, mode="bilinear", align_corners=True) if d is not None else None
-
-        # 3. Denoise
+        # 2. Denoise
         l_denoise, noise, p_x = self.denoiser(x)
 
-        # 4. Fusion
+        # 3. Fusion
         if d is not None:
             x_in = torch.cat([x, p_x, d], dim=1)
         else:
             x_in = torch.cat([x, p_x], dim=1)
 
-        # 5. Encode global features
+        # 4. Encode global features
         features = self.encoder(x_in)
 
-        # 6. Predict curve parameters
-        if size0 == size1:
-            A = self.gen_curve_map(features, size1)
-        else:
-            A = self.gen_curve_map_chunk(features, size0, chunk_size=chunk_size)
+        # 5. Predict curve parameters
+        A = self.gen_curve_map(features, size1)
 
-        # 7. Enhance
+        # 6. Enhance
         if "iter" in self.method:
             num_iters = int(self.method.split("iter")[-1])
             y = self.enhance_iter(image=image, A=A, num_iters=num_iters)
         else:
             y = self.enhance_ode(image=image, A=A, T=T)
 
-        # 8. Return final and intermediate results for debugging
+        # 7. Return final and intermediate results for debugging
         outputs = {
             "enhanced": y,
             "curve_map": A,
@@ -246,6 +274,78 @@ class SLICE(ModelRegisterMixin, Model):
             "l_denoise": l_denoise,
         }
         return TensorDict(outputs, batch_size=[])
+
+    @override
+    def forward_step(
+        self,
+        image: Tensor,
+        depth: Tensor | None = None,
+        T: Tensor | None = None,
+        chunk_size: int = 65536,
+    ) -> tuple[Tensor, ...]:
+        """Perform a single forward step of the model.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            depth (Tensor | None, optional): Input depth map tensor of shape
+                (B, 1, H, W) and values ranging from 0.0 to 1.0. If None, depth
+                is not used. Defaults to None.
+            T (Tensor | None, optional): Time span for the ODE solver.
+                Defaults to None.
+            chunk_size (int, optional): Chunk size for inference on large images.
+                Defaults to 65,536.
+
+        Returns:
+            tuple[Tensor, ...]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - curve_map (Tensor): The estimated curve parameters of shape
+                  (B, C, H, W) and values ranging from -1.0 to 1.0.
+                - noise_map (Tensor): The estimated noise map of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - denoised (Tensor): The denoised image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+        """
+        # 1. Prepare inputs
+        x = image
+        d = depth if self.use_depth else None
+        size0 = Size.from_value(x)
+        size1 = self.imgsz
+
+        # Downsample the inputs to self.imgsz so the CNN doesn't cause an OOM
+        if size0 != size1:
+            x = F.interpolate(x, size=size1.hw, mode="bilinear", align_corners=True)
+            d = F.interpolate(d, size=size1.hw, mode="bilinear", align_corners=True) if d is not None else None
+
+        # 2. Denoise
+        l_denoise, noise, p_x = self.denoiser(x)
+
+        # 3. Fusion
+        if d is not None:
+            x_in = torch.cat([x, p_x, d], dim=1)
+        else:
+            x_in = torch.cat([x, p_x], dim=1)
+
+        # 4. Encode global features
+        features = self.encoder(x_in)
+
+        # 5. Predict curve parameters
+        if size0 == size1:
+            A = self.gen_curve_map(features, size1)
+        else:
+            A = self.gen_curve_map_chunk(features, size0, chunk_size=chunk_size)
+
+        # 6. Enhance
+        if "iter" in self.method:
+            num_iters = int(self.method.split("iter")[-1])
+            y = self.enhance_iter(image=image, A=A, num_iters=num_iters)
+        else:
+            y = self.enhance_ode(image=image, A=A, T=T)
+
+        # 7. Return final and intermediate results for debugging
+        return y, A, noise, p_x
 
     # --- Curve Map ---
     def gen_curve_map(self, features: Tensor, size: Size) -> Tensor:
@@ -322,7 +422,6 @@ class SLICE(ModelRegisterMixin, Model):
 
         return y
 
-    # noinspection PyMethodMayBeStatic
     def enhance_iter(self, image: Tensor, A: Tensor, num_iters: int = 8) -> Tensor:
         """Apply the original iterative enhancement scheme."""
         y = image
@@ -369,34 +468,6 @@ class SLICE(ModelRegisterMixin, Model):
         loss_equi = F.l1_loss(A_pred_flip, A_orig_manually_flipped)
 
         return loss_equi
-
-    # --- Interfaces ---
-    @override
-    def build_transforms(self, config: Config | None = None) -> T.Compose:
-        """Define the model's transformations.
-
-        Args:
-            config (Config, optional): The configuration object containing any
-                necessary parameters for defining the transformations.
-                Defaults to None.
-
-        Returns:
-            Callable: A callable (e.g., a torchvision transform or a custom
-                function) that takes in the raw input data and returns the
-                transformed data ready for the forward step.
-        """
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
-
-        if config is not None:
-            if config.strategy in [Strategy.RESIZE]:
-                imgsz = config.imgsz
-                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-                transforms = resize + transforms
-
-        return transforms
 
     # --- Benchmark ---
     @override

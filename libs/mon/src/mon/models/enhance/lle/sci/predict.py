@@ -18,6 +18,7 @@ from tensordict import TensorDict
 from typing_extensions import override
 
 from mon.core import K, MODELS, Path, PREDICTORS, TimeProfiler
+from mon.dataset import transform as T
 from mon.runners import Predictor
 # noinspection PyUnusedImports
 from .model import sci
@@ -47,6 +48,26 @@ class SCI_Predictor(Predictor):
         model.eval()
         self._model = model
 
+    @override
+    def _init_transforms(self):
+        """Initialize ``self._transforms`` attribute for pre-processing the
+        input data.
+        """
+        config = self.config
+
+        transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
+
+        if config is not None:
+            if config.use_resize:
+                imgsz = config.imgsz
+                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
+                transforms = resize + transforms
+
+        self._transforms = transforms
+
     # --- Prediction ---
     @override
     @torch.inference_mode()
@@ -71,7 +92,7 @@ class SCI_Predictor(Predictor):
 
         # 2. Inference
         timers.infer.tick()
-        outputs = self.model(data=datapoint, inference=True, save_debug=self.save_debug)
+        outputs = self.model(data=datapoint, save_debug=self.save_debug)
         timers.infer.tock()
 
         return outputs

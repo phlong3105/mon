@@ -15,9 +15,9 @@ __all__ = [
 from typing import override
 
 from tensordict import TensorDict
+from torch import Tensor
 
-from mon.core import Config, MODELS, Path, Size, Strategy, Task
-from mon.dataset import transform as T
+from mon.core import MODELS, Path, Size, Strategy, Task
 from mon.metrics import benchmark, create_dummy_image
 from mon.nn import Model, ModelRegisterMixin
 from mon.ops import tv_denoise
@@ -42,6 +42,7 @@ class TVDenoise(ModelRegisterMixin, Model):
 
     in_keys: set = {"image"}
     out_keys: set = {"restored"}
+    debug_keys: set = {}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -68,54 +69,37 @@ class TVDenoise(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, data: TensorDict) -> TensorDict:
-        """Forward the input through the network.
+    def forward(self, image: Tensor) -> Tensor:
+        """Route the inputs through the model's different forward methods based
+        on the context.
 
         Args:
-            data (TensorDict): Input data dictionary.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            TensorDict: Output data dictionary.
+            Tensor: The denoised image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
         """
-        # 1. Extract input data
-        image = data["image"]
+        return self.forward_step(image=image)
 
-        # 2. Network forward
+    @override
+    def forward_step(self, image: Tensor) -> Tensor:
+        """Perform a single forward step of the model.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+
+        Returns:
+            Tensor: The denoised image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+        """
+        # 1. Network forward
         restored = tv_denoise(image=image, weight=self.weight, num_iter=self.num_iter)
 
-        # 3. Return final and intermediate results for debugging
-        outputs = {
-            "restored": restored,
-        }
-        return TensorDict(outputs, batch_size=[])
-
-    # --- Interfaces ---
-    @override
-    def build_transforms(self, config: Config | None = None) -> T.Compose:
-        """Define the model's transformations.
-
-        Args:
-            config (Config, optional): The configuration object containing any
-                necessary parameters for defining the transformations.
-                Defaults to None.
-
-        Returns:
-            Callable: A callable (e.g., a torchvision transform or a custom
-                function) that takes in the raw input data and returns the
-                transformed data ready for the forward step.
-        """
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
-
-        if config is not None:
-            if config.strategy in [Strategy.RESIZE]:
-                imgsz = config.imgsz
-                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-                transforms = resize + transforms
-
-        return transforms
+        # 2. Return final and intermediate results for debugging
+        return restored
 
     # --- Benchmark ---
     @override

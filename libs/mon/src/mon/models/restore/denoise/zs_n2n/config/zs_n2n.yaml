@@ -16,8 +16,6 @@ model:
   arch: "zs_n2n"  # (str) Model architecture (e.g., resnet, yolo8).
   in_channels: 3
   hidden_dim: 48
-  fit: True
-  fit_epochs: 3000
   weights: ~  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
@@ -94,8 +92,10 @@ predict:
     name: "interpolation"  # (str) Upsampler name.
 
   # Patching strategy: Split the image into patches -> Inference on each patch -> Blend the patches.
-  patch_size: 512  # (int) Patch size for patch-based prediction.
-  overlap: 128  # (int) Number of pixels patches should overlap to blend seams.
+  patcher:
+    name: "hann_window"
+    size: 512  # (int) Patch size for patch-based prediction.
+    stride: 384  # (int) The step size between patches.
 
 # --- Evaluation ---
 benchmark: False  # (bool) Benchmark the model.

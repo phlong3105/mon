@@ -16,6 +16,7 @@ from tensordict import TensorDict
 from typing_extensions import override
 
 from mon.core import K, Path, PREDICTORS, TimeProfiler
+from mon.dataset import transform as T
 from mon.runners import Predictor
 from .model import colie
 
@@ -39,6 +40,20 @@ class CoLIE_Predictor(Predictor):
 
         # Update model's hidden_dim with eval_imgsz
         self.config.model.hidden_dim = self.config.imgsz.h
+        self.config.model["epochs"] = self.config.epochs
+        self.config.model["optimizer"] = self.config.optimizer
+        self.config.model["device"] = self.device
+
+    @override
+    def _init_transforms(self):
+        """Initialize ``self._transforms`` attribute for pre-processing the
+        input data.
+        """
+        transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
+        self._transforms = transforms
 
     # --- Prediction ---
     @override
@@ -60,21 +75,13 @@ class CoLIE_Predictor(Predictor):
         # 1. Prepare inputs
         timers.preprocess.tick()
         datapoint = datapoint.to(device)
+        E = config.loss.E
         timers.preprocess.tock()
 
         # 3. Inference
         timers.infer.tick()
-        model = colie(
-            device=device,
-            optimizer=config.optimizer,
-            **config.model
-        ).to(device)
-        outputs = model(
-            data=datapoint,
-            epochs=config.epochs,
-            E=config.loss.E,
-            save_debug=self.save_debug,
-        )
+        model = colie(**config.model).to(device)
+        outputs = model(data=datapoint, E=E, save_debug=self.save_debug)
         timers.infer.tock()
 
         return outputs

@@ -22,9 +22,9 @@ from typing import override
 
 import torch
 from tensordict import TensorDict
+from torch import Tensor
 
 from mon.core import (
-    Config,
     is_weights_type,
     K,
     log,
@@ -38,7 +38,6 @@ from mon.core import (
     WeightsEnum,
     WeightsLike,
 )
-from mon.dataset import transform as T
 from mon.metrics import benchmark, create_dummy_image
 from mon.nn import Model, ModelRegisterMixin
 from .module import DecomNet, EnhanceNet
@@ -67,6 +66,7 @@ class RetinexNet(ModelRegisterMixin, Model):
 
     in_keys: set = {"image"}
     out_keys: set = {"enhanced"}
+    debug_keys: set = {"R", "L", "L_delta"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -104,73 +104,64 @@ class RetinexNet(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, data: TensorDict, decom: bool = False) -> TensorDict:
-        """Forward the input through the network.
+    def forward(self, image: Tensor, decom: bool = False) -> tuple[Tensor, ...]:
+        """Route the inputs through the model's different forward methods based
+        on the context.
 
         Args:
-            data (TensorDict): Input data dictionary.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
             decom (bool, optional): Whether to perform decomposition only.
                 Defaults to False.
 
         Returns:
-            TensorDict: Output data dictionary.
+            tuple[Tensor, ...]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - R (Tensor): Reflectance component tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - L (Tensor): Illumination component tensor of shape (B, 1, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - L_delta (Tensor): Illumination adjustment tensor of shape
+                  (B, 1, H, W) and values ranging from -1.0 to 1.0.
         """
-        # 1. Extract input data
-        image = data["image"]
+        return self.forward_step(image=image, decom=decom)
 
-        # 2. Network forward
-        # Decomposition
-        R, L = self.decom_net(image)
-        if decom:
-            outputs = {
-                "R": R,
-                "L": L,
-            }
-        else:
-            # Relighting
-            L_delta = self.enhance_net(R, L)
-            L_delta_3 = torch.cat((L_delta, L_delta, L_delta), dim=1)
-
-            # Reconstruction
-            S = R * L_delta_3
-
-            outputs = {
-                "enhanced": S,
-                "R": R,
-                "L": L,
-                "L_delta": L_delta,
-            }
-
-        # 3. Return final and intermediate results for debugging
-        return TensorDict(outputs, batch_size=[])
-
-    # --- Interfaces ---
     @override
-    def build_transforms(self, config: Config | None = None) -> T.Compose:
-        """Define the model's transformations.
+    def forward_step(self, image: Tensor, decom: bool = False) -> tuple[Tensor, ...]:
+        """Perform a single forward step of the model.
 
         Args:
-            config (Config, optional): The configuration object containing any
-                necessary parameters for defining the transformations.
-                Defaults to None.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            decom (bool, optional): Whether to perform decomposition only.
+                Defaults to False.
 
         Returns:
-            Callable: A callable (e.g., a torchvision transform or a custom
-                function) that takes in the raw input data and returns the
-                transformed data ready for the forward step.
+            tuple[Tensor, ...]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - R (Tensor): Reflectance component tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - L (Tensor): Illumination component tensor of shape (B, 1, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - L_delta (Tensor): Illumination adjustment tensor of shape
+                  (B, 1, H, W) and values ranging from -1.0 to 1.0.
         """
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
+        # 1. Decomposition
+        R, L = self.decom_net(image)
 
-        if config is not None:
-            if config.strategy in [Strategy.RESIZE]:
-                imgsz = config.imgsz
-                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-                transforms = resize + transforms
-
-        return transforms
+        if decom:
+            return None, R, L, None
+        else:
+            # 2. Relighting
+            L_delta = self.enhance_net(R, L)
+            L_delta_3 = torch.cat((L_delta, L_delta, L_delta), dim=1)
+            # 3. Reconstruction
+            enhanced = R * L_delta_3
+            return enhanced, R, L, L_delta
 
     # --- Benchmark ---
     @override

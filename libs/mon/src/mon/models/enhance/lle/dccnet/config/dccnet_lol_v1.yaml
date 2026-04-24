@@ -89,8 +89,10 @@ predict:
     name: "interpolation"  # (str) Upsampler name.
 
   # Patching strategy: Split the image into patches -> Inference on each patch -> Blend the patches.
-  patch_size: 512  # (int) Patch size for patch-based prediction.
-  overlap: 128  # (int) Number of pixels patches should overlap to blend seams.
+  patcher:
+    name: "hann_window"
+    size: 512  # (int) Patch size for patch-based prediction.
+    stride: 384  # (int) The step size between patches.
 
 # --- Evaluation ---
 benchmark: False  # (bool) Benchmark the model.

@@ -23,10 +23,9 @@ from typing import override
 
 import torch
 from tensordict import TensorDict
-from torch import nn
+from torch import nn, Tensor
 
 from mon.core import (
-    Config,
     is_weights_type,
     K,
     log,
@@ -40,7 +39,6 @@ from mon.core import (
     WeightsEnum,
     WeightsLike,
 )
-from mon.dataset import transform as T
 from mon.metrics import benchmark, create_dummy_image
 from mon.nn import Model, ModelRegisterMixin
 from mon.ops import pair_downsample
@@ -73,6 +71,7 @@ class ZeroIG(ModelRegisterMixin, Model):
 
     in_keys: set = {"image"}
     out_keys: set = {"enhanced"}
+    debug_keys: set = {"denoised"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -113,131 +112,137 @@ class ZeroIG(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, data: TensorDict, inference: bool = True) -> TensorDict:
-        """Forward the input through the network.
+    def forward(self, image: Tensor) -> TensorDict:
+        """Route the inputs through the model's different forward methods based
+        on the context.
 
         Args:
-            data (TensorDict): Input data dictionary.
-            inference (bool, optional): Whether to run in inference mode.
-                Defaults to True.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+
+        Returns:
+            tuple[Tensor, Tensor]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - denoised (Tensor): Denoised image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+        """
+        return self.forward_step(image=image)
+
+    def forward_train(self, image: Tensor) -> TensorDict:
+        """Perform a single forward step of the model during training.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
             TensorDict: Output data dictionary.
         """
-        # 1. Extract input data
         eps = 1e-4
-        x = data["image"] + eps
+        x = image + eps
 
-        # 2. Network forward
-        if inference:
-            L2 = x - self.denoise_1(x)
-            L2 = torch.clamp(L2, eps, 1)
-            s2 = self.enhance(L2)
-            H2 = x / s2
-            H2 = torch.clamp(H2, eps, 1)
-            H5_pred = torch.cat([H2, s2], 1).detach() - self.denoise_2(torch.cat([H2, s2], 1))
-            H5_pred = torch.clamp(H5_pred, eps, 1)
-            H3 = H5_pred[:, :3, :, :]
-            outputs = {
-                "enhanced": H2,
-                "denoised": H3,
-            }
-        else:
-            L11, L12 = pair_downsample(x)
-            L_pred1 = L11 - self.denoise_1(L11)
-            L_pred2 = L12 - self.denoise_1(L12)
-            L2 = x - self.denoise_1(x)
-            L2 = torch.clamp(L2, eps, 1)
+        # 1. Network forward
+        L11, L12 = pair_downsample(x)
+        L_pred1 = L11 - self.denoise_1(L11)
+        L_pred2 = L12 - self.denoise_1(L12)
+        L2 = x - self.denoise_1(x)
+        L2 = torch.clamp(L2, eps, 1)
 
-            s2 = self.enhance(L2.detach())
-            s21, s22 = pair_downsample(s2)
-            H2 = x / s2
-            H2 = torch.clamp(H2, eps, 1)
+        s2 = self.enhance(L2.detach())
+        s21, s22 = pair_downsample(s2)
+        H2 = x / s2
+        H2 = torch.clamp(H2, eps, 1)
 
-            H11 = L11 / s21
-            H11 = torch.clamp(H11, eps, 1)
+        H11 = L11 / s21
+        H11 = torch.clamp(H11, eps, 1)
 
-            H12 = L12 / s22
-            H12 = torch.clamp(H12, eps, 1)
+        H12 = L12 / s22
+        H12 = torch.clamp(H12, eps, 1)
 
-            H3_pred = torch.cat([H11, s21], 1).detach() - self.denoise_2(torch.cat([H11, s21], 1))
-            H3_pred = torch.clamp(H3_pred, eps, 1)
-            H13 = H3_pred[:, :3, :, :]
-            s13 = H3_pred[:, 3:, :, :]
+        H3_pred = torch.cat([H11, s21], 1).detach() - self.denoise_2(torch.cat([H11, s21], 1))
+        H3_pred = torch.clamp(H3_pred, eps, 1)
+        H13 = H3_pred[:, :3, :, :]
+        s13 = H3_pred[:, 3:, :, :]
 
-            H4_pred = torch.cat([H12, s22], 1).detach() - self.denoise_2(torch.cat([H12, s22], 1))
-            H4_pred = torch.clamp(H4_pred, eps, 1)
-            H14 = H4_pred[:, :3, :, :]
-            s14 = H4_pred[:, 3:, :, :]
+        H4_pred = torch.cat([H12, s22], 1).detach() - self.denoise_2(torch.cat([H12, s22], 1))
+        H4_pred = torch.clamp(H4_pred, eps, 1)
+        H14 = H4_pred[:, :3, :, :]
+        s14 = H4_pred[:, 3:, :, :]
 
-            H5_pred = torch.cat([H2, s2], 1).detach() - self.denoise_2(torch.cat([H2, s2], 1))
-            H5_pred = torch.clamp(H5_pred, eps, 1)
-            H3 = H5_pred[:, :3, :, :]
-            s3 = H5_pred[:, 3:, :, :]
+        H5_pred = torch.cat([H2, s2], 1).detach() - self.denoise_2(torch.cat([H2, s2], 1))
+        H5_pred = torch.clamp(H5_pred, eps, 1)
+        H3 = H5_pred[:, :3, :, :]
+        s3 = H5_pred[:, 3:, :, :]
 
-            L_pred1_L_pred2_diff = self.texture_difference(L_pred1, L_pred2)
-            H3_denoised1, H3_denoised2 = pair_downsample(H3)
-            H3_denoised1_H3_denoised2_diff = self.texture_difference(H3_denoised1, H3_denoised2)
+        L_pred1_L_pred2_diff = self.texture_difference(L_pred1, L_pred2)
+        H3_denoised1, H3_denoised2 = pair_downsample(H3)
+        H3_denoised1_H3_denoised2_diff = self.texture_difference(H3_denoised1, H3_denoised2)
 
-            H1 = L2 / s2
-            H1 = torch.clamp(H1, 0, 1)
-            H2_blur = blur(H1)
-            H3_blur = blur(H3)
+        H1 = L2 / s2
+        H1 = torch.clamp(H1, 0, 1)
+        H2_blur = blur(H1)
+        H3_blur = blur(H3)
 
-            outputs = {
-                "L_pred1": L_pred1,
-                "L_pred2": L_pred2,
-                "L2": L2,
-                "s2": s2,
-                "s21": s21,
-                "s22": s22,
-                "H2": H2,
-                "H11": H11,
-                "H12": H12,
-                "H13": H13,
-                "s13": s13,
-                "H14": H14,
-                "s14": s14,
-                "H3": H3,
-                "s3": s3,
-                "H3_pred": H3_pred,
-                "H4_pred": H4_pred,
-                "L_pred1_L_pred2_diff": L_pred1_L_pred2_diff,
-                "H3_denoised1_H3_denoised2_diff": H3_denoised1_H3_denoised2_diff,
-                "H2_blur": H2_blur,
-                "H3_blur": H3_blur,
-            }
+        outputs = {
+            "L_pred1": L_pred1,
+            "L_pred2": L_pred2,
+            "L2": L2,
+            "s2": s2,
+            "s21": s21,
+            "s22": s22,
+            "H2": H2,
+            "H11": H11,
+            "H12": H12,
+            "H13": H13,
+            "s13": s13,
+            "H14": H14,
+            "s14": s14,
+            "H3": H3,
+            "s3": s3,
+            "H3_pred": H3_pred,
+            "H4_pred": H4_pred,
+            "L_pred1_L_pred2_diff": L_pred1_L_pred2_diff,
+            "H3_denoised1_H3_denoised2_diff": H3_denoised1_H3_denoised2_diff,
+            "H2_blur": H2_blur,
+            "H3_blur": H3_blur,
+        }
 
-        # 3. Return final and intermediate results for debugging
+        # 2. Return final and intermediate results for debugging
         return TensorDict(outputs, batch_size=[])
 
-    # --- Interfaces ---
     @override
-    def build_transforms(self, config: Config | None = None) -> T.Compose:
-        """Define the model's transformations.
+    def forward_step(self, image: Tensor) -> tuple[Tensor, Tensor]:
+        """Perform a single forward step of the model.
 
         Args:
-            config (Config, optional): The configuration object containing any
-                necessary parameters for defining the transformations.
-                Defaults to None.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            Callable: A callable (e.g., a torchvision transform or a custom
-                function) that takes in the raw input data and returns the
-                transformed data ready for the forward step.
+            tuple[Tensor, Tensor]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - denoised (Tensor): Denoised image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
         """
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
+        eps = 1e-4
+        x = image + eps
 
-        if config is not None:
-            if config.strategy in [Strategy.RESIZE]:
-                imgsz = config.imgsz
-                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-                transforms = resize + transforms
+        # 1. Network forward
+        L2 = x - self.denoise_1(x)
+        L2 = torch.clamp(L2, eps, 1)
+        s2 = self.enhance(L2)
+        H2 = x / s2
+        H2 = torch.clamp(H2, eps, 1)
+        H5_pred = torch.cat([H2, s2], 1).detach() - self.denoise_2(torch.cat([H2, s2], 1))
+        H5_pred = torch.clamp(H5_pred, eps, 1)
+        H3 = H5_pred[:, :3, :, :]
 
-        return transforms
+        # 2. Return final and intermediate results for debugging
+        return H2, H3
 
     # --- Benchmark ---
     @override

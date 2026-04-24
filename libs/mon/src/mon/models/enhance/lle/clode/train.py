@@ -101,7 +101,12 @@ class CLODE_Trainer(Trainer):
             eval_time = torch.tensor([0, 3]).float().to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(data=datapoint, eval_time=eval_time, save_debug=True)
+            outputs = self.model(
+                data=datapoint,
+                eval_time=eval_time,
+                inference=False,
+                save_debug=True
+            )
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]

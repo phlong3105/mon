@@ -30,11 +30,9 @@ import numpy as np
 import torch
 from numpy import ndarray
 from tensordict import TensorDict
-from tensordict.tensorclass import NonTensorData
 from torch import Tensor
 
 from mon.core import (
-    Config,
     is_weights_type,
     K,
     log,
@@ -48,7 +46,6 @@ from mon.core import (
     WeightsEnum,
     WeightsLike,
 )
-from mon.dataset import transform as T
 from mon.nn import Model, ModelRegisterMixin
 from mon.ops import normalize_minmax
 
@@ -86,6 +83,7 @@ class DAV2(ModelRegisterMixin, Model):
 
     in_keys: set = {"image"}
     out_keys: set = {"depth"}
+    debug_keys: set = {}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -148,19 +146,48 @@ class DAV2(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, data: TensorDict, *args, **kwargs):
-        """Forward the input through the network.
+    def forward(
+        self,
+        image: Tensor | ndarray,
+        input_size: int = 518,
+        *args, **kwargs
+    ) -> ndarray:
+        """Route the inputs through the model's different forward methods based
+        on the context.
 
         Args:
-            data (TensorDict): Input data dictionary.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            input_size (int, optional): The size to which the input image should
+                be resized before being fed into the model. Defaults to 518.
 
         Returns:
             TensorDict: Output data dictionary.
         """
-        # 1. Extract input data
-        x = data["image"]
+        return self.forward_step(image=image)
 
-        # 2. Network forward
+    @override
+    def forward_step(
+        self,
+        image: Tensor | ndarray,
+        input_size: int = 518,
+        *args, **kwargs
+    ) -> ndarray:
+        """Perform a single forward step of the model.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            input_size (int, optional): The size to which the input image should
+                be resized before being fed into the model. Defaults to 518.
+
+        Returns:
+            ndarray: The predicted depth map as a NumPy array of shape (H, W)
+                and values ranging from 0 to 255.
+        """
+        x = image
+
+        # 1. Network forward
         if isinstance(x, Tensor):
             depth = self.model(x)
         elif isinstance(x, ndarray):
@@ -170,31 +197,11 @@ class DAV2(ModelRegisterMixin, Model):
                 f"Expected input to be a Tensor or ndarray, "
                 f"but got {type(x).__name__}."
             )
-
-        # 3. Return final and intermediate results for debugging
         depth = normalize_minmax(depth) * 255.0
         depth = depth.astype(np.uint8)
-        outputs = {
-            "depth": NonTensorData(depth),
-        }
-        return TensorDict(outputs, batch_size=[])
 
-    # --- Interfaces ---
-    @override
-    def build_transforms(self, config: Config | None = None) -> T.Compose | None:
-        """Define the model's transformations.
-
-        Args:
-            config (Config, optional): The configuration object containing any
-                necessary parameters for defining the transformations.
-                Defaults to None.
-
-        Returns:
-            Callable: A callable (e.g., a torchvision transform or a custom
-                function) that takes in the raw input data and returns the
-                transformed data ready for the forward step.
-        """
-        return None
+        # 2. Return final and intermediate results for debugging
+        return depth
 
     # --- Benchmark ---
     @override

@@ -15,7 +15,10 @@ File Structure:
     ├── features.py     # Feature detection and extraction (e.g., edges, corners)
     ├── filter.py       # Image filtering operations (e.g., blurring, sharpening
     ├── io.py           # Image I/O operations (e.g., reading, writing, resizing)
-    └── proc.py         # General image processing operations (e.g., geometric transformations, morphological operations)
+    ├── noise.py        # Noise generation and analysis
+    ├── patch.py        # Image patch extraction and manipulation
+    ├── proc.py         # General image processing operations (e.g., geometric transformations, morphological operations)
+    └── sample.py       # Image sampling and augmentation techniques
 """
 
 from __future__ import annotations
@@ -26,4 +29,6 @@ from .features import *
 from .filter import *
 from .io import *
 from .noise import *
+from .patch import *
 from .proc import *
+from .sample import *

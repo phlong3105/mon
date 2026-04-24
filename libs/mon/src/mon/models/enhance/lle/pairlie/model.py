@@ -23,9 +23,9 @@ from typing import override
 
 import torch
 from tensordict import TensorDict
+from torch import Tensor
 
 from mon.core import (
-    Config,
     is_weights_type,
     K,
     log,
@@ -39,7 +39,6 @@ from mon.core import (
     WeightsEnum,
     WeightsLike,
 )
-from mon.dataset import transform as T
 from mon.metrics import benchmark, create_dummy_image
 from mon.nn import Model, ModelRegisterMixin
 from .module import L_Net, N_Net, R_Net
@@ -69,6 +68,7 @@ class PairLIE(ModelRegisterMixin, Model):
 
     in_keys: set = {"image"}
     out_keys: set = {"enhanced"}
+    debug_keys: set = {"L", "R", "X", "D"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -111,62 +111,55 @@ class PairLIE(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, data: TensorDict) -> TensorDict:
+    def forward(self, image: Tensor) -> tuple[Tensor, ...]:
+        """Route the inputs through the model's different forward methods based
+        on the context.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+
+        Returns:
+            tuple[Tensor, ...]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - L (Tensor): The illumination map predicted by the L-Net.
+                - R (Tensor): The reflectance map predicted by the R-Net.
+                - X (Tensor): The intermediate feature map from the N-Net.
+                - D (Tensor): The difference between the input image and the
+                  intermediate feature map (D = image - X).
+        """
+        return self.forward_step(image=image)
+
+    @override
+    def forward_step(self, image: Tensor) -> tuple[Tensor, ...]:
         """Forward the input through the network.
 
         Args:
-            data (TensorDict): Input data dictionary.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            TensorDict: Output data dictionary.
-        """
-        # 1. Extract input data
-        image = data["image"]
+            tuple[Tensor, ...]: A tuple containing:
 
-        # 2. Network forward
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - L (Tensor): The illumination map predicted by the L-Net.
+                - R (Tensor): The reflectance map predicted by the R-Net.
+                - X (Tensor): The intermediate feature map from the N-Net.
+                - D (Tensor): The difference between the input image and the
+                  intermediate feature map (D = image - X).
+        """
+        # 1. Network forward
         X = self.N_net(image)
         L = self.L_net(X)
         R = self.R_net(X)
         D = image - X
         I = torch.pow(L, self.alpha) * R  # default=0.2, LOL=0.14.
 
-        # 3. Return final and intermediate results for debugging
-        outputs = {
-            "enhanced": I,
-            "L": L,
-            "R": R,
-            "X": X,
-            "D": D,
-        }
-        return TensorDict(outputs, batch_size=[])
-
-    # --- Interfaces ---
-    @override
-    def build_transforms(self, config: Config | None = None) -> T.Compose:
-        """Define the model's transformations.
-
-        Args:
-            config (Config, optional): The configuration object containing any
-                necessary parameters for defining the transformations.
-                Defaults to None.
-
-        Returns:
-            Callable: A callable (e.g., a torchvision transform or a custom
-                function) that takes in the raw input data and returns the
-                transformed data ready for the forward step.
-        """
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
-
-        if config is not None:
-            if config.strategy in [Strategy.RESIZE]:
-                imgsz = config.imgsz
-                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-                transforms = resize + transforms
-
-        return transforms
+        # 2. Return final and intermediate results for debugging
+        return I, L, R, X, D
 
     # --- Benchmark ---
     @override

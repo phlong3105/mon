@@ -29,8 +29,6 @@ from torch.optim import Adam
 from torch.optim.lr_scheduler import StepLR
 
 from mon.core import (
-    Config,
-    DictLike,
     MODELS,
     OPTIMIZERS,
     Path,
@@ -39,7 +37,6 @@ from mon.core import (
     Strategy,
     Task,
 )
-from mon.dataset import transform as T
 from mon.metrics import benchmark, create_dummy_image
 from mon.nn import Model, ModelRegisterMixin
 from .module import DenoiseNetwork, ImprovedDenoiseNetwork
@@ -70,14 +67,13 @@ class ZS_N2N(ModelRegisterMixin, Model):
 
     in_keys: set = {"image"}
     out_keys: set = {"restored"}
+    debug_keys: set = {"noise"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_channels: int = 3,
         hidden_dim: int = 48,
-        fit: bool = False,
-        fit_epochs: int = 3000,
         device: torch.device = torch.device("cpu"),
         verbose: bool = True,
         *args, **kwargs
@@ -89,10 +85,6 @@ class ZS_N2N(ModelRegisterMixin, Model):
                 Defaults to 3.
             hidden_dim (int): Number of channels in the hidden layers.
                 Defaults to 48.
-            fit (bool, optional): If True, perform single-image optimization
-                Default to False.
-            fit_epochs (int, optional): Number of optimization epochs for
-                single-image optimization. Defaults to 3000.
             device (torch.device, optional): Device to use for computation.
                 Defaults to torch.device("cpu").
             verbose (bool, optional): Verbosity mode. Defaults to True.
@@ -103,8 +95,6 @@ class ZS_N2N(ModelRegisterMixin, Model):
         self.verbose = verbose
         self.in_channels = in_channels
         self.out_channels = in_channels
-        self.fit_enabled = fit
-        self.fit_epochs = fit_epochs
         self.device = device
 
         # Define network
@@ -116,51 +106,80 @@ class ZS_N2N(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, data: TensorDict, *args, **kwargs) -> TensorDict:
-        """Forward the input through the network.
+    def forward(self, image: Tensor, *args, **kwargs) -> tuple[Tensor, Tensor]:
+        """Route the inputs through the model's different forward methods based
+        on the context.
 
         Args:
-            data (TensorDict): Input data dictionary.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            TensorDict: Output data dictionary.
+            tuple[Tensor, Tensor]: A tuple containing:
+
+                - restored (Tensor): The restored image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - noise (Tensor): The predicted noise tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0, representing the noise
+                  estimated by the model.
         """
-        # 1. Extract input data
-        image = data["image"]
+        return self.forward_step(image=image)
 
-        # 2. Scenario 1: Single-Image Optimization
-        if self.fit_enabled:
-            return self.fit(image=image, *args, **kwargs)
+    def forward_train(self, image: Tensor) -> TensorDict:
+        """Perform a single forward step of the model during training.
 
-        # 3. Scenario 2: Standard Training
-        if self.training:
-            loss = self.denoise_loss(image)
-            noise = self.model(image)
-            restored = image - noise
-            outputs = {
-                "restored": restored,
-                "noise": noise,
-                "loss": loss,
-            }
-        else:
-            noise = self.model(image)
-            restored = torch.clamp(image - noise, 0, 1)
-            outputs = {
-                "restored": restored,
-                "noise": noise,
-                "loss": None,
-            }
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
-        # 4. Return final and intermediate results for debugging
+        Returns:
+            TensorDict: Dictionary containing the restored image tensor,
+                noise tensor, and loss for debugging.
+        """
+        # 1. Network forward
+        loss = self.denoise_loss(image)
+        noise = self.model(image)
+        restored = image - noise
+
+        # 2. Return final and intermediate results for debugging
+        outputs = {
+            "restored": restored,
+            "noise": noise,
+            "loss": loss,
+        }
         return TensorDict(outputs, batch_size=[])
+
+    @override
+    def forward_step(self, image: Tensor) -> tuple[Tensor, Tensor]:
+        """Perform a single forward step of the model.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+
+        Returns:
+            tuple[Tensor, Tensor]: A tuple containing:
+
+                - restored (Tensor): The restored image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - noise (Tensor): The predicted noise tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0, representing the noise
+                  estimated by the model.
+        """
+        # 1. Network forward
+        noise = self.model(image)
+        restored = torch.clamp(image - noise, 0, 1)
+
+        # 2. Return final and intermediate results for debugging
+        return restored, noise
 
     def fit(
         self,
         image: Tensor,
-        epochs: int | None = None,
+        epochs: int = 3000,
         reset_weights: bool = True,
-        optimizer: DictLike | None = None,
-        scheduler: DictLike | None = None,
+        optimizer: dict | None = None,
+        scheduler: dict | None = None,
     ) -> TensorDict:
         """Fit the model to a single image using zero-shot optimization.
 
@@ -168,20 +187,18 @@ class ZS_N2N(ModelRegisterMixin, Model):
             image (Tensor): Image tensor of shape (B, 3, H, W) and values
                 ranging from 0.0 to 1.0.
             epochs (int, optional): Number of optimization epochs for the network.
-                Defaults to None
+                Defaults to 3000
             reset_weights (bool, optional): If True, reset the network weights
                 to the initial state before optimization. Defaults to True.
-            optimizer (DictLike, optional): Dictionary containing optimizer
+            optimizer (dict, optional): Dictionary containing optimizer
                 parameters. Defaults to None.
-            scheduler (DictLike, optional): Dictionary containing scheduler
+            scheduler (dict, optional): Dictionary containing scheduler
                 parameters. Defaults to None.
 
         Returns:
             TensorDict: Dictionary containing the enhanced image tensor and
                 intermediate results for debugging.
         """
-        epochs = epochs or self.fit_epochs
-
         # 1. Reset the network weights to the initial state
         if reset_weights:
             self.model.load_state_dict(self._default_state_dict)
@@ -218,34 +235,6 @@ class ZS_N2N(ModelRegisterMixin, Model):
             "restored": restored,
         }
         return TensorDict(outputs, batch_size=[])
-
-    # --- Interfaces ---
-    @override
-    def build_transforms(self, config: Config | None = None) -> T.Compose:
-        """Define the model's transformations.
-
-        Args:
-            config (Config, optional): The configuration object containing any
-                necessary parameters for defining the transformations.
-                Defaults to None.
-
-        Returns:
-            Callable: A callable (e.g., a torchvision transform or a custom
-                function) that takes in the raw input data and returns the
-                transformed data ready for the forward step.
-        """
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
-
-        if config is not None:
-            if config.strategy in [Strategy.RESIZE]:
-                imgsz = config.imgsz
-                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-                transforms = resize + transforms
-
-        return transforms
 
     # --- Benchmark ---
     @override
@@ -354,7 +343,7 @@ class IZS_N2N(ModelRegisterMixin, Model):
           Mechanism," ICAICE 2023.
     """
 
-    arch: str = "zsn2n"
+    arch: str = "zs_n2n"
     name: str = "izs_n2n"
     tasks: list[Task] = [Task.DENOISE]
     strategies: list[Strategy] = [Strategy.RESIZE]
@@ -362,14 +351,13 @@ class IZS_N2N(ModelRegisterMixin, Model):
 
     in_keys: set = {"image"}
     out_keys: set = {"restored"}
+    debug_keys: set = {"noise"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
         in_channels: int = 3,
         hidden_dim: int = 48,
-        fit: bool = False,
-        fit_epochs: int = 3000,
         device: torch.device = torch.device("cpu"),
         verbose: bool = True,
         *args, **kwargs
@@ -381,10 +369,6 @@ class IZS_N2N(ModelRegisterMixin, Model):
                 Defaults to 3.
             hidden_dim (int): Number of channels in the hidden layers.
                 Defaults to 48.
-            fit (bool, optional): If True, perform single-image optimization
-                Default to False.
-            fit_epochs (int, optional): Number of optimization epochs for
-                single-image optimization. Defaults to 3000.
             device (torch.device, optional): Device to use for computation.
                 Defaults to torch.device("cpu").
             verbose (bool, optional): Verbosity mode. Defaults to True.
@@ -395,8 +379,6 @@ class IZS_N2N(ModelRegisterMixin, Model):
         self.verbose = verbose
         self.in_channels = in_channels
         self.out_channels = in_channels
-        self.fit_enabled = fit
-        self.fit_epochs = fit_epochs
         self.device = device
 
         # Define network
@@ -408,51 +390,80 @@ class IZS_N2N(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, data: TensorDict, *args, **kwargs) -> TensorDict:
-        """Forward the input through the network.
+    def forward(self, image: Tensor, *args, **kwargs) -> tuple[Tensor, Tensor]:
+        """Route the inputs through the model's different forward methods based
+        on the context.
 
         Args:
-            data (TensorDict): Input data dictionary.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            TensorDict: Output data dictionary.
+            tuple[Tensor, Tensor]: A tuple containing:
+
+                - restored (Tensor): The restored image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - noise (Tensor): The predicted noise tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0, representing the noise
+                  estimated by the model.
         """
-        # 1. Extract input data
-        image = data["image"]
+        return self.forward_step(image=image)
 
-        # 2. Scenario 1: Single-Image Optimization
-        if self.fit_enabled:
-            return self.fit(image=image, *args, **kwargs)
+    def forward_train(self, image: Tensor) -> TensorDict:
+        """Perform a single forward step of the model during training.
 
-        # 3. Scenario 2: Standard Training
-        if self.training:
-            loss = self.denoise_loss(image)
-            noise = self.model(image)
-            restored = image - noise
-            outputs = {
-                "restored": restored,
-                "noise": noise,
-                "loss": loss,
-            }
-        else:
-            noise = self.model(image)
-            restored = torch.clamp(image - noise, 0, 1)
-            outputs = {
-                "restored": restored,
-                "noise": noise,
-                "loss": None,
-            }
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
-        # 4. Return final and intermediate results for debugging
+        Returns:
+            TensorDict: Dictionary containing the restored image tensor,
+                noise tensor, and loss for debugging.
+        """
+        # 1. Network forward
+        loss = self.denoise_loss(image)
+        noise = self.model(image)
+        restored = image - noise
+
+        # 2. Return final and intermediate results for debugging
+        outputs = {
+            "restored": restored,
+            "noise": noise,
+            "loss": loss,
+        }
         return TensorDict(outputs, batch_size=[])
+
+    @override
+    def forward_step(self, image: Tensor) -> tuple[Tensor, Tensor]:
+        """Perform a single forward step of the model.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+
+        Returns:
+            tuple[Tensor, Tensor]: A tuple containing:
+
+                - restored (Tensor): The restored image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - noise (Tensor): The predicted noise tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0, representing the noise
+                  estimated by the model.
+        """
+        # 1. Network forward
+        noise = self.model(image)
+        restored = torch.clamp(image - noise, 0, 1)
+
+        # 2. Return final and intermediate results for debugging
+        return restored, noise
 
     def fit(
         self,
         image: Tensor,
-        epochs: int | None = None,
+        epochs: int = 3000,
         reset_weights: bool = True,
-        optimizer: DictLike | None = None,
-        scheduler: DictLike | None = None,
+        optimizer: dict | None = None,
+        scheduler: dict | None = None,
     ) -> TensorDict:
         """Fit the model to a single image using zero-shot optimization.
 
@@ -463,17 +474,15 @@ class IZS_N2N(ModelRegisterMixin, Model):
                 Defaults to None
             reset_weights (bool, optional): If True, reset the network weights
                 to the initial state before optimization. Defaults to True.
-            optimizer (DictLike, optional): Dictionary containing optimizer
+            optimizer (dict, optional): Dictionary containing optimizer
                 parameters. Defaults to None.
-            scheduler (DictLike, optional): Dictionary containing scheduler
+            scheduler (dict, optional): Dictionary containing scheduler
                 parameters. Defaults to None.
 
         Returns:
             TensorDict: Dictionary containing the enhanced image tensor and
                 intermediate results for debugging.
         """
-        epochs = epochs or self.fit_epochs
-
         # 1. Reset the network weights to the initial state
         if reset_weights:
             self.model.load_state_dict(self._default_state_dict)
@@ -510,34 +519,6 @@ class IZS_N2N(ModelRegisterMixin, Model):
             "restored": restored,
         }
         return TensorDict(outputs, batch_size=[])
-
-    # --- Interfaces ---
-    @override
-    def build_transforms(self, config: Config | None = None) -> T.Compose:
-        """Define the model's transformations.
-
-        Args:
-            config (Config, optional): The configuration object containing any
-                necessary parameters for defining the transformations.
-                Defaults to None.
-
-        Returns:
-            Callable: A callable (e.g., a torchvision transform or a custom
-                function) that takes in the raw input data and returns the
-                transformed data ready for the forward step.
-        """
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
-
-        if config is not None:
-            if config.strategy in [Strategy.RESIZE]:
-                imgsz = config.imgsz
-                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-                transforms = resize + transforms
-
-        return transforms
 
     # --- Benchmark ---
     @override

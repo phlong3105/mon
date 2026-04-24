@@ -34,11 +34,11 @@ from torch import nn, Tensor
 from torch.nn import functional as F
 
 from mon.core import (
-    Config,
     is_weights_type,
     K,
     log,
     MODELS,
+    PATCHERS,
     Path,
     Size,
     Strategy,
@@ -48,9 +48,9 @@ from mon.core import (
     WeightsEnum,
     WeightsLike,
 )
-from mon.dataset import transform as T
 from mon.metrics import benchmark, create_dummy_image
 from mon.nn import Model, ModelRegisterMixin
+from mon.ops import ImagePatcher
 from .module import DSConv
 from .utils import weights_init
 
@@ -79,6 +79,7 @@ class ZeroDCE(ModelRegisterMixin, Model):
 
     in_keys: set = {"image"}
     out_keys: set = {"enhanced"}
+    debug_keys: set = {"r"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -135,100 +136,50 @@ class ZeroDCE(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, data: TensorDict, use_patch: bool = False, *args, **kwargs) -> TensorDict:
-        """Forward the input through the network.
+    def forward(
+        self,
+        image: Tensor,
+        use_patch: bool = False,
+        *args, **kwargs
+    ) -> tuple[Tensor, Tensor]:
+        """Route the inputs through the model's different forward methods based
+        on the context.
 
         Args:
-            data (TensorDict): Input data dictionary.
-            use_patch (bool, optional): Whether to use patch-based processing.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            use_patch (bool, optional): Whether to use patch-based strategy.
                 Defaults to False.
 
         Returns:
-            TensorDict: Output data dictionary.
+            tuple[Tensor, Tensor]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - r (Tensor): The estimated curve parameters of shape (B, C*8, H, W)
+                  and values ranging from -1.0 to 1.0.
         """
         if use_patch:
-            return self.forward_patch(data, *args, **kwargs)
+            return self.forward_patch(image=image, *args, **kwargs)
 
-        return self.forward_step(data)
+        return self.forward_step(image=image)
 
-    def forward_step(self, data: TensorDict) -> TensorDict:
-        """Forward the input through the network using the standard forward method.
-
-        Args:
-            data (TensorDict): Input data dictionary.
-
-        Returns:
-            TensorDict: Output data dictionary.
-        """
-        enhanced, r = self._forward_core(image=data["image"])
-        outputs = {
-            "enhanced": enhanced,
-            "r": r,
-        }
-        return TensorDict(outputs, batch_size=[])
-
-    def forward_patch(
-        self,
-        data: TensorDict,
-        patch_size: int = 512,
-        overlap: int = 128,
-    ) -> TensorDict:
-        """Forward the input through the network using patch-based processing.
+    @override
+    def forward_step(self, image: Tensor) -> tuple[Tensor, Tensor]:
+        """Perform a single forward step of the model.
 
         Args:
-            data (TensorDict): Input data dictionary.
-            patch_size (int, optional): Size of the patches to process.
-                Defaults to 512.
-            overlap (int, optional): Overlap between patches. Defaults to 128.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            TensorDict: Output data dictionary.
+            tuple[Tensor, Tensor]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - r (Tensor): The estimated curve parameters of shape (B, C*8, H, W)
+                  and values ranging from -1.0 to 1.0.
         """
-        image = data["image"]
-        b, c, h, w = image.shape
-        stride = patch_size - overlap
-
-        # 1. Pad the image so we don't drop the bottom/right edges
-        pad_h = (stride - (h - patch_size) % stride) % stride
-        pad_w = (stride - (w - patch_size) % stride) % stride
-        image_padded = F.pad(image, (0, pad_w, 0, pad_h), mode="reflect")
-
-        # 2. Setup output buffers (accumulator and weight map for blending)
-        enhanced = torch.zeros_like(image_padded)
-        weight_mask = torch.zeros_like(image_padded)
-
-        # 3. Create a 2D Hann Window to feather the edges of the patches
-        window_1d = torch.hann_window(patch_size).to(image.device)
-        window_2d = window_1d.unsqueeze(0) * window_1d.unsqueeze(1)
-        window = window_2d.unsqueeze(0).unsqueeze(0).repeat(b, c, 1, 1)
-
-        # 4. Sliding Window Loop
-        for y in range(0, image_padded.shape[2] - patch_size + 1, stride):
-            for x in range(0, image_padded.shape[3] - patch_size + 1, stride):
-                # Extract the local patch
-                patch = image_padded[:, :, y:y+patch_size, x:x+patch_size]
-
-                # Forward pass through the SOTA model
-                enhanced_patch, r_patch = self._forward_core(image=patch)
-
-                # Accumulate the blended output
-                enhanced[:, :, y:y+patch_size, x:x+patch_size] += enhanced_patch * window
-                weight_mask[:, :, y:y+patch_size, x:x+patch_size] += window
-
-        # 5. Normalize by the accumulated weights
-        enhanced = enhanced / (weight_mask + 1e-8)
-
-        # 6. Crop off the padding to return the original dimensions
-        enhanced = enhanced[:, :, :h, :w]
-
-        # 7. Return final and intermediate results for debugging
-        outputs = {
-            "enhanced": enhanced,
-        }
-        return TensorDict(outputs, batch_size=[])
-
-    def _forward_core(self, image: Tensor) -> tuple[Tensor, Tensor]:
-        """The mathematical heart of the model (Shared by both strategies)."""
         # 1. Network forward
         x1 = self.relu(self.e_conv1(image))
         x2 = self.relu(self.e_conv2(x1))
@@ -253,33 +204,45 @@ class ZeroDCE(ModelRegisterMixin, Model):
         # 3. Return final and intermediate results for debugging
         return y, r
 
-    # --- Interfaces ---
-    @override
-    def build_transforms(self, config: Config | None = None) -> T.Compose:
-        """Define the model's transformations.
+    def forward_patch(
+        self,
+        image: Tensor,
+        patcher: dict | None = None
+    ) -> tuple[Tensor, Tensor]:
+        """Forward the input through the network using the patch-based strategy.
 
         Args:
-            config (Config, optional): The configuration object containing any
-                necessary parameters for defining the transformations.
-                Defaults to None.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            patcher (dict, optional): A dictionary containing the patching
+                configuration, such as patch size and stride. Defaults to None
+                means using the default patcher.
 
         Returns:
-            Callable: A callable (e.g., a torchvision transform or a custom
-                function) that takes in the raw input data and returns the
-                transformed data ready for the forward step.
+            tuple[Tensor, Tensor]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - r (Tensor): The estimated curve parameters of shape (B, C*8, H, W)
+                  and values ranging from -1.0 to 1.0.
         """
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
+        # 1. Initialize image patcher
+        patcher: dict = patcher or {}
+        patcher: ImagePatcher = PATCHERS.build(image=image, **patcher)
 
-        if config is not None:
-            if config.strategy in [Strategy.RESIZE]:
-                imgsz = config.imgsz
-                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-                transforms = resize + transforms
+        # 2. Iterate and Process
+        for patch, x, y in patcher:
+            # 2.1. Process the patch
+            enhanced, r = self.forward_step(image=patch)
+            patch_output = {
+                "enhanced": enhanced,
+                "r": r,
+            }
+            # 2.2. Feed result back to Patcher
+            patcher(patches=patch_output, x=x, y=y)
 
-        return transforms
+        # 3. Get the merged results
+        return tuple(patcher.output.values())
 
     # --- Benchmark ---
     @override
@@ -323,6 +286,7 @@ class ZeroDCEPP(ModelRegisterMixin, Model):
 
     in_keys: set = {"image"}
     out_keys: set = {"enhanced"}
+    debug_keys: set = {"r"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -382,105 +346,50 @@ class ZeroDCEPP(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, data: TensorDict, use_patch: bool = False, *args, **kwargs) -> TensorDict:
-        """Forward the input through the network.
+    def forward(
+        self,
+        image: Tensor,
+        use_patch: bool = False,
+        *args, **kwargs
+    ) -> tuple[Tensor, Tensor]:
+        """Route the inputs through the model's different forward methods based
+        on the context.
 
         Args:
-            data (TensorDict): Input data dictionary.
-            use_patch (bool, optional): Whether to use patch-based processing.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            use_patch (bool, optional): Whether to use patch-based strategy.
                 Defaults to False.
 
         Returns:
-            TensorDict: Output data dictionary.
+            tuple[Tensor, Tensor]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - r (Tensor): The estimated curve parameters of shape (B, C*8, H, W)
+                  and values ranging from -1.0 to 1.0.
         """
         if use_patch:
-            return self.forward_patch(data, *args, **kwargs)
+            return self.forward_patch(image=image, *args, **kwargs)
 
-        return self.forward_step(data)
+        return self.forward_step(image=image)
 
-    def forward_step(self, data: TensorDict) -> TensorDict:
-        """Forward the input through the network using the standard forward method.
-
-        Args:
-            data (TensorDict): Input data dictionary.
-
-        Returns:
-            TensorDict: Output data dictionary.
-        """
-        enhanced, r = self._forward_core(image=data["image"])
-        outputs = {
-            "enhanced": enhanced,
-            "r": r,
-        }
-        return TensorDict(outputs, batch_size=[])
-
-    def forward_patch(
-        self,
-        data: TensorDict,
-        patch_size: int = 512,
-        overlap: int = 128,
-    ) -> TensorDict:
-        """Forward the input through the network using patch-based processing.
+    @override
+    def forward_step(self, image: Tensor) -> tuple[Tensor, Tensor]:
+        """Perform a single forward step of the model.
 
         Args:
-            data (TensorDict): Input data dictionary.
-            patch_size (int, optional): Size of the patches to process.
-                Defaults to 512.
-            overlap (int, optional): Overlap between patches. Defaults to 128.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            TensorDict: Output data dictionary.
+            tuple[Tensor, Tensor]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - r (Tensor): The estimated curve parameters of shape (B, C*8, H, W)
+                  and values ranging from -1.0 to 1.0.
         """
-        image = data["image"]
-        b, c, h, w = image.shape
-        stride = patch_size - overlap
-
-        # 1. Pad the image so we don't drop the bottom/right edges
-        pad_h = (stride - (h - patch_size) % stride) % stride
-        pad_w = (stride - (w - patch_size) % stride) % stride
-        image_padded = F.pad(image, (0, pad_w, 0, pad_h), mode="reflect")
-
-        # 2. Setup output buffers (accumulator and weight map for blending)
-        enhanced = torch.zeros_like(image_padded)
-        r = torch.zeros_like(image_padded)
-        weight_mask = torch.zeros_like(image_padded)
-
-        # 3. Create a 2D Hann Window to feather the edges of the patches
-        window_1d = torch.hann_window(patch_size).to(image.device)
-        window_2d = window_1d.unsqueeze(0) * window_1d.unsqueeze(1)
-        window = window_2d.unsqueeze(0).unsqueeze(0).repeat(b, c, 1, 1)
-
-        # 4. Sliding Window Loop
-        for y in range(0, image_padded.shape[2] - patch_size + 1, stride):
-            for x in range(0, image_padded.shape[3] - patch_size + 1, stride):
-                # Extract the local patch
-                patch = image_padded[:, :, y:y+patch_size, x:x+patch_size]
-
-                # Forward pass through the SOTA model
-                enhanced_patch, r_patch = self._forward_core(image=patch)
-
-                # Accumulate the blended output
-                enhanced[:, :, y:y+patch_size, x:x+patch_size] += enhanced_patch * window
-                r[:, :, y:y+patch_size, x:x+patch_size] += r_patch * window
-                weight_mask[:, :, y:y+patch_size, x:x+patch_size] += window
-
-        # 5. Normalize by the accumulated weights
-        enhanced = enhanced / (weight_mask + 1e-8)
-        r = r / (weight_mask + 1e-8)
-
-        # 6. Crop off the padding to return the original dimensions
-        enhanced = enhanced[:, :, :h, :w]
-        r = r[:, :, :h, :w]
-
-        # 7. Return final and intermediate results for debugging
-        outputs = {
-            "enhanced": enhanced,
-            "r": r,
-        }
-        return TensorDict(outputs, batch_size=[])
-
-    def _forward_core(self, image: Tensor) -> tuple[Tensor, Tensor]:
-        """The mathematical heart of the model (Shared by both strategies)."""
         # 1. Network forward with optional downsampling
         if self.scale_factor == 1:
             x_down = image
@@ -514,34 +423,45 @@ class ZeroDCEPP(ModelRegisterMixin, Model):
         # 3. Return final and intermediate results for debugging
         return y, r
 
-    # --- Interfaces ---
-    @override
-    def build_transforms(self, config: Config | None = None) -> T.Compose:
-        """Define the model's transformations.
+    def forward_patch(
+        self,
+        image: Tensor,
+        patcher: dict | None = None
+    ) -> tuple[Tensor, Tensor]:
+        """Forward the input through the network using the patch-based strategy.
 
         Args:
-            config (Config, optional): The configuration object containing any
-                necessary parameters for defining the transformations.
-                Defaults to None.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            patcher (dict, optional): A dictionary containing the patching
+                configuration, such as patch size and stride. Defaults to None
+                means using the default patcher.
 
         Returns:
-            Callable: A callable (e.g., a torchvision transform or a custom
-                function) that takes in the raw input data and returns the
-                transformed data ready for the forward step.
+            tuple[Tensor, Tensor]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - r (Tensor): The estimated curve parameters of shape (B, C*8, H, W)
+                  and values ranging from -1.0 to 1.0.
         """
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
+        # 1. Initialize image patcher
+        patcher: dict = patcher or {}
+        patcher: ImagePatcher = PATCHERS.build(image=image, **patcher)
 
-        if config is not None:
-            if config.strategy in [Strategy.RESIZE]:
-                imgsz = config.imgsz
-                imgsz = Size(height=imgsz.h // self.scale_factor, width=imgsz.w // self.scale_factor)
-                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-                transforms = resize + transforms
+        # 2. Iterate and Process
+        for patch, x, y in patcher:
+            # 2.1. Process the patch
+            enhanced, r = self.forward_step(image=patch)
+            patch_output = {
+                "enhanced": enhanced,
+                "r": r,
+            }
+            # 2.2. Feed result back to Patcher
+            patcher(patches=patch_output, x=x, y=y)
 
-        return transforms
+        # 3. Get the merged results
+        return tuple(patcher.output.values())
 
     # --- Benchmark ---
     @override

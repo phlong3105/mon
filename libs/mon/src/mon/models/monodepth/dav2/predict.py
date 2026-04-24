@@ -65,6 +65,13 @@ class DAV2_Predictor(Predictor):
         self._model = model
 
     @override
+    def _init_transforms(self):
+        """Initialize ``self._transforms`` attribute for pre-processing the
+        input data.
+        """
+        self._transforms = None
+
+    @override
     def _build_dataloader(
         self,
         source: DictLike | PathLike,
@@ -117,7 +124,7 @@ class DAV2_Predictor(Predictor):
 
         # 2. Inference
         timers.infer.tick()
-        outputs = self.model(image, imgsz.h)
+        outputs = self.model(image=image, input_size=imgsz.h)
         timers.infer.tock()
 
         return outputs

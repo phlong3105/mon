@@ -21,14 +21,11 @@ __all__ = [
 from typing import override
 
 import torch
-from tensordict import TensorDict
-from torch import nn
+from torch import nn, Tensor
 from torch.nn import functional as F
 from torch.optim import Adam, Optimizer
 
 from mon.core import (
-    Config,
-    DictLike,
     log,
     MODELS,
     OPTIMIZERS,
@@ -37,7 +34,6 @@ from mon.core import (
     Strategy,
     Task,
 )
-from mon.dataset import transform as T
 from mon.metrics import benchmark
 from mon.nn import Model, ModelRegisterMixin
 from mon.ops import guided_filter_upsample, RgbToHsv
@@ -65,11 +61,12 @@ class CoLIE(ModelRegisterMixin, Model):
     arch: str = "colie"
     name: str = "colie"
     tasks: list[Task] = [Task.LLE]
-    strategies: list[Strategy] = [Strategy.RESIZE]
+    strategies: list[Strategy] = [Strategy.NATIVE]
     model_dir: Path = current_dir
 
     in_keys: set = {"image"}
     out_keys: set = {"enhanced"}
+    debug_keys: set = {"image_i_res", "image_i_fixed", "image_r"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -80,7 +77,7 @@ class CoLIE(ModelRegisterMixin, Model):
         num_layers: int,
         add_layers: int,
         epochs: int = 100,
-        optimizer: DictLike | None = None,
+        optimizer: dict | None = None,
         device: torch.device = torch.device("cpu"),
         verbose: bool = True,
         *args, **kwargs
@@ -117,25 +114,52 @@ class CoLIE(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(
-        self,
-        data: TensorDict,
-        epochs: int | None = None,
-        E: float = 0.5,
-    ) -> TensorDict:
+    def forward(self, image: Tensor, E: float = 0.5) -> tuple[Tensor, ...]:
         """Forward the input through the network.
 
         Args:
-            data (TensorDict): Input data dictionary.
-            epochs (int, optional): Number of optimization epochs for
-                single-image optimization. If None, uses the default value from
-                initialization. Defaults to None.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
             E (float, optional): Exponential loss parameter. Defaults to 0.5.
 
         Returns:
-            TensorDict: Output data dictionary.
+            - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - image_i_res (Tensor): The residual illumination component of
+                  the image of shape (B, C, H, W) and values ranging from
+                  0.0 to 1.0.
+                - image_i_fixed (Tensor): The fixed illumination component of
+                  the image of shape (B, C, H, W) and values ranging from
+                  0.0 to 1.0.
+                - image_r (Tensor): The reflectance component of the image of
+                  shape (B, C, H, W) and values ranging from 0.0 to 1.0.
         """
-        epochs = epochs or self.epochs
+        return self.forward_step(image=image, E=E)
+
+    @override
+    def forward_step(self, image: Tensor, E: float = 0.5) -> tuple[Tensor, ...]:
+        """Forward the input through the network using the patch-based strategy.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            E (float, optional): Exponential loss parameter. Defaults to 0.5.
+
+        Returns:
+            tuple[Tensor, ...]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - image_i_res (Tensor): The residual illumination component of
+                  the image of shape (B, C, H, W) and values ranging from
+                  0.0 to 1.0.
+                - image_i_fixed (Tensor): The fixed illumination component of
+                  the image of shape (B, C, H, W) and values ranging from
+                  0.0 to 1.0.
+                - image_r (Tensor): The reflectance component of the image of
+                  shape (B, C, H, W) and values ranging from 0.0 to 1.0.
+        """
+        epochs = self.epochs
         window_size = self.window_size
         down_size = self.hidden_dim
         device = self.device
@@ -148,10 +172,10 @@ class CoLIE(ModelRegisterMixin, Model):
             add_layer=self.add_layers,
         ).to(device)
 
-        optimizer = self.build_optimizer(model=model, optimizer=self.optimizer)
+        optimizer = self._build_optimizer(model=model, optimizer=self.optimizer)
 
         # 2. Move inputs to the corresponding device
-        image = data["image"].to(device)
+        image = image.to(device)
 
         # 3. Convert the image to HSV color space
         color_func = RgbToHsv().to(device)
@@ -228,43 +252,14 @@ class CoLIE(ModelRegisterMixin, Model):
         # 9. Return final and intermediate results for debugging
         image_i_res = guided_filter_upsample(lr_image_i_res, image_i, lr_image_i)
         image_i_fixed = guided_filter_upsample(lr_image_i_fixed, image_i, lr_image_i)
-        outputs = {
-            "enhanced": image_rgb_fixed,
-            "image_h": image_h,
-            "image_s": image_s,
-            "image_i": image_i,
-            "image_i_res": image_i_res,
-            "image_i_fixed": image_i_fixed,
-            "image_r": image_r,
-        }
-        return TensorDict(outputs, batch_size=[])
+        return image_rgb_fixed, image_i_res, image_i_fixed, image_r
 
-    # --- Interfaces ---
-    @override
-    def build_transforms(self, config: Config | None = None) -> T.Compose:
-        """Define the model's transformations.
-
-        Args:
-            config (Config, optional): The configuration object containing any
-                necessary parameters for defining the transformations.
-                Defaults to None.
-
-        Returns:
-            Callable: A callable (e.g., a torchvision transform or a custom
-                function) that takes in the raw input data and returns the
-                transformed data ready for the forward step.
-        """
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
-        return transforms
-
-    def build_optimizer(self, model: nn.Module, optimizer: DictLike | None = None) -> Optimizer:
+    # noinspection PyMethodMayBeStatic
+    def _build_optimizer(self, model: nn.Module, optimizer: dict | None = None) -> Optimizer:
         """Build and return the optimizer for the INR model.
 
         Args:
-            optimizer (DictLike, optional): Dictionary containing optimizer
+            optimizer (dict, optional): Dictionary containing optimizer
                 parameters. Defaults to None.
         """
         # Define optimizer

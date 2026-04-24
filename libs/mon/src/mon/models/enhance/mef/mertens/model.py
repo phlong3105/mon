@@ -20,9 +20,9 @@ __all__ = [
 from typing import override
 
 from tensordict import TensorDict
+from torch import Tensor
 
-from mon.core import Config, MODELS, Path, Size, Strategy, Task
-from mon.dataset import transform as T
+from mon.core import MODELS, Path, Size, Strategy, Task
 from mon.metrics import benchmark, create_dummy_image
 from mon.nn import Model, ModelRegisterMixin
 from .module import mertens
@@ -53,6 +53,7 @@ class Mertens(ModelRegisterMixin, Model):
 
     in_keys: set = {"images"}
     out_keys: set = {"enhanced"}
+    debug_keys: set = {}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -88,19 +89,33 @@ class Mertens(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, data: TensorDict) -> TensorDict:
-        """Forward the input through the network.
+    def forward(self, images: Tensor | list[Tensor]) -> Tensor:
+        """Route the inputs through the model's different forward methods based
+        on the context.
 
         Args:
-            data (TensorDict): Input data dictionary.
+            images (Tensor | list[Tensor]): Input tensor of shape (B, C, H, W);
+                or a list of images of shape (C, H, W).
 
         Returns:
-            TensorDict: Output data dictionary.
+            Tensor: Enhanced image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
         """
-        # 1. Extract input data
-        images = data["images"]
+        results = self.forward_step(images=images)
 
-        # 2. Network forward
+    @override
+    def forward_step(self, images: Tensor | list[Tensor]) -> Tensor:
+        """Perform a single forward step of the model.
+
+        Args:
+            images (Tensor | list[Tensor]): Input tensor of shape (B, C, H, W);
+                or a list of images of shape (C, H, W).
+
+        Returns:
+            Tensor: Enhanced image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+        """
+        # 1. Network forward
         enhanced = mertens(
             images=images,
             w_sat=self.w_sat,
@@ -109,39 +124,8 @@ class Mertens(ModelRegisterMixin, Model):
             n_levels=self.n_levels
         )
 
-        # 3. Return final and intermediate results for debugging
-        outputs = {
-            "enhanced": enhanced,
-        }
-        return TensorDict(outputs, batch_size=[])
-
-    # --- Interfaces ---
-    @override
-    def build_transforms(self, config: Config | None = None) -> T.Compose:
-        """Define the model's transformations.
-
-        Args:
-            config (Config, optional): The configuration object containing any
-                necessary parameters for defining the transformations.
-                Defaults to None.
-
-        Returns:
-            Callable: A callable (e.g., a torchvision transform or a custom
-                function) that takes in the raw input data and returns the
-                transformed data ready for the forward step.
-        """
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
-
-        if config is not None:
-            if config.strategy in [Strategy.RESIZE]:
-                imgsz = config.imgsz
-                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-                transforms = resize + transforms
-
-        return transforms
+        # 2. Return final and intermediate results for debugging
+        return enhanced
 
     # --- Benchmark ---
     @override

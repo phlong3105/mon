@@ -23,15 +23,15 @@ from typing import Literal, override
 
 import torch
 from tensordict import TensorDict
-from torch import nn
+from torch import nn, Tensor
 from torch.nn import functional as F
 
 from mon.core import (
-    Config,
     is_weights_type,
     K,
     log,
     MODELS,
+    PATCHERS,
     Path,
     Size,
     Strategy,
@@ -41,9 +41,9 @@ from mon.core import (
     WeightsEnum,
     WeightsLike,
 )
-from mon.dataset import transform as T
 from mon.metrics import benchmark, create_dummy_image
 from mon.nn import Model, ModelRegisterMixin
+from mon.ops import ImagePatcher
 from .module import DSC, TC
 
 current_file = Path(__file__).normalize()
@@ -66,11 +66,12 @@ class SGZ(ModelRegisterMixin, Model):
     arch: str = "sgz"
     name: str = "sgz"
     tasks: list[Task] = [Task.LLE]
-    strategies: list[Strategy] = [Strategy.RESIZE]
+    strategies: list[Strategy] = [Strategy.RESIZE, Strategy.PATCH]
     model_dir: Path = current_dir
 
     in_keys: set = {"image"}
     out_keys: set = {"enhanced"}
+    debug_keys: set = {"r"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -146,19 +147,51 @@ class SGZ(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, data: TensorDict) -> TensorDict:
-        """Forward the input through the network.
+    def forward(
+        self,
+        image: Tensor,
+        use_patch: bool = False,
+        *args, **kwargs
+    ) -> tuple[Tensor, Tensor]:
+        """Route the inputs through the model's different forward methods based
+        on the context.
 
         Args:
-            data (TensorDict): Input data dictionary.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            use_patch (bool, optional): Whether to use patch-based strategy.
+                Defaults to False.
 
         Returns:
-            TensorDict: Output data dictionary.
-        """
-        # 1. Extract input data
-        image = data["image"]
+            tuple[Tensor, Tensor]: A tuple containing:
 
-        # 2. Network forward with optional downsampling
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - r (Tensor): The estimated curve parameters of shape (B, C*8, H, W)
+                  and values ranging from -1.0 to 1.0.
+        """
+        if use_patch:
+            return self.forward_patch(image=image, *args, **kwargs)
+
+        return self.forward_step(image=image)
+
+    @override
+    def forward_step(self, image: Tensor) -> tuple[Tensor, Tensor]:
+        """Perform a single forward step of the model.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+
+        Returns:
+            tuple[Tensor, Tensor]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - r (Tensor): The estimated curve parameters of shape (B, C*8, H, W)
+                  and values ranging from -1.0 to 1.0.
+        """
+        # 1. Network forward with optional downsampling
         if self.scale_factor != 1:
             x_down = image
         else:
@@ -175,7 +208,7 @@ class SGZ(ModelRegisterMixin, Model):
         if self.scale_factor != 1:
             r = self.upsample(r)
 
-        # 3. Enhancement logic
+        # 2. Enhancement logic
         y = image
         intermediates = {}
 
@@ -186,42 +219,48 @@ class SGZ(ModelRegisterMixin, Model):
             if i < 7: # Don't add y8 to intermediates yet
                 intermediates[f"y{i+1}"] = y
 
-        # 4. Return final and intermediate results for debugging
-        outputs = {
-            "enhanced": y,
-            "r": r,
-            **intermediates
-        }
-        return TensorDict(outputs, batch_size=[])
+        # 3. Return final and intermediate results for debugging
+        return y, r
 
-    # --- Interfaces ---
-    @override
-    def build_transforms(self, config: Config | None = None) -> T.Compose:
-        """Define the model's transformations.
+    def forward_patch(
+        self,
+        image: Tensor,
+        patcher: dict | None = None
+    ) -> tuple[Tensor, Tensor]:
+        """Forward the input through the network using the patch-based strategy.
 
         Args:
-            config (Config, optional): The configuration object containing any
-                necessary parameters for defining the transformations.
-                Defaults to None.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            patcher (dict, optional): A dictionary containing the patching
+                configuration, such as patch size and stride. Defaults to None
+                means using the default patcher.
 
         Returns:
-            Callable: A callable (e.g., a torchvision transform or a custom
-                function) that takes in the raw input data and returns the
-                transformed data ready for the forward step.
+            tuple[Tensor, Tensor]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - r (Tensor): The estimated curve parameters of shape (B, C*8, H, W)
+                  and values ranging from -1.0 to 1.0.
         """
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
+        # 1. Initialize image patcher
+        patcher: dict = patcher or {}
+        patcher: ImagePatcher = PATCHERS.build(image=image, **patcher)
 
-        if config is not None:
-            if config.strategy in [Strategy.RESIZE]:
-                imgsz = config.imgsz
-                imgsz = Size(height=imgsz.h // self.scale_factor, width=imgsz.w // self.scale_factor)
-                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-                transforms = resize + transforms
+        # 2. Iterate and Process
+        for patch, x, y in patcher:
+            # 2.1. Process the patch
+            enhanced, r = self.forward_step(image=patch)
+            patch_output = {
+                "enhanced": enhanced,
+                "r": r,
+            }
+            # 2.2. Feed result back to Patcher
+            patcher(patches=patch_output, x=x, y=y)
 
-        return transforms
+        # 3. Get the merged results
+        return tuple(patcher.output.values())
 
     # --- Benchmark ---
     @override

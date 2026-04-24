@@ -20,10 +20,10 @@ __all__ = [
 ]
 
 from tensordict import TensorDict
+from torch import Tensor
 from typing_extensions import override
 
 from mon.core import (
-    Config,
     is_weights_type,
     K,
     log,
@@ -37,7 +37,6 @@ from mon.core import (
     WeightsEnum,
     WeightsLike,
 )
-from mon.dataset import transform as T
 from mon.metrics import benchmark, create_dummy_image
 from mon.nn import Model, ModelRegisterMixin
 from .module import Net
@@ -106,58 +105,51 @@ class DCCNet(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, data: TensorDict) -> TensorDict:
-        """Forward the input through the network.
+    def forward(self, image: Tensor) -> tuple[Tensor, Tensor, Tensor]:
+        """Route the inputs through the model's different forward methods based
+        on the context.
 
         Args:
-            data (TensorDict): Input data dictionary.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            TensorDict: Output data dictionary.
-        """
-        # 1. Extract input data
-        image = data["image"]
+            tuple[Tensor, Tensor, Tensor]: A tuple containing:
 
-        # 2. Network forward
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - gray (Tensor): Grayscale image tensor of shape (B, 1, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - color_hist (Tensor): Color histogram tensor of shape
+                  (B, d_hist * 3) where d_hist is the number of histogram bins
+                  per channel.
+        """
+        return self.forward_step(image=image)
+
+    @override
+    def forward_step(self, image: Tensor) -> tuple[Tensor, Tensor, Tensor]:
+        """Perform a single forward step of the model.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+
+        Returns:
+            tuple[Tensor, Tensor, Tensor]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - gray (Tensor): Grayscale image tensor of shape (B, 1, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - color_hist (Tensor): Color histogram tensor of shape
+                  (B, d_hist * 3) where d_hist is the number of histogram bins
+                  per channel.
+        """
+        # 1. Network forward
         enhanced, gray, color_hist = self.module(image)
 
-        # 3. Return final and intermediate results for debugging
-        outputs = {
-            "enhanced": enhanced,
-            "gray": gray,
-            "color_hist": color_hist,
-        }
-        return TensorDict(outputs, batch_size=[])
-
-    # --- Interfaces ---
-    @override
-    def build_transforms(self, config: Config | None = None) -> T.Compose:
-        """Define the model's transformations.
-
-        Args:
-            config (Config, optional): The configuration object containing any
-                necessary parameters for defining the transformations.
-                Defaults to None.
-
-        Returns:
-            Callable: A callable (e.g., a torchvision transform or a custom
-                function) that takes in the raw input data and returns the
-                transformed data ready for the forward step.
-        """
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
-
-        if config is not None:
-            if config.strategy in [Strategy.RESIZE]:
-                imgsz = config.imgsz
-                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-            else:
-                resize = T.ResizeDivisibleBy(divisor=32)
-            transforms = resize + transforms
-
-        return transforms
+        # 2. Return final and intermediate results for debugging
+        return enhanced, gray, color_hist
 
     # --- Benchmark ---
     @override

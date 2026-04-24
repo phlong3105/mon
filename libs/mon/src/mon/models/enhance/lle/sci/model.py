@@ -30,9 +30,9 @@ from typing import override
 
 import torch
 from tensordict import TensorDict
+from torch import Tensor
 
 from mon.core import (
-    Config,
     is_weights_type,
     K,
     log,
@@ -46,7 +46,6 @@ from mon.core import (
     WeightsEnum,
     WeightsLike,
 )
-from mon.dataset import transform as T
 from mon.metrics import benchmark, create_dummy_image
 from mon.nn import Model, ModelRegisterMixin
 from .module import (
@@ -78,11 +77,12 @@ class SCI(ModelRegisterMixin, Model):
     arch: str = "sci"
     name: str = "sci"
     tasks: list[Task] = [Task.LLE]
-    strategies: list[Strategy] = [Strategy.RESIZE]
+    strategies: list[Strategy] = [Strategy.NATIVE]
     model_dir: Path = current_dir
 
     in_keys: set = {"image"}
     out_keys: set = {"enhanced"}
+    debug_keys: set = {"illumination"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -123,78 +123,84 @@ class SCI(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, data: TensorDict, inference: bool = True) -> TensorDict:
-        """Forward the input through the network.
+    def forward(self, image: Tensor) -> tuple[Tensor, Tensor]:
+        """Route the inputs through the model's different forward methods based
+        on the context.
 
         Args:
-            data (TensorDict): Input data dictionary.
-            inference (bool, optional): If True, return enhanced image only.
-                Defaults to True.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+
+        Returns:
+            tuple[Tensor, Tensor]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - illumination (Tensor): Illumination tensor of shape (B, 1, H, W)
+                  and values ranging from 0.0 to 1.0.
+        """
+        return self.forward_step(image=image)
+
+    def forward_train(self, image: Tensor) -> TensorDict:
+        """Perform a single forward step of the model during training.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
             TensorDict: Output data dictionary.
         """
-        # 1. Extract input data
-        x = data["image"]
+        x = image
 
-        # 2. Network forward
-        if inference:
+        # 1. Network forward
+        i_list, r_list, x_list, a_list = [], [], [], []
+        for i in range(self.stage):
+            x_list.append(x)
             i = self.enhance(x)
             r = x / i
-            r = torch.clamp(r, 0.0, 1.0)
-            outputs = {
-                "enhanced": r,
-                "illumination": i,
-            }
-        else:
-            i_list, r_list, x_list, a_list = [], [], [], []
-            for i in range(self.stage):
-                x_list.append(x)
-                i = self.enhance(x)
-                r = x / i
-                r = torch.clamp(r, 0, 1)
-                att = self.calibrate(r)
-                x = x + att
-                i_list.append(i)
-                r_list.append(r)
-                a_list.append(torch.abs(att))
-            outputs = {
-                "x_list": torch.stack(x_list, dim=0),
-                "i_list": torch.stack(i_list, dim=0),
-                "r_list": torch.stack(r_list, dim=0),
-                "a_list": torch.stack(a_list, dim=0),
-            }
+            r = torch.clamp(r, 0, 1)
+            att = self.calibrate(r)
+            x = x + att
+            i_list.append(i)
+            r_list.append(r)
+            a_list.append(torch.abs(att))
 
-        # 3. Return final and intermediate results for debugging
+        outputs = {
+            "x_list": torch.stack(x_list, dim=0),
+            "i_list": torch.stack(i_list, dim=0),
+            "r_list": torch.stack(r_list, dim=0),
+            "a_list": torch.stack(a_list, dim=0),
+        }
+
+        # 2. Return final and intermediate results for debugging
         return TensorDict(outputs, batch_size=[])
 
-    # --- Interfaces ---
     @override
-    def build_transforms(self, config: Config | None = None) -> T.Compose:
-        """Define the model's transformations.
+    def forward_step(self, image: Tensor) -> tuple[Tensor, Tensor]:
+        """Perform a single forward step of the model.
 
         Args:
-            config (Config, optional): The configuration object containing any
-                necessary parameters for defining the transformations.
-                Defaults to None.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            Callable: A callable (e.g., a torchvision transform or a custom
-                function) that takes in the raw input data and returns the
-                transformed data ready for the forward step.
+            tuple[Tensor, Tensor]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - illumination (Tensor): Illumination tensor of shape (B, 1, H, W)
+                  and values ranging from 0.0 to 1.0.
         """
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
+        x = image
 
-        if config is not None:
-            if config.strategy in [Strategy.RESIZE]:
-                imgsz = config.imgsz
-                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-                transforms = resize + transforms
+        # 1. Network forward
+        i = self.enhance(x)
+        r = x / i
+        r = torch.clamp(r, 0.0, 1.0)
 
-        return transforms
+        # 2. Return final and intermediate results for debugging
+        return r, i
 
     # --- Benchmark ---
     @override
@@ -233,7 +239,7 @@ class SCI_PP(ModelRegisterMixin, Model):
     arch: str = "sci"
     name: str = "sci++"
     tasks: list[Task] = [Task.LLE]
-    strategies: list[Strategy] = [Strategy.RESIZE]
+    strategies: list[Strategy] = [Strategy.NATIVE]
     model_dir: Path = current_dir
 
     in_keys: set = {"image"}
@@ -279,89 +285,94 @@ class SCI_PP(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, data: TensorDict, inference: bool = True) -> TensorDict:
-        """Forward the input through the network.
+    def forward(self, image: Tensor) -> tuple[Tensor, Tensor]:
+        """Route the inputs through the model's different forward methods based
+        on the context.
 
         Args:
-            data (TensorDict): Input data dictionary.
-            inference (bool, optional): If True, return enhanced image only.
-                Defaults to True.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+
+        Returns:
+            tuple[Tensor, Tensor]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - illumination (Tensor): Illumination tensor of shape (B, 1, H, W)
+                  and values ranging from 0.0 to 1.0.
+        """
+        return self.forward_step(image=image)
+
+    def forward_train(self, image: Tensor) -> TensorDict:
+        """Perform a single forward step of the model during training.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
             TensorDict: Output data dictionary.
         """
-        # 1. Extract input data
-        x = data["image"]
+        x = image
 
-        # 2. Network forward
-        if inference:
-            i = self.ha(x)
-            r = x / i
-            r = torch.clamp(r, 0.0, 1.0)
-            outputs = {
-                "enhanced": r,
-                "illumination": i,
-            }
-        else:
-            i_list, r_list, x_list, a_list = [], [], [], []
+        # 1. Network forward
+        i_list, r_list, x_list, a_list = [], [], [], []
 
-            i = self.ha(x)
+        i = self.ha(x)
+        r = x / i
+        r = torch.clamp(r, 0, 1)
+        i_list.append(i)
+        r_list.append(r)
+        x_list.append(x)
+
+        for i in range(self.stage):
+            x_list.append(i)
+            att = self.calibrate(r)
+            att_1 = self.hb(att)
+
+            i = i + att + att_1
             r = x / i
             r = torch.clamp(r, 0, 1)
+
             i_list.append(i)
             r_list.append(r)
-            x_list.append(x)
+            a_list.append(torch.abs(att))
 
-            for i in range(self.stage):
-                x_list.append(i)
-                att = self.calibrate(r)
-                att_1 = self.hb(att)
+        outputs = {
+            "x_list": torch.stack(x_list, dim=0),
+            "i_list": torch.stack(i_list, dim=0),
+            "r_list": torch.stack(r_list, dim=0),
+            "a_list": torch.stack(a_list, dim=0),
+        }
 
-                i = i + att + att_1
-                r = x / i
-                r = torch.clamp(r, 0, 1)
-
-                i_list.append(i)
-                r_list.append(r)
-                a_list.append(torch.abs(att))
-
-            outputs = {
-                "x_list": torch.stack(x_list, dim=0),
-                "i_list": torch.stack(i_list, dim=0),
-                "r_list": torch.stack(r_list, dim=0),
-                "a_list": torch.stack(a_list, dim=0),
-            }
-
-        # 3. Return final and intermediate results for debugging
+        # 2. Return final and intermediate results for debugging
         return TensorDict(outputs, batch_size=[])
 
-    # --- Interfaces ---
     @override
-    def build_transforms(self, config: Config | None = None) -> T.Compose:
-        """Define the model's transformations.
+    def forward_step(self, image: Tensor) -> tuple[Tensor, Tensor]:
+        """Perform a single forward step of the model.
 
         Args:
-            config (Config, optional): The configuration object containing any
-                necessary parameters for defining the transformations.
-                Defaults to None.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
 
         Returns:
-            Callable: A callable (e.g., a torchvision transform or a custom
-                function) that takes in the raw input data and returns the
-                transformed data ready for the forward step.
+            tuple[Tensor, Tensor]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - illumination (Tensor): Illumination tensor of shape (B, 1, H, W)
+                  and values ranging from 0.0 to 1.0.
         """
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
+        x = image
 
-        if config is not None:
-            if config.strategy in [Strategy.RESIZE]:
-                imgsz = config.imgsz
-                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-                transforms = resize + transforms
+        # 1. Network forward
+        i = self.ha(x)
+        r = x / i
+        r = torch.clamp(r, 0.0, 1.0)
 
-        return transforms
+        # 2. Return final and intermediate results for debugging
+        return r, i
 
     # --- Benchmark ---
     @override

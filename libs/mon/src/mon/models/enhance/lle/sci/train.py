@@ -15,8 +15,6 @@ __all__ = [
     "SCI_Trainer",
 ]
 
-from typing import Any
-
 import pyiqa
 import torch
 from rich.progress import Progress
@@ -97,11 +95,10 @@ class SCI_Trainer(Trainer):
         for i, datapoint in enumerate(self.train_dataloader):
             # 2.1. Prepare inputs
             image = datapoint["image"]
-            # image = image.to(device)
             image = Variable(image, requires_grad=False).to(device)
 
             # 2.2. Forward pass
-            outputs = self.model(data={"image": image}, inference=False, save_debug=True)
+            outputs = self.model.forward_train(image=image)
 
             # 2.3. Extract outputs
             i_list = list(outputs["i_list"])
@@ -167,7 +164,7 @@ class SCI_Trainer(Trainer):
             target = datapoint["target"]
 
             # 2.2. Forward pass
-            outputs = self.model(data={"image": image}, inference=False, save_debug=True)
+            outputs = self.model.forward_train(image=image)
 
             # 2.3. Extract outputs
             enhanced = list(outputs["r_list"])[0]
@@ -285,7 +282,7 @@ class SCI_Finetuner(Trainer):
             image = datapoint["image"]
 
             # 2.2. Forward pass
-            outputs = self.model(data=datapoint, inference=True, save_debug=True)
+            outputs = self.model(data=datapoint, save_debug=True)
 
             # 2.3. Extract outputs
             illumination = outputs["illumination"]
@@ -348,7 +345,7 @@ class SCI_Finetuner(Trainer):
             target = datapoint["target"]
 
             # 2.2. Forward pass
-            outputs = self.model(data=datapoint, inference=True, save_debug=True)
+            outputs = self.model(data=datapoint, save_debug=True)
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
@@ -478,9 +475,10 @@ class SCI_PP_Trainer(Trainer):
 
             # 2.1. Prepare inputs
             datapoint = datapoint.to(device)
+            image = datapoint["image"]
 
             # 2.2. Forward pass
-            outputs = self.model(data=datapoint, inference=False, save_debug=True)
+            outputs = self.model.forward_train(image=image)
 
             # 2.3. Extract outputs
             i_list = list(outputs["i_list"])
@@ -566,7 +564,7 @@ class SCI_PP_Trainer(Trainer):
             target = datapoint["target"]
 
             # 2.2. Forward pass
-            outputs = self.model(data=datapoint, inference=False, save_debug=True)
+            outputs = self.model.forward_train(image=image)
 
             # 2.3. Extract outputs
             enhanced = list(outputs["r_list"])[0]

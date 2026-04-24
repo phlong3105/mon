@@ -95,16 +95,12 @@ class Predictor(Runner, ABC):
             if self.verbose:
                 log(f"'transforms' is not initialized.")
 
+    @abstractmethod
     def _init_transforms(self):
         """Initialize ``self._transforms`` attribute for pre-processing the
         input data.
         """
-        if self.model is None:
-            transforms = None
-        else:
-            transforms = self.model.build_transforms(config=self.config)
-
-        self._transforms = transforms
+        pass
 
     def _init_upsampler(self):
         """Initialize ``self._upsampler`` attribute for upsampling the output
@@ -120,7 +116,7 @@ class Predictor(Runner, ABC):
             # Only build the upsampler if the strategy is RESIZE and upscaling
             # is requested, since other strategies (e.g., NATIVE, PATCH) do not
             # require upsampling
-            upsampler = UPSAMPLERS.build(**self.config.upsampler).to(self.device)
+            upsampler = UPSAMPLERS.build(**self.config.upsampler)
         else:
             upsampler = None
 

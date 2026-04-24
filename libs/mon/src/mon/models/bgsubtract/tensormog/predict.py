@@ -17,6 +17,7 @@ from typing_extensions import override
 
 from mon.core import K, MODELS, Path, PREDICTORS, TimeProfiler
 from mon.runners import Predictor
+from mon.dataset import transform as T
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -47,6 +48,26 @@ class TensorMOG_Predictor(Predictor):
         )
         model = model.to(device)
         self._model = model
+
+    @override
+    def _init_transforms(self):
+        """Initialize ``self._transforms`` attribute for pre-processing the
+        input data.
+        """
+        config = self.config
+
+        transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
+
+        if config is not None:
+            if config.use_resize:
+                imgsz = config.imgsz
+                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
+                transforms = resize + transforms
+
+        self._transforms = transforms
 
     # --- Prediction ---
     @override

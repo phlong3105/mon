@@ -206,7 +206,7 @@ class NODE(nn.Module):
                 "enhanced": torch.clamp(pred[:, 0:3, :, :]  - self.odefunc.denoise(pred[:, 0:3, :, :]), 0, 1),
                 "curve_map": normalize_minmax(curve_map),
                 "noise_map": self.odefunc.denoise(pred[:, 0:3, :, :]),  # normalize_minmax(self.odefunc.denoise(pred[:, 0:3, :, :]), 255),  # self.odefunc.denoise(pred[:, 0:3, :, :]),
-                "all": [torch.clamp(pred[:, 0:3, :, :] - self.odefunc.denoise(pred[:, 0:3, :, :]), 0, 1) for pred in preds],
+                # "all": [torch.clamp(pred[:, 0:3, :, :] - self.odefunc.denoise(pred[:, 0:3, :, :]), 0, 1) for pred in preds],
             }
         else:
             return {

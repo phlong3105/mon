@@ -16,8 +16,7 @@ import torch
 from tensordict import TensorDict
 from typing_extensions import override
 
-from mon import Strategy
-from mon.core import K, MODELS, Path, PREDICTORS, Size, SizeLike, TimeProfiler
+from mon.core import K, MODELS, Path, PREDICTORS, Size, TimeProfiler
 from mon.dataset import transform as T
 from mon.runners import Predictor
 # noinspection PyUnusedImports
@@ -48,6 +47,28 @@ class ZeroDCE_Predictor(Predictor):
         model.eval()
         self._model = model
 
+    @override
+    def _init_transforms(self):
+        """Initialize ``self._transforms`` attribute for pre-processing the
+        input data.
+        """
+        config = self.config
+
+        transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
+
+        if config is not None:
+            if config.use_resize:
+                scale_factor = config.model.get("scale_factor", 1)
+                imgsz = config.imgsz
+                imgsz = Size(height=imgsz.h//scale_factor, width=imgsz.w//scale_factor)
+                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
+                transforms = resize + transforms
+
+        self._transforms = transforms
+
     # --- Prediction ---
     @override
     @torch.inference_mode()
@@ -75,7 +96,8 @@ class ZeroDCE_Predictor(Predictor):
         timers.infer.tick()
         outputs = self.model(
             data=datapoint,
-            use_patch=(config.strategy == Strategy.PATCH),
+            use_patch=config.use_patch,
+            patcher=config.patcher,
             save_debug=self.save_debug,
         )
         timers.infer.tock()

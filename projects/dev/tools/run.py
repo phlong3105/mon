@@ -116,6 +116,7 @@ def metric(args: argparse.Namespace):
             "zero_dce_sice_me_1080p",
             "zero_dce_sice_me_2k",
             "zero_dce_sice_me_4k",
+            "zero_dce_sice_me_patch",
         ],
         "zero_ig": [
             "zero_ig_lol_128",

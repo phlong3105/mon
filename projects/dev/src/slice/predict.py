@@ -25,6 +25,7 @@ from mon.core import (
     Task,
     TimeProfiler,
 )
+from mon.dataset import transform as T
 from mon.runners import Predictor
 # noinspection PyUnusedImports
 from .model import slice
@@ -54,6 +55,26 @@ class SLICE_Predictor(Predictor):
         model.eval()
         self._model = model
 
+    @override
+    def _init_transforms(self):
+        """Initialize ``self._transforms`` attribute for pre-processing the
+        input data.
+        """
+        config = self.config
+
+        transforms = T.Compose([
+            T.Normalize(normalization="min_max"),
+            T.ToTensorV2(transpose_mask=True),
+        ])
+
+        if config is not None:
+            if config.use_resize:
+                imgsz = config.imgsz
+                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
+                transforms = resize + transforms
+
+        self._transforms = transforms
+
     # --- Prediction ---
     @override
     @torch.inference_mode()
@@ -75,7 +96,7 @@ class SLICE_Predictor(Predictor):
         # 1. Prepare inputs
         timers.preprocess.tick()
         datapoint = datapoint.to(device)
-        T = torch.tensor([0, config.eval_T]).float().to(device)
+        T = torch.tensor([0, config.predict.T]).float().to(device)
         timers.preprocess.tock()
 
         # 2. Inference

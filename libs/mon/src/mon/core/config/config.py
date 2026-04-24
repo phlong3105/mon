@@ -29,7 +29,7 @@ from mon.core.constants import K
 from mon.core.context import sys_ctx
 from mon.core.data import Size, SizeLike, Weights
 from mon.core.dtype import RunMode, Strategy, Task
-from mon.core.factory import DATASETS, MODELS, UPSAMPLERS, WEIGHTS
+from mon.core.factory import DATASETS, MODELS, PATCHERS, UPSAMPLERS, WEIGHTS
 from mon.core.filesystem import (
     resolve_output_dir,
     resolve_save_dir,
@@ -213,6 +213,13 @@ ARGUMENTS = Box({
         "prompt_only": False,
         "prompt_text": "Upsampling method",
     },
+    "patcher": {
+        "default": "hann_window",
+        "type": _str_or_none,
+        "help": "Patching method.",
+        "prompt_only": False,
+        "prompt_text": "Patching method",
+    },
     "patch_size": {
         "default": None,
         "type": _int_or_none,
@@ -359,8 +366,11 @@ class Config:
             "upsampler": {
                 "name": "interpolation",
             },
-            "patch_size": 512,
-            "overlap": 128,
+            "patcher": {
+                "name": "hann_window",
+                "size": 512,
+                "stride": 384,
+            },
         },
 
         # --- Evaluation ---
@@ -637,6 +647,7 @@ class Config:
         """Set the device to use for computation."""
         self._config.device = sys_ctx.get_torch_device(value)
 
+    # --- Properties (Prediction) ---
     @property
     def data(self) -> list[PathLike]:
         """Return the list of inference data sources."""
@@ -675,6 +686,16 @@ class Config:
             self._config.predict.strategy = Strategy(value)
 
     @property
+    def use_resize(self) -> bool:
+        """Return whether to use resize-based prediction."""
+        return self.strategy in [Strategy.RESIZE]
+
+    @property
+    def use_patch(self) -> bool:
+        """Return whether to use patch-based prediction."""
+        return self.strategy in [Strategy.PATCH]
+
+    @property
     def imgsz(self) -> Size:
         """Return the image size for prediction."""
         return self._config.predict.imgsz
@@ -696,6 +717,11 @@ class Config:
         self._config.predict.upscale = value
 
     @property
+    def upsampler(self) -> Box:
+        """Return the upsampler configuration."""
+        return self._config.predict.upsampler
+
+    @property
     def upsampler_name(self) -> str:
         """Return the upsampling method."""
         return self._config.predict.upsampler.name
@@ -707,16 +733,33 @@ class Config:
             self._config.predict.upsampler.name = value
 
     @property
-    def patch_size(self) -> Size:
+    def patcher(self) -> Box:
+        """Return the patcher configuration."""
+        return self._config.predict.patcher
+
+    @property
+    def patcher_name(self) -> str:
+        """Return the patching method."""
+        return self._config.predict.patcher.name
+
+    @patcher_name.setter
+    def patcher_name(self, value: str | None):
+        """Set the patching method."""
+        if is_valid_str(value):
+            self._config.predict.patcher.name = value
+
+    @property
+    def patch_size(self) -> int:
         """Return the patch size for patch-based prediction."""
-        return self._config.predict.patch_size
+        return self._config.predict.patcher.size
 
     @patch_size.setter
-    def patch_size(self, value: SizeLike | None):
+    def patch_size(self, value: int | None):
         """Set the patch size for patch-based prediction."""
         if value is not None:
-            self._config.predict.patch_size = Size.from_value(value)
+            self._config.predict.patcher.size = value
 
+    # --- Properties (Evaluation) ---
     @property
     def benchmark(self) -> bool:
         """Return whether to run in benchmark mode."""
@@ -727,6 +770,7 @@ class Config:
         """Set whether to run in benchmark mode."""
         self._config.benchmark = value
 
+    # --- Properties (Saving & Visualization) ---
     @property
     def save(self) -> bool:
         """Return whether to save the output."""
@@ -1279,6 +1323,7 @@ class ConfigContext(Config, PromptContextMixin):
             FileNotFoundError: If the project root directory is not found.
         """
         # Validate inputs
+        root: Path = Path(root).normalize()
         if not root.is_dir():
             raise FileNotFoundError(f"Project root not found at: {root}")
 
@@ -1521,7 +1566,7 @@ class ConfigContext(Config, PromptContextMixin):
                 strict=True,
             )
         if self._index == 9:
-            # Prediction Strategy
+            # Strategy (Prediction)
             if self.mode in [RunMode.PREDICT]:
                 # Get model's supported strategies
                 meta_ = MODELS.get_model_meta(name=self.model_name)
@@ -1537,7 +1582,7 @@ class ConfigContext(Config, PromptContextMixin):
             # Imgsz
             if (
                 self.mode in [RunMode.PREDICT]
-                and self.strategy in [Strategy.RESIZE]
+                and self.use_resize
             ):
                 self.imgsz = IntPrompt.ask(
                     prompt=ARGUMENTS.imgsz.prompt_text,
@@ -1551,7 +1596,7 @@ class ConfigContext(Config, PromptContextMixin):
             # Upscale
             if (
                 self.mode in [RunMode.PREDICT]
-                and self.strategy in [Strategy.RESIZE]
+                and self.use_resize
             ):
                 self.upscale = ConfirmPrompt.ask(
                     prompt=ARGUMENTS.upscale.prompt_text,
@@ -1560,10 +1605,11 @@ class ConfigContext(Config, PromptContextMixin):
             else:
                 self._next()
         if self._index == 12:
-            # Upsampler
+            # Upsampler Name
             if (
                 self.mode in [RunMode.PREDICT]
-                and self.strategy in [Strategy.RESIZE]
+                and self.use_resize
+                and self.upscale
             ):
                 self.upsampler_name = Prompt.ask(
                     prompt=ARGUMENTS.upsampler.prompt_text,
@@ -1574,56 +1620,70 @@ class ConfigContext(Config, PromptContextMixin):
             else:
                 self._next()
         if self._index == 13:
-            # Patch Size
+            # Patcher Name
             if (
                 self.mode in [RunMode.PREDICT]
-                and self.strategy in [Strategy.PATCH]
+                and self.use_patch
             ):
-                self.patch_size = IntPrompt.ask(
-                    prompt=ARGUMENTS.patch_size.prompt_text,
-                    defaults=self.patch_size.hw if self.patch_size else None,
-                    multiple=True,
-                    show_default=True,
+                self.patcher_name = Prompt.ask(
+                    prompt=ARGUMENTS.patcher.prompt_text,
+                    choices=list(PATCHERS.keys()),
+                    defaults=self.patcher_name,
+                    strict=True,
                 )
             else:
                 self._next()
         if self._index == 14:
+            # Patch Size
+            if (
+                self.mode in [RunMode.PREDICT]
+                and self.use_patch
+            ):
+                self.patch_size = IntPrompt.ask(
+                    prompt=ARGUMENTS.patch_size.prompt_text,
+                    defaults=self.patch_size,
+                    multiple=False,
+                    show_default=True,
+                )
+            else:
+                self._next()
+        if self._index == 15:
             # Benchmark
             self.benchmark = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.benchmark.prompt_text,
                 defaults=self.benchmark,
             )
-        if self._index == 15:
+        if self._index == 16:
             # Save
             self.save = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.save.prompt_text,
                 defaults=self.save,
             )
-        if self._index == 16:
+        if self._index == 17:
             # Save Debug
             self.save_debug = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.save_debug.prompt_text,
                 defaults=self.save_debug,
             )
-        if self._index == 17:
+        if self._index == 18:
             # Keep Subdirs
             self.keep_subdirs = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.keep_subdirs.prompt_text,
                 defaults=self.keep_subdirs,
             )
-        if self._index == 18:
+        if self._index == 19:
             # Near Source
             self.near_src = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.near_src.prompt_text,
                 defaults=self.near_src,
             )
-        if self._index == 19:
+        if self._index == 20:
             # Exist OK
             self.exist_ok = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.exist_ok.prompt_text,
                 defaults=self.exist_ok,
             )
-        if self._index == 20:
+        if self._index == 21:
             # Verbose
             self.verbose = ConfirmPrompt.ask(
                 prompt=ARGUMENTS.verbose.prompt_text,
@@ -1640,7 +1700,7 @@ class ConfigContext(Config, PromptContextMixin):
     @property
     def num_prompts(self) -> int:
         """Return the total number of interactive steps."""
-        return 21
+        return 22
 
 # endregion
 

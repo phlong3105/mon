@@ -69,6 +69,7 @@ class CLODE(ModelRegisterMixin, Model):
 
     in_keys: set = {"image"}
     out_keys: set = {"enhanced"}
+    debug_keys: set = {"curve_map", "noise_map"}
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -115,58 +116,61 @@ class CLODE(ModelRegisterMixin, Model):
     @override
     def forward(
         self,
-        data: TensorDict,
+        image: Tensor,
         eval_time: Tensor | None = None,
         inference: bool = True,
     ) -> TensorDict:
         """Forward the input through the network.
 
         Args:
-            data (TensorDict): Input data dictionary.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
             eval_time (Tensor, optional): Evaluation time for the ODE solver.
                 Defaults to None, which means it will be determined by the model.
             inference (bool, optional): Whether the forward step is for inference.
                 Defaults to True.
 
         Returns:
-            TensorDict: Output data dictionary.
+            tuple[Tensor, Tensor, Tensor]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - curve_map (Tensor): The estimated curve parameters of shape
+                  (B, C*8, H, W) and values ranging from -1.0 to 1.0.
+                - noise_map (Tensor): The estimated noise map of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
         """
-        # 1. Extract input data
-        x = data["image"]
+        return self.forward_step(image=image, eval_time=eval_time, inference=inference)
 
-        # 2. Network forward
-        outputs = self.model(x, eval_time, inference)
-
-        # 3. Return final and intermediate results for debugging
-        return TensorDict(outputs, batch_size=[])
-
-    # --- Interfaces ---
     @override
-    def build_transforms(self, config: Config | None = None) -> T.Compose:
-        """Define the model's transformations.
+    def forward_step(
+        self,
+        image: Tensor,
+        eval_time: Tensor | None = None,
+        inference: bool = True,
+    ) -> tuple[Tensor, Tensor, Tensor]:
+        """Perform a single forward step of the model.
 
         Args:
-            config (Config, optional): The configuration object containing any
-                necessary parameters for defining the transformations.
-                Defaults to None.
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            eval_time (Tensor, optional): Evaluation time for the ODE solver.
+                Defaults to None, which means it will be determined by the model.
+            inference (bool, optional): Whether the forward step is for inference.
+                Defaults to True.
 
         Returns:
-            Callable: A callable (e.g., a torchvision transform or a custom
-                function) that takes in the raw input data and returns the
-                transformed data ready for the forward step.
+            tuple[Tensor, Tensor, Tensor]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - curve_map (Tensor): The estimated curve parameters of shape
+                  (B, C*8, H, W) and values ranging from -1.0 to 1.0.
+                - noise_map (Tensor): The estimated noise map of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
         """
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
-
-        if config is not None:
-            if config.strategy in [Strategy.RESIZE]:
-                imgsz = config.imgsz
-                resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-                transforms = resize + transforms
-
-        return transforms
+        outputs = self.model(image, eval_time, inference)
+        return tuple(outputs.values())
 
     # --- Benchmark ---
     @override

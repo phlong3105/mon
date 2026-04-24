@@ -20,6 +20,7 @@ __all__ = [
     "ModelFactory",
     "OPTIMIZERS",
     "OptimizerFactory",
+    "PATCHERS",
     "PREDICTORS",
     "SCHEDULERS",
     "TRAINERS",
@@ -939,6 +940,7 @@ DATASETS: DatasetFactory = DatasetFactory(name="Datasets", decamelize=False)
 BACKBONES: ModelFactory = ModelFactory(name="Backbones", decamelize=False)
 MODELS: ModelFactory = ModelFactory(name="Models", decamelize=False)
 UPSAMPLERS: Factory = Factory(name="Upsamplers", decamelize=False)
+PATCHERS: Factory = Factory(name="Patchers", decamelize=False)
 
 WEIGHTS: WeightsFactory = WeightsFactory(name="Weights", decamelize=False)
 OPTIMIZERS: OptimizerFactory = OptimizerFactory(name="Optimizers", decamelize=False)

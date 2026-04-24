@@ -12,13 +12,10 @@ __all__ = [
     "SCI_Trainer",
 ]
 
-from typing import Any
-
 import pyiqa
 import torch
 from rich.progress import Progress
 from tensordict import TensorDict
-from torch.autograd import Variable
 from typing_extensions import override
 
 from mon.core import K, OPTIMIZERS, Path, TRAINERS
@@ -90,9 +87,10 @@ class SCI_Trainer(Trainer):
         for i, datapoint in enumerate(self.train_dataloader):
             # 2.1. Prepare inputs
             datapoint = datapoint.to(device)
+            image = datapoint["image"]
 
             # 2.2. Forward pass
-            outputs = self.model(data=datapoint, inference=False, save_debug=True)
+            outputs = self.model.forward_train(image=image)
 
             # 2.3. Calculate loss
             loss = criterion(**outputs)
@@ -153,7 +151,7 @@ class SCI_Trainer(Trainer):
             target = datapoint["target"]
 
             # 2.2. Forward pass
-            outputs = self.model(data=datapoint, inference=False, save_debug=True)
+            outputs = self.model.forward_train(image=image)
 
             # 2.3. Extract outputs
             enhanced = outputs["H2"][0]
