@@ -344,7 +344,7 @@ class Predictor(Runner, ABC):
                 # Resize the image if needed
                 imgsz = Size.from_value(image)
                 if (upsampler is not None) and (imgsz != size):
-                    image = upsampler(x_lr=image, y_hr=y_hr, imgsz=size)["x_hr"]
+                    image = upsampler(x_lr=image, y_hr=y_hr, imgsz=size)
 
                 # Convert to array
                 if isinstance(image, Tensor):

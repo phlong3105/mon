@@ -215,7 +215,6 @@ class InterpolationUpsample(ImageUpsampler):
             is_depth = (c == 1)
             mode = cv2.INTER_NEAREST if is_depth else cv2.INTER_CUBIC
             x_hr = cv2.resize(src=x_lr, dsize=imgsz.wh, interpolation=mode)
-            x_hr = NonTensorData(x_hr)
 
         # 2. Tensor / TorchVision
         elif self.backend == Backend.TORCHVISION:

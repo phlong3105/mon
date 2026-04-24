@@ -141,7 +141,7 @@ class ZeroDCE(ModelRegisterMixin, Model):
         image: Tensor,
         use_patch: bool = False,
         *args, **kwargs
-    ) -> tuple[Tensor, Tensor]:
+    ) -> tuple[Tensor, ...]:
         """Route the inputs through the model's different forward methods based
         on the context.
 
@@ -165,7 +165,11 @@ class ZeroDCE(ModelRegisterMixin, Model):
         return self.forward_step(image=image, *args, **kwargs)
 
     @override
-    def forward_step(self, image: Tensor, *args, **kwargs) -> tuple[Tensor, Tensor]:
+    def forward_step(
+        self,
+        image: Tensor,
+        *args, **kwargs
+    ) -> tuple[Tensor, ...]:
         """Perform a single forward step of the model.
 
         Args:
@@ -209,7 +213,7 @@ class ZeroDCE(ModelRegisterMixin, Model):
         image: Tensor,
         patcher: dict | None = None,
         *args, **kwargs
-    ) -> tuple[Tensor, Tensor]:
+    ) -> tuple[Tensor, ...]:
         """Forward the input through the network using the patch-based strategy.
 
         Args:
@@ -234,7 +238,7 @@ class ZeroDCE(ModelRegisterMixin, Model):
         # 2. Iterate and Process
         for patch, x, y in patcher:
             # 2.1. Process the patch
-            enhanced, r = self.forward_step(image=patch)
+            enhanced, r = self.forward_step(image=patch, *args, **kwargs)
             patch_output = {
                 "enhanced": enhanced,
                 "r": r,
@@ -376,7 +380,11 @@ class ZeroDCEPP(ModelRegisterMixin, Model):
         return self.forward_step(image=image, *args, **kwargs)
 
     @override
-    def forward_step(self, image: Tensor, *args, **kwargs) -> tuple[Tensor, ...]:
+    def forward_step(
+        self,
+        image: Tensor,
+        *args, **kwargs
+    ) -> tuple[Tensor, ...]:
         """Perform a single forward step of the model.
 
         Args:
@@ -454,7 +462,7 @@ class ZeroDCEPP(ModelRegisterMixin, Model):
         # 2. Iterate and Process
         for patch, x, y in patcher:
             # 2.1. Process the patch
-            enhanced, r = self.forward_step(image=patch)
+            enhanced, r = self.forward_step(image=patch, *args, **kwargs)
             patch_output = {
                 "enhanced": enhanced,
                 "r": r,
