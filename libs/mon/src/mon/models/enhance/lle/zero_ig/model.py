@@ -112,7 +112,7 @@ class ZeroIG(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, image: Tensor) -> TensorDict:
+    def forward(self, image: Tensor, *args, **kwargs) -> tuple[Tensor, ...]:
         """Route the inputs through the model's different forward methods based
         on the context.
 
@@ -121,16 +121,16 @@ class ZeroIG(ModelRegisterMixin, Model):
                 ranging from 0.0 to 1.0.
 
         Returns:
-            tuple[Tensor, Tensor]: A tuple containing:
+            tuple[Tensor, ...]: A tuple containing:
 
                 - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
                   and values ranging from 0.0 to 1.0.
                 - denoised (Tensor): Denoised image tensor of shape (B, C, H, W)
                   and values ranging from 0.0 to 1.0.
         """
-        return self.forward_step(image=image)
+        return self.forward_step(image=image, *args, **kwargs)
 
-    def forward_train(self, image: Tensor) -> TensorDict:
+    def forward_train(self, image: Tensor, *args, **kwargs) -> TensorDict:
         """Perform a single forward step of the model during training.
 
         Args:
@@ -213,7 +213,7 @@ class ZeroIG(ModelRegisterMixin, Model):
         return TensorDict(outputs, batch_size=[])
 
     @override
-    def forward_step(self, image: Tensor) -> tuple[Tensor, Tensor]:
+    def forward_step(self, image: Tensor, *args, **kwargs) -> tuple[Tensor, ...]:
         """Perform a single forward step of the model.
 
         Args:
@@ -221,7 +221,7 @@ class ZeroIG(ModelRegisterMixin, Model):
                 ranging from 0.0 to 1.0.
 
         Returns:
-            tuple[Tensor, Tensor]: A tuple containing:
+            tuple[Tensor, ...]: A tuple containing:
 
                 - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
                   and values ranging from 0.0 to 1.0.

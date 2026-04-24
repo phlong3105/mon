@@ -22,7 +22,7 @@ from tensordict import TensorDict
 from torch import Tensor
 from torch.nn import functional as F
 
-from mon.core import PATCHERS, to_tensordict
+from mon.core import PATCHERS
 
 
 # ==============================================================================
@@ -65,7 +65,7 @@ class ImagePatcher:
         self._image: Tensor = None
         self._image_padded: Tensor = None
         self._canvases: dict[str, Tensor] = {}
-        self._weight_mask: Tensor = None
+        self._weight_masks: dict[str, Tensor] = {}
         self._window: Tensor = None
         self._output: TensorDict = None
 
@@ -93,7 +93,7 @@ class ImagePatcher:
         self._image = image
         self._image_padded = image_padded
         self._canvases: dict[str, Tensor] = {}
-        self._weight_mask = torch.zeros_like(image_padded, device=device)
+        self._weight_masks: dict[str, Tensor] = {}
         self._window = self._get_window()
         self._output = None
 
@@ -138,12 +138,12 @@ class ImagePatcher:
         for key, patch in patches.items():
             if key not in self._canvases:
                 b, c, _, _ = patch.shape
-                _, _, h, w = self._image.shape
+                _, _, h, w = self._image_padded.shape
                 self._canvases[key] = torch.zeros((b, c, h, w), device=patch.device)
+                self._weight_masks[key] = torch.zeros((b, c, h, w), device=patch.device)
 
             self._canvases[key][:, :, y:y+s, x:x+s] += patch * self._window
-
-        self._weight_mask[:, :, y:y+s, x:x+s] += self._window
+            self._weight_masks[key][:, :, y:y+s, x:x+s] += self._window
 
     # --- Properties ---
     @property
@@ -153,7 +153,8 @@ class ImagePatcher:
             _, _, h, w = self._image.shape
             outputs = {}
             for key, canvas in self._canvases.items():
-                canvas = canvas / (self._weight_mask + self.eps)
+                weight_mask = self._weight_masks[key]
+                canvas = canvas / (weight_mask + self.eps)
                 canvas = canvas[:, :, :h, :w]
                 outputs[key] = canvas
             self._output = TensorDict(outputs, batch_size=[])

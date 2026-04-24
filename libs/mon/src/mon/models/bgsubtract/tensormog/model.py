@@ -109,7 +109,7 @@ class TensorMOG(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, image: Tensor) -> tuple[Tensor, Tensor]:
+    def forward(self, image: Tensor, *args, **kwargs) -> tuple[Tensor, ...]:
         """Route the inputs through the model's different forward methods based
         on the context.
 
@@ -118,17 +118,17 @@ class TensorMOG(ModelRegisterMixin, Model):
                 ranging from 0.0 to 1.0.
 
         Returns:
-            tuple[Tensor, Tensor]: A tuple containing:
+            tuple[Tensor, ...]: A tuple containing:
 
                 - background (Tensor): The estimated background image tensor of
                   shape (B, C, H, W) and values ranging from 0.0 to 1.0.
                 - foreground (Tensor): The estimated foreground image tensor of
                   shape (B, C, H, W) and values ranging from 0.0 to 1.0.
         """
-        return self.forward_step(image=image)
+        return self.forward_step(image=image, *args, **kwargs)
 
     @override
-    def forward_step(self, image: Tensor) -> tuple[Tensor, Tensor]:
+    def forward_step(self, image: Tensor, *args, **kwargs) -> tuple[Tensor, ...]:
         """Perform a single forward step of the model.
 
         Args:
@@ -136,7 +136,7 @@ class TensorMOG(ModelRegisterMixin, Model):
                 ranging from 0.0 to 1.0.
 
         Returns:
-            tuple[Tensor, Tensor]: A tuple containing:
+            tuple[Tensor, ...]: A tuple containing:
 
                 - background (Tensor): The estimated background image tensor of
                   shape (B, C, H, W) and values ranging from 0.0 to 1.0.

@@ -152,7 +152,7 @@ class ZeroDCE(ModelRegisterMixin, Model):
                 Defaults to False.
 
         Returns:
-            tuple[Tensor, Tensor]: A tuple containing:
+            tuple[Tensor, ...]: A tuple containing:
 
                 - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
                   and values ranging from 0.0 to 1.0.
@@ -162,10 +162,10 @@ class ZeroDCE(ModelRegisterMixin, Model):
         if use_patch:
             return self.forward_patch(image=image, *args, **kwargs)
 
-        return self.forward_step(image=image)
+        return self.forward_step(image=image, *args, **kwargs)
 
     @override
-    def forward_step(self, image: Tensor) -> tuple[Tensor, Tensor]:
+    def forward_step(self, image: Tensor, *args, **kwargs) -> tuple[Tensor, Tensor]:
         """Perform a single forward step of the model.
 
         Args:
@@ -173,7 +173,7 @@ class ZeroDCE(ModelRegisterMixin, Model):
                 ranging from 0.0 to 1.0.
 
         Returns:
-            tuple[Tensor, Tensor]: A tuple containing:
+            tuple[Tensor, ...]: A tuple containing:
 
                 - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
                   and values ranging from 0.0 to 1.0.
@@ -207,7 +207,8 @@ class ZeroDCE(ModelRegisterMixin, Model):
     def forward_patch(
         self,
         image: Tensor,
-        patcher: dict | None = None
+        patcher: dict | None = None,
+        *args, **kwargs
     ) -> tuple[Tensor, Tensor]:
         """Forward the input through the network using the patch-based strategy.
 
@@ -219,7 +220,7 @@ class ZeroDCE(ModelRegisterMixin, Model):
                 means using the default patcher.
 
         Returns:
-            tuple[Tensor, Tensor]: A tuple containing:
+            tuple[Tensor, ...]: A tuple containing:
 
                 - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
                   and values ranging from 0.0 to 1.0.
@@ -351,7 +352,7 @@ class ZeroDCEPP(ModelRegisterMixin, Model):
         image: Tensor,
         use_patch: bool = False,
         *args, **kwargs
-    ) -> tuple[Tensor, Tensor]:
+    ) -> tuple[Tensor, ...]:
         """Route the inputs through the model's different forward methods based
         on the context.
 
@@ -362,7 +363,7 @@ class ZeroDCEPP(ModelRegisterMixin, Model):
                 Defaults to False.
 
         Returns:
-            tuple[Tensor, Tensor]: A tuple containing:
+            tuple[Tensor, ...]: A tuple containing:
 
                 - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
                   and values ranging from 0.0 to 1.0.
@@ -372,10 +373,10 @@ class ZeroDCEPP(ModelRegisterMixin, Model):
         if use_patch:
             return self.forward_patch(image=image, *args, **kwargs)
 
-        return self.forward_step(image=image)
+        return self.forward_step(image=image, *args, **kwargs)
 
     @override
-    def forward_step(self, image: Tensor) -> tuple[Tensor, Tensor]:
+    def forward_step(self, image: Tensor, *args, **kwargs) -> tuple[Tensor, ...]:
         """Perform a single forward step of the model.
 
         Args:
@@ -383,7 +384,7 @@ class ZeroDCEPP(ModelRegisterMixin, Model):
                 ranging from 0.0 to 1.0.
 
         Returns:
-            tuple[Tensor, Tensor]: A tuple containing:
+            tuple[Tensor, ...]: A tuple containing:
 
                 - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
                   and values ranging from 0.0 to 1.0.
@@ -426,8 +427,9 @@ class ZeroDCEPP(ModelRegisterMixin, Model):
     def forward_patch(
         self,
         image: Tensor,
-        patcher: dict | None = None
-    ) -> tuple[Tensor, Tensor]:
+        patcher: dict | None = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, ...]:
         """Forward the input through the network using the patch-based strategy.
 
         Args:
@@ -438,7 +440,7 @@ class ZeroDCEPP(ModelRegisterMixin, Model):
                 means using the default patcher.
 
         Returns:
-            tuple[Tensor, Tensor]: A tuple containing:
+            tuple[Tensor, ...]: A tuple containing:
 
                 - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
                   and values ranging from 0.0 to 1.0.

@@ -104,7 +104,12 @@ class RetinexNet(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, image: Tensor, decom: bool = False) -> tuple[Tensor, ...]:
+    def forward(
+        self,
+        image: Tensor,
+        decom: bool = False,
+        *args, **kwargs
+    ) -> tuple[Tensor, ...]:
         """Route the inputs through the model's different forward methods based
         on the context.
 
@@ -129,7 +134,12 @@ class RetinexNet(ModelRegisterMixin, Model):
         return self.forward_step(image=image, decom=decom)
 
     @override
-    def forward_step(self, image: Tensor, decom: bool = False) -> tuple[Tensor, ...]:
+    def forward_step(
+        self,
+        image: Tensor,
+        decom: bool = False,
+        *args, **kwargs
+    ) -> tuple[Tensor, ...]:
         """Perform a single forward step of the model.
 
         Args:

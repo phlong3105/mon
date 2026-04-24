@@ -255,7 +255,7 @@ class Denoiser(nn.Module):
                 from 0.0 to 1.0.
 
         Returns:
-            tuple[Tensor, Tensor, Tensor]: A tuple containing:
+            tuple[Tensor, ...]: A tuple containing:
                 - loss (Tensor): The denoising loss if in training mode, otherwise None.
                 - noise (Tensor): The predicted noise tensor of shape (B, C, H, W)
                     and values ranging from 0.0 to 1.0.

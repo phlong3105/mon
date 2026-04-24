@@ -119,6 +119,7 @@ class CLODE(ModelRegisterMixin, Model):
         image: Tensor,
         eval_time: Tensor | None = None,
         inference: bool = True,
+        *args, **kwargs
     ) -> TensorDict:
         """Forward the input through the network.
 
@@ -131,7 +132,7 @@ class CLODE(ModelRegisterMixin, Model):
                 Defaults to True.
 
         Returns:
-            tuple[Tensor, Tensor, Tensor]: A tuple containing:
+            tuple[Tensor, ...]: A tuple containing:
 
                 - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
                   and values ranging from 0.0 to 1.0.
@@ -148,6 +149,7 @@ class CLODE(ModelRegisterMixin, Model):
         image: Tensor,
         eval_time: Tensor | None = None,
         inference: bool = True,
+        *args, **kwargs
     ) -> tuple[Tensor, Tensor, Tensor]:
         """Perform a single forward step of the model.
 
@@ -160,7 +162,7 @@ class CLODE(ModelRegisterMixin, Model):
                 Defaults to True.
 
         Returns:
-            tuple[Tensor, Tensor, Tensor]: A tuple containing:
+            tuple[Tensor, ...]: A tuple containing:
 
                 - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
                   and values ranging from 0.0 to 1.0.

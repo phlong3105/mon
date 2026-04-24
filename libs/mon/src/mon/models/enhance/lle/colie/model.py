@@ -114,7 +114,12 @@ class CoLIE(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, image: Tensor, E: float = 0.5) -> tuple[Tensor, ...]:
+    def forward(
+        self,
+        image: Tensor,
+        E: float = 0.5,
+        *args, **kwargs
+    ) -> tuple[Tensor, ...]:
         """Forward the input through the network.
 
         Args:
@@ -137,7 +142,12 @@ class CoLIE(ModelRegisterMixin, Model):
         return self.forward_step(image=image, E=E)
 
     @override
-    def forward_step(self, image: Tensor, E: float = 0.5) -> tuple[Tensor, ...]:
+    def forward_step(
+        self,
+        image: Tensor,
+        E: float = 0.5,
+        *args, **kwargs
+    ) -> tuple[Tensor, ...]:
         """Forward the input through the network using the patch-based strategy.
 
         Args:
@@ -255,7 +265,11 @@ class CoLIE(ModelRegisterMixin, Model):
         return image_rgb_fixed, image_i_res, image_i_fixed, image_r
 
     # noinspection PyMethodMayBeStatic
-    def _build_optimizer(self, model: nn.Module, optimizer: dict | None = None) -> Optimizer:
+    def _build_optimizer(
+        self,
+        model: nn.Module,
+        optimizer: dict | None = None
+    ) -> Optimizer:
         """Build and return the optimizer for the INR model.
 
         Args:

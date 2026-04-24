@@ -164,7 +164,7 @@ class DAV2(ModelRegisterMixin, Model):
         Returns:
             TensorDict: Output data dictionary.
         """
-        return self.forward_step(image=image)
+        return self.forward_step(image=image, *args, **kwargs)
 
     @override
     def forward_step(

@@ -184,6 +184,7 @@ class SLICE(ModelRegisterMixin, Model):
         depth: Tensor | None = None,
         T: Tensor | None = None,
         chunk_size: int = 65536,
+        *args, **kwargs
     ) -> tuple[Tensor, ...]:
         """Route the inputs through the model's different forward methods based
         on the context.
@@ -218,6 +219,7 @@ class SLICE(ModelRegisterMixin, Model):
         image: Tensor,
         depth: Tensor | None = None,
         T: Tensor | None = None,
+        *args, **kwargs
     ) -> TensorDict:
         """Perform a single forward step of the model during training.
 
@@ -282,6 +284,7 @@ class SLICE(ModelRegisterMixin, Model):
         depth: Tensor | None = None,
         T: Tensor | None = None,
         chunk_size: int = 65536,
+        *args, **kwargs
     ) -> tuple[Tensor, ...]:
         """Perform a single forward step of the model.
 

@@ -89,7 +89,7 @@ class Mertens(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, images: Tensor | list[Tensor]) -> Tensor:
+    def forward(self, images: Tensor | list[Tensor], *args, **kwargs) -> Tensor:
         """Route the inputs through the model's different forward methods based
         on the context.
 
@@ -101,10 +101,10 @@ class Mertens(ModelRegisterMixin, Model):
             Tensor: Enhanced image tensor of shape (B, C, H, W) and values
                 ranging from 0.0 to 1.0.
         """
-        results = self.forward_step(images=images)
+        return self.forward_step(images=images, *args, **kwargs)
 
     @override
-    def forward_step(self, images: Tensor | list[Tensor]) -> Tensor:
+    def forward_step(self, images: Tensor | list[Tensor], *args, **kwargs) -> Tensor:
         """Perform a single forward step of the model.
 
         Args:

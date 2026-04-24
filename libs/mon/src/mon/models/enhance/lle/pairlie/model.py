@@ -111,7 +111,7 @@ class PairLIE(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, image: Tensor) -> tuple[Tensor, ...]:
+    def forward(self, image: Tensor, *args, **kwargs) -> tuple[Tensor, ...]:
         """Route the inputs through the model's different forward methods based
         on the context.
 
@@ -130,10 +130,10 @@ class PairLIE(ModelRegisterMixin, Model):
                 - D (Tensor): The difference between the input image and the
                   intermediate feature map (D = image - X).
         """
-        return self.forward_step(image=image)
+        return self.forward_step(image=image, *args, **kwargs)
 
     @override
-    def forward_step(self, image: Tensor) -> tuple[Tensor, ...]:
+    def forward_step(self, image: Tensor, *args, **kwargs) -> tuple[Tensor, ...]:
         """Forward the input through the network.
 
         Args:

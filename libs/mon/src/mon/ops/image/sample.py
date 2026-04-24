@@ -29,8 +29,8 @@ from torchvision.transforms import functional as F_tv, InterpolationMode
 
 from mon import TensorOrArray
 from mon.core import Backend, BackendLike, Size, UPSAMPLERS
-from mon.ops import to_image_array, to_image_tensor
 from .filter import FastGuidedFilter
+from .proc import to_image_array, to_image_tensor
 
 
 # ==============================================================================
