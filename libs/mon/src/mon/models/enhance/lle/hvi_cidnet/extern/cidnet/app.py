@@ -1,15 +1,14 @@
-import numpy as np
-import torch
-import gradio as gr
-from PIL import Image
-from net.CIDNet import CIDNet
-import torchvision.transforms as transforms
-import torch.nn.functional as F
-import os
-import imquality.brisque as brisque
-from loss.niqe_utils import *
-import platform
 import argparse
+import os
+import platform
+
+import gradio as gr
+import imquality.brisque as brisque
+import torch.nn.functional as F
+import torchvision.transforms as transforms
+
+from loss.niqe_utils import *
+from net.CIDNet import CIDNet
 
 opt_parser = argparse.ArgumentParser(description='App')
 opt_parser.add_argument('--cpu', action='store_true', help='CPU-Only')
@@ -19,7 +18,7 @@ if opt.cpu:
     eval_net = CIDNet().cpu()
 else:
     eval_net = CIDNet().cuda()
-    
+
 eval_net.trans.gated = True
 eval_net.trans.gated2 = True
 
@@ -27,7 +26,7 @@ def process_image(input_img,score,model_path,gamma,alpha_s=1.0,alpha_i=1.0):
     torch.set_grad_enabled(False)
     eval_net.load_state_dict(torch.load(os.path.join(directory,model_path), map_location=lambda storage, loc: storage))
     eval_net.eval()
-    
+
     pil2tensor = transforms.Compose([transforms.ToTensor()])
     input = pil2tensor(input_img)
     factor = 8
@@ -43,7 +42,7 @@ def process_image(input_img,score,model_path,gamma,alpha_s=1.0,alpha_i=1.0):
             output = eval_net(input**gamma)
         else:
             output = eval_net(input.cuda()**gamma)
-            
+
     if opt.cpu:
         output = torch.clamp(output,0,1)
     else:
@@ -52,7 +51,7 @@ def process_image(input_img,score,model_path,gamma,alpha_s=1.0,alpha_i=1.0):
     enhanced_img = transforms.ToPILImage()(output.squeeze(0))
     if score == 'Yes':
         im1 = enhanced_img.convert('RGB')
-        score_brisque = brisque.score(im1) 
+        score_brisque = brisque.score(im1)
         im1 = np.array(im1)
         score_niqe = calculate_niqe(im1)
         return enhanced_img,score_niqe,score_brisque
@@ -75,7 +74,7 @@ def remove_weights_prefix(paths):
         cleaned_paths = [path.replace('weights\\', '') for path in paths]
     elif os_name.lower() == 'linux':
         cleaned_paths = [path.replace('weights/', '') for path in paths]
-        
+
     return cleaned_paths
 
 directory = "weights"

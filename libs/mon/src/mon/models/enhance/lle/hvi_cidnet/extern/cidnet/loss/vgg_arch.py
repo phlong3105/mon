@@ -4,6 +4,7 @@ from collections import OrderedDict
 from torch import nn as nn
 from torchvision.models import vgg as vgg
 
+
 class Registry():
     """
     The registry that provides name -> object mapping, to support third-party

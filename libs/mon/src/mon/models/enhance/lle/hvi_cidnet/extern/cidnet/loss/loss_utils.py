@@ -1,10 +1,9 @@
-import torch
-import torch.nn.functional as F
 import functools
 from math import exp
+
+import torch
+import torch.nn.functional as F
 from torch.autograd import Variable
-
-
 
 
 def reduce_loss(loss, reduction):
@@ -58,6 +57,7 @@ def weight_reduce_loss(loss, weight=None, reduction='mean'):
 
     return loss
 
+
 def weighted_loss(loss_func):
     """Create a weighted version of a given loss function.
 
@@ -98,25 +98,24 @@ def weighted_loss(loss_func):
 
     return wrapper
 
+
 @weighted_loss
 def l1_loss(pred, target):
     return F.l1_loss(pred, target, reduction='none')
+
 
 @weighted_loss
 def mse_loss(pred, target):
     return F.mse_loss(pred, target, reduction='none')
 
 
-
-
-
 def gaussian(window_size,sigma):
     gauss = torch.Tensor([exp(-(x - window_size // 2) ** 2 / float(2 * sigma ** 2)) for x in range(window_size)])
-    return gauss/torch.sum(gauss)  
+    return gauss/torch.sum(gauss)
 
 
 def create_window(window_size,channel=1):
-    _1D_window = gaussian(window_size, 1.5).unsqueeze(1)  
+    _1D_window = gaussian(window_size, 1.5).unsqueeze(1)
     _2D_window = _1D_window.mm(_1D_window.t()).float().unsqueeze(0).unsqueeze(0)
     window = Variable(_2D_window.expand(channel, 1, window_size, window_size).contiguous())
     return window

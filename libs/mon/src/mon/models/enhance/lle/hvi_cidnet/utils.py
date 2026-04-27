@@ -3,13 +3,16 @@
 
 """Utilities.
 
-This module provides various utilities for Zero-DCE.
+This module provides various utilities for HVI-CIDNet.
 """
 
 from __future__ import annotations
 
+from PIL import Image
+
 __all__ = [
-    "weights_init",
+    "is_image_file",
+    "load_image",
 ]
 
 
@@ -17,13 +20,17 @@ __all__ = [
 # region UTILITIES
 # ==============================================================================
 
-def weights_init(m):
-    classname = m.__class__.__name__
-    if classname.find("Conv") != -1:
-        m.weight.data.normal_(0.0, 0.02)
-    elif classname.find("BatchNorm") != -1:
-        m.weight.data.normal_(1.0, 0.02)
-        m.bias.data.fill_(0)
+def is_image_file(filename: str) -> bool:
+    return any(
+        filename.endswith(extension)
+        for extension in [".png", ".jpg", ".bmp", ".JPG", ".jpeg"]
+    )
+
+
+def load_image(filepath: str) -> Image.Image:
+    image = Image.open(filepath).convert('RGB')
+    return image
+
 
 # endregion
 

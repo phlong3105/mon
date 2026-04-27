@@ -23,23 +23,24 @@ def eval(model, testing_data_loader, model_path, output_folder,norm_size=True,LO
     elif unpaired:
         model.trans.gated2 = True
         model.trans.alpha = alpha
+
     for batch in tqdm(testing_data_loader):
         with torch.no_grad():
             if norm_size:
                 input, name = batch[0], batch[1]
             else:
                 input, name, h, w = batch[0], batch[1], batch[2], batch[3]
-            
+
             input = input.cuda()
-            output = model(input**gamma) 
-            
-        if not os.path.exists(output_folder):          
-            os.mkdir(output_folder)  
-            
+            output = model(input**gamma)
+
+        if not os.path.exists(output_folder):
+            os.mkdir(output_folder)
+
         output = torch.clamp(output.cuda(),0,1).cuda()
         if not norm_size:
             output = output[:, :, :h, :w]
-        
+
         output_img = transforms.ToPILImage()(output.squeeze(0))
         output_img.save(output_folder + name[0])
         torch.cuda.empty_cache()
@@ -49,9 +50,9 @@ def eval(model, testing_data_loader, model_path, output_folder,norm_size=True,LO
     elif v2:
         model.trans.gated2 = False
     torch.set_grad_enabled(True)
-    
+
 if __name__ == '__main__':
-    
+
     eval_parser = argparse.ArgumentParser(description='Eval')
     eval_parser.add_argument('--perc', action='store_true', help='trained with perceptual loss')
     eval_parser.add_argument('--lol', action='store_true', help='output lolv1 dataset')
@@ -83,10 +84,10 @@ if __name__ == '__main__':
     cuda = True
     if cuda and not torch.cuda.is_available():
         raise Exception("No GPU found, or need to change CUDA_VISIBLE_DEVICES number")
-    
-    if not os.path.exists('./output'):          
-            os.mkdir('./output')  
-    
+
+    if not os.path.exists('./output'):
+            os.mkdir('./output')
+
     norm_size = True
     num_workers = 1
     alpha = None
@@ -97,8 +98,7 @@ if __name__ == '__main__':
             weight_path = './weights/LOLv1/w_perc.pth'
         else:
             weight_path = './weights/LOLv1/wo_perc.pth'
-        
-            
+
     elif ep.lol_v2_real:
         eval_data = DataLoader(dataset=get_eval_set("./datasets/LOLv2/Real_captured/Test/Low"), num_workers=num_workers, batch_size=1, shuffle=False)
         output_folder = './output/LOLv2_real/'
@@ -111,7 +111,7 @@ if __name__ == '__main__':
         elif ep.best_SSIM:
             weight_path = './weights/LOLv2_real/best_SSIM.pth'
             alpha = 0.82
-            
+
     elif ep.lol_v2_syn:
         eval_data = DataLoader(dataset=get_eval_set("./datasets/LOLv2/Synthetic/Test/Low"), num_workers=num_workers, batch_size=1, shuffle=False)
         output_folder = './output/LOLv2_syn/'
@@ -119,26 +119,25 @@ if __name__ == '__main__':
             weight_path = './weights/LOLv2_syn/w_perc.pth'
         else:
             weight_path = './weights/LOLv2_syn/wo_perc.pth'
-            
+
     elif ep.SICE_grad:
         eval_data = DataLoader(dataset=get_SICE_eval_set("./datasets/SICE/SICE_Grad"), num_workers=num_workers, batch_size=1, shuffle=False)
         output_folder = './output/SICE_grad/'
         weight_path = './weights/SICE.pth'
         norm_size = False
-        
     elif ep.SICE_mix:
         eval_data = DataLoader(dataset=get_SICE_eval_set("./datasets/SICE/SICE_Mix"), num_workers=num_workers, batch_size=1, shuffle=False)
         output_folder = './output/SICE_mix/'
         weight_path = './weights/SICE.pth'
         norm_size = False
-        
+
     elif ep.fivek:
         eval_data = DataLoader(dataset=get_SICE_eval_set("./datasets/FiveK/test/input"), num_workers=num_workers, batch_size=1, shuffle=False)
         output_folder = './output/fivek/'
         weight_path = './weights/fivek.pth'
         norm_size = False
-    
-    elif ep.unpaired: 
+
+    elif ep.unpaired:
         if ep.DICM:
             eval_data = DataLoader(dataset=get_SICE_eval_set("./datasets/DICM"), num_workers=num_workers, batch_size=1, shuffle=False)
             output_folder = './output/DICM/'
@@ -160,7 +159,6 @@ if __name__ == '__main__':
         alpha = ep.alpha
         norm_size = False
         weight_path = ep.unpaired_weights
-        
+
     eval_net = CIDNet().cuda()
     eval(eval_net, eval_data, weight_path, output_folder,norm_size=norm_size,LOL=ep.lol,v2=ep.lol_v2_real,unpaired=ep.unpaired,alpha=alpha,gamma=ep.gamma)
-

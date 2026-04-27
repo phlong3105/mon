@@ -1,5 +1,5 @@
 # --- General ---
-exp_name: "zero_dce_sice_me"  # (str) Experiment name.
+exp_name: "hvi_cidnet_lol_v2_real"  # (str) Experiment name.
 
 root: ~  # (str) Root path of the project.
 output_dir: ~  # (str) Output directory.
@@ -8,29 +8,31 @@ task: "lle"  # (str) Task name (e.g., detect, segment, classify).
 mode: "predict"  # (str) Run mode (e.g., train, predict).
 
 device: 0  # (int | str | list) device: 0 or [0,1,2,3] for CUDA, 'cpu'/'mps'
-seed: 100  # (int) Random seed for reproducibility
+seed: [1, 1000000]  # (int) Random seed for reproducibility
 
 # --- Model ---
 model:
-  name: "zero_dce"  # (str) Model name (e.g., resnet50, yolov8n).
-  arch: "zero_dce"  # (str) Model architecture (e.g., resnet, yolo8).
-  in_channels: 3
-  out_channels: 3
-  hidden_dim: 32
-  weights: "enhance/lle/zero_dce/zero_dce/sice_me/zero_dce_sice_me.pt"  # (str) Path to model weights.
+  name: "hvi_cidnet"  # (str) Model name (e.g., resnet50, yolov8n).
+  arch: "hvi_cidnet"  # (str) Model architecture (e.g., resnet, yolo8).
+  alpha: 1.0
+  gated: False
+  gated2: True
+  weights: "enhance/lle/hvi_cidnet/hvi_cidnet/lol_v2_real/hvi_cidnet_lol_v2_real.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---
 train_dataloader:
   dataset:
-    name: "sice_me"  # (str) Dataset name.
+    name: "lol_v2_real"  # (str) Dataset name.
     root: ~  # (str) Root directory of the dataset.
-    dirname: "sice"  # (str) Directory name of the dataset within the root path.
-    subdir: "me"  # (str) Subdirectory name of the dataset.
+    dirname: "lol_v2"  # (str) Directory name of the dataset within the root path.
+    subdir: "real"  # (str) Subdirectory name of the dataset.
     split: "train"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 512, width: 512 }
+        - { name: "RandomCrop", height: 256, width: 256 }
+        - { name: "HorizontalFlip" }
+        - { name: "VerticalFlip" }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
@@ -46,14 +48,16 @@ train_dataloader:
 
 val_dataloader:
   dataset:
-    name: "sice_me"  # (str) Dataset name.
+    name: "lol_v2_real"  # (str) Dataset name.
     root: ~  # (str) Root directory of the dataset.
-    dirname: "sice"  # (str) Directory name of the dataset within the root path.
-    subdir: "me"  # (str) Subdirectory name of the dataset.
-    split: "val"  # (str) Dataset split (e.g., train, val, test, predict).
+    dirname: "lol_v2"  # (str) Directory name of the dataset within the root path.
+    subdir: "real"  # (str) Subdirectory name of the dataset.
+    split: "test"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 512, width: 512 }
+        - { name: "RandomCrop", height: 256, width: 256 }
+        - { name: "HorizontalFlip" }
+        - { name: "VerticalFlip" }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
@@ -68,31 +72,38 @@ val_dataloader:
   drop_last: False  # (bool) Drop the last incomplete batch.
 
 # --- Training ---
-epochs: 100  # (int) Number of epochs to train.
+epochs: 1000  # (int) Number of epochs to train.
+
+gamma:
+  start_gamma: 60.0  # (float) Starting gamma value for the gamma augmentation during training.
+  end_gamma: 120.0  # (float) Ending gamma value for the gamma augmentation during training.
 
 optimizer:
   name: "Adam"  # (str) Optimizer name.
   lr: 0.0001  # (float) Learning rate.
-  weight_decay: 0.0001
 
-lr_scheduler: ~
+lr_scheduler:
+  name: "CosineAnnealingRestartLR"  # (str) Learning rate scheduler name: CosineAnnealingRestartCyclicLR or CosineAnnealingRestartLR
 
-lr_warmup_scheduler: ~
+lr_warmup_scheduler:
+  name: "GradualWarmupScheduler"  # (str) Learning rate warmup scheduler name.
+  warmup_epochs: 3
 
 loss:
-  E: 0.5  # (float) Default is 0.6, but the author suggests 0.5 or 0.45
-  W_tv: 200
-  W_spa: 1
-  W_col: 5
-  W_exp: 10
+  W_HVI: 1.0
+  W_L1: 1.0
+  W_D: 0.5
+  W_E: 50.0
+  W_P: 1.0
 
-grad_clip_norm: 0.1
+grad_clip_norm: 0.01
 
 tensorboard_logger: True
 
 # --- Prediction ---
 predict:
   data: ~  # (list[str]) List of data names or paths for prediction.
+  gamma: 1.0  # (float) Gamma value for gamma augmentation.
   strategy: "resize"  # (str) Prediction strategy (e.g., default, resize, patch).
 
   # Resizing strategy: Downsampling -> Inference -> Upsampling.

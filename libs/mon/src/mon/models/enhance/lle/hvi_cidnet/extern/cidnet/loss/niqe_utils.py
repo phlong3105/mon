@@ -16,7 +16,6 @@ def cubic(x):
                                                                                      (absx <= 2)).type_as(absx))
 
 
-
 def calculate_weights_indices(in_length, out_length, scale, kernel, kernel_width, antialiasing):
     """Calculate weights and indices, used for imresize function.
     Args:
@@ -83,6 +82,7 @@ def calculate_weights_indices(in_length, out_length, scale, kernel, kernel_width
     sym_len_e = indices.max() - in_length
     indices = indices + sym_len_s - 1
     return weights, indices, int(sym_len_s), int(sym_len_e)
+
 
 def imresize(img, scale, antialiasing=True):
     """imresize function same as MATLAB.
@@ -227,7 +227,6 @@ def _convert_output_type_range(img, dst_type):
     return img.astype(dst_type)
 
 
-
 def rgb2ycbcr(img, y_only=False):
     """Convert a RGB image to YCbCr image.
     This function produces the same results as Matlab's `rgb2ycbcr` function.
@@ -284,6 +283,7 @@ def bgr2ycbcr(img, y_only=False):
             img, [[24.966, 112.0, -18.214], [128.553, -74.203, -93.786], [65.481, -37.797, 112.0]]) + [16, 128, 128]
     out_img = _convert_output_type_range(out_img, img_type)
     return out_img
+
 
 def ycbcr2rgb(img):
     """Convert a YCbCr image to RGB image.
@@ -346,6 +346,7 @@ def reorder_image(img, input_order='HWC'):
         img = img.transpose(1, 2, 0)
     return img
 
+
 def rgb2ycbcr_pt(img, y_only=False):
     """Convert RGB images to YCbCr images (PyTorch version).
     It implements the ITU-R BT.601 conversion for standard-definition television. See more details in
@@ -367,6 +368,7 @@ def rgb2ycbcr_pt(img, y_only=False):
     out_img = out_img / 255.
     return
 
+
 def tensor2img(tensor):
     im = (255. * tensor).data.cpu().numpy()
     # clamp
@@ -374,6 +376,7 @@ def tensor2img(tensor):
     im[im < 0] = 0
     im = im.astype(np.uint8)
     return im
+
 
 def img2tensor(img):
     img = (img / 255.).astype('float32')
@@ -385,6 +388,7 @@ def img2tensor(img):
     img = np.ascontiguousarray(img, dtype=np.float32)
     tensor = torch.from_numpy(img)
     return tensor
+
 
 def estimate_aggd_param(block):
     """Estimate AGGD (Asymmetric Generalized Gaussian Distribution) parameters.

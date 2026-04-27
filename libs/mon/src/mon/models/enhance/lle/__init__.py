@@ -11,6 +11,7 @@ from __future__ import annotations
 from .clode import *
 from .colie import *
 from .dccnet import *
+from .hvi_cidnet import *
 from .pairlie import *
 from .retinexnet import *
 from .sci import *

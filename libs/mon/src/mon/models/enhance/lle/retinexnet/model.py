@@ -267,14 +267,14 @@ class RetinexNet(ModelRegisterMixin, Model):
 @WEIGHTS.register(name="retinexnet")
 class RetinexNet_Weights(WeightsEnum):
 
-    SICE_ME = Weights(
+    LOL_V1 = Weights(
         path=K.ZOO_ROOT / "enhance/lle/retinexnet/retinexnet/lol_v1/retinexnet_lol_v1.pt",
         url=None,
         num_classes=None,
         transforms=None,
         meta={}
     )
-    DEFAULT = SICE_ME
+    DEFAULT = LOL_V1
 
 
 # --- Model Variants ---

@@ -3,24 +3,24 @@
 
 """Prediction Runners.
 
-This module provides prediction runner classes for Zero-DCE and Zero-DCE++ models.
+This module provides prediction runner classes for HVI-CIDNet models.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "ZeroDCE_Predictor",
+    "HVI_CIDNet_Predictor",
 ]
 
 import torch
 from tensordict import TensorDict
 from typing_extensions import override
 
-from mon.core import K, MODELS, Path, PREDICTORS, Size, TimeProfiler
+from mon.core import K, MODELS, Path, PREDICTORS, TimeProfiler
 from mon.dataset import transform as T
 from mon.runners import Predictor
 # noinspection PyUnusedImports
-from .model import zero_dce, zero_dce_pp
+from .model import hvi_cidnet
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -30,9 +30,9 @@ current_dir = current_file.parents[0]
 # region PREDICTOR
 # ==============================================================================
 
-@PREDICTORS.register(name="zero_dce")
-class ZeroDCE_Predictor(Predictor):
-    """Predictor for Zero-DCE models."""
+@PREDICTORS.register(name="hvi_cidnet")
+class HVI_CIDNet_Predictor(Predictor):
+    """Predictor for HVI-CIDNet models."""
 
     # --- Lifecycle & Initialization ---
     @override
@@ -42,7 +42,7 @@ class ZeroDCE_Predictor(Predictor):
         device = self.device
         weights = config.weights or config.finetune
 
-        model = MODELS.build(**config.model | { "weights": weights })
+        model = MODELS.build(**config.model | {"weights": weights})
         model = model.to(device)
         model.eval()
         self._model = model
@@ -61,11 +61,11 @@ class ZeroDCE_Predictor(Predictor):
 
         if config is not None:
             if config.use_resize:
-                scale_factor = config.model.get("scale_factor", 1)
                 imgsz = config.imgsz
-                imgsz = Size(height=imgsz.h//scale_factor, width=imgsz.w//scale_factor)
                 resize = T.ResizeDivisibleBy(height=imgsz.h, width=imgsz.w, divisor=32)
-                transforms = resize + transforms
+            else:
+                resize = T.ResizeDivisibleBy(divisor=32)
+            transforms = resize + transforms
 
         self._transforms = transforms
 
@@ -96,6 +96,7 @@ class ZeroDCE_Predictor(Predictor):
         timers.infer.tick()
         outputs = self.model(
             data=datapoint,
+            gamma=config.predict.gamma,
             use_patch=config.use_patch,
             patcher=config.patcher,
             save_debug=self.save_debug,
