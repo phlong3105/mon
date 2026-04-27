@@ -161,15 +161,11 @@ class ZeroDCE(ModelRegisterMixin, Model):
         """
         if use_patch:
             return self.forward_patch(image=image, *args, **kwargs)
-
-        return self.forward_step(image=image, *args, **kwargs)
+        else:
+            return self.forward_step(image=image, *args, **kwargs)
 
     @override
-    def forward_step(
-        self,
-        image: Tensor,
-        *args, **kwargs
-    ) -> tuple[Tensor, ...]:
+    def forward_step(self, image: Tensor, *args, **kwargs) -> tuple[Tensor, ...]:
         """Perform a single forward step of the model.
 
         Args:
@@ -238,10 +234,10 @@ class ZeroDCE(ModelRegisterMixin, Model):
         # 2. Iterate and Process
         for patch, x, y in patcher:
             # 2.1. Process the patch
-            enhanced, r = self.forward_step(image=patch, *args, **kwargs)
+            outputs = self.forward_step(image=patch, *args, **kwargs)
             patch_outputs = {
-                "enhanced": enhanced,
-                "r": r,
+                "enhanced": outputs[0],
+                "r": outputs[1],
             }
             # 2.2. Feed result back to Patcher
             patcher(patches=patch_outputs, x=x, y=y)
@@ -462,10 +458,10 @@ class ZeroDCEPP(ModelRegisterMixin, Model):
         # 2. Iterate and Process
         for patch, x, y in patcher:
             # 2.1. Process the patch
-            enhanced, r = self.forward_step(image=patch, *args, **kwargs)
+            outputs = self.forward_step(image=patch, *args, **kwargs)
             patch_outputs = {
-                "enhanced": enhanced,
-                "r": r,
+                "enhanced": outputs[0],
+                "r": outputs[1],
             }
             # 2.2. Feed result back to Patcher
             patcher(patches=patch_outputs, x=x, y=y)

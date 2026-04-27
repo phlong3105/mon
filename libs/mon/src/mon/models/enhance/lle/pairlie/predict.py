@@ -82,6 +82,7 @@ class PairLIE_Predictor(Predictor):
         Returns:
             TensorDict: The dictionary containing the prediction results.
         """
+        config = self.config
         device = self.device
 
         # 1. Prepare inputs
@@ -91,7 +92,12 @@ class PairLIE_Predictor(Predictor):
 
         # 2. Inference
         timers.infer.tick()
-        outputs = self.model(data=datapoint, save_debug=self.save_debug)
+        outputs = self.model(
+            data=datapoint,
+            use_patch=config.use_patch,
+            patcher=config.patcher,
+            save_debug=self.save_debug,
+        )
         timers.infer.tock()
 
         return outputs

@@ -30,7 +30,7 @@ train_dataloader:
     split: "train"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 128, width : 128 }
+        - { name: "Resize", height: 128, width: 128 }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
@@ -53,7 +53,7 @@ val_dataloader:
     split: "val"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 128, width : 128 }
+        - { name: "Resize", height: 128, width: 128 }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0

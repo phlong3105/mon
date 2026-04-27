@@ -29,6 +29,7 @@ from mon.core import (
     log,
     MODELS,
     OPTIMIZERS,
+    PATCHERS,
     Path,
     Size,
     Strategy,
@@ -36,7 +37,7 @@ from mon.core import (
 )
 from mon.metrics import benchmark
 from mon.nn import Model, ModelRegisterMixin
-from mon.ops import guided_filter_upsample, RgbToHsv
+from mon.ops import guided_filter_upsample, ImagePatcher, RgbToHsv
 from . import loss as L
 from .module import ResidualINR
 from .utils import get_coords, get_patches, replace_v_component
@@ -61,7 +62,7 @@ class CoLIE(ModelRegisterMixin, Model):
     arch: str = "colie"
     name: str = "colie"
     tasks: list[Task] = [Task.LLE]
-    strategies: list[Strategy] = [Strategy.NATIVE]
+    strategies: list[Strategy] = [Strategy.NATIVE, Strategy.PATCH]
     model_dir: Path = current_dir
 
     in_keys: set = {"image"}
@@ -118,6 +119,7 @@ class CoLIE(ModelRegisterMixin, Model):
         self,
         image: Tensor,
         E: float = 0.5,
+        use_patch: bool = False,
         *args, **kwargs
     ) -> tuple[Tensor, ...]:
         """Forward the input through the network.
@@ -126,6 +128,8 @@ class CoLIE(ModelRegisterMixin, Model):
             image (Tensor): Input image tensor of shape (B, C, H, W) and values
                 ranging from 0.0 to 1.0.
             E (float, optional): Exponential loss parameter. Defaults to 0.5.
+            use_patch (bool, optional): Whether to use patch-based strategy.
+                Defaults to False.
 
         Returns:
             - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
@@ -139,7 +143,10 @@ class CoLIE(ModelRegisterMixin, Model):
                 - image_r (Tensor): The reflectance component of the image of
                   shape (B, C, H, W) and values ranging from 0.0 to 1.0.
         """
-        return self.forward_step(image=image, E=E)
+        if use_patch:
+            return self.forward_patch(image=image, E=E, *args, **kwargs)
+        else:
+            return self.forward_step(image=image, E=E, *args, **kwargs)
 
     @override
     def forward_step(
@@ -190,8 +197,8 @@ class CoLIE(ModelRegisterMixin, Model):
         # 3. Convert the image to HSV color space
         color_func = RgbToHsv().to(device)
         image_hsv = color_func.from_rgb(image)
-        image_h = image_hsv[:, 0:1, :, :].detach()  # Detach to prevent memory leak
-        image_s = image_hsv[:, 1:2, :, :].detach()  # Detach to prevent memory leak
+        # image_h = image_hsv[:, 0:1, :, :].detach()  # Detach to prevent memory leak
+        # image_s = image_hsv[:, 1:2, :, :].detach()  # Detach to prevent memory leak
         image_i = image_hsv[:, 2:3, :, :].detach()  # Detach to prevent memory leak
         lr_image_i = F.interpolate(image_i, (down_size, down_size)).to(device)
 
@@ -263,6 +270,57 @@ class CoLIE(ModelRegisterMixin, Model):
         image_i_res = guided_filter_upsample(lr_image_i_res, image_i, lr_image_i)
         image_i_fixed = guided_filter_upsample(lr_image_i_fixed, image_i, lr_image_i)
         return image_rgb_fixed, image_i_res, image_i_fixed, image_r
+
+    def forward_patch(
+        self,
+        image: Tensor,
+        E: float = 0.5,
+        patcher: dict | None = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, ...]:
+        """Forward the input through the network using the patch-based strategy.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            E (float, optional): Exponential loss parameter. Defaults to 0.5.
+            patcher (dict, optional): A dictionary containing the patching
+                configuration, such as patch size and stride. Defaults to None
+                means using the default patcher.
+
+        Returns:
+            tuple[Tensor, ...]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - image_i_res (Tensor): The residual illumination component of
+                  the image of shape (B, C, H, W) and values ranging from
+                  0.0 to 1.0.
+                - image_i_fixed (Tensor): The fixed illumination component of
+                  the image of shape (B, C, H, W) and values ranging from
+                  0.0 to 1.0.
+                - image_r (Tensor): The reflectance component of the image of
+                  shape (B, C, H, W) and values ranging from 0.0 to 1.0.
+        """
+        # 1. Initialize image patcher
+        patcher: dict = patcher or {"name": "hann_window"}
+        patcher: ImagePatcher = PATCHERS.build(image=image, **patcher)
+
+        # 2. Iterate and Process
+        for patch, x, y in patcher:
+            # 2.1. Process the patch
+            outputs = self.forward_step(image=patch, E=E, *args, **kwargs)
+            patch_outputs = {
+                "enhanced": outputs[0],
+                "image_i_res": outputs[1],
+                "image_i_fixed": outputs[2],
+                "image_r": outputs[3],
+            }
+            # 2.2. Feed result back to Patcher
+            patcher(patches=patch_outputs, x=x, y=y)
+
+        # 3. Get the merged results
+        return tuple(patcher.output.values())
 
     # noinspection PyMethodMayBeStatic
     def _build_optimizer(

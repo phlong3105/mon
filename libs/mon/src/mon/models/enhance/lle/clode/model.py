@@ -151,13 +151,13 @@ class CLODE(ModelRegisterMixin, Model):
                 inference=inference,
                 *args, **kwargs
             )
-
-        return self.forward_step(
-            image=image,
-            eval_T=eval_T,
-            inference=inference,
-            *args, **kwargs
-        )
+        else:
+            return self.forward_step(
+                image=image,
+                eval_T=eval_T,
+                inference=inference,
+                *args, **kwargs
+            )
 
     @override
     def forward_step(
@@ -216,8 +216,10 @@ class CLODE(ModelRegisterMixin, Model):
 
                 - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
                   and values ranging from 0.0 to 1.0.
-                - r (Tensor): The estimated curve parameters of shape (B, C*8, H, W)
-                  and values ranging from -1.0 to 1.0.
+                - curve_map (Tensor): The estimated curve parameters of shape
+                  (B, C*8, H, W) and values ranging from -1.0 to 1.0.
+                - noise_map (Tensor): The estimated noise map of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
         """
         # 1. Initialize image patcher
         patcher: dict = patcher or {"name": "hann_window"}

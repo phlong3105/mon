@@ -57,7 +57,7 @@ val_dataloader:
     split: "val"  # (str) Dataset split (e.g., train, val, test, predict).
     transforms:
       ops:
-        - { name: "Resize", height: 512, width : 512 }
+        - { name: "Resize", height: 512, width: 512 }
         - { name: "Normalize", normalization: "min_max" }
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0

@@ -81,7 +81,13 @@ class CoLIE_Predictor(Predictor):
         # 3. Inference
         timers.infer.tick()
         model = colie(**config.model).to(device)
-        outputs = model(data=datapoint, E=E, save_debug=self.save_debug)
+        outputs = model(
+            data=datapoint,
+            E=E,
+            use_patch=config.use_patch,
+            patcher=config.patcher,
+            save_debug=self.save_debug,
+        )
         timers.infer.tock()
 
         return outputs
