@@ -25,11 +25,11 @@ from tensordict import TensorDict
 from torch import Tensor
 
 from mon.core import (
-    Config,
     is_weights_type,
     K,
     log,
     MODELS,
+    PATCHERS,
     Path,
     Size,
     Strategy,
@@ -39,9 +39,9 @@ from mon.core import (
     WeightsEnum,
     WeightsLike,
 )
-from mon.dataset import transform as T
 from mon.metrics import benchmark, create_dummy_image
 from mon.nn import Model, ModelRegisterMixin
+from mon.ops import ImagePatcher
 from .module import NODE
 
 current_file = Path(__file__).normalize()
@@ -64,7 +64,7 @@ class CLODE(ModelRegisterMixin, Model):
     arch: str = "clode"
     name: str = "clode"
     tasks: list[Task] = [Task.LLE]
-    strategies: list[Strategy] = [Strategy.RESIZE]
+    strategies: list[Strategy] = [Strategy.RESIZE, Strategy.PATCH]
     model_dir: Path = current_dir
 
     in_keys: set = {"image"}
@@ -117,8 +117,9 @@ class CLODE(ModelRegisterMixin, Model):
     def forward(
         self,
         image: Tensor,
-        eval_time: Tensor | None = None,
+        eval_T: Tensor | None = None,
         inference: bool = True,
+        use_patch: bool = False,
         *args, **kwargs
     ) -> TensorDict:
         """Forward the input through the network.
@@ -126,10 +127,12 @@ class CLODE(ModelRegisterMixin, Model):
         Args:
             image (Tensor): Input image tensor of shape (B, C, H, W) and values
                 ranging from 0.0 to 1.0.
-            eval_time (Tensor, optional): Evaluation time for the ODE solver.
+            eval_T (Tensor, optional): Evaluation time for the ODE solver.
                 Defaults to None, which means it will be determined by the model.
             inference (bool, optional): Whether the forward step is for inference.
                 Defaults to True.
+            use_patch (bool, optional): Whether to use patch-based strategy.
+                Defaults to False.
 
         Returns:
             tuple[Tensor, ...]: A tuple containing:
@@ -141,13 +144,26 @@ class CLODE(ModelRegisterMixin, Model):
                 - noise_map (Tensor): The estimated noise map of shape (B, C, H, W)
                   and values ranging from 0.0 to 1.0.
         """
-        return self.forward_step(image=image, eval_time=eval_time, inference=inference)
+        if use_patch:
+            return self.forward_patch(
+                image=image,
+                eval_T=eval_T,
+                inference=inference,
+                *args, **kwargs
+            )
+
+        return self.forward_step(
+            image=image,
+            eval_T=eval_T,
+            inference=inference,
+            *args, **kwargs
+        )
 
     @override
     def forward_step(
         self,
         image: Tensor,
-        eval_time: Tensor | None = None,
+        eval_T: Tensor | None = None,
         inference: bool = True,
         *args, **kwargs
     ) -> tuple[Tensor, Tensor, Tensor]:
@@ -156,7 +172,7 @@ class CLODE(ModelRegisterMixin, Model):
         Args:
             image (Tensor): Input image tensor of shape (B, C, H, W) and values
                 ranging from 0.0 to 1.0.
-            eval_time (Tensor, optional): Evaluation time for the ODE solver.
+            eval_T (Tensor, optional): Evaluation time for the ODE solver.
                 Defaults to None, which means it will be determined by the model.
             inference (bool, optional): Whether the forward step is for inference.
                 Defaults to True.
@@ -171,8 +187,61 @@ class CLODE(ModelRegisterMixin, Model):
                 - noise_map (Tensor): The estimated noise map of shape (B, C, H, W)
                   and values ranging from 0.0 to 1.0.
         """
-        outputs = self.model(image, eval_time, inference)
+        outputs = self.model(image, eval_T, inference)
         return tuple(outputs.values())
+
+    def forward_patch(
+        self,
+        image: Tensor,
+        eval_T: Tensor | None = None,
+        inference: bool = True,
+        patcher: dict | None = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, ...]:
+        """Forward the input through the network using the patch-based strategy.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            eval_T (Tensor, optional): Evaluation time for the ODE solver.
+                Defaults to None, which means it will be determined by the model.
+            inference (bool, optional): Whether the forward step is for inference.
+                Defaults to True.
+            patcher (dict, optional): A dictionary containing the patching
+                configuration, such as patch size and stride. Defaults to None
+                means using the default patcher.
+
+        Returns:
+            tuple[Tensor, ...]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - r (Tensor): The estimated curve parameters of shape (B, C*8, H, W)
+                  and values ranging from -1.0 to 1.0.
+        """
+        # 1. Initialize image patcher
+        patcher: dict = patcher or {"name": "hann_window"}
+        patcher: ImagePatcher = PATCHERS.build(image=image, **patcher)
+
+        # 2. Iterate and Process
+        for patch, x, y in patcher:
+            # 2.1. Process the patch
+            outputs = self.forward_step(
+                image=patch,
+                eval_T=eval_T,
+                inference=inference,
+                *args, **kwargs
+            )
+            patch_outputs = {
+                "enhanced": outputs[0],
+                "curve_map": outputs[1],
+                "noise_map": outputs[2],
+            }
+            # 2.2. Feed result back to Patcher
+            patcher(patches=patch_outputs, x=x, y=y)
+
+        # 3. Get the merged results
+        return tuple(patcher.output.values())
 
     # --- Benchmark ---
     @override

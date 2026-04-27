@@ -232,19 +232,19 @@ class ZeroDCE(ModelRegisterMixin, Model):
                   and values ranging from -1.0 to 1.0.
         """
         # 1. Initialize image patcher
-        patcher: dict = patcher or {}
+        patcher: dict = patcher or {"name": "hann_window"}
         patcher: ImagePatcher = PATCHERS.build(image=image, **patcher)
 
         # 2. Iterate and Process
         for patch, x, y in patcher:
             # 2.1. Process the patch
             enhanced, r = self.forward_step(image=patch, *args, **kwargs)
-            patch_output = {
+            patch_outputs = {
                 "enhanced": enhanced,
                 "r": r,
             }
             # 2.2. Feed result back to Patcher
-            patcher(patches=patch_output, x=x, y=y)
+            patcher(patches=patch_outputs, x=x, y=y)
 
         # 3. Get the merged results
         return tuple(patcher.output.values())
@@ -456,19 +456,19 @@ class ZeroDCEPP(ModelRegisterMixin, Model):
                   and values ranging from -1.0 to 1.0.
         """
         # 1. Initialize image patcher
-        patcher: dict = patcher or {}
+        patcher: dict = patcher or {"name": "hann_window"}
         patcher: ImagePatcher = PATCHERS.build(image=image, **patcher)
 
         # 2. Iterate and Process
         for patch, x, y in patcher:
             # 2.1. Process the patch
             enhanced, r = self.forward_step(image=patch, *args, **kwargs)
-            patch_output = {
+            patch_outputs = {
                 "enhanced": enhanced,
                 "r": r,
             }
             # 2.2. Feed result back to Patcher
-            patcher(patches=patch_output, x=x, y=y)
+            patcher(patches=patch_outputs, x=x, y=y)
 
         # 3. Get the merged results
         return tuple(patcher.output.values())

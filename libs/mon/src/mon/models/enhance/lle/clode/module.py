@@ -155,11 +155,11 @@ class ODEBlock(nn.Module):
         self.adjoint = adjoint
 
     # --- Callable & Context Manager ---
-    def forward(self, x: Tensor, eval_time: Tensor = None) -> Tensor:
-        if eval_time is None:
+    def forward(self, x: Tensor, eval_T: Tensor = None) -> Tensor:
+        if eval_T is None:
             t = torch.tensor([0, 1]).float().type_as(x)
         else:
-            t = eval_time
+            t = eval_T
 
         self.odefunc.nfe = 0
         x_aug = x
@@ -190,14 +190,9 @@ class NODE(nn.Module):
         self.odeblock = ODEBlock(self.odefunc, tol=tol, adjoint=adjoint)
 
     # --- Callable & Context Manager ---
-    def forward(
-        self,
-        x: Tensor,
-        eval_time: Tensor = None,
-        inference: bool = False
-    ) -> dict:
+    def forward(self, x: Tensor, eval_T: Tensor = None, inference: bool = False) -> dict:
         _input = torch.cat([x, torch.zeros_like(x), torch.zeros_like(x)], 1)
-        preds = self.odeblock(_input, eval_time)
+        preds = self.odeblock(_input, eval_T)
         pred = preds[-1]
         curve_map = self.odefunc.last_curve_map
 

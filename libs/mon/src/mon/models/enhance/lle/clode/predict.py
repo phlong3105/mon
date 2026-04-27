@@ -92,15 +92,17 @@ class CLODE_Predictor(Predictor):
         # 1. Prepare inputs
         timers.preprocess.tick()
         datapoint = datapoint.to(device)
-        eval_time = torch.tensor([0, config.predict.T]).float().to(device)
+        eval_T = torch.tensor([0, config.predict.T]).float().to(device)
         timers.preprocess.tock()
 
         # 2. Inference
         timers.infer.tick()
         outputs = self.model(
             data=datapoint,
-            eval_time=eval_time,
+            eval_T=eval_T,
             inference=True,
+            use_patch=config.use_patch,
+            patcher=config.patcher,
             save_debug=self.save_debug,
         )
         timers.infer.tock()
