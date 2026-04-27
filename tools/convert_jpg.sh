@@ -8,7 +8,7 @@ clear
 echo "${HOSTNAME}"
 
 # ----- Input -----
-directory="/home/longpham/Downloads/lsd"
+directory="/home/longpham/Downloads/aicity_2026_pab/train"
 
 # ----- Directory & File -----
 current_file=$(readlink -f "${0}")

@@ -3,7 +3,7 @@
 
 """Image Sampling Operations.
 
-This module provides operations for sampling images.
+This module provides operations for (down-/up-) sampling images.
 """
 
 from __future__ import annotations
@@ -22,7 +22,6 @@ from typing import override
 import cv2
 import torch
 from numpy import ndarray
-from tensordict import NonTensorData
 from torch import Tensor
 from torch.nn import functional as F
 from torchvision.transforms import functional as F_tv, InterpolationMode
