@@ -191,7 +191,7 @@ class DCCNet(ModelRegisterMixin, Model):
                   per channel.
         """
         # 1. Initialize image patcher
-        patcher: dict = patcher or {"name": "hann_window"}
+        patcher: dict = patcher or {"name": "uniform"}
         patcher: ImagePatcher = PATCHERS.build(image=image, **patcher)
 
         # 2. Iterate and Process
@@ -201,7 +201,7 @@ class DCCNet(ModelRegisterMixin, Model):
             patch_outputs = {
                 "enhanced": outputs[0],
                 "gray": outputs[1],
-                "color_hist": outputs[2],
+                # "color_hist": outputs[2],
             }
             # 2.2. Feed result back to Patcher
             patcher(patches=patch_outputs, x=x, y=y)

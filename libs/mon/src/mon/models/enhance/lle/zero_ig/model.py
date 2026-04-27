@@ -30,6 +30,7 @@ from mon.core import (
     K,
     log,
     MODELS,
+    PATCHERS,
     Path,
     Size,
     Strategy,
@@ -41,7 +42,7 @@ from mon.core import (
 )
 from mon.metrics import benchmark, create_dummy_image
 from mon.nn import Model, ModelRegisterMixin
-from mon.ops import pair_downsample
+from mon.ops import ImagePatcher, pair_downsample
 from .loss import TextureDifference
 from .module import Denoise1, Denoise2, Enhancer
 from .utils import blur
@@ -66,7 +67,7 @@ class ZeroIG(ModelRegisterMixin, Model):
     arch: str = "zero_ig"
     name: str = "zero_ig"
     tasks: list[Task] = [Task.LLE]
-    strategies: list[Strategy] = [Strategy.RESIZE]
+    strategies: list[Strategy] = [Strategy.RESIZE, Strategy.PATCH]
     model_dir: Path = current_dir
 
     in_keys: set = {"image"}
@@ -112,13 +113,20 @@ class ZeroIG(ModelRegisterMixin, Model):
 
     # --- Callable & Context Manager ---
     @override
-    def forward(self, image: Tensor, *args, **kwargs) -> tuple[Tensor, ...]:
+    def forward(
+        self,
+        image: Tensor,
+        use_patch: bool = False,
+        *args, **kwargs
+    ) -> tuple[Tensor, ...]:
         """Route the inputs through the model's different forward methods based
         on the context.
 
         Args:
             image (Tensor): Input image tensor of shape (B, C, H, W) and values
                 ranging from 0.0 to 1.0.
+            use_patch (bool, optional): Whether to use patch-based strategy.
+                Defaults to False.
 
         Returns:
             tuple[Tensor, ...]: A tuple containing:
@@ -128,7 +136,10 @@ class ZeroIG(ModelRegisterMixin, Model):
                 - denoised (Tensor): Denoised image tensor of shape (B, C, H, W)
                   and values ranging from 0.0 to 1.0.
         """
-        return self.forward_step(image=image, *args, **kwargs)
+        if use_patch:
+            return self.forward_patch(image=image, *args, **kwargs)
+        else:
+            return self.forward_step(image=image, *args, **kwargs)
 
     def forward_train(self, image: Tensor, *args, **kwargs) -> TensorDict:
         """Perform a single forward step of the model during training.
@@ -243,6 +254,47 @@ class ZeroIG(ModelRegisterMixin, Model):
 
         # 2. Return final and intermediate results for debugging
         return H2, H3
+
+    def forward_patch(
+        self,
+        image: Tensor,
+        patcher: dict | None = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, ...]:
+        """Forward the input through the network using the patch-based strategy.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            patcher (dict, optional): A dictionary containing the patching
+                configuration, such as patch size and stride. Defaults to None
+                means using the default patcher.
+
+        Returns:
+            tuple[Tensor, ...]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - denoised (Tensor): Denoised image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+        """
+        # 1. Initialize image patcher
+        patcher: dict = patcher or {"name": "uniform"}
+        patcher: ImagePatcher = PATCHERS.build(image=image, **patcher)
+
+        # 2. Iterate and Process
+        for patch, x, y in patcher:
+            # 2.1. Process the patch
+            outputs = self.forward_step(image=patch, *args, **kwargs)
+            patch_outputs = {
+                "enhanced": outputs[0],
+                "denoised": outputs[1],
+            }
+            # 2.2. Feed result back to Patcher
+            patcher(patches=patch_outputs, x=x, y=y)
+
+        # 3. Get the merged results
+        return tuple(patcher.output.values())
 
     # --- Benchmark ---
     @override

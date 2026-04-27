@@ -228,7 +228,7 @@ class ZeroDCE(ModelRegisterMixin, Model):
                   and values ranging from -1.0 to 1.0.
         """
         # 1. Initialize image patcher
-        patcher: dict = patcher or {"name": "hann_window"}
+        patcher: dict = patcher or {"name": "uniform"}
         patcher: ImagePatcher = PATCHERS.build(image=image, **patcher)
 
         # 2. Iterate and Process
@@ -452,7 +452,7 @@ class ZeroDCEPP(ModelRegisterMixin, Model):
                   and values ranging from -1.0 to 1.0.
         """
         # 1. Initialize image patcher
-        patcher: dict = patcher or {"name": "hann_window"}
+        patcher: dict = patcher or {"name": "uniform"}
         patcher: ImagePatcher = PATCHERS.build(image=image, **patcher)
 
         # 2. Iterate and Process

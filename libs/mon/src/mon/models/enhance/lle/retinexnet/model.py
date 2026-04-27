@@ -29,6 +29,7 @@ from mon.core import (
     K,
     log,
     MODELS,
+    PATCHERS,
     Path,
     Size,
     Strategy,
@@ -40,6 +41,7 @@ from mon.core import (
 )
 from mon.metrics import benchmark, create_dummy_image
 from mon.nn import Model, ModelRegisterMixin
+from mon.ops import ImagePatcher
 from .module import DecomNet, EnhanceNet
 
 current_file = Path(__file__).normalize()
@@ -61,7 +63,7 @@ class RetinexNet(ModelRegisterMixin, Model):
     arch: str = "retinexnet"
     name: str = "retinexnet"
     tasks: list[Task] = [Task.LLE]
-    strategies: list[Strategy] = [Strategy.RESIZE]
+    strategies: list[Strategy] = [Strategy.RESIZE, Strategy.PATCH]
     model_dir: Path = current_dir
 
     in_keys: set = {"image"}
@@ -108,6 +110,7 @@ class RetinexNet(ModelRegisterMixin, Model):
         self,
         image: Tensor,
         decom: bool = False,
+        use_patch: bool = False,
         *args, **kwargs
     ) -> tuple[Tensor, ...]:
         """Route the inputs through the model's different forward methods based
@@ -117,6 +120,8 @@ class RetinexNet(ModelRegisterMixin, Model):
             image (Tensor): Input image tensor of shape (B, C, H, W) and values
                 ranging from 0.0 to 1.0.
             decom (bool, optional): Whether to perform decomposition only.
+                Defaults to False.
+            use_patch (bool, optional): Whether to use patch-based strategy.
                 Defaults to False.
 
         Returns:
@@ -131,7 +136,10 @@ class RetinexNet(ModelRegisterMixin, Model):
                 - L_delta (Tensor): Illumination adjustment tensor of shape
                   (B, 1, H, W) and values ranging from -1.0 to 1.0.
         """
-        return self.forward_step(image=image, decom=decom)
+        if use_patch:
+            return self.forward_patch(image=image, decom=decom, *args, **kwargs)
+        else:
+            return self.forward_step(image=image, decom=decom, *args, **kwargs)
 
     @override
     def forward_step(
@@ -172,6 +180,56 @@ class RetinexNet(ModelRegisterMixin, Model):
             # 3. Reconstruction
             enhanced = R * L_delta_3
             return enhanced, R, L, L_delta
+
+    def forward_patch(
+        self,
+        image: Tensor,
+        decom: bool = False,
+        patcher: dict | None = None,
+        *args, **kwargs
+    ) -> tuple[Tensor, ...]:
+        """Forward the input through the network using the patch-based strategy.
+
+        Args:
+            image (Tensor): Input image tensor of shape (B, C, H, W) and values
+                ranging from 0.0 to 1.0.
+            decom (bool, optional): Whether to perform decomposition only.
+                Defaults to False.
+            patcher (dict, optional): A dictionary containing the patching
+                configuration, such as patch size and stride. Defaults to None
+                means using the default patcher.
+
+        Returns:
+            tuple[Tensor, ...]: A tuple containing:
+
+                - enhanced (Tensor): Enhanced image tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - R (Tensor): Reflectance component tensor of shape (B, C, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - L (Tensor): Illumination component tensor of shape (B, 1, H, W)
+                  and values ranging from 0.0 to 1.0.
+                - L_delta (Tensor): Illumination adjustment tensor of shape
+                  (B, 1, H, W) and values ranging from -1.0 to 1.0.
+        """
+        # 1. Initialize image patcher
+        patcher: dict = patcher or {"name": "uniform"}
+        patcher: ImagePatcher = PATCHERS.build(image=image, **patcher)
+
+        # 2. Iterate and Process
+        for patch, x, y in patcher:
+            # 2.1. Process the patch
+            outputs = self.forward_step(image=patch, decom=decom, *args, **kwargs)
+            patch_outputs = {
+                "enhanced": outputs[0],
+                "R": outputs[1],
+                "L": outputs[2],
+                "L_delta": outputs[3],
+            }
+            # 2.2. Feed result back to Patcher
+            patcher(patches=patch_outputs, x=x, y=y)
+
+        # 3. Get the merged results
+        return tuple(patcher.output.values())
 
     # --- Benchmark ---
     @override

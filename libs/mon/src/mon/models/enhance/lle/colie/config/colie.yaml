@@ -101,7 +101,7 @@ predict:
 
   # Patching strategy: Split the image into patches -> Inference on each patch -> Blend the patches.
   patcher:
-    name: "hann_window"
+    name: "uniform"
     size: 256  # (int) Patch size for patch-based prediction.
     stride: 128  # (int) The step size between patches.
 

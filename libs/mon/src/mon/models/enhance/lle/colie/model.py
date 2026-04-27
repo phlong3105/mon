@@ -303,7 +303,7 @@ class CoLIE(ModelRegisterMixin, Model):
                   shape (B, C, H, W) and values ranging from 0.0 to 1.0.
         """
         # 1. Initialize image patcher
-        patcher: dict = patcher or {"name": "hann_window"}
+        patcher: dict = patcher or {"name": "uniform"}
         patcher: ImagePatcher = PATCHERS.build(image=image, **patcher)
 
         # 2. Iterate and Process

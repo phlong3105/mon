@@ -15,8 +15,9 @@ __all__ = [
 import torch
 from tensordict import TensorDict
 from typing_extensions import override
-from mon.dataset import transform as T
+
 from mon.core import K, MODELS, Path, PREDICTORS, TimeProfiler
+from mon.dataset import transform as T
 from mon.runners import Predictor
 # noinspection PyUnusedImports
 from .model import zero_ig
@@ -81,6 +82,7 @@ class ZeroIG_Predictor(Predictor):
         Returns:
             TensorDict: The dictionary containing the prediction results.
         """
+        config = self.config
         device = self.device
 
         # 1. Prepare inputs
@@ -90,7 +92,12 @@ class ZeroIG_Predictor(Predictor):
 
         # 2. Inference
         timers.infer.tick()
-        outputs = self.model(data=datapoint, save_debug=self.save_debug)
+        outputs = self.model(
+            data=datapoint,
+            use_patch=config.use_patch,
+            patcher=config.patcher,
+            save_debug=self.save_debug,
+        )
         timers.infer.tock()
 
         return outputs

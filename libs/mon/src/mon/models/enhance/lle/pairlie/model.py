@@ -200,7 +200,7 @@ class PairLIE(ModelRegisterMixin, Model):
                   intermediate feature map (D = image - X).
         """
         # 1. Initialize image patcher
-        patcher: dict = patcher or {"name": "hann_window"}
+        patcher: dict = patcher or {"name": "uniform"}
         patcher: ImagePatcher = PATCHERS.build(image=image, **patcher)
 
         # 2. Iterate and Process
