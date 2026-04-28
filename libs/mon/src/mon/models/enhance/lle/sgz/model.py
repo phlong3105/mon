@@ -282,7 +282,7 @@ class SGZ(ModelRegisterMixin, Model):
         # Create dummy inputs
         imgsz = Size(height=imgsz.h // self.scale_factor, width=imgsz.w // self.scale_factor)
         dummy_input = create_dummy_image(imgsz=imgsz, device=device)
-        data = TensorDict({"image": dummy_input}, batch_size=[])
+        data = TensorDict({"image": dummy_input}, batch_size=dummy_input.shape)
         inputs = {"data": data}
 
         # Benchmark the model

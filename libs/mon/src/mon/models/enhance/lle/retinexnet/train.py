@@ -63,6 +63,35 @@ class RetinexNet_Trainer(Trainer):
         self._model = model
 
     @override
+    def _setup(self):
+        """Setup the runner ready for training."""
+        config = self.config
+
+        # Setup environment
+        config.output_dir.mkdir(exist_ok=True, parents=True)
+        config.config_file.copy_to(config.output_dir / config.config_file.name)
+        sys_ctx.set_random_seed(config.seed)
+
+        # Define model
+        self._init_model()
+        if self.model is None:
+            raise RuntimeError(f"'model' is not initialized.")
+
+        # Define optimizer & scheduler
+        # self._init_optimizer()
+        # if self.optimizer is None:
+        #     raise RuntimeError(f"'optimizer' is not initialized.")
+
+        # Define data
+        self._init_train_dataloader()
+        self._init_val_dataloader()
+        if self.train_dataloader is None:
+            raise RuntimeError(f"'train_dataloader' is not initialized.")
+
+        # Define loggers
+        self._init_loggers()
+
+    @override
     def _init_optimizer(self, phase: Literal["decom", "enhance", "whole"]):
         """Initialize ``self._optimizer`` and ``self._scheduler`` attributes."""
         config = self.config
@@ -112,48 +141,27 @@ class RetinexNet_Trainer(Trainer):
         """Train the model."""
         config = self.config
 
-        # 1. Summarize the current run
+        # 1. Setup
+        self._setup()
+
+        # 2. Summarize the current run
         if config.verbose:
-            config.log_summary()
+            self.log_summary()
 
-        # 2. Setup environment
-        config.output_dir.mkdir(exist_ok=True, parents=True)
-        config.config_file.copy_to(config.output_dir / config.config_file.name)
+        # 3. Run benchmark
+        if config.benchmark:
+            self.benchmark()
 
-        sys_ctx.set_random_seed(config.seed)
-        epochs = config.epochs
-
-        # 3. Define model
-        self._init_model()
-        if self.model is None:
-            raise RuntimeError(f"'model' is not initialized.")
-
-        # 4. Define optimizer & scheduler
-        # self._init_optimizer()
-        # if self.optimizer is None:
-        #     raise RuntimeError(f"'optimizer' is not initialized.")
-
-        # 5. Define data
-        self._init_train_dataloader()
-        self._init_val_dataloader()
-        if self.train_dataloader is None:
-            raise RuntimeError(f"'train_dataloader' is not initialized.")
-
-        # 6. Define loggers
-        self._init_loggers()
-
-        # 7. Run benchmark
-        self.benchmark()
-
-        # 8. Main loop (DecomNet)
+        # 4. Main loop (DecomNet)
         self._init_optimizer(phase="decom")
+        epochs = config.epochs
         with create_progress_bar() as pbar:
             for epoch in pbar.track(
                 sequence=range(epochs),
                 total=epochs,
                 description=f"[bright_yellow]Training DecomNet"
             ):
-                # 8.1. Train epoch
+                # 4.1. Train epoch
                 self.model.decom_net.train()
                 self.model.enhance_net.eval()
                 train_outputs = self._train_epoch(epoch=epoch, phase="decom", pbar=pbar)
@@ -163,19 +171,19 @@ class RetinexNet_Trainer(Trainer):
                         f"but got {train_outputs.keys()}."
                     )
 
-                # 8.2. Scheduler Step
+                # 4.2. Scheduler Step
                 if self.scheduler is not None:
                     self.scheduler.step()
 
-                # 8.3. Log
+                # 4.3. Log
                 if self.verbose:
                     self._log(epoch, train_outputs=train_outputs, val_outputs={})
 
-                # 8.4. Save
+                # 4.4. Save
                 if self.save:
                     self._save(epoch, train_outputs=train_outputs, val_outputs={})
 
-        # 9. Main loop (EnhanceNet)
+        # 5. Main loop (EnhanceNet)
         current_epoch = epochs
         end_epoch = epochs * 2
         self._init_optimizer(phase="enhance")
@@ -185,7 +193,7 @@ class RetinexNet_Trainer(Trainer):
                 total=(end_epoch - current_epoch),
                 description=f"[bright_yellow]Training EnhanceNet"
             ):
-                # 9.1. Train epoch
+                # 5.1. Train epoch
                 self.model.decom_net.eval()
                 self.model.enhance_net.train()
                 train_outputs = self._train_epoch(epoch=epoch, phase="enhance", pbar=pbar)
@@ -195,71 +203,27 @@ class RetinexNet_Trainer(Trainer):
                         f"but got {train_outputs.keys()}."
                     )
 
-                # 9.2. Val epoch
+                # 5.2. Val epoch
                 val_outputs = {}
                 if self.val_dataloader is not None:
                     self.model.eval()
                     val_outputs = self._val_epoch(epoch=epoch, pbar=pbar)
 
-                # 9.3. Scheduler Step
+                # 5.3. Scheduler Step
                 if self.scheduler is not None:
                     self.scheduler.step()
 
-                # 9.4. Log
+                # 5.4. Log
                 if self.verbose:
                     self._log(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
 
-                # 9.5. Save
+                # 5.5. Save
                 if self.save:
                     self._save(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
 
-                # 9.6. Save debug
+                # 5.6. Save debug
                 if self.save_debug:
                     self._save_debug(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
-
-        # 10. Main loop (Whole)
-        '''
-        current_epoch = epochs * 2
-        end_epoch = epochs * 2 + 5
-        self._init_optimizer(phase="whole")
-        with create_progress_bar() as pbar:
-            for epoch in pbar.track(
-                sequence=range(current_epoch, end_epoch),
-                total=(end_epoch - current_epoch),
-                description=f"[bright_yellow]Training Whole Model"
-            ):
-                # 10.1. Train epoch
-                self.model.decom_net.eval()
-                self.model.enhance_net.train()
-                train_outputs = self._train_epoch(epoch=epoch, phase="whole", pbar=pbar)
-                if "loss" not in train_outputs:
-                    raise ValueError(
-                        f"Expected 'loss' from 'self._train_epoch()', "
-                        f"but got {train_outputs.keys()}."
-                    )
-
-                # 10.2. Val epoch
-                val_outputs = {}
-                if self.val_dataloader is not None:
-                    self.model.eval()
-                    val_outputs = self._val_epoch(epoch=epoch, pbar=pbar)
-
-                # 10.3. Scheduler Step
-                if self.scheduler is not None:
-                    self.scheduler.step()
-
-                # 10.4. Log
-                if self.verbose:
-                    self._log(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
-
-                # 10.5. Save
-                if self.save:
-                    self._save(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
-
-                # 10.6. Save debug
-                if self.save_debug:
-                    self._save_debug(epoch, train_outputs=train_outputs, val_outputs=val_outputs)
-        '''
 
     # --- Training ---
     @override

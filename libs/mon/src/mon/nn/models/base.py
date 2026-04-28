@@ -85,11 +85,16 @@ class Model(nn.Module, ABC):
         )
 
     # --- Callable & Context Manager ---
-    def __call__(self, data: TensorDict, save_debug: bool = False, *args, **kwargs) -> TensorDict:
+    def __call__(
+        self,
+        data: TensorDict | None = None,
+        save_debug: bool = False,
+        *args, **kwargs
+    ) -> TensorDict:
         """Override the call method to forward the input through the model.
 
         Args:
-            data (TensorDict): A TensorDict containing a single datapoint.
+            data (TensorDict, optional): A TensorDict containing a single datapoint.
             save_debug (bool, optional): If True, return intermediate results
                 for debugging. Defaults to False.
             **kwargs: Direct keyword arguments to pass to the forward step.

@@ -172,7 +172,7 @@ class RetinexNet(ModelRegisterMixin, Model):
         R, L = self.decom_net(image)
 
         if decom:
-            return None, R, L, None
+            return image, R, L, L
         else:
             # 2. Relighting
             L_delta = self.enhance_net(R, L)
@@ -249,7 +249,7 @@ class RetinexNet(ModelRegisterMixin, Model):
 
         # Create dummy inputs
         dummy_input = create_dummy_image(imgsz=imgsz, device=device)
-        data = TensorDict({"image": dummy_input}, batch_size=[])
+        data = TensorDict({"image": dummy_input}, batch_size=dummy_input.shape)
         inputs = {"data": data}
 
         # Benchmark the model
