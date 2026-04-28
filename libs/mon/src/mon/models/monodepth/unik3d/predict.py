@@ -63,7 +63,7 @@ def predict(config: Config):
     # 4. Define model
     imgsz = Size.from_value(config.imgsz)
 
-    model = MODELS.build(device=device, **config.model | { "weights": weights})
+    model = MODELS.build(device=device, **config.model | {"weights": weights})
     model = model.to(device)
     model.eval()
 

@@ -125,7 +125,11 @@ class FLOL(ModelRegisterMixin, Model):
 
         # Load weights
         if weights is not None and is_weights_type(weights):
-            self.load_state_dict(weights.state_dict())
+            state_dict = weights.state_dict()
+            if "params" in state_dict:
+                state_dict = state_dict["params"]
+                torch.save(state_dict, str(weights.path))
+            self.load_state_dict(state_dict)
             if self.verbose:
                 log(f"Initialized '{name}' from weights: '{weights.path}'.")
         else:

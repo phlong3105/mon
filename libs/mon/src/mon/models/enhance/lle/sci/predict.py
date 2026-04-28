@@ -43,7 +43,7 @@ class SCI_Predictor(Predictor):
         device = self.device
         weights = config.weights or config.finetune
 
-        model = MODELS.build(**config.model | { "weights": weights})
+        model = MODELS.build(**config.model | {"weights": weights})
         model = model.to(device)
         model.eval()
         self._model = model

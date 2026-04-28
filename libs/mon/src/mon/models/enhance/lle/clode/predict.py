@@ -46,7 +46,7 @@ class CLODE_Predictor(Predictor):
         device = self.device
         weights = config.weights or config.finetune
 
-        model = clode(**config.model | { "weights": weights})
+        model = clode(**config.model | {"weights": weights})
         model = model.to(device)
         model.eval()
         self._model = model

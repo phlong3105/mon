@@ -3,28 +3,27 @@
 
 """Training Runners.
 
-This module provides training runner classes for PairLIE models.
+This module provides training runner classes for FLOL models.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "PairLIE_Trainer",
+    "FLOL_Trainer",
 ]
-
-from typing import Any
 
 import pyiqa
 import torch
 from rich.progress import Progress
 from tensordict import TensorDict
+from torch import nn
 from typing_extensions import override
 
-from mon.core import K, OPTIMIZERS, Path, SCHEDULERS, TRAINERS
+from mon.core import disable_print, K, OPTIMIZERS, Path, SCHEDULERS, TRAINERS
 from mon.runners import Trainer
-from . import loss as L
-from .model import pairlie
+from .model import flol
 
+# disable_print()
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
 
@@ -33,9 +32,9 @@ current_dir = current_file.parents[0]
 # region TRAINER
 # ==============================================================================
 
-@TRAINERS.register(name="pairlie")
-class PairLIE_Trainer(Trainer):
-    """Trainer for PairLIE models."""
+@TRAINERS.register(name="flol")
+class FLOL_Trainer(Trainer):
+    """Trainer for FLOL models."""
 
     # --- Lifecycle & Initialization ---
     @override
@@ -45,7 +44,7 @@ class PairLIE_Trainer(Trainer):
         device = self.device
         weights = config.finetune
 
-        model = pairlie(**config.model | {"weights": weights})
+        model = flol(**config.model | {"weights": weights})
         model = model.to(device)
         model.train()
         self._model = model
@@ -54,17 +53,9 @@ class PairLIE_Trainer(Trainer):
     def _init_optimizer(self):
         """Initialize ``self._optimizer`` and ``self._scheduler`` attributes."""
         config = self.config
-        lr_scheduler = config.lr_scheduler
-        decay = lr_scheduler.pop("decay", 100)
-
-        milestones = []
-        for i in range(1, config.epochs + 1):
-            if i % decay == 0:
-                milestones.append(i)
-        lr_scheduler["milestones"] = milestones
 
         self._optimizer = OPTIMIZERS.build(params=self.model.parameters(), **config.optimizer)
-        self._scheduler = SCHEDULERS.build(optimizer=self.optimizer, **config.lr_scheduler)
+        self._scheduler = SCHEDULERS.build(optimizer=self._optimizer, **config.lr_scheduler)
 
     # --- Training ---
     @override
@@ -83,13 +74,10 @@ class PairLIE_Trainer(Trainer):
         device = self.device
 
         # 1. Define losses
-        L_C = L.L_C().to(device)
-        L_R = L.L_R().to(device)
-        L_P = L.L_P().to(device)
+        L_l1 = nn.L1Loss().to(device)
+        L_lpips = pyiqa.create_metric("lpips", net="vgg", as_loss=True, device=device)
         # Loss weights
-        W_C = config.loss.W_C
-        W_R = config.loss.W_R
-        W_P = config.loss.W_P
+        W_lpips = config.loss.W_lpips
 
         # 2. Train loop
         train_outputs = {}
@@ -106,20 +94,17 @@ class PairLIE_Trainer(Trainer):
             target = datapoint["target"]
 
             # 2.2. Forward pass
-            outputs1 = self.model(data={"image": image}, save_debug=True)
-            outputs2 = self.model(data={"image": target}, save_debug=True)
+            outputs = self.model(data=datapoint, save_debug=True)
 
             # 2.3. Extract outputs
-            L1, R1, X1 = outputs1["L"], outputs1["R"], outputs1["X"]
-            L2, R2, X2 = outputs2["L"], outputs2["R"], outputs2["X"]
+            enhanced = outputs["enhanced"]
+            amplitude = outputs["amplitude"]
 
             # 2.4. Calculate loss
-            # Enhance loss
-            l_C = W_C * L_C(R1, R2)
-            l_R = W_R * L_R(L1, R1, image, X1)
-            l_P = W_P * L_P(image, X1)
+            l_l1 = L_l1(enhanced, target) + L_l1(amplitude, target)
+            l_lpips = W_lpips * L_lpips(enhanced, target)
             # Total loss
-            loss = l_C + l_R + l_P
+            loss = l_l1 + l_lpips
 
             # 2.5. Backward pass
             self.optimizer.zero_grad()
@@ -150,7 +135,6 @@ class PairLIE_Trainer(Trainer):
             TensorDict: A dictionary containing the validation metrics and
                 other results for the epoch.
         """
-        config = self.config
         device = self.device
 
         # 1. Define metrics
@@ -175,14 +159,11 @@ class PairLIE_Trainer(Trainer):
             target = datapoint["target"]
 
             # 2.2. Forward pass
-            outputs = self.model(data=datapoint, save_debug=True)
+            outputs = self.model(data=datapoint, save_debug=self.save_debug)
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
-            L = outputs["L"]
-            R = outputs["R"]
-            X = outputs["X"]
-            D = outputs["D"]
+            enhanced = torch.clamp(enhanced, 0.0, 1.0)
 
             # 2.4. Calculate metrics
             psnrs.append(psnr_metric(enhanced, target).detach())
@@ -195,10 +176,6 @@ class PairLIE_Trainer(Trainer):
                     "image": image,
                     "target": target,
                     "enhanced": enhanced,
-                    "L": L,
-                    "R": R,
-                    "X": X,
-                    "D": D,
                 }
 
             pbar.update(task, advance=1)
@@ -226,17 +203,12 @@ class PairLIE_Trainer(Trainer):
             "image": val_outputs["image"],
             "target": val_outputs["target"],
             "enhanced": val_outputs["enhanced"],
-            "L": val_outputs["L"],
-            "R": val_outputs["R"],
-            "X": val_outputs["X"],
-            "D": val_outputs["D"],
         }
         self._save_image(
             epoch=epoch,
             outputs=debug_image,
             dirname=K.PRED_DIR,
             stem="debug",
-            column_first=True,
         )
 
 # endregion

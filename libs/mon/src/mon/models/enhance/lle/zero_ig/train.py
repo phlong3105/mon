@@ -43,7 +43,7 @@ class SCI_Trainer(Trainer):
         device = self.device
         weights = None  # config.finetune
 
-        model = zero_ig(**config.model | { "weights": weights})
+        model = zero_ig(**config.model | {"weights": weights})
         model = model.to(device)
         model.train()
         self._model = model

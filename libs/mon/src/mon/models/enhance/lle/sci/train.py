@@ -51,7 +51,7 @@ class SCI_Trainer(Trainer):
         device = self.device
         weights = None  # config.finetune
 
-        model = sci(**config.model | { "weights": weights})
+        model = sci(**config.model | {"weights": weights})
         model = model.to(device)
         model.train()
         self._model = model
@@ -234,7 +234,7 @@ class SCI_Finetuner(Trainer):
         device = self.device
         weights = config.finetune
 
-        model = sci(**config.model | { "weights": weights})
+        model = sci(**config.model | {"weights": weights})
         model = model.to(device)
         model.train()
         self._model = model
@@ -419,7 +419,7 @@ class SCI_PP_Trainer(Trainer):
         device = self.device
         weights = None  # config.finetune
 
-        model = sci_pp(**config.model | { "weights": weights})
+        model = sci_pp(**config.model | {"weights": weights})
         model = model.to(device)
         model.train()
         self._model = model

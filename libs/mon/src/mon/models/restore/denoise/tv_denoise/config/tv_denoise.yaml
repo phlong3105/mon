@@ -5,7 +5,7 @@ root: ~  # (str) Root path of the project.
 output_dir: ~  # (str) Output directory.
 
 task: "denoise"  # (str) Task name (e.g., detect, segment, classify).
-mode: "predict"  # (str) Run mode (e.g., train, predict).
+mode: ~  # (str) Run mode (e.g., train, predict).
 
 device: 0  # (int | str | list) device: 0 or [0,1,2,3] for CUDA, 'cpu'/'mps'
 seed: 100  # (int) Random seed for reproducibility
@@ -32,6 +32,7 @@ train_dataloader:
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
       seed: ~
+      is_check_shapes: False
     keep_original: False  # (bool) Keep the original data along with augmented ones.
     modalities: ~
     classes: ~
@@ -54,6 +55,7 @@ val_dataloader:
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
       seed: ~
+      is_check_shapes: False
     keep_original: False  # (bool) Keep the original data along with augmented ones.
     modalities: ~
     classes: ~

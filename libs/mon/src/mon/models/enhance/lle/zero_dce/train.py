@@ -43,7 +43,7 @@ class ZeroDCE_Trainer(Trainer):
         device = self.device
         weights = config.finetune
 
-        model = zero_dce(**config.model | { "weights": weights})
+        model = zero_dce(**config.model | {"weights": weights})
         model = model.to(device)
         model.train()
         self._model = model

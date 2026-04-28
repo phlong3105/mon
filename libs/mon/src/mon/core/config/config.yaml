@@ -31,6 +31,7 @@ train_dataloader:
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
       seed: ~
+      is_check_shapes: False
     keep_original: False  # (bool) Keep the original data along with augmented ones.
     modalities: ~
     classes: ~
@@ -53,6 +54,7 @@ val_dataloader:
         - { name: "ToTensorV2", transpose_mask: True }
       p: 1.0
       seed: ~
+      is_check_shapes: False
     keep_original: False  # (bool) Keep the original data along with augmented ones.
     modalities: ~
     classes: ~

@@ -170,7 +170,7 @@ class Trainer(Runner, ABC):
         return self._train_dataloader
 
     @property
-    def val_dataloader(self) -> DataLoader | None:
+    def val_dataloader(self) -> DataLoader:
         """Return the validation dataloader."""
         return self._val_dataloader
 

@@ -1541,9 +1541,7 @@ class ConfigContext(Config, PromptContextMixin):
             )
         if self._index == 6:
             # Data
-            if self.mode not in [RunMode.PREDICT]:
-                self._next()
-            else:
+            if self.mode in [RunMode.PREDICT]:
                 self.data = Prompt.ask(
                     prompt=ARGUMENTS.data.prompt_text,
                     choices=DATASETS.search(self.task, self.mode),
@@ -1551,6 +1549,8 @@ class ConfigContext(Config, PromptContextMixin):
                     multiple=True,
                     show_column=True,
                 )
+            else:
+                self._next()
         if self._index == 7:
             # Experiment Name
             self.exp_name = Prompt.ask(

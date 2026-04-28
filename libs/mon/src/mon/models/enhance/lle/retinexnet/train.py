@@ -57,7 +57,7 @@ class RetinexNet_Trainer(Trainer):
         device = self.device
         weights = config.finetune
 
-        model = retinexnet(**config.model | { "weights": weights})
+        model = retinexnet(**config.model | {"weights": weights})
         model = model.to(device)
         model.train()
         self._model = model
