@@ -86,6 +86,16 @@ def metric(args: argparse.Namespace):
             "colie_512",
             "colie_480p",
         ],
+        "hvi_cidnet": [
+            "hvi_cidnet_sice_128",
+            "hvi_cidnet_sice_256",
+            "hvi_cidnet_sice_512",
+            "hvi_cidnet_sice_480p",
+            "hvi_cidnet_sice_720p",
+            "hvi_cidnet_sice_1080p",
+            "hvi_cidnet_sice_2k",
+            "hvi_cidnet_sice_4k",
+        ],
         "pairlie": [
             "pairlie_sice_128",
             "pairlie_sice_256",
