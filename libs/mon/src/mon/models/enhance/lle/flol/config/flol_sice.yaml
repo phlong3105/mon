@@ -14,6 +14,7 @@ seed: 0  # (int) Random seed for reproducibility
 model:
   name: "flol"  # (str) Model name (e.g., resnet50, yolov8n).
   arch: "flol"  # (str) Model architecture (e.g., resnet, yolo8).
+  channels: 16
   weights: "enhance/lle/flol/flol/sice/flol_sice.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 

@@ -109,7 +109,6 @@ class RetinexNet(ModelRegisterMixin, Model):
     def forward(
         self,
         image: Tensor,
-        decom: bool = False,
         use_patch: bool = False,
         *args, **kwargs
     ) -> tuple[Tensor, ...]:
@@ -119,8 +118,6 @@ class RetinexNet(ModelRegisterMixin, Model):
         Args:
             image (Tensor): Input image tensor of shape (B, C, H, W) and values
                 ranging from 0.0 to 1.0.
-            decom (bool, optional): Whether to perform decomposition only.
-                Defaults to False.
             use_patch (bool, optional): Whether to use patch-based strategy.
                 Defaults to False.
 
@@ -137,24 +134,17 @@ class RetinexNet(ModelRegisterMixin, Model):
                   (B, 1, H, W) and values ranging from -1.0 to 1.0.
         """
         if use_patch:
-            return self.forward_patch(image=image, decom=decom, *args, **kwargs)
+            return self.forward_patch(image=image, *args, **kwargs)
         else:
-            return self.forward_step(image=image, decom=decom, *args, **kwargs)
+            return self.forward_step(image=image, *args, **kwargs)
 
     @override
-    def forward_step(
-        self,
-        image: Tensor,
-        decom: bool = False,
-        *args, **kwargs
-    ) -> tuple[Tensor, ...]:
+    def forward_step(self, image: Tensor, *args, **kwargs) -> tuple[Tensor, ...]:
         """Perform a single forward step of the model.
 
         Args:
             image (Tensor): Input image tensor of shape (B, C, H, W) and values
                 ranging from 0.0 to 1.0.
-            decom (bool, optional): Whether to perform decomposition only.
-                Defaults to False.
 
         Returns:
             tuple[Tensor, ...]: A tuple containing:
@@ -170,21 +160,16 @@ class RetinexNet(ModelRegisterMixin, Model):
         """
         # 1. Decomposition
         R, L = self.decom_net(image)
-
-        if decom:
-            return image, R, L, L
-        else:
-            # 2. Relighting
-            L_delta = self.enhance_net(R, L)
-            L_delta_3 = torch.cat((L_delta, L_delta, L_delta), dim=1)
-            # 3. Reconstruction
-            enhanced = R * L_delta_3
-            return enhanced, R, L, L_delta
+        # 2. Relighting
+        L_delta = self.enhance_net(R, L)
+        L_delta_3 = torch.cat((L_delta, L_delta, L_delta), dim=1)
+        # 3. Reconstruction
+        enhanced = R * L_delta_3
+        return enhanced, R, L, L_delta
 
     def forward_patch(
         self,
         image: Tensor,
-        decom: bool = False,
         patcher: dict | None = None,
         *args, **kwargs
     ) -> tuple[Tensor, ...]:
@@ -193,8 +178,6 @@ class RetinexNet(ModelRegisterMixin, Model):
         Args:
             image (Tensor): Input image tensor of shape (B, C, H, W) and values
                 ranging from 0.0 to 1.0.
-            decom (bool, optional): Whether to perform decomposition only.
-                Defaults to False.
             patcher (dict, optional): A dictionary containing the patching
                 configuration, such as patch size and stride. Defaults to None
                 means using the default patcher.
@@ -218,7 +201,7 @@ class RetinexNet(ModelRegisterMixin, Model):
         # 2. Iterate and Process
         for patch, x, y in patcher:
             # 2.1. Process the patch
-            outputs = self.forward_step(image=patch, decom=decom, *args, **kwargs)
+            outputs = self.forward_step(image=patch, *args, **kwargs)
             patch_outputs = {
                 "enhanced": outputs[0],
                 "R": outputs[1],

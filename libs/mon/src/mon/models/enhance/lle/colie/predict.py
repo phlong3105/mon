@@ -49,10 +49,14 @@ class CoLIE_Predictor(Predictor):
         """Initialize ``self._transforms`` attribute for pre-processing the
         input data.
         """
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
+        transforms = T.Compose(
+            [
+                T.Normalize(normalization="min_max"),
+                T.ToTensorV2(transpose_mask=True),
+            ],
+            is_check_shapes=False,
+        )
+
         self._transforms = transforms
 
     # --- Prediction ---

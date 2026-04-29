@@ -108,8 +108,14 @@ def metric(args: argparse.Namespace):
             "pairlie_sice_patch"
         ],
         "retinexnet": [
-            "retinexnet_lol_v1_512",
-            "retinexnet_lol_v1_patch",
+            "retinexnet_sice_128",
+            "retinexnet_sice_256",
+            "retinexnet_sice_512",
+            "retinexnet_sice_480p",
+            "retinexnet_sice_720p",
+            "retinexnet_sice_1080p",
+            "retinexnet_sice_2k",
+            "retinexnet_sice_patch",
         ],
         "sci": [
             "sci++_128",

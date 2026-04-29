@@ -92,7 +92,7 @@ class RetinexNet_Trainer(Trainer):
         self._init_loggers()
 
     @override
-    def _init_optimizer(self, phase: Literal["decom", "enhance", "whole"]):
+    def _init_optimizer(self, phase: Literal["decom", "enhance"]):
         """Initialize ``self._optimizer`` and ``self._scheduler`` attributes."""
         config = self.config
 
@@ -230,15 +230,14 @@ class RetinexNet_Trainer(Trainer):
     def _train_epoch(
         self,
         epoch: int,
-        phase: Literal["decom", "enhance", "whole"],
+        phase: Literal["decom", "enhance"],
         pbar: Progress
     ) -> dict[str, Any]:
         """Train an epoch.
 
         Args:
             epoch (int): The current epoch number.
-            phase (str): The current training phase. Either "decom", "enhance",
-                or "whole".
+            phase (str): The current training phase. Either "decom" or "enhance".
             pbar (Progress): The progress bar object.
 
         Returns:
@@ -265,44 +264,38 @@ class RetinexNet_Trainer(Trainer):
             target = datapoint["target"]
 
             # 2.2. Forward pass
-            if phase == "decom":
-                outputs_low = self.model(data={"image": image}, decom=True, save_debug=True)
-            else:
-                outputs_low = self.model(data={"image": image}, decom=False, save_debug=True)
-            outputs_high = self.model(data={"image": target}, decom=True, save_debug=True)
+            R_low, L_low = self.model.decom_net(image)
+            R_high, L_high = self.model.decom_net(target)
+            L_delta = self.model.enhance_net(R_low, L_low)
 
             # 2.3. Extract outputs
-            R_low = outputs_low["R"]
-            L_low = outputs_low["L"]
             L_low_3 = torch.cat((L_low, L_low, L_low), dim=1)
-            R_high = outputs_high["R"]
-            L_high = outputs_high["L"]
             L_high_3 = torch.cat((L_high, L_high, L_high), dim=1)
+            L_delta_3 = torch.cat((L_delta, L_delta, L_delta), dim=1)
 
             # 2.4. Calculate loss
-            # DecomNet loss
-            l_recon_low = L(R_low * L_low_3, image)
-            l_recon_high = L(R_high * L_high_3, target)
-            l_recon_mutal_low = L(R_high * L_low_3, image)
-            l_recon_mutal_high = L(R_low * L_high_3, target)
-            l_equal_R = L(R_low, R_high.detach())
-            l_smooth_low = smooth(R_low, L_low)
-            l_smooth_high = smooth(R_high, L_high)
-            loss = (
-                l_recon_low + l_recon_high
-                + 0.001 * l_recon_mutal_low
-                + 0.001 * l_recon_mutal_high
-                + 0.1 * l_smooth_low
-                + 0.1 * l_smooth_high
-                + 0.01 * l_equal_R
-            )
-            # EnhanceNet loss
-            if phase != "decom":
-                L_delta = outputs_low["L_delta"]
-                L_delta_3 = torch.cat((L_delta, L_delta, L_delta), dim=1)
+            if phase == "decom":
+                # DecomNet loss
+                l_recon_low = L(R_low * L_low_3, image)
+                l_recon_high = L(R_high * L_high_3, target)
+                l_recon_mutal_low = L(R_high * L_low_3, image)
+                l_recon_mutal_high = L(R_low * L_high_3, target)
+                l_equal_R = L(R_low, R_high.detach())
+                l_smooth_low = smooth(R_low, L_low)
+                l_smooth_high = smooth(R_high, L_high)
+                loss = (
+                    l_recon_low + l_recon_high
+                    + 0.001 * l_recon_mutal_low
+                    + 0.001 * l_recon_mutal_high
+                    + 0.1 * l_smooth_low
+                    + 0.1 * l_smooth_high
+                    + 0.01 * l_equal_R
+                )
+            else:
+                # EnhanceNet loss
                 l_relight = L(R_low * L_delta_3, target)
                 l_smooth_delta = smooth(R_low, L_delta)
-                loss += l_relight + 3 * l_smooth_delta
+                loss = l_relight + 3 * l_smooth_delta
 
             # 2.5. Backward pass
             self.optimizer.zero_grad()
@@ -357,10 +350,11 @@ class RetinexNet_Trainer(Trainer):
             target = datapoint["target"]
 
             # 2.2. Forward pass
-            outputs = self.model(data=datapoint, decom=False, save_debug=True)
+            outputs = self.model(data=datapoint, save_debug=True)
 
             # 2.3. Extract outputs
             enhanced = outputs["enhanced"]
+            enhanced = torch.clamp(enhanced, 0.0, 1.0)
             R = outputs["R"]
             L = outputs["L"]
             L_delta = outputs["L_delta"]

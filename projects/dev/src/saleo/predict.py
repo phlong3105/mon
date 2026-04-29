@@ -60,10 +60,13 @@ class SALEO_Predictor(Predictor):
     @override
     def _init_transforms(self):
         """Initialize ``self._transforms`` attribute."""
-        self._transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
+        self._transforms = T.Compose(
+            [
+                T.Normalize(normalization="min_max"),
+                T.ToTensorV2(transpose_mask=True),
+            ],
+            is_check_shapes=False,
+        )
 
     # --- Prediction ---
     @override

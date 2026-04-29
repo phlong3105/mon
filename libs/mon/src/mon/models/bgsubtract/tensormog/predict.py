@@ -56,10 +56,13 @@ class TensorMOG_Predictor(Predictor):
         """
         config = self.config
 
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
+        transforms = T.Compose(
+            [
+                T.Normalize(normalization="min_max"),
+                T.ToTensorV2(transpose_mask=True),
+            ],
+            is_check_shapes=False,
+        )
 
         if config is not None:
             if config.use_resize:

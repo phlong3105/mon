@@ -19,11 +19,10 @@ from tensordict import TensorDict
 from torch import nn
 from typing_extensions import override
 
-from mon.core import disable_print, K, OPTIMIZERS, Path, SCHEDULERS, TRAINERS
+from mon.core import K, OPTIMIZERS, Path, SCHEDULERS, TRAINERS
 from mon.runners import Trainer
 from .model import flol
 
-# disable_print()
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
 

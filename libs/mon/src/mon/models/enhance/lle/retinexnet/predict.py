@@ -54,10 +54,13 @@ class RetinexNet_Predictor(Predictor):
         """
         config = self.config
 
-        transforms = T.Compose([
-            T.Normalize(normalization="min_max"),
-            T.ToTensorV2(transpose_mask=True),
-        ])
+        transforms = T.Compose(
+            [
+                T.Normalize(normalization="min_max"),
+                T.ToTensorV2(transpose_mask=True),
+            ],
+            is_check_shapes=False,
+        )
 
         if config is not None:
             if config.use_resize:
@@ -94,7 +97,6 @@ class RetinexNet_Predictor(Predictor):
         timers.infer.tick()
         outputs = self.model(
             data=datapoint,
-            decom=False,
             use_patch=config.use_patch,
             patcher=config.patcher,
             save_debug=self.save_debug,
