@@ -7,5 +7,3 @@ This package contains various object detection models.
 """
 
 from __future__ import annotations
-
-from .ultralytics_yolo import *

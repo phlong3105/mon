@@ -61,6 +61,7 @@ from .bgsubtract import *
 from .classify import *
 from .detect import *
 from .enhance import *
+from .framework import *
 from .monodepth import *
 from .restore import *
 from .segment import *

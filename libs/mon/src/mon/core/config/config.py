@@ -505,7 +505,7 @@ class Config:
 
         # Look for the configuration file in the model directory
         if self.model_dir:
-            config_file = self.model_dir / "config" / value
+            config_file = self.model_dir / "configs" / value
             if config_file.has_ext(".yaml", ".yml", exists=True):
                 self._config.config_file = config_file
                 return
@@ -837,7 +837,7 @@ class Config:
         """Return the root directory of all configuration files in the current
         project.
         """
-        return self.root / "config"
+        return self.root / "configs"
 
     @property
     def data_dir(self) -> Path:

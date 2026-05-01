@@ -94,7 +94,7 @@ current_dir = current_file.parents[0]
 class YOLO26n_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26n/coco/yolo26n_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26n/coco/yolo26n_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n.pt"),
         num_classes=80,
         transforms=None,
@@ -107,7 +107,7 @@ class YOLO26n_Weights(WeightsEnum):
 class YOLO26s_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26s/coco/yolo26s_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26s/coco/yolo26s_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s.pt"),
         num_classes=80,
         transforms=None,
@@ -120,7 +120,7 @@ class YOLO26s_Weights(WeightsEnum):
 class YOLO26m_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26m/coco/yolo26m_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26m/coco/yolo26m_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m.pt"),
         num_classes=80,
         transforms=None,
@@ -133,7 +133,7 @@ class YOLO26m_Weights(WeightsEnum):
 class YOLO26l_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26l/coco/yolo26l_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26l/coco/yolo26l_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26l.pt"),
         num_classes=80,
         transforms=None,
@@ -146,7 +146,7 @@ class YOLO26l_Weights(WeightsEnum):
 class YOLO26x_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26x/coco/yolo26x_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26x/coco/yolo26x_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26x.pt"),
         num_classes=80,
         transforms=None,
@@ -229,7 +229,7 @@ def yolo26x(weights: WeightsLike = "default", *args, **kwargs):
 class YOLO26n_SEG_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26n_seg/coco/yolo26n_seg_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26n_seg/coco/yolo26n_seg_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-seg.pt"),
         num_classes=80,
         transforms=None,
@@ -242,7 +242,7 @@ class YOLO26n_SEG_Weights(WeightsEnum):
 class YOLO26s_SEG_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26s_seg/coco/yolo26s_seg_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26s_seg/coco/yolo26s_seg_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s-seg.pt"),
         num_classes=80,
         transforms=None,
@@ -255,7 +255,7 @@ class YOLO26s_SEG_Weights(WeightsEnum):
 class YOLO26m_SEG_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26m_seg/coco/yolo26m_seg_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26m_seg/coco/yolo26m_seg_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m-seg.pt"),
         num_classes=80,
         transforms=None,
@@ -268,7 +268,7 @@ class YOLO26m_SEG_Weights(WeightsEnum):
 class YOLO26l_SEG_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26l_seg/coco/yolo26l_seg_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26l_seg/coco/yolo26l_seg_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26l-seg.pt"),
         num_classes=80,
         transforms=None,
@@ -281,7 +281,7 @@ class YOLO26l_SEG_Weights(WeightsEnum):
 class YOLO26x_SEG_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26x_seg/coco/yolo26x_seg_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26x_seg/coco/yolo26x_seg_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26x-seg.pt"),
         num_classes=80,
         transforms=None,
@@ -364,7 +364,7 @@ def yolo26x_seg(weights: WeightsLike = "default", *args, **kwargs):
 class YOLO26n_CLS_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26n_cls/imagenet/yolo26n_cls_imagenet.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26n_cls/imagenet/yolo26n_cls_imagenet.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-cls.pt"),
         num_classes=1000,
         transforms=None,
@@ -377,7 +377,7 @@ class YOLO26n_CLS_Weights(WeightsEnum):
 class YOLO26s_CLS_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26s_cls/imagenet/yolo26s_cls_imagenet.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26s_cls/imagenet/yolo26s_cls_imagenet.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s-cls.pt"),
         num_classes=1000,
         transforms=None,
@@ -390,7 +390,7 @@ class YOLO26s_CLS_Weights(WeightsEnum):
 class YOLO26m_CLS_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26m_cls/imagenet/yolo26m_cls_imagenet.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26m_cls/imagenet/yolo26m_cls_imagenet.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m-cls.pt"),
         num_classes=1000,
         transforms=None,
@@ -403,7 +403,7 @@ class YOLO26m_CLS_Weights(WeightsEnum):
 class YOLO26l_CLS_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26l_cls/imagenet/yolo26l_cls_imagenet.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26l_cls/imagenet/yolo26l_cls_imagenet.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26l-cls.pt"),
         num_classes=1000,
         transforms=None,
@@ -416,7 +416,7 @@ class YOLO26l_CLS_Weights(WeightsEnum):
 class YOLO26x_CLS_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26x_cls/imagenet/yolo26x_cls_imagenet.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26x_cls/imagenet/yolo26x_cls_imagenet.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26x-cls.pt"),
         num_classes=1000,
         transforms=None,
@@ -499,7 +499,7 @@ def yolo26x_cls(weights: WeightsLike = "default", *args, **kwargs):
 class YOLO26n_POSE_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26n_pose/coco/yolo26n_pose_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26n_pose/coco/yolo26n_pose_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-pose.pt"),
         num_classes=1,
         transforms=None,
@@ -512,7 +512,7 @@ class YOLO26n_POSE_Weights(WeightsEnum):
 class YOLO26s_POSE_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26s_pose/coco/yolo26s_pose_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26s_pose/coco/yolo26s_pose_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s-pose.pt"),
         num_classes=1,
         transforms=None,
@@ -525,7 +525,7 @@ class YOLO26s_POSE_Weights(WeightsEnum):
 class YOLO26m_POSE_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26m_pose/coco/yolo26m_pose_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26m_pose/coco/yolo26m_pose_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m-pose.pt"),
         num_classes=1,
         transforms=None,
@@ -538,7 +538,7 @@ class YOLO26m_POSE_Weights(WeightsEnum):
 class YOLO26l_POSE_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26l_pose/coco/yolo26l_pose_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26l_pose/coco/yolo26l_pose_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26l-pose.pt"),
         num_classes=1,
         transforms=None,
@@ -551,7 +551,7 @@ class YOLO26l_POSE_Weights(WeightsEnum):
 class YOLO26x_POSE_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26x_pose/coco/yolo26x_pose_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26x_pose/coco/yolo26x_pose_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26x-pose.pt"),
         num_classes=1,
         transforms=None,
@@ -634,7 +634,7 @@ def yolo26x_pose(weights: WeightsLike = "default", *args, **kwargs):
 class YOLO26n_OBB_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26n_obb/dota_v1/yolo26n_obb_dota_v1.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26n_obb/dota_v1/yolo26n_obb_dota_v1.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26n-obb.pt"),
         num_classes=15,
         transforms=None,
@@ -647,7 +647,7 @@ class YOLO26n_OBB_Weights(WeightsEnum):
 class YOLO26s_OBB_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26s_obb/dota_v1/yolo26s_obb_dota_v1.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26s_obb/dota_v1/yolo26s_obb_dota_v1.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26s-obb.pt"),
         num_classes=15,
         transforms=None,
@@ -660,7 +660,7 @@ class YOLO26s_OBB_Weights(WeightsEnum):
 class YOLO26m_OBB_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26m_obb/dota_v1/yolo26m_obb_dota_v1.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26m_obb/dota_v1/yolo26m_obb_dota_v1.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26m-obb.pt"),
         num_classes=15,
         transforms=None,
@@ -673,7 +673,7 @@ class YOLO26m_OBB_Weights(WeightsEnum):
 class YOLO26l_OBB_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26l_obb/dota_v1/yolo26l_obb_dota_v1.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26l_obb/dota_v1/yolo26l_obb_dota_v1.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26l-obb.pt"),
         num_classes=15,
         transforms=None,
@@ -686,7 +686,7 @@ class YOLO26l_OBB_Weights(WeightsEnum):
 class YOLO26x_OBB_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo26/yolo26x_obb/dota_v1/yolo26x_obb_dota_v1.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo26/yolo26x_obb/dota_v1/yolo26x_obb_dota_v1.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo26x-obb.pt"),
         num_classes=15,
         transforms=None,

@@ -14,6 +14,7 @@ References:
 from __future__ import annotations
 
 from .model import *
+from .sam import *
 from .yolo11 import *
 from .yolo12 import *
 from .yolo26 import *

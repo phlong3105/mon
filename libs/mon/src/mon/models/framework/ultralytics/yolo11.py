@@ -94,7 +94,7 @@ current_dir = current_file.parents[0]
 class YOLO11n_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11n/coco/yolo11n_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11n/coco/yolo11n_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11n.pt"),
         num_classes=80,
         transforms=None,
@@ -107,7 +107,7 @@ class YOLO11n_Weights(WeightsEnum):
 class YOLO11s_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11s/coco/yolo11s_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11s/coco/yolo11s_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11s.pt"),
         num_classes=80,
         transforms=None,
@@ -120,7 +120,7 @@ class YOLO11s_Weights(WeightsEnum):
 class YOLO11m_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11m/coco/yolo11m_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11m/coco/yolo11m_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11m.pt"),
         num_classes=80,
         transforms=None,
@@ -133,7 +133,7 @@ class YOLO11m_Weights(WeightsEnum):
 class YOLO11l_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11l/coco/yolo11l_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11l/coco/yolo11l_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11l.pt"),
         num_classes=80,
         transforms=None,
@@ -146,7 +146,7 @@ class YOLO11l_Weights(WeightsEnum):
 class YOLO11x_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11x/coco/yolo11x_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11x/coco/yolo11x_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11x.pt"),
         num_classes=80,
         transforms=None,
@@ -229,7 +229,7 @@ def yolo11x(weights: WeightsLike = "default", *args, **kwargs):
 class YOLO11n_SEG_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11n_seg/coco/yolo11n_seg_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11n_seg/coco/yolo11n_seg_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11n-seg.pt"),
         num_classes=80,
         transforms=None,
@@ -242,7 +242,7 @@ class YOLO11n_SEG_Weights(WeightsEnum):
 class YOLO11s_SEG_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11s_seg/coco/yolo11s_seg_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11s_seg/coco/yolo11s_seg_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11s-seg.pt"),
         num_classes=80,
         transforms=None,
@@ -255,7 +255,7 @@ class YOLO11s_SEG_Weights(WeightsEnum):
 class YOLO11m_SEG_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11m_seg/coco/yolo11m_seg_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11m_seg/coco/yolo11m_seg_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11m-seg.pt"),
         num_classes=80,
         transforms=None,
@@ -268,7 +268,7 @@ class YOLO11m_SEG_Weights(WeightsEnum):
 class YOLO11l_SEG_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11l_seg/coco/yolo11l_seg_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11l_seg/coco/yolo11l_seg_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11l-seg.pt"),
         num_classes=80,
         transforms=None,
@@ -281,7 +281,7 @@ class YOLO11l_SEG_Weights(WeightsEnum):
 class YOLO11x_SEG_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11x_seg/coco/yolo11x_seg_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11x_seg/coco/yolo11x_seg_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11x-seg.pt"),
         num_classes=80,
         transforms=None,
@@ -364,7 +364,7 @@ def yolo11x_seg(weights: WeightsLike = "default", *args, **kwargs):
 class YOLO11n_CLS_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11n_cls/imagenet/yolo11n_cls_imagenet.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11n_cls/imagenet/yolo11n_cls_imagenet.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11n-cls.pt"),
         num_classes=1000,
         transforms=None,
@@ -377,7 +377,7 @@ class YOLO11n_CLS_Weights(WeightsEnum):
 class YOLO11s_CLS_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11s_cls/imagenet/yolo11s_cls_imagenet.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11s_cls/imagenet/yolo11s_cls_imagenet.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11s-cls.pt"),
         num_classes=1000,
         transforms=None,
@@ -390,7 +390,7 @@ class YOLO11s_CLS_Weights(WeightsEnum):
 class YOLO11m_CLS_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11m_cls/imagenet/yolo11m_cls_imagenet.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11m_cls/imagenet/yolo11m_cls_imagenet.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11m-cls.pt"),
         num_classes=1000,
         transforms=None,
@@ -403,7 +403,7 @@ class YOLO11m_CLS_Weights(WeightsEnum):
 class YOLO11l_CLS_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11l_cls/imagenet/yolo11l_cls_imagenet.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11l_cls/imagenet/yolo11l_cls_imagenet.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11l-cls.pt"),
         num_classes=1000,
         transforms=None,
@@ -416,7 +416,7 @@ class YOLO11l_CLS_Weights(WeightsEnum):
 class YOLO11x_CLS_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11x_cls/imagenet/yolo11x_cls_imagenet.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11x_cls/imagenet/yolo11x_cls_imagenet.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11x-cls.pt"),
         num_classes=1000,
         transforms=None,
@@ -499,7 +499,7 @@ def yolo11x_cls(weights: WeightsLike = "default", *args, **kwargs):
 class YOLO11n_POSE_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11n_pose/coco/yolo11n_pose_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11n_pose/coco/yolo11n_pose_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11n-pose.pt"),
         num_classes=1,
         transforms=None,
@@ -512,7 +512,7 @@ class YOLO11n_POSE_Weights(WeightsEnum):
 class YOLO11s_POSE_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11s_pose/coco/yolo11s_pose_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11s_pose/coco/yolo11s_pose_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11s-pose.pt"),
         num_classes=1,
         transforms=None,
@@ -525,7 +525,7 @@ class YOLO11s_POSE_Weights(WeightsEnum):
 class YOLO11m_POSE_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11m_pose/coco/yolo11m_pose_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11m_pose/coco/yolo11m_pose_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11m-pose.pt"),
         num_classes=1,
         transforms=None,
@@ -538,7 +538,7 @@ class YOLO11m_POSE_Weights(WeightsEnum):
 class YOLO11l_POSE_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11l_pose/coco/yolo11l_pose_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11l_pose/coco/yolo11l_pose_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11l-pose.pt"),
         num_classes=1,
         transforms=None,
@@ -551,7 +551,7 @@ class YOLO11l_POSE_Weights(WeightsEnum):
 class YOLO11x_POSE_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11x_pose/coco/yolo11x_pose_coco.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11x_pose/coco/yolo11x_pose_coco.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11x-pose.pt"),
         num_classes=1,
         transforms=None,
@@ -634,7 +634,7 @@ def yolo11x_pose(weights: WeightsLike = "default", *args, **kwargs):
 class YOLO11n_OBB_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11n_obb/dota_v1/yolo11n_obb_dota_v1.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11n_obb/dota_v1/yolo11n_obb_dota_v1.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11n-obb.pt"),
         num_classes=15,
         transforms=None,
@@ -647,7 +647,7 @@ class YOLO11n_OBB_Weights(WeightsEnum):
 class YOLO11s_OBB_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11s_obb/dota_v1/yolo11s_obb_dota_v1.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11s_obb/dota_v1/yolo11s_obb_dota_v1.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11s-obb.pt"),
         num_classes=15,
         transforms=None,
@@ -660,7 +660,7 @@ class YOLO11s_OBB_Weights(WeightsEnum):
 class YOLO11m_OBB_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11m_obb/dota_v1/yolo11m_obb_dota_v1.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11m_obb/dota_v1/yolo11m_obb_dota_v1.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11m-obb.pt"),
         num_classes=15,
         transforms=None,
@@ -673,7 +673,7 @@ class YOLO11m_OBB_Weights(WeightsEnum):
 class YOLO11l_OBB_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11l_obb/dota_v1/yolo11l_obb_dota_v1.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11l_obb/dota_v1/yolo11l_obb_dota_v1.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11l-obb.pt"),
         num_classes=15,
         transforms=None,
@@ -686,7 +686,7 @@ class YOLO11l_OBB_Weights(WeightsEnum):
 class YOLO11x_OBB_Weights(WeightsEnum):
 
     COCO = Weights(
-        path=K.ZOO_ROOT / "ultralytics/yolo11/yolo11x_obb/dota_v1/yolo11x_obb_dota_v1.pt",
+        path=K.ZOO_ROOT / "framework/ultralytics/yolo11/yolo11x_obb/dota_v1/yolo11x_obb_dota_v1.pt",
         url=Path("https://github.com/ultralytics/assets/releases/download/v8.4.0/yolo11x-obb.pt"),
         num_classes=15,
         transforms=None,
