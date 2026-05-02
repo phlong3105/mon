@@ -1,13 +1,13 @@
 # --- General ---
-exp_name: "saleo_ffsiren"  # (str) Experiment name.
+exp_name: &exp_name "saleo_ffsiren"  # (str) Experiment name.
 
-root: ~  # (str) Root path of the project.
-output_dir: ~  # (str) Output directory.
+root: &root ~  # (str) Root path of the project.
+output_dir: &output_dir ~  # (str) Output directory.
 
 task: "enhance"  # (str) Task name (e.g., detect, segment, classify).
 mode: ~  # (str) Run mode (e.g., train, predict).
 
-device: 0  # (int | str | list) device: 0 or [0,1,2,3] for CUDA, 'cpu'/'mps'
+device: &device 0  # (int | str | list) device: 0 or [0,1,2,3] for CUDA, 'cpu'/'mps'
 seed: 100  # (int) Random seed for reproducibility
 
 # --- Model ---
@@ -21,7 +21,7 @@ model:
 train_dataloader:
   dataset:
     name: ~  # (str) Dataset name.
-    root: ~  # (str) Root directory of the dataset.
+    root: &root ~  # (str) Root directory of the dataset.
     dirname: ~  # (str) Directory name of the dataset within the root path.
     subdir: ~  # (str) Subdirectory name of the dataset.
     split: "train"  # (str) Dataset split (e.g., train, val, test, predict).
@@ -44,7 +44,7 @@ train_dataloader:
 val_dataloader:
   dataset:
     name: ~  # (str) Dataset name.
-    root: ~  # (str) Root directory of the dataset.
+    root: &root ~  # (str) Root directory of the dataset.
     dirname: ~  # (str) Directory name of the dataset within the root path.
     subdir: ~  # (str) Subdirectory name of the dataset.
     split: "val"  # (str) Dataset split (e.g., train, val, test, predict).
@@ -65,7 +65,7 @@ val_dataloader:
   drop_last: False  # (bool) Drop the last incomplete batch.
 
 # --- Training ---
-epochs: 100  # (int) Number of epochs to train.
+epochs: &epochs 100  # (int) Number of epochs to train.
 
 optimizer:
   name: "Adam"  # (str) Optimizer name.

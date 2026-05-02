@@ -52,6 +52,7 @@ from mon.core.ui.prompt_toolkit import (
     PromptContextMixin,
 )
 from mon.core.utils import is_valid_str, merge_dicts, truncate_string
+from .utils import load_config
 
 # ==============================================================================
 # region CONSTANTS
@@ -861,14 +862,14 @@ class Config:
         config_files = []
 
         config_files += self.config_dir.files(
-            f"*{model}*.yaml",
-            f"*{model}*.yml",
+            f"*{model}*.yaml",  # Use .yaml for general configs
+            # f"*{model}*.yml",  # Use .yml for model-specific configs to avoid conflicts with general configs
             recursive=True
         ) if self.config_dir else []
 
         config_files += self.model_dir.files(
-            f"*{model}*.yaml",
-            f"*{model}*.yml",
+            f"*{model}*.yaml",  # Use .yaml for general configs
+            # f"*{model}*.yml",  # Use .yml for model-specific configs to avoid conflicts with general configs
             recursive=True
         ) if self.model_dir else []
 
@@ -1029,24 +1030,10 @@ class Config:
     # --- Mutation ---
     def update_from_yaml(self, path: PathLike | None):
         """Update the current configuration with values from a YAML file."""
-        # Validate inputs
-        if path is None:
-            return
-
-        # Normalize inputs
-        path = Path(path).normalize()
-
-        # Validate inputs
-        if not path.has_ext(".yaml", ".yml", exists=True):
-            raise TypeError(
-                f"Expected 'path' to be a valid configuration file path, "
-                f"but got {type(path).__name__}."
-            )
-
-        new_config = Box.from_yaml(filename=path)
-        # merged_config = merge_dicts(self._config, new_config)
-        # self._config = Box(merged_config)
-        self.update_from_dict(new_config)
+        # Load the configuration from the YAML file
+        file_config = load_config(path=path)
+        # Update the current configuration with the loaded values
+        self.update_from_dict(file_config)
         self.config_file = path
 
     def update_from_cli(self, value: DictLike):

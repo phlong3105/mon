@@ -1,13 +1,13 @@
 # --- General ---
-exp_name: "hvi_cidnet_sice"  # (str) Experiment name.
+exp_name: &exp_name "hvi_cidnet_sice"  # (str) Experiment name.
 
-root: ~  # (str) Root path of the project.
-output_dir: ~  # (str) Output directory.
+root: &root ~  # (str) Root path of the project.
+output_dir: &output_dir ~  # (str) Output directory.
 
 task: "lle"  # (str) Task name (e.g., detect, segment, classify).
 mode: ~  # (str) Run mode (e.g., train, predict).
 
-device: 0  # (int | str | list) device: 0 or [0,1,2,3] for CUDA, 'cpu'/'mps'
+device: &device 0  # (int | str | list) device: 0 or [0,1,2,3] for CUDA, 'cpu'/'mps'
 seed: [1, 1000000]  # (int) Random seed for reproducibility
 
 # --- Model ---
@@ -24,7 +24,7 @@ model:
 train_dataloader:
   dataset:
     name: "sice"  # (str) Dataset name.
-    root: ~  # (str) Root directory of the dataset.
+    root: &root ~  # (str) Root directory of the dataset.
     dirname: "sice"  # (str) Directory name of the dataset within the root path.
     subdir: "sice"  # (str) Subdirectory name of the dataset.
     split: "train"  # (str) Dataset split (e.g., train, val, test, predict).
@@ -50,7 +50,7 @@ train_dataloader:
 val_dataloader:
   dataset:
     name: "sice"  # (str) Dataset name.
-    root: ~  # (str) Root directory of the dataset.
+    root: &root ~  # (str) Root directory of the dataset.
     dirname: "sice"  # (str) Directory name of the dataset within the root path.
     subdir: "sice"  # (str) Subdirectory name of the dataset.
     split: "test"  # (str) Dataset split (e.g., train, val, test, predict).
@@ -74,7 +74,7 @@ val_dataloader:
   drop_last: False  # (bool) Drop the last incomplete batch.
 
 # --- Training ---
-epochs: 1000  # (int) Number of epochs to train.
+epochs: &epochs 1000  # (int) Number of epochs to train.
 
 gamma:
   start_gamma: 60.0  # (float) Starting gamma value for the gamma augmentation during training.
@@ -109,7 +109,7 @@ predict:
   strategy: "resize"  # (str) Prediction strategy (e.g., default, resize, patch).
 
   # Resizing strategy: Downsampling -> Inference -> Upsampling.
-  imgsz: 512  # (int | list[int]) Image size for prediction.
+  imgsz: &imgsz 512  # (int | list[int]) Image size for prediction.
   upscale: True  # (bool) Whether to upscale the image after inference.
   upsampler:
     name: "interpolation"  # (str) Upsampler name.

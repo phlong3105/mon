@@ -158,6 +158,7 @@ class K(SimpleNamespace):
     DUMMY_IMAGE = STI.LENNA
 
     # --- Strings ---
+    INCLUDE_KEY = "__include__"
     ORIGINAL = "orig"
 
     # --- Logging ---

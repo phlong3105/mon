@@ -264,10 +264,10 @@ def resolve_config_file(
     search_dirs = []
     if model_dir:
         model_dir = Path(model_dir).normalize()
-        search_dirs.append(Path(model_dir) / "config")
+        search_dirs.append(Path(model_dir) / "configs")
     if root:
         root = Path(root).normalize()
-        search_dirs.append(Path(root) / "config")
+        search_dirs.append(Path(root) / "configs")
 
     # Search loop
     for d in search_dirs:
