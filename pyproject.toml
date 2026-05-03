@@ -75,10 +75,10 @@ include      = []
 exclude      = []
 
 [tool.poetry.dependencies]
-mon = { path = "libs/mon"         , develop = true }
-dev = { path = "projects/aic26_01", develop = true }
-dev = { path = "projects/aic26_06", develop = true }
-dev = { path = "projects/dev"     , develop = true }
+mon      = { path = "libs/mon"         , develop = true }
+aic26_01 = { path = "projects/aic26_01", develop = true }
+aic26_06 = { path = "projects/aic26_06", develop = true }
+dev      = { path = "projects/dev"     , develop = true }
 
 [build-system]
 requires      = ["poetry-core>=2.3.2,<3.0.0"]

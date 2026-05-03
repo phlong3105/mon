@@ -51,7 +51,7 @@ mon = { workspace = true }
 [tool.poetry]
 # package-mode = false                    # If you want to use Poetry only for dependency management but not for packaging.
 packages = [
-    # { include = "slice", from = "src" }
+    { include = "ecdetseg", from = "src" }
 ]
 include  = []
 exclude  = []

@@ -1371,7 +1371,9 @@ class ConfigContext(Config, PromptContextMixin):
             # If a default value for this argument is provided in kwargs, it
             # should override the default from ARGUMENTS
             if opt_name in kwargs:
-                argument_kwargs["default"] = kwargs[opt_name]
+                # Remove the value from kwargs to avoid confusion later and set
+                # it as the default for the argument
+                argument_kwargs["default"] = kwargs.pop(opt_name)
 
             flag = f"--{opt_name.replace('_', '-')}"
             parser.add_argument(flag, **argument_kwargs)
@@ -1390,7 +1392,7 @@ class ConfigContext(Config, PromptContextMixin):
 
         # If the argument is not provided or is None, we don't include it in
         # kwargs to avoid overriding defaults
-        kwargs = {}
+        # kwargs = {}
         for k, v in args.items():
             if v is None or (k in ARGUMENTS and v == ARGUMENTS[k].get("default")):
                 continue
