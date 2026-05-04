@@ -37,9 +37,8 @@ from torch.optim.optimizer import Optimizer, ParamsT
 
 from mon.core.console import log_error
 from mon.core.data import Weights, WeightsEnum
-from mon.core.dtype import Split, Task
+from mon.core.dtype import RunMode, Split, Task
 from mon.core.path import Path
-from mon.core.typing import PathLike, RunModeLike, TaskLike
 from mon.core.utils import depascalize, is_valid_str
 
 
@@ -65,11 +64,11 @@ class Factory(UserDict[str, Any | Callable[..., Any]]):
 
         Args:
             name (str): Name for the factory.
-            mapping (dict, optional): Initial dictionary of registered classes.
-                Defaults to None.
+            mapping (dict | None, optional): Initial dictionary of registered
+                classes. Defaults to None.
             decamelize (bool, optional): If True, normalize class names to
                 snake_case. Defaults to False.
-            verbose (bool), optional: Verbosity mode. Defaults to False.
+            verbose (bool, optional): Verbosity mode. Defaults to False.
 
         Raises:
             ValueError: If ``name`` is empty.
@@ -298,18 +297,14 @@ class DatasetFactory(Factory):
     """
 
     # --- Discovery ---
-    def search(
-        self,
-        task: TaskLike | None = None,
-        mode: RunModeLike | None = None
-    ) -> list[str]:
+    def search(self, task: Task | None = None, mode: RunMode | None = None) -> list[str]:
         """Find all available dataset names matching a task and mode.
 
         Args:
-            task (TaskType, optional): Task name to filter datasets.
-                Defaults to None.
-            mode (RunModeType, optional): Run mode to filter datasets.
-                Defaults to None.
+            task (Task | None, optional): Task name to filter datasets. If None,
+                return all datasets. Defaults to None.
+            mode (RunMode | None, optional): Run mode to filter datasets. If None,
+                return all datasets. Defaults to None.
 
         Returns:
             list[str]: Sorted list of dataset names.
@@ -326,17 +321,13 @@ class DatasetFactory(Factory):
         return self.filter(task=task, mode=mode)
 
     # --- Retrieval ---
-    def filter(
-        self,
-        task: TaskLike | None = None,
-        mode: RunModeLike | None = None
-    ) -> list[str]:
+    def filter(self, task: Task | None = None,  mode: RunMode | None = None) -> list[str]:
         """Filter and return all available dataset names matching a task and mode.
 
         Args:
-            task (TaskType, optional): Task name to filter datasets. If None,
+            task (Task | None, optional): Task name to filter datasets. If None,
                 return all datasets. Defaults to None.
-            mode (RunModeType, optional): Run mode to filter datasets. If None,
+            mode (RunMode | None, optional): Run mode to filter datasets. If None,
                 return all datasets. Defaults to None.
 
         Returns:
@@ -410,9 +401,12 @@ class ModelFactory(Factory):
         Args:
             name (str, optional): Model name. Defaults to "".
             arch (str, optional): Architecture name. Defaults to "".
-            module (Any): Class or function to register. Defaults to None.
-            metaclass (Any): Metaclass to get metadata from. Defaults to None.
-            replace (bool): If True, overwrite an existing entry. Defaults to False.
+            module (Any, optional): Class or function to register.
+                Defaults to None.
+            metaclass (Any, optional): Metaclass to get metadata from.
+                Defaults to None.
+            replace (bool, optional): If True, overwrite an existing entry.
+                Defaults to False.
 
         Returns:
             Callable: Decorator function if ``module`` is None, else None.
@@ -438,8 +432,10 @@ class ModelFactory(Factory):
             name (str): Model name.
             arch (str): Architecture name.
             module (Any): Class or function to register.
-            metaclass (Any): Metaclass to get metadata from. Defaults to None.
-            replace (bool): If True, overwrite an existing entry. Defaults to False.
+            metaclass (Any, optional): Metaclass to get metadata from.
+                Defaults to None.
+            replace (bool, optional): If True, overwrite an existing entry.
+                Defaults to False.
 
         Raises:
             TypeError: If ``module`` is not a class or function.
@@ -524,14 +520,14 @@ class ModelFactory(Factory):
         return self._create_instance(flatten[key]["module"], key, *args, **kwargs)
 
     # --- Discovery ---
-    def search(self, arch: str = "", task: TaskLike | None = None) -> list[str]:
+    def search(self, arch: str = "", task: Task | None = None) -> list[str]:
         """Find all available model names matching an architecture, task, or
         run mode.
 
         Args:
             arch (str, optional): Architecture name to filter datasets.
                 Defaults to "".
-            task (TaskType, optional): Task name to filter datasets.
+            task (Task | None, optional): Task name to filter datasets.
                 Defaults to None.
 
         Returns:
@@ -547,11 +543,11 @@ class ModelFactory(Factory):
 
         return self.filter(arch=arch, task=task)
 
-    def search_archs(self, task: TaskLike | None = None) -> list[str]:
+    def search_archs(self, task: Task | None = None) -> list[str]:
         """Find all available architectures matching a task and mode.
 
         Args:
-            task (TaskType, optional): Task name to filter datasets.
+            task (Task | None, optional): Task name to filter datasets.
                 Defaults to None.
 
         Returns:
@@ -639,14 +635,14 @@ class ModelFactory(Factory):
         else:
             return None
 
-    def filter(self, arch: str = "", task: TaskLike | None = None) -> list[str]:
+    def filter(self, arch: str = "", task: Task | None = None) -> list[str]:
         """Filter and return all available model names matching an architecture,
         or task.
 
         Args:
             arch (str, optional): Architecture name to filter datasets.
                 Defaults to "".
-            task (TaskType, optional): Task name to filter datasets.
+            task (Task | None, optional): Task name to filter datasets.
                 Defaults to None.
 
         Returns:
@@ -681,14 +677,14 @@ class WeightsFactory(Factory):
         return weights_objs
 
     # --- Discovery ---
-    def find(self, weights_path: PathLike | None) -> WeightsEnum | None:
+    def find(self, weights_path: Path | None) -> WeightsEnum | None:
         """Find the ``WeightsEnum`` object for a given path.
 
         Args:
-            weights_path (PathLike): Path to look for the weights enum.
+            weights_path (Path | None): Path to look for the weights enum.
 
         Returns:
-            WeightsEnum: ``WeightsEnum`` object if found, None otherwise.
+            WeightsEnum | None: ``WeightsEnum`` object if found, None otherwise.
         """
         if weights_path:
             weights_path = Path(weights_path).normalize()
@@ -705,14 +701,14 @@ class WeightsFactory(Factory):
         # Return None if no match is found
         return None
 
-    def find_weights_obj(self, weights_path: PathLike | None) -> Weights | None:
+    def find_weights_obj(self, weights_path: Path | None) -> Weights | None:
         """Find the ``Weights`` object for a given path.
 
         Args:
-            weights_path (PathLike): Path to look for the weights object.
+            weights_path (Path | None): Path to look for the weights object.
 
         Returns:
-            Weights: ``Weights`` object if found, None otherwise.
+            Weights | None: ``Weights`` object if found, None otherwise.
         """
         if is_valid_str(weights_path):
             weights_path = Path(weights_path).normalize()
@@ -729,11 +725,11 @@ class WeightsFactory(Factory):
         return None
 
     # --- Validation ---
-    def has(self, weights_path: PathLike) -> bool:
+    def has(self, weights_path: Path) -> bool:
         """Check if there is a weights enum registered for a given path.
 
         Args:
-            weights_path (PathLike): Path to look for the weights enum.
+            weights_path (Path): Path to look for the weights enum.
         """
         return self.find(weights_path) is not None
 
@@ -798,13 +794,13 @@ class MetricFactory(Factory):
         Args:
             name (str, optional): Name to register the ``module``. Defaults to "".
             module (Any, optional): Class or function to register. Defaults to None.
-            metric_opts (dict, optional): Additional options for the metric.
+            metric_opts (dict | None, optional): Additional options for the metric.
                 Defaults to None.
-            metric_mode (str, optional): Metric mode (e.g., "FR" or "NR").
+            metric_mode (str | None, optional): Metric mode (e.g., "FR" or "NR").
                 Defaults to None.
-            lower_better (bool, optional): Whether lower scores are better.
+            lower_better (bool | None, optional): Whether lower scores are better.
                 Defaults to None.
-            score_range (str, optional): Valid score range (min, max).
+            score_range (str | None, optional): Valid score range (min, max).
                 Defaults to None.
             metaclass (Any, optional): Metaclass to get metadata from.
                 Defaults to None.
@@ -845,13 +841,13 @@ class MetricFactory(Factory):
         Args:
             name (str): Name to register the ``module``.
             module (Any): Class or function to register.
-            metric_opts (dict, optional): Additional options for the metric.
+            metric_opts (dict | None, optional): Additional options for the metric.
                 Defaults to None.
-            metric_mode (str, optional): Metric mode (e.g., "FR" or "NR").
+            metric_mode (str | None, optional): Metric mode (e.g., "FR" or "NR").
                 Defaults to None.
-            lower_better (bool, optional): Whether lower scores are better.
+            lower_better (bool | None, optional): Whether lower scores are better.
                 Defaults to None.
-            score_range (str, optional): Valid score range (min, max).
+            score_range (str | None, optional): Valid score range (min, max).
                 Defaults to None.
             metaclass (Any, optional): Metaclass to get metadata from.
                 Defaults to None.

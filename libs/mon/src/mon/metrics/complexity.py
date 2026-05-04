@@ -28,7 +28,7 @@ import torch
 from box import Box
 from torch import nn, Tensor
 
-from mon.core import Float3, K, log, Size, SizeLike, Float2
+from mon.core import Float2, Float3, K, log, Size
 from mon.ops import read_image, to_image_tensor
 
 
@@ -212,11 +212,11 @@ def benchmark(
 # region UTILITIES
 # ==============================================================================
 
-def create_dummy_image(imgsz: SizeLike = (512, 512), device = torch.device("cpu")) -> Tensor:
+def create_dummy_image(imgsz: Size = (512, 512), device = torch.device("cpu")) -> Tensor:
     """Create a dummy image tensor for benchmarking.
 
     Args:
-        imgsz (SizeLike, optional): Image size (e.g., 512 or (512, 512)).
+        imgsz (Size, optional): Image size (e.g., 512 or (512, 512)).
             Defaults to (512, 512).
         device (torch.device, optional): Device to create the tensor on.
             Defaults to torch.device("cpu").

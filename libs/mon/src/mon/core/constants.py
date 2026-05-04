@@ -148,6 +148,7 @@ class K(SimpleNamespace):
     # --- Extensions ---
     CKPT_EXT = WeightExtension.CKPT
     IMAGE_EXT = ImageExtension.JPG
+    LABEL_EXT = ".txt"
     WEIGHTS_EXT = WeightExtension.PT
 
     # --- Values ---

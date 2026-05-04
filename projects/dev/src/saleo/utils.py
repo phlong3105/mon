@@ -28,7 +28,7 @@ from torch import nn, Tensor
 from torch.nn import functional as F
 from torchvision.transforms import functional as TF
 
-from mon.core import Size, SizeLike
+from mon.core import Size
 from mon.ops import FastGuidedFilter
 
 
@@ -316,7 +316,7 @@ def get_nearest_features(
 
 # --- Resize ---
 
-def interpolate_image(image: Tensor, size: SizeLike) -> Tensor:
+def interpolate_image(image: Tensor, size: Size) -> Tensor:
     """Reshapes the image based on new resolution."""
     size = Size.from_value(size)
     return F.interpolate(image, size=size.hw)

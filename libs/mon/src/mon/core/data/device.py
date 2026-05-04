@@ -25,7 +25,7 @@ from torch import nn
 
 from mon.core.base import IndexList
 from mon.core.dtype import DeviceType, MemoryUnit
-from mon.core.typing import Float3, MemoryUnitLike
+from mon.core.typing import Float3
 
 try:
     import pynvml
@@ -117,7 +117,7 @@ class Device:
             return self.type
 
     # --- Retrieval ---
-    def usages(self, unit: MemoryUnitLike = "GB") -> tuple[float, float, float]:
+    def usages(self, unit: MemoryUnit = MemoryUnit.GB) -> Float3:
         """Return the memory usage (total, used, free) for the device.
 
         Args:
@@ -125,8 +125,7 @@ class Device:
                 Defaults to MemoryUnit.GB.
 
         Returns:
-            tuple[float, float, float]: (total, used, free) memory values in the
-                requested unit.
+            Float3: (total, used, free) memory values in the requested unit.
         """
         if self.is_cuda:
             return query_vram_usage(self.index, unit=unit)
@@ -146,7 +145,7 @@ class DeviceList(IndexList[Device]):
         """Initialize a new instance.
 
         Args:
-            data (Iterable, optional): Initial data to populate the list.
+            data (Iterable | None, optional): Initial data to populate the list.
                 Defaults to None.
         """
         # We hardcode the item_type and key here
@@ -195,16 +194,16 @@ def inspect_model_device(model: nn.Module) -> torch.device:
             return torch.device("cpu")
 
 
-def query_vram_usage(device: int = 0, unit: MemoryUnitLike = "GB") -> Float3:
+def query_vram_usage(device: int = 0, unit: MemoryUnit = MemoryUnit.GB) -> Float3:
     """Query NVML for the specified CUDA device memory usage.
 
     Args:
         device (int, optional): CUDA device index to query. Defaults to 0.
-        unit (MemoryUnit, optional): Unit to report memory in. Defaults to "GB".
+        unit (MemoryUnit, optional): Unit to report memory in.
+            Defaults to MemoryUnit.GB.
 
     Returns:
-        tuple[float, float, float]: (total, used, free) memory values in the
-            requested unit.
+        Float3: (total, used, free) memory values in the requested unit.
 
     Raises:
         ImportError: If ``pynvml`` is not installed.
@@ -229,7 +228,7 @@ def query_vram_usage(device: int = 0, unit: MemoryUnitLike = "GB") -> Float3:
             pass
 
 
-def query_ram_usages(unit: MemoryUnitLike = "GB") -> Float3:
+def query_ram_usages(unit: MemoryUnit = MemoryUnit.GB) -> Float3:
     """Query system RAM usage.
 
     Args:
@@ -237,8 +236,7 @@ def query_ram_usages(unit: MemoryUnitLike = "GB") -> Float3:
             Defaults to MemoryUnit.GB.
 
     Returns:
-        tuple[float, float, float]: (total, used, free) memory values in the
-            requested unit.
+        Float3: (total, used, free) memory values in the requested unit.
     """
     memory = psutil.virtual_memory()
     ratio = MemoryUnit.names_to_bytes()[unit]
@@ -253,6 +251,7 @@ def query_ram_usages(unit: MemoryUnitLike = "GB") -> Float3:
 
 
 # --- Aggregation ---
+
 
 # endregion
 

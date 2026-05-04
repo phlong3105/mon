@@ -230,7 +230,7 @@ class GradualWarmupScheduler(LRScheduler):
         optimizer: optim.Optimizer,
         multiplier: float,
         total_epoch: int,
-        after_scheduler: LRScheduler = None
+        after_scheduler: LRScheduler | None = None
     ):
         """Initialize a new instance.
 
@@ -241,8 +241,8 @@ class GradualWarmupScheduler(LRScheduler):
                 up with the base lr. If multiplier > 1.0, the learning rate
                 starts from the base lr and ends up with the target learning rate.
             total_epoch (int): Target learning rate is reached at total_epoch.
-            after_scheduler (LRScheduler, optional): After target_epoch, use
-                this scheduler(eg. ReduceLROnPlateau). Defaults to None.
+            after_scheduler (LRScheduler | None, optional): After target_epoch,
+                use this scheduler(e.g. ReduceLROnPlateau). Defaults to None.
         """
         # Validate inputs
         if multiplier < 1.0:
@@ -331,7 +331,7 @@ def _get_position_from_periods(iteration: int, cumulative_period: list[int]) -> 
         cumulative_period (list[int]): Cumulative period list.
 
     Returns:
-        int: The position of the right-closest number in the period list.
+        int | None: The position of the right-closest number in the period list.
     """
     for i, period in enumerate(cumulative_period):
         if iteration <= period:

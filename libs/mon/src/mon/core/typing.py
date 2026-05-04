@@ -10,10 +10,6 @@ package.
 from __future__ import annotations
 
 __all__ = [
-    "BBoxFormatLike",
-    "BackendLike",
-    "DeviceLike",
-    "DictLike",
     "Float2",
     "Float3",
     "Float4",
@@ -29,34 +25,14 @@ __all__ = [
     "IntOrTuple3",
     "IntOrTuple4",
     "MISSING",
-    "MemoryUnitLike",
-    "PathLike",
-    "RunModeLike",
-    "SplitLike",
-    "StrOrList",
-    "StrategyLike",
-    "TaskLike",
     "TensorOrArray",
 ]
 
-from typing import Any, TypeVar, Union
+from typing import TypeVar, Union
 
-import torch
-from box import Box
 from numpy import ndarray
 from torch import Tensor
 from typing_extensions import TypeAlias
-
-from .dtype import (
-    Backend,
-    BBoxFormat,
-    MemoryUnit,
-    RunMode,
-    Split,
-    Strategy,
-    Task,
-)
-from .path import Path
 
 T = TypeVar("T")
 _scalar_or_tuple_any_t: TypeAlias = Union[T, tuple[T, ...]]
@@ -85,18 +61,6 @@ FloatOrTuple2: TypeAlias = _scalar_or_tuple_2_t[float]
 FloatOrTuple3: TypeAlias = _scalar_or_tuple_3_t[float]
 FloatOrTuple4: TypeAlias = _scalar_or_tuple_4_t[float]
 
-MISSING = object()
-
-StrOrList: TypeAlias = Union[str, list[str]]
-
-BBoxFormatLike: TypeAlias = Union[BBoxFormat, str]
-BackendLike: TypeAlias = Union[Backend, str]
-DeviceLike: TypeAlias = Union[torch.device, str, int]
-DictLike: TypeAlias = Union[Box, dict[str, Any]]
-MemoryUnitLike: TypeAlias = Union[MemoryUnit, str]
-PathLike: TypeAlias = Union[Path, str]
-RunModeLike: TypeAlias = Union[RunMode, str]
-SplitLike: TypeAlias = Union[Split, str]
-StrategyLike: TypeAlias = Union[Strategy, str]
-TaskLike: TypeAlias = Union[Task, str]
 TensorOrArray: TypeAlias = Union[Tensor, ndarray]
+
+MISSING = object()

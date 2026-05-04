@@ -10,7 +10,9 @@ covers computer vision and artificial intelligence.
 __author__ = "Long H. Pham"
 __version__ = "2.11.0"
 
+import os
 import time
+os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
 
 _start_time = time.time()
 

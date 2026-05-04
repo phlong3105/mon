@@ -61,11 +61,11 @@ class MobileNetV2BackBone(ModelRegisterMixin, nn.Module):
 
         Args:
             name (str): Name of the model variant.
-            weights (Weights, optional): Pre-trained weights to load.
+            weights (Weights | None, optional): Pre-trained weights to load.
                 Defaults to None.
-            out_indices (list[int], optional): List of layer indices to extract
-                features from. If None, defaults to [3, 6, 13, 18].
-            verbose (bool): Verbosity mode. Defaults to True.
+            out_indices (list[int] | None, optional): List of layer indices to
+                extract features from. If None, defaults to [3, 6, 13, 18].
+            verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         super().__init__(name=name)
 
@@ -185,8 +185,8 @@ def mobilenet_v2(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     return MobileNetV2BackBone(
         name="mobilenet_v2",

@@ -188,7 +188,9 @@ def is_list_of(value: Any, type_: type) -> bool:
 
 
 def is_listdict_of(value: Any, type_: type) -> bool:
-    """Check if the input value is a list of dictionaries with values of a specific type."""
+    """Check if the input value is a list of dictionaries with values of a
+    specific type.
+    """
     if not isinstance(value, list):
         return False
     return all(is_dict_of(v, type_) for v in value)
@@ -208,7 +210,9 @@ def is_dict_of(value: Any, type_: type) -> bool:
 
 
 def is_dictlist_of(value: Any, type_: type) -> bool:
-    """Check if the input value is a dictionary with list values of a specific type."""
+    """Check if the input value is a dictionary with list values of a specific
+    type.
+    """
     if not isinstance(value, dict):
         return False
     return all(is_list_of(v, type_) for v in value.values())
@@ -304,7 +308,8 @@ def to_str(value: Any, sep: str | tuple[str, ...] | list[str] = ",") -> str:
 
     Args:
         value (Any): Input value to convert.
-        sep (str | tuple | list): Delimiters for splitting if the input is a string.
+        sep (str | tuple | list, optional): Delimiters for splitting if the
+            input is a string.
             If a string, it is treated as a regex pattern.
             If a tuple/list, the items are escaped and treated as literal delimiters.
             Defaults to ",".
@@ -323,7 +328,8 @@ def to_list(value: Any, sep: str | tuple[str, ...] | list[str] = ",|;|:") -> lis
 
     Args:
         value (Any): Input value to convert.
-        sep (str | tuple | list): Delimiters for splitting if the input is a string.
+        sep (str | tuple | list, optional): Delimiters for splitting if the
+            input is a string.
             If a string, it is treated as a regex pattern.
             If a tuple/list, the items are escaped and treated as literal delimiters.
             Defaults to ",|;|:".
@@ -353,7 +359,8 @@ def to_int_list(value: Any, sep: str | tuple[str, ...] | list[str] = ",|;|:") ->
 
     Args:
         value (Any): Input value to normalize and convert.
-        sep (str | tuple | list): Delimiters for splitting if the input is a string.
+        sep (str | tuple | list, optional): Delimiters for splitting if the
+            input is a string.
             If a string, it is treated as a regex pattern.
             If a tuple/list, the items are escaped and treated as literal delimiters.
             Defaults to ",|;|:".

@@ -189,7 +189,13 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
 
     # --- Validation ---
     def has_name(self, name: str, exists: bool = False) -> bool:
-        """Check if the path has the given name (either stem or full name)."""
+        """Check if the path has the given name (either stem or full name).
+
+        Args:
+            name (str): Name to check against (e.g. "file" or "file.txt").
+            exists (bool, optional): If True, also check if the file exists.
+                Defaults to False.
+        """
         if exists and not self.exists():
             return False
 
@@ -307,7 +313,7 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
             return self
 
         # Normalize inputs
-        path = Path(path)
+        path: Path = Path(path)
 
         # If path is a file, use its stem as the new path
         if path.is_file():

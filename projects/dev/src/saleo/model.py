@@ -25,7 +25,7 @@ import kornia
 import torch
 from torch import nn, Tensor
 
-from mon.core import log, MODELS, Path, SizeLike, Strategy, Task
+from mon.core import log, MODELS, Path, Size, Strategy, Task
 from mon.models.restore import ZS_N2N
 from mon.nn import loss as L, ModelRegisterMixin
 from .loss import ConfidenceGatedDepthLoss
@@ -442,11 +442,11 @@ class SALEO(ModelRegisterMixin, nn.Module):
     def _pre_denoise(
         self,
         image: Tensor,
-        imgsz: SizeLike | None = 512,
+        imgsz: Size | None = 512,
         epochs: int = 100,
     ) -> Tensor:
         # Resize the image for faster processing
-        if imgsz is not None:
+        if imgsz:
             resized = interpolate_image(image, imgsz)
         else:
             resized = image

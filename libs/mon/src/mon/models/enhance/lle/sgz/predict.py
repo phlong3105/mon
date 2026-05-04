@@ -16,7 +16,7 @@ import torch
 from tensordict import TensorDict
 from typing_extensions import override
 
-from mon.core import K, MODELS, Path, PREDICTORS, Size, SizeLike, TimeProfiler
+from mon.core import K, MODELS, Path, PREDICTORS, Size, TimeProfiler
 from mon.dataset import transform as T
 from mon.runners import Predictor
 # noinspection PyUnusedImports
@@ -135,11 +135,11 @@ class SGZ_Predictor(Predictor):
 
     # --- Utilities ---
     @override
-    def benchmark(self, imgsz: SizeLike | None = None):
+    def benchmark(self, imgsz: Size | None = None):
         """Run the benchmark for the model.
 
         Args:
-            imgsz (SizeLike, optional): The input image size for benchmarking.
+            imgsz (Size, optional): The input image size for benchmarking.
                 Defaults to None, which means using the default size.
         """
         config = self.config

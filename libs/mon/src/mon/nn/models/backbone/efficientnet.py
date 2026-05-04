@@ -95,13 +95,13 @@ class EfficientNetBackBone(ModelRegisterMixin, nn.Module):
             name (str): Name of the model variant.
             inverted_residual_setting: Network structure configuration.
             dropout (float): Dropout probability for the final classifier layer.
-            last_channel (int, optional): Number of output channels for the
-                last layer.
-            weights (Weights, optional): Pre-trained weights to load.
+            last_channel (int | None, optional): Number of output channels for
+                the last layer.
+            weights (Weights | None, optional): Pre-trained weights to load.
                 Defaults to None.
-            out_indices (list[int], optional): List of layer indices to extract
-                features from. If None, defaults to [2, 3, 5, 8].
-            verbose (bool): Verbosity mode. Defaults to True.
+            out_indices (list[int] | None, optional): List of layer indices to 
+                extract features from. If None, defaults to [2, 3, 5, 8].
+            verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         super().__init__(name=name)
 
@@ -515,8 +515,8 @@ def efficientnet_b0(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf(
         arch="efficientnet_b0",
@@ -545,8 +545,8 @@ def efficientnet_b1(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf(
         arch="efficientnet_b1",
@@ -575,8 +575,8 @@ def efficientnet_b2(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf(
         arch="efficientnet_b2",
@@ -605,8 +605,8 @@ def efficientnet_b3(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf(
         arch="efficientnet_b3",
@@ -635,8 +635,8 @@ def efficientnet_b4(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf(
         arch="efficientnet_b4",
@@ -665,8 +665,8 @@ def efficientnet_b5(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf(
         arch="efficientnet_b5",
@@ -696,8 +696,8 @@ def efficientnet_b6(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf(
         arch="efficientnet_b6",
@@ -727,8 +727,8 @@ def efficientnet_b7(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf(
         arch="efficientnet_b7",
@@ -758,8 +758,8 @@ def efficientnet_v2_s(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_v2_s")
     return EfficientNetBackBone(
@@ -785,8 +785,8 @@ def efficientnet_v2_m(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_v2_m")
     return EfficientNetBackBone(
@@ -812,8 +812,8 @@ def efficientnet_v2_l(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     inverted_residual_setting, last_channel = _efficientnet_conf("efficientnet_v2_l")
     return EfficientNetBackBone(

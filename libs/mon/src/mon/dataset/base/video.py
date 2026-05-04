@@ -23,10 +23,8 @@ from mon.core import (
     Frame,
     MetadataDictList,
     Path,
-    PathLike,
     Size,
     Split,
-    SplitLike,
 )
 from mon.dataset.transform import build_compose, Compose
 from .dataset import Dataset, StandardDataset
@@ -57,8 +55,8 @@ class VideoOnlyDataset(StandardDataset, AlbumentationsDataset):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        root: PathLike,
-        split: SplitLike = Split.PREDICT,
+        root: Path,
+        split: Split = Split.PREDICT,
         dirname: str = "",
         subdir: str = "",
         transforms: Compose | None = None,
@@ -71,9 +69,9 @@ class VideoOnlyDataset(StandardDataset, AlbumentationsDataset):
         """Initialize a new instance.
 
         Args:
-            root (PathLike): Path to the root directory of the dataset.
-            split (SplitType): Data split subset to use. Must be one of the
-                options defined in ``splits``.
+            root (Path): Path to the root directory of the dataset.
+            split (Split, optional): Data split subset to use. Must be one of
+                the options defined in ``splits``.
             dirname (str, optional): Name of the dataset directory within the
                 root path. Use this if the given ``root`` path does not contain
                 the dataset directory itself. Defaults to "".
@@ -81,18 +79,18 @@ class VideoOnlyDataset(StandardDataset, AlbumentationsDataset):
                 ``root`` (i.e., ``root/subdir``). Use this if the current
                 dataset is a subset of another dataset. If provided, it
                 overrides the class-level default. Defaults to "".
-            transforms (Compose, optional): Transformations to apply.
+            transforms (Compose | None, optional): Transformations to apply.
                 Defaults to None.
             keep_original (bool, optional): Whether to keep the original data
                 in the datapoint dictionary. If True, the original data will be
-            modalities (ModalityList, optional): A list of ``Modality``
+            modalities (ModalityList | None, optional): A list of ``Modality``
                 definitions. By default, the first modality is considered the
                 primary one. If provided, it overrides the class-level default.
                 Defaults to None.
-            classes (ClassList, optional): Class definitions associated with
-                the dataset. If provided, it overrides the class-level default.
-                Defaults to None.
-            verbose (bool): Verbosity mode. Defaults to True.
+            classes (ClassList | None, optional): Class definitions associated
+                with the dataset. If provided, it overrides the class-level
+                default. Defaults to None.
+            verbose (bool, optional): Verbosity mode. Defaults to True.
             *args: Positional arguments for ``Dataset`` constructor.
             **kwargs: Keyword arguments for ``Dataset`` constructor.
         """
@@ -273,7 +271,7 @@ def is_video_dataset(dataset: Dataset | None) -> bool:
     """Check if a dataset is a video dataset.
 
     Args:
-        dataset (Dataset): Dataset to check.
+        dataset (Dataset | None): Dataset to check.
 
     Returns:
         bool: True if the dataset is a video dataset, False otherwise.

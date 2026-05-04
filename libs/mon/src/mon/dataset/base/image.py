@@ -31,14 +31,13 @@ from mon.core import (
     Metadata,
     MetadataDictList,
     Path,
-    PathLike,
     Split,
-    SplitLike,
     to_tensordict,
 )
 from mon.dataset.base.modality import (
     build_modalities,
     ImageModality,
+    Modality,
     ModalityList,
 )
 from mon.dataset.transform import build_compose, Compose
@@ -64,7 +63,7 @@ class AlbumentationsDataset(Dataset, ABC):
         """Initialize a new instance.
 
         Args:
-            transforms (Compose, optional): Transformations to apply.
+            transforms (Compose | None, optional): Transformations to apply.
                 Defaults to None.
             keep_original (bool, optional): Whether to keep the original data
                 alongside the transformed ones. Defaults to False.
@@ -134,7 +133,7 @@ class AlbumentationsDataset(Dataset, ABC):
         """Set the transformation operations.
 
         Args:
-            value (Compose, optional): Transformations to apply.
+            value (Compose | None, optional): Transformations to apply.
 
         Raises:
             TypeError: If ``transform`` is not an instance of albumentations.Compose.
@@ -154,7 +153,8 @@ class AlbumentationsDataset(Dataset, ABC):
                 if (k != pk) and v is not None:
                     # If the modality is not primary and has a target type, add it
                     # to the Compose
-                    value.add_targets(self.modalities[k].additional_target)
+                    modality: Modality = self.modalities[k]
+                    value.add_targets(modality.additional_target)
 
         self._transforms = value
 
@@ -203,8 +203,8 @@ class ImageDataset(StandardDataset, AlbumentationsDataset):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        root: PathLike,
-        split: SplitLike,
+        root: Path,
+        split: Split,
         dirname: str = "",
         subdir: str = "",
         transforms: Compose | None = None,
@@ -217,9 +217,9 @@ class ImageDataset(StandardDataset, AlbumentationsDataset):
         """Initialize a new instance.
 
         Args:
-            root (PathLike): Path to the root directory of the dataset.
-            split (SplitType): Data split subset to use. Must be one of the
-                options defined in ``splits``.
+            root (Path): Path to the root directory of the dataset.
+            split (Split): Data split subset to use. Must be one of the options
+                defined in ``splits``.
             dirname (str, optional): Name of the dataset directory within the
                 root path. Use this if the given ``root`` path does not contain
                 the dataset directory itself. Defaults to "".
@@ -227,18 +227,18 @@ class ImageDataset(StandardDataset, AlbumentationsDataset):
                 ``root`` (i.e., ``root/subdir``). Use this if the current
                 dataset is a subset of another dataset. If provided, it
                 overrides the class-level default. Defaults to "".
-            transforms (Compose, optional): Transformations to apply.
+            transforms (Compose | None, optional): Transformations to apply.
                 Defaults to None.
             keep_original (bool, optional): Whether to keep the original data
                 alongside the transformed ones. Defaults to False.
-            modalities (ModalityList, optional): A list of ``Modality``
+            modalities (ModalityList | None, optional): A list of ``Modality``
                 definitions. By default, the first modality is considered the
                 primary one. If provided, it overrides the class-level default.
                 Defaults to None.
-            classes (ClassList, optional): Class definitions associated with
-                the dataset. If provided, it overrides the class-level default.
-                Defaults to None.
-            verbose (bool): Verbosity mode. Defaults to True.
+            classes (ClassList | None, optional): Class definitions associated
+                with the dataset. If provided, it overrides the class-level
+                default. Defaults to None.
+            verbose (bool, optional): Verbosity mode. Defaults to True.
             *args: Positional arguments for ``Dataset`` constructor.
             **kwargs: Keyword arguments for ``Dataset`` constructor.
         """
@@ -299,8 +299,8 @@ class ImageOnlyDataset(StandardDataset, AlbumentationsDataset):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        root: PathLike,
-        split: SplitLike = Split.PREDICT,
+        root: Path,
+        split: Split = Split.PREDICT,
         dirname: str = "",
         subdir: str = "",
         transforms: Compose | None = None,
@@ -313,9 +313,9 @@ class ImageOnlyDataset(StandardDataset, AlbumentationsDataset):
         """Initialize a new instance.
 
         Args:
-            root (PathLike): Path to the root directory of the dataset.
-            split (SplitType): Data split subset to use. Must be one of the
-                options defined in ``splits``.
+            root (Path): Path to the root directory of the dataset.
+            split (Split): Data split subset to use. Must be one of the options
+                defined in ``splits``.
             dirname (str, optional): Name of the dataset directory within the
                 root path. Use this if the given ``root`` path does not contain
                 the dataset directory itself. Defaults to "".
@@ -323,18 +323,18 @@ class ImageOnlyDataset(StandardDataset, AlbumentationsDataset):
                 ``root`` (i.e., ``root/subdir``). Use this if the current
                 dataset is a subset of another dataset. If provided, it
                 overrides the class-level default. Defaults to "".
-            transforms (Compose, optional): Transformations to apply.
+            transforms (Compose | None, optional): Transformations to apply.
                 Defaults to None.
             keep_original (bool, optional): Whether to keep the original data
                 alongside the transformed ones. Defaults to False.
-            modalities (ModalityList, optional): A list of ``Modality``
+            modalities (ModalityList | None, optional): A list of ``Modality``
                 definitions. By default, the first modality is considered the
                 primary one. If provided, it overrides the class-level default.
                 Defaults to None.
-            classes (ClassList, optional): Class definitions associated with
-                the dataset. If provided, it overrides the class-level default.
-                Defaults to None.
-            verbose (bool): Verbosity mode. Defaults to True.
+            classes (ClassList | None, optional): Class definitions associated
+                with the dataset. If provided, it overrides the class-level
+                default. Defaults to None.
+            verbose (bool, optional): Verbosity mode. Defaults to True.
             *args: Positional arguments for ``Dataset`` constructor.
             **kwargs: Keyword arguments for ``Dataset`` constructor.
         """
@@ -370,7 +370,7 @@ class ImageOnlyDataset(StandardDataset, AlbumentationsDataset):
 
         # List all image files under the root
         pk, pm = self.primary
-        src = self.base_dir
+        src: Path = self.base_dir
 
         if src.is_image_file():
             # If is a single image file, return a list with only that image
@@ -442,8 +442,8 @@ class IQADataset(InputTargetDataset, AlbumentationsDataset):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        input_dir: PathLike,
-        target_dir: PathLike | None = None,
+        input_dir: Path,
+        target_dir: Path | None = None,
         transforms: Compose | None = None,
         keep_original: bool = False,
         modalities: ModalityList | None = None,
@@ -454,20 +454,20 @@ class IQADataset(InputTargetDataset, AlbumentationsDataset):
         """Initialize a new instance.
 
         Args:
-            input_dir (PathLike): Path to the input directory.
-            target_dir (PathLike, optional): Path to the target directory.
+            input_dir (Path): Path to the input directory.
+            target_dir (Path | None, optional): Path to the target directory.
                 Defaults to None.
-            transforms (Compose, optional): Transformations to apply.
+            transforms (Compose | None, optional): Transformations to apply.
                 Defaults to None.
             keep_original (bool, optional): Whether to keep the original data
                 alongside the transformed ones. Defaults to False.
-            modalities (ModalityList, optional): A list of ``Modality``
+            modalities (ModalityList | None, optional): A list of ``Modality``
                 definitions. By default, the first modality is considered the
                 primary one. If provided, it overrides the class-level default.
                 Defaults to None.
-            classes (ClassList, optional): Class definitions associated with
-                the dataset. If provided, it overrides the class-level default.
-                Defaults to None.
+            classes (ClassList | None, optional): Class definitions associated
+                with the dataset. If provided, it overrides the class-level
+                default. Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
             *args: Positional arguments for ``Dataset`` constructor.
             **kwargs: Keyword arguments for ``Dataset`` constructor.

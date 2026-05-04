@@ -11,10 +11,12 @@ from __future__ import annotations
 import importlib
 import inspect
 import pkgutil
-from typing import Any, TypeAlias, Union
 
 import albumentations as A
-from albumentations import *
+# noinspection PyUnusedImports
+from albumentations.augmentations import *
+# noinspection PyUnusedImports
+from albumentations.pytorch import *
 
 from mon.core import ALBUMENTATIONS
 
@@ -31,6 +33,13 @@ def __register_transforms(module, prefix: str = ""):
         module (ModuleType): The module to inspect for transformation classes.
         prefix (str, optional): The prefix for submodule names. Defaults to "".
     """
+    from albumentations import (
+        BasicTransform,
+        DualTransform,
+        ImageOnlyTransform,
+        NoOp,
+        Transform3D,
+    )
 
     def is_transform_class(obj):
         return (
@@ -70,20 +79,6 @@ def __register_transforms(module, prefix: str = ""):
 __register_transforms(A)
 del __register_transforms
 ALBUMENTATIONS.sort()
-
-# endregion
-
-
-# ==============================================================================
-# region TYPE DEFINITIONS
-# ==============================================================================
-
-TransformLike: TypeAlias = Union[BasicTransform, dict[str, Any]]
-ComposeLike: TypeAlias = Union[
-    Compose,
-    list[TransformLike],
-    dict[str, TransformLike],
-]
 
 # endregion
 

@@ -84,9 +84,9 @@ class FLOL_Trainer(Trainer):
 
         task = pbar.add_task(
             f"[bright_yellow]Train Epoch {epoch+1:03}",
-            total=len(self.train_dataloader)
+            total=len(self._train_dataloader)
         )
-        for i, datapoint in enumerate(self.train_dataloader):
+        for i, datapoint in enumerate(self._train_dataloader):
             # 2.1. Prepare inputs
             datapoint = datapoint.to(device)
             image = datapoint["image"]
@@ -106,9 +106,9 @@ class FLOL_Trainer(Trainer):
             loss = l_l1 + l_lpips
 
             # 2.5. Backward pass
-            self.optimizer.zero_grad()
+            self._optimizer.zero_grad()
             loss.backward()
-            self.optimizer.step()
+            self._optimizer.step()
             losses.append(loss.item())
 
             pbar.update(task, advance=1)
@@ -149,9 +149,9 @@ class FLOL_Trainer(Trainer):
 
         task = pbar.add_task(
             f"[bright_cyan]Val Epoch {epoch+1:03}",
-            total=len(self.val_dataloader)
+            total=len(self._val_dataloader)
         )
-        for i, datapoint in enumerate(self.val_dataloader):
+        for i, datapoint in enumerate(self._val_dataloader):
             # 2.1. Prepare inputs
             datapoint = datapoint.to(device)
             image = datapoint["image"]

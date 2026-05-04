@@ -32,7 +32,6 @@ from mon.core import (
     MODELS,
     Path,
     Size,
-    SizeLike,
     Strategy,
     Task,
     Weights,
@@ -96,7 +95,7 @@ class SLICE(ModelRegisterMixin, Model):
         name: str,
         in_channels: int = 3,
         hidden_dim: int = 32,
-        imgsz: SizeLike = 256,
+        imgsz: Size = 256,
         method: str = "dopri5",
         tol: float = 1e-5,
         ode_options: dict | None = None,
@@ -113,7 +112,7 @@ class SLICE(ModelRegisterMixin, Model):
             name (str): Name of the model to use.
             in_channels (int, optional): Number of input channels. Defaults to 3.
             hidden_dim (int, optional): Hidden dimension. Defaults to 32.
-            imgsz (SizeLike, optional): Downsample the input image to this size
+            imgsz (Size, optional): Downsample the input image to this size
                 for encoding. Defaults to 256.
             method (str, optional): ODE solver method. Defaults to "dopri5".
             tol (float, optional): Tolerance for solver. Defaults to 1e-5.

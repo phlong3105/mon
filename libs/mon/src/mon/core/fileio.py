@@ -24,18 +24,17 @@ from typing import Any
 import yaml
 
 from .path import Path
-from .typing import PathLike
 
 
 # ==============================================================================
 # region INPUT
 # ==============================================================================
 
-def load_json(path: PathLike) -> dict | list:
+def load_json(path: Path) -> dict | list:
     """Load data from a JSON file.
 
     Args:
-        path (PathLike): Path to the JSON file.
+        path (Path): Path to the JSON file.
     """
     path = Path(path).normalize()
 
@@ -46,11 +45,11 @@ def load_json(path: PathLike) -> dict | list:
         return json.load(f)
 
 
-def load_yaml(path: PathLike) -> dict | list:
+def load_yaml(path: Path) -> dict | list:
     """Load data from a YAML file.
 
     Args:
-        path (PathLike): Path to the YAML file.
+        path (Path): Path to the YAML file.
     """
     path = Path(path).normalize()
 
@@ -61,11 +60,11 @@ def load_yaml(path: PathLike) -> dict | list:
         return yaml.safe_load(f)
 
 
-def load_txt(path: PathLike) -> list[str]:
+def load_txt(path: Path) -> list[str]:
     """Read lines from a text file.
 
     Args:
-        path (PathLike): Path to the text file.
+        path (Path): Path to the text file.
     """
     path = Path(path).normalize()
 
@@ -82,12 +81,12 @@ def load_txt(path: PathLike) -> list[str]:
 # region OUTPUT
 # ==============================================================================
 
-def save_json(data: Any, path: PathLike, indent: int = 4, overwrite: bool = True):
+def save_json(data: Any, path: Path, indent: int = 4, overwrite: bool = True):
     """Save data to a JSON file.
 
     Args:
         data (Any): Data to save.
-        path (PathLike): Destination path to save the file.
+        path (Path): Destination path to save the file.
         indent (int, optional): Indentation level for JSON output. Defaults to 4.
         overwrite (bool, optional): If True, overwrite the destination file if
             it exists. Defaults to True.
@@ -101,12 +100,12 @@ def save_json(data: Any, path: PathLike, indent: int = 4, overwrite: bool = True
         json.dump(data, f, indent=indent)
 
 
-def save_yaml(data: Any, path: PathLike, overwrite: bool = True):
+def save_yaml(data: Any, path: Path, overwrite: bool = True):
     """Save data to a YAML file.
 
     Args:
         data (Any): Data to save.
-        path (PathLike): Destination path to save the file.
+        path (Path): Destination path to save the file.
         overwrite (bool, optional): If True, overwrite the destination file if
             it exists. Defaults to True.
     """
@@ -119,12 +118,12 @@ def save_yaml(data: Any, path: PathLike, overwrite: bool = True):
         yaml.safe_dump(data, f, sort_keys=False)
 
 
-def save_txt(data: list[str] | str, path: PathLike, overwrite: bool = True):
+def save_txt(data: list[str] | str, path: Path, overwrite: bool = True):
     """Save strings to a text file.
 
     Args:
         data (list[str] | str): Lines or string to save.
-        path (PathLike): Destination path to save the file.
+        path (Path): Destination path to save the file.
         overwrite (bool, optional): If True, overwrite the destination file if
             it exists. Defaults to True.
     """

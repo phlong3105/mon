@@ -113,13 +113,13 @@ class NormalizeWithMask(BasicTransform):
         """Initializes the NormalizeWithMask transformation.
 
         Args:
-            mean (tuple[float, ...] or float, optional): Mean values for
+            mean (tuple[float, ...], float | None, optional): Mean values for
                 standard normalization. Defaults to ImageNet mean values:
                 (0.485, 0.456, 0.406).
-            std (tuple[float, ...] or float, optional): Standard deviation
+            std (tuple[float, ...], float | None, optional): Standard deviation
                 values for standard normalization. Defaults to ImageNet
                 standard deviation: (0.229, 0.224, 0.225).
-            max_pixel_value (float, optional): Maximum possible pixel value,
+            max_pixel_value (float | None, optional): Maximum possible pixel value,
                 used for scaling in standard normalization. Defaults to 255.0.
             normalization (str, optional): Specifies the normalization technique
                 to apply. Defaults to "standard".
@@ -290,9 +290,9 @@ class ResizeDivisibleBy(DualTransform):
         """Initializes the ResizeDivisibleBy transformation.
 
         Args:
-            height (int): Desired height of the output image. If set to 0,
+            height (int, optional): Desired height of the output image. If set to 0,
                 the height will be determined based on the original image size.
-            width (int): Desired width of the output image. If set to 0,
+            width (int, optional): Desired width of the output image. If set to 0,
                 the width will be determined based on the original image size.
             divisor (int, optional): The output dimensions will be made
                 divisible by this number. Defaults to 1.

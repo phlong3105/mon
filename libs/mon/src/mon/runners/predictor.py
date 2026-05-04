@@ -22,14 +22,13 @@ from tensordict import TensorDict
 from torch import nn, Tensor
 
 from mon.core import (
+    BBoxes,
     Config,
     ConfigContext,
     create_progress_bar,
-    DictLike,
     K,
     log,
     Path,
-    PathLike,
     RunMode,
     Size,
     Split,
@@ -70,8 +69,8 @@ class Predictor(Runner, ABC):
 
         # Allocate resources
         # These attributes will be initialized later to avoid a long initialization time
-        self._transforms: T.Compose | None = None
-        self._upsampler: nn.Module | None = None
+        self._transforms: T.Compose = None
+        self._upsampler: nn.Module = None
 
     @override
     def _setup(self):
@@ -84,16 +83,10 @@ class Predictor(Runner, ABC):
 
         # Define model
         self._init_model()
-        if self.model is None:
-            if self.verbose:
-                log(f"'model' is not initialized.")
 
         # Define transforms & upsampler
         self._init_transforms()
         self._init_upsampler()
-        if self.transforms is None:
-            if self.verbose:
-                log(f"'transforms' is not initialized.")
 
     @abstractmethod
     def _init_transforms(self):
@@ -122,27 +115,16 @@ class Predictor(Runner, ABC):
 
         self._upsampler = upsampler
 
-    # --- Properties ---
-    @property
-    def transforms(self) -> T.Compose | None:
-        """Return the transforms object."""
-        return self._transforms
-
-    @property
-    def upsampler(self) -> nn.Module | None:
-        """Return the upsampler object."""
-        return self._upsampler
-
     # --- Creation ---
     @classmethod
-    def from_cli(cls, prompt: bool = False, *args, **kwargs) -> "Predictor":
+    def from_cli(cls, prompt: bool = False, **kwargs) -> "Predictor":
         """Create an instance of Predictor from command-line arguments.
 
         Args:
             prompt (bool, optional): Whether to prompt the user for input if
                 necessary. Defaults to False.
         """
-        config_ctx = ConfigContext.from_cli(*args, **kwargs)
+        config_ctx = ConfigContext.from_cli(**kwargs)
         config = config_ctx.config_for(RunMode.PREDICT, prompt=prompt)
         return cls(config)
 
@@ -153,10 +135,15 @@ class Predictor(Runner, ABC):
 
         # 1. Setup
         self._setup()
+        # Validate that all necessary components are initialized
+        if self._model is None and self.verbose:
+            log(f"'model' is not initialized.")
+        if self._transforms is None and self.verbose:
+            log(f"'transforms' is not initialized.")
 
         # 2. Summarize the current run
         if config.verbose:
-            self.log_summary()
+            self._log_summary()
 
         # 3. Run benchmark (if requested)
         if config.benchmark:
@@ -185,11 +172,11 @@ class Predictor(Runner, ABC):
                 timers.print()
 
     # --- Prediction ---
-    def _predict_data(self, data: PathLike, pbar: Progress, timers: TimeProfiler):
+    def _predict_data(self, data: Path, pbar: Progress, timers: TimeProfiler):
         """Predict the output of the model for a single data source.
 
         Args:
-            data (PathLike): The path to the data point to predict.
+            data (Path): The path to the data point to predict.
             pbar (Progress): The progress bar to update during prediction.
             timers (TimeProfiler): The time profiler to record timing information
                 during prediction.
@@ -234,12 +221,12 @@ class Predictor(Runner, ABC):
         """
         pass
 
-    def _build_dataloader(self, source: DictLike | PathLike) -> tuple[str, DataLoader]:
+    def _build_dataloader(self, source: dict | Path) -> tuple[str, DataLoader]:
         """Initialize and return a dataset or dataloader.
 
         Args:
-            source (DictLike | PathLike): A dataloader configuration dictionary
-                or a source path.
+            source (dict | Path): A dataloader configuration dictionary or a
+                source path.
 
         Returns:
             tuple[str, DataLoader]: A tuple containing the name of the
@@ -250,7 +237,7 @@ class Predictor(Runner, ABC):
             src=source,
             dataset_dir=self.config.data_dir,
             split=Split.TEST,
-            transforms=self.transforms,
+            transforms=self._transforms,
             keep_original=True,
             batch_size=1,
             num_workers=1,
@@ -292,7 +279,7 @@ class Predictor(Runner, ABC):
 
     # --- Logging ---
     @override
-    def log_summary(self):
+    def _log_summary(self):
         """Log a summary of the current run."""
         self.config.log_summary()
 
@@ -324,7 +311,7 @@ class Predictor(Runner, ABC):
                 be the same as the source file name. Defaults to False.
         """
         device = self.device
-        upsampler = self.upsampler
+        upsampler = self._upsampler
 
         # Pre-extract the batches for the requested keys to avoid dict lookups
         # in the loop
@@ -408,6 +395,42 @@ class Predictor(Runner, ABC):
 
         # Save the image
         write_image(image=image, path=save_path)
+
+    def _save_bboxes(
+        self,
+        boxes: BBoxes,
+        src_path: Path,
+        dirname: str = K.PRED_DIR,
+        subdirname: str = "",
+        stem: str = "",
+    ):
+        """Save all bounding boxes for a single image.
+
+        Args:
+            boxes (BBoxes): The predicted bounding boxes.
+            src_path (Path): The source path, used to determine the output file
+                path.
+            dirname (str, optional): The directory name for the output file.
+                Defaults to K.PRED_DIR.
+            subdirname (str): Subdirectory name to append to the output path
+                (e.g., 'debug'/'mask'). Defaults to "".
+            stem (str, optional): An optional string to be appended to the
+                output file name for differentiation. If not provided, the
+                output file name will be the same as the source file name.
+                Defaults to "".
+        """
+        config = self.config
+
+        # Determine the save path based on the source path and the provided parameters
+        save_dir = config.resolve_save_dir(
+            dirname=dirname,
+            subdirname=subdirname,
+            src_path=src_path,
+        )
+        if stem:
+            save_path = save_dir / f"{src_path.stem}_{stem}{K.LABEL_EXT}"
+        else:
+            save_path = save_dir / f"{src_path.stem}{K.LABEL_EXT}"
 
 # endregion
 

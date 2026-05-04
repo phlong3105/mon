@@ -74,11 +74,11 @@ class ConvNeXtBackBone(ModelRegisterMixin, nn.Module):
                 ConvNeXt model.
             stochastic_depth_prob (float): Probability of applying stochastic
                 depth to the model.
-            weights (Weights, optional): Pre-trained weights to load.
+            weights (Weights | None, optional): Pre-trained weights to load.
                 Defaults to None.
-            out_indices (list[int], optional): List of layer indices to extract
-                features from. If None, defaults to [1, 3, 5, 7].
-            verbose (bool): Verbosity mode. Defaults to True.
+            out_indices (list[int] | None, optional): List of layer indices to
+                extract features from. If None, defaults to [1, 3, 5, 7].
+            verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         super().__init__(name=name)
 
@@ -284,8 +284,8 @@ def convnext_tiny(
     Args:
          weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     block_setting = [
         CNBlockConfig(96, 192, 3),
@@ -315,8 +315,8 @@ def convnext_small(
     Args:
          weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     block_setting = [
         CNBlockConfig(96, 192, 3),
@@ -346,8 +346,8 @@ def convnext_base(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     block_setting = [
         CNBlockConfig(128, 256, 3),
@@ -377,8 +377,8 @@ def convnext_large(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     block_setting = [
         CNBlockConfig(192, 384, 3),

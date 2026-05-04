@@ -90,9 +90,9 @@ class SCI_Trainer(Trainer):
 
         task = pbar.add_task(
             f"[bright_yellow]Train Epoch {epoch+1:03}",
-            total=len(self.train_dataloader)
+            total=len(self._train_dataloader)
         )
-        for i, datapoint in enumerate(self.train_dataloader):
+        for i, datapoint in enumerate(self._train_dataloader):
             # 2.1. Prepare inputs
             image = datapoint["image"]
             image = Variable(image, requires_grad=False).to(device)
@@ -110,10 +110,10 @@ class SCI_Trainer(Trainer):
                 loss += criterion(x_list[j], i_list[j])
 
             # 2.5. Backward pass
-            self.optimizer.zero_grad()
+            self._optimizer.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), grad_clip_norm)
-            self.optimizer.step()
+            self._optimizer.step()
             losses.append(loss.item())
 
             pbar.update(task, advance=1)
@@ -155,9 +155,9 @@ class SCI_Trainer(Trainer):
 
         task = pbar.add_task(
             f"[bright_cyan]Val Epoch {epoch+1:03}",
-            total=len(self.val_dataloader)
+            total=len(self._val_dataloader)
         )
-        for i, datapoint in enumerate(self.val_dataloader):
+        for i, datapoint in enumerate(self._val_dataloader):
             # 2.1. Prepare inputs
             datapoint = datapoint.to(device)
             image = datapoint["image"]
@@ -274,9 +274,9 @@ class SCI_Finetuner(Trainer):
 
         task = pbar.add_task(
             f"[bright_yellow]Train Epoch {epoch+1:03}",
-            total=len(self.train_dataloader)
+            total=len(self._train_dataloader)
         )
-        for i, datapoint in enumerate(self.train_dataloader):
+        for i, datapoint in enumerate(self._train_dataloader):
             # 2.1. Prepare inputs
             datapoint = datapoint.to(device)
             image = datapoint["image"]
@@ -291,10 +291,10 @@ class SCI_Finetuner(Trainer):
             loss = criterion(image, illumination)
 
             # 2.5. Backward pass
-            self.optimizer.zero_grad()
+            self._optimizer.zero_grad()
             loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), grad_clip_norm)
-            self.optimizer.step()
+            self._optimizer.step()
             losses.append(loss.item())
 
             pbar.update(task, advance=1)
@@ -336,9 +336,9 @@ class SCI_Finetuner(Trainer):
 
         task = pbar.add_task(
             f"[bright_cyan]Val Epoch {epoch+1:03}",
-            total=len(self.val_dataloader)
+            total=len(self._val_dataloader)
         )
-        for i, datapoint in enumerate(self.val_dataloader):
+        for i, datapoint in enumerate(self._val_dataloader):
             # 2.1. Prepare inputs
             datapoint = datapoint.to(device)
             image = datapoint["image"]
@@ -468,9 +468,9 @@ class SCI_PP_Trainer(Trainer):
 
         task = pbar.add_task(
             f"[bright_yellow]Train Epoch {epoch+1:03}",
-            total=len(self.train_dataloader)
+            total=len(self._train_dataloader)
         )
-        for i, datapoint in enumerate(self.train_dataloader):
+        for i, datapoint in enumerate(self._train_dataloader):
             self.total_step += 1
 
             # 2.1. Prepare inputs
@@ -513,7 +513,7 @@ class SCI_PP_Trainer(Trainer):
                 loss.backward()
                 self._optimizer_b.step()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), grad_clip_norm)
-            self.optimizer.step()
+            self._optimizer.step()
             losses.append(loss.item())
 
             pbar.update(task, advance=1)
@@ -555,9 +555,9 @@ class SCI_PP_Trainer(Trainer):
 
         task = pbar.add_task(
             f"[bright_cyan]Val Epoch {epoch+1:03}",
-            total=len(self.val_dataloader)
+            total=len(self._val_dataloader)
         )
-        for i, datapoint in enumerate(self.val_dataloader):
+        for i, datapoint in enumerate(self._val_dataloader):
             # 2.1. Prepare inputs
             datapoint = datapoint.to(device)
             image = datapoint["image"]

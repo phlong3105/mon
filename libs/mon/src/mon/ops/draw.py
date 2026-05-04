@@ -21,7 +21,7 @@ from box import Box
 from matplotlib.colors import Colormap
 from numpy import ndarray
 
-from mon.core import DictLike, Int2
+from mon.core import Int2
 
 
 # ====================================O==========================================
@@ -86,7 +86,7 @@ def vis_heatmap(image: ndarray, colormap: str | Colormap = "Spectral_r") -> ndar
 
 def draw_info(
     image: ndarray,
-    info: DictLike | list,
+    info: dict | list,
     pos: Int2 = (20, 40),
     scale: float = 0.8,
     thickness: int = 2,
@@ -96,7 +96,7 @@ def draw_info(
     Args:
         image (ndarray): Image array of shape (H, W, C) and values ranging from
             0 to 255.
-        info (DictLike | list): Information to draw. Can be a dictionary
+        info (dict | list): Information to draw. Can be a dictionary
             (key-value pairs) or a list of strings.
         pos (Int2, optional): Position (x, y) where the information will be
             drawn. Defaults to (20, 40).

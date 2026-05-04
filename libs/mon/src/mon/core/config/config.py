@@ -27,7 +27,7 @@ from rich.table import Table
 from mon.core.console import console, log_error, pprint_dict
 from mon.core.constants import K
 from mon.core.context import sys_ctx
-from mon.core.data import Size, SizeLike, Weights
+from mon.core.data import Size, Weights
 from mon.core.dtype import RunMode, Strategy, Task
 from mon.core.factory import DATASETS, MODELS, PATCHERS, UPSAMPLERS, WEIGHTS
 from mon.core.filesystem import (
@@ -36,14 +36,6 @@ from mon.core.filesystem import (
     resolve_weights_file,
 )
 from mon.core.path import Path
-from mon.core.typing import (
-    DeviceLike,
-    DictLike,
-    PathLike,
-    RunModeLike,
-    StrategyLike,
-    TaskLike,
-)
 from mon.core.ui.prompt_toolkit import (
     ConfirmPrompt,
     IntPrompt,
@@ -389,20 +381,20 @@ class Config:
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        config: DictLike | None = None,
-        config_file: PathLike | None = None,
-        root: PathLike | None = None,
+        config: dict | None = None,
+        config_file: Path | None = None,
+        root: Path | None = None,
         **kwargs
     ):
         """Initialize a new instance.
 
         Args:
-            config (DictLike | None): A dictionary containing the initial
+            config (dict | None, optional): A dictionary containing the initial
                 configuration. Defaults to None.
-            config_file (PathLike | None): Path to the configuration file.
+            config_file (Path | None, optional): Path to the configuration file.
                 If given, it will be loaded and used to override the default
                 configuration. Defaults to None.
-            root (PathLike | None): Project root directory. Defaults to None.
+            root (Path | None, optional): Project root directory. Defaults to None.
             **kwargs: Additional keyword arguments for configuration updates.
         """
         # Allocate resources
@@ -485,7 +477,7 @@ class Config:
         return self._config.config_file
 
     @config_file.setter
-    def config_file(self, value: PathLike | None):
+    def config_file(self, value: Path | None):
         """Set the path to the configuration file."""
         # Validate inputs
         if not is_valid_str(value):
@@ -535,7 +527,7 @@ class Config:
         return self.config.root
 
     @root.setter
-    def root(self, value: PathLike | None):
+    def root(self, value: Path | None):
         """Set the project root directory."""
         root = Path(value).normalize() if is_valid_str(value) else None
         if root and root.is_dir():
@@ -550,7 +542,7 @@ class Config:
         return self._config.output_dir
 
     @output_dir.setter
-    def output_dir(self, value: PathLike | None):
+    def output_dir(self, value: Path | None):
         """Set the output directory."""
         output_dir = Path(value).normalize() if is_valid_str(value) else None
         if output_dir:  # and output_dir.is_dir():
@@ -562,7 +554,7 @@ class Config:
         return self._config.task
 
     @task.setter
-    def task(self, value: TaskLike | None):
+    def task(self, value: Task | None):
         """Set the task type."""
         if value is not None:
             self._config.task = Task(value)
@@ -573,7 +565,7 @@ class Config:
         return self._config.mode
 
     @mode.setter
-    def mode(self, value: RunModeLike | None):
+    def mode(self, value: RunMode | None):
         """Set the run mode."""
         if value is not None:
             self._config.mode = RunMode(value)
@@ -606,7 +598,7 @@ class Config:
         return self._config.model.weights
 
     @weights.setter
-    def weights(self, value: Weights | PathLike | None):
+    def weights(self, value: Weights | Path | None):
         """Set the model weights."""
         if isinstance(value, Weights):
             # If the value is already a Weights object, set it directly
@@ -625,7 +617,7 @@ class Config:
         return self._config.model.finetune
 
     @finetune.setter
-    def finetune(self, value: Weights | PathLike | None):
+    def finetune(self, value: Weights | Path | None):
         """Set the model weights."""
         if isinstance(value, Weights):
             # If the value is already a Weights object, set it directly
@@ -644,18 +636,18 @@ class Config:
         return self._config.device
 
     @device.setter
-    def device(self, value: DeviceLike):
+    def device(self, value: torch.device | str | int):
         """Set the device to use for computation."""
         self._config.device = sys_ctx.get_torch_device(value)
 
     # --- Properties (Prediction) ---
     @property
-    def data(self) -> list[PathLike]:
+    def data(self) -> list[Path]:
         """Return the list of inference data sources."""
         return self._config.predict.data
 
     @data.setter
-    def data(self, value: list[PathLike] | PathLike | None):
+    def data(self, value: list[Path] | Path | None):
         """Set the list of inference data sources."""
         # Normalize inputs
         data = []
@@ -681,7 +673,7 @@ class Config:
         return self._config.predict.strategy
 
     @strategy.setter
-    def strategy(self, value: StrategyLike | None):
+    def strategy(self, value: Strategy | None):
         """Set the prediction strategy."""
         if value is not None:
             self._config.predict.strategy = Strategy(value)
@@ -702,7 +694,7 @@ class Config:
         return self._config.predict.imgsz
 
     @imgsz.setter
-    def imgsz(self, value: SizeLike | None):
+    def imgsz(self, value: Size | None):
         """Set the image size for prediction."""
         if value is not None:
             self._config.predict.imgsz = Size.from_value(value)
@@ -903,12 +895,12 @@ class Config:
         return sorted(weights_files)
 
     @property
-    def infer_data(self) -> PathLike:
+    def infer_data(self) -> Path:
         """Return the current inference data source."""
         return self._current_data or ""
 
     @infer_data.setter
-    def infer_data(self, value: PathLike | None):
+    def infer_data(self, value: Path | None):
         """Set the current inference data source."""
         self._current_data = Path(value).normalize() if is_valid_str(value) else None
 
@@ -927,7 +919,7 @@ class Config:
         self,
         dirname: str,
         subdirname: str = "",
-        src_path: PathLike | None = None,
+        src_path: Path | None = None,
     ) -> Path:
         """Compute the saving directory for an output type based on the output
         directory and optional components.
@@ -958,8 +950,8 @@ class Config:
                 (e.g., 'pred', 'debug').
             subdirname (str): Subdirectory name to append to the output path
                 (e.g., 'debug'/'mask'). Defaults to "".
-            src_path (PathLike, optional): Source path to determine the subdirectory
-                hierarchy. Defaults to None.
+            src_path (Path | None, optional): Source path to determine the
+                subdirectory hierarchy. Defaults to None.
 
         Returns:
             Path: Computed output directory path.
@@ -976,7 +968,7 @@ class Config:
     def resolve_save_file(
         self,
         dirname: str,
-        src_path: PathLike,
+        src_path: Path,
         subdirname: str = ""
     ) -> Path:
         """Compute the saving file path for an output type based on the output
@@ -1006,10 +998,9 @@ class Config:
         Args:
             dirname (str): Directory name to append to the output path
                 (e.g., 'pred', 'debug').
-            src_path (PathLike): Source path to determine the subdirectory
-                hierarchy.
-            subdirname (str): Subdirectory name to append to the output path
-                (e.g., 'debug'/'mask'). Defaults to "".
+            src_path (Path): Source path to determine the subdirectory hierarchy.
+            subdirname (str, optional): Subdirectory name to append to the
+                output path (e.g., 'debug'/'mask'). Defaults to "".
 
         Returns:
             Path: Computed output directory path.
@@ -1028,7 +1019,7 @@ class Config:
         return save_dir / src_path.name
 
     # --- Mutation ---
-    def update_from_yaml(self, path: PathLike | None):
+    def update_from_yaml(self, path: Path | None):
         """Update the current configuration with values from a YAML file."""
         # Load the configuration from the YAML file
         file_config = load_config(path=path)
@@ -1036,7 +1027,7 @@ class Config:
         self.update_from_dict(file_config)
         self.config_file = path
 
-    def update_from_cli(self, value: DictLike):
+    def update_from_cli(self, value: dict):
         """Update the current configuration with values from CLI arguments."""
         for k, v in value.items():
             if (
@@ -1060,7 +1051,7 @@ class Config:
             else:
                 self._config[k] = v
 
-    def update_from_dict(self, value: DictLike):
+    def update_from_dict(self, value: dict):
         """Update the current configuration with values from a dictionary."""
         for key, val in value.items():
             if val is None:
@@ -1287,19 +1278,19 @@ class ConfigContext(Config, PromptContextMixin):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        root: PathLike,
-        config: DictLike | None = None,
-        config_file: PathLike | None = None,
+        root: Path,
+        config: dict | None = None,
+        config_file: Path | None = None,
         prompt: bool = False,
         **kwargs
     ):
         """Initialize a new instance.
 
         Args:
-            root (PathLike): Project root directory.
-            config (DictLike, optional): Initial configuration to override the
-                default config. Defaults to None.
-            config_file (PathLike, optional): Path to the configuration file.
+            root (Path): Project root directory.
+            config (dict | None, optional): Initial configuration to override
+                the default config. Defaults to None.
+            config_file (Path | None, optional): Path to the configuration file.
                 If given, it will be loaded and used to override the default
                 configuration. Defaults to None.
             prompt (bool, optional): If True, enable interactive prompting.
@@ -1324,19 +1315,19 @@ class ConfigContext(Config, PromptContextMixin):
     @classmethod
     def from_cli(
         cls,
-        root: PathLike | None = None,
-        config_file: PathLike | None = None,
+        root: Path | None = None,
+        config_file: Path | None = None,
         name: str = "main",
         **kwargs
     ) -> "ConfigContext":
         """Create a new instance from CLI arguments.
 
         Args:
-            root (PathLike | None): Optional project root directory.
+            root (Path | None, optional): Optional project root directory.
                 Defaults to None.
-            config_file (PathLike | None): Optional path to a configuration file.
-                Defaults to None.
-            name (str): Name for the argument parser. Defaults to "main".
+            config_file (Path | None, optional): Optional path to a configuration
+                file. Defaults to None.
+            name (str, optional): Name for the argument parser. Defaults to "main".
 
         Returns:
             ConfigContext: A new instance of ConfigContext initialized with CLI
@@ -1401,12 +1392,12 @@ class ConfigContext(Config, PromptContextMixin):
         return cls(root=root, config_file=config_file, prompt=prompt, **kwargs)
 
     # --- Retrieval ---
-    def config_for(self, mode: RunModeLike, prompt: bool = False) -> Config:
+    def config_for(self, mode: RunMode, prompt: bool = False) -> Config:
         """Get the resolved configuration for a specific run mode, optionally
         enabling interactive prompting.
 
         Args:
-            mode (RunModeLike): The run mode for which to retrieve the configuration.
+            mode (RunMode): The run mode for which to retrieve the configuration.
             prompt (bool, optional): If True, enable interactive prompting before
                 returning the configuration. Defaults to False.
 

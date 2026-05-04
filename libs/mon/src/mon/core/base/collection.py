@@ -137,7 +137,7 @@ class IndexList(UserList, Generic[T]):
             self._key_map[getattr(item, self.key_attr)] = item
 
         # 2. Update id nndex (only if enabled)
-        if self._id_map is not None and hasattr(item, self.id_attr):
+        if self._id_map and self.id_attr and hasattr(item, self.id_attr):
             self._id_map[getattr(item, self.id_attr)] = item
 
     # --- Representation ---

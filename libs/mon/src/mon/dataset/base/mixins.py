@@ -35,8 +35,9 @@ class DatasetRegisterMixin(ABC):
     Attributes:
         name (str, optional): Name of the dataset. Defaults to "" and should be
             overridden in subclasses or set during initialization.
-        tasks (list[Task]): List of supported tasks. Defaults to an empty list
-            and should be overridden in subclasses or set during initialization.
+        tasks (list[Task], optional): List of supported tasks. Defaults to an
+            empty list and should be overridden in subclasses or set during
+            initialization.
     """
 
     name: str = ""
@@ -54,8 +55,8 @@ class DatasetRegisterMixin(ABC):
         Args:
             name (str, optional): Name of the data container. If provided, it
                 overrides the class-level default. Defaults to "".
-            tasks (list[Task], optional): List of supported tasks. If provided,
-                it overrides the class-level default. Defaults to None.
+            tasks (list[Task] | None, optional): List of supported tasks.
+                If provided, it overrides the class-level default. Defaults to None.
             *args: Positional arguments to forward to the superclass constructor.
             **kwargs: Keyword arguments to forward to the superclass constructor.
         """
@@ -195,10 +196,12 @@ class DatasetCollationMixin:
         # and preserves the TensorDict structure.
         return torch.stack(batch, dim=0)
 
+
 # --- Statistical ---
 
 
 # --- Geometric ---
+
 
 # endregion
 

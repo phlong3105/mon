@@ -85,11 +85,12 @@ class Metadata:
 
     Attributes:
         path (Path): Path to the data file.
-        base_dir (Path, optional): Base directory for relative paths. This is
-            useful to resolve other files related to the data. Defaults to None.
-        shape (int_any_t, optional): Shape of the data (if known). This is used
-            to initialize an empty tensor or array of the correct shape.
+        base_dir (Path | None, optional): Base directory for relative paths.
+            This is useful to resolve other files related to the data.
             Defaults to None.
+        shape (tuple[int, ...] | None, optional): Shape of the data (if known).
+            This is used to initialize an empty tensor or array of the correct
+            shape. Defaults to None.
     """
 
     path: Path
@@ -127,8 +128,10 @@ class MetadataDictList(DictList[str, list[Metadata]]):
         """Initialize a new instance.
 
         Args:
-            data (dict[str, list[Metadata]], optional): Initial data for the
-                dictionary. Defaults to None.
+            data (dict[str, Metadata | list[Metadata]] | None, optional):
+                Initial data to populate the dictionary. The keys are strings
+                and the values can be either a single ``Metadata`` instance or
+                a list of ``Metadata`` instances. Defaults to None.
             **kwargs: Additional key-value pairs to initialize.
         """
         # We hardcode the item_type

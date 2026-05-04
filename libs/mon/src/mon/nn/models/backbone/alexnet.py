@@ -62,10 +62,10 @@ class AlexNetBackBone(ModelRegisterMixin, nn.Module):
 
         Args:
             name (str): Name of the model variant.
-            weights (Weights, optional): Pre-trained weights to load.
+            weights (Weights | None, optional): Pre-trained weights to load.
                 Defaults to None.
-            out_indices (list[int], optional): List of layer indices to extract
-                features from. If None, defaults to [2, 5, 8, 10, 12].
+            out_indices (list[int] | None, optional): List of layer indices to
+                extract features from. If None, defaults to [2, 5, 8, 10, 12].
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         super().__init__(name=name)
@@ -161,8 +161,8 @@ def alexnet(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     return AlexNetBackBone(
         name="alexnet",

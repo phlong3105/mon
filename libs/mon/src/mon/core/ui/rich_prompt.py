@@ -38,7 +38,6 @@ from rich.progress import Console
 from rich.text import Text, TextType
 
 from mon.core.path import Path
-from mon.core.typing import PathLike
 from mon.core.utils import is_int, is_valid_str, to_list, truncate_string
 
 # ==============================================================================
@@ -863,7 +862,7 @@ class PathPrompt(OptionPrompt):
         column_first: bool = False,
         truncate_length: int | None = None,
         truncate_side: Literal["left", "middle", "right"] = "middle",
-        commonpath: PathLike | None = None,
+        commonpath: Path | None = None,
         multiselect: bool = False,
         allow_empty: bool = False,
     ):
@@ -931,7 +930,7 @@ class PathPrompt(OptionPrompt):
         column_first: bool = False,
         truncate_length: int | None = None,
         truncate_side: Literal["left", "middle", "right"] = "middle",
-        commonpath: PathLike | None = None,
+        commonpath: Path | None = None,
         multiselect: bool = False,
         allow_empty: bool = False,
         default: Any = ...,

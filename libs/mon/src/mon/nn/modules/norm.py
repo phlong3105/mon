@@ -201,10 +201,7 @@ class PositionalNorm(nn.Module):
         self.eps = eps
 
     # --- Callable & Context Manager ---
-    def forward(
-        self,
-        x: Tensor,
-    ) -> tuple[Tensor, Tensor, Tensor]:
+    def forward(self, x: Tensor) -> tuple[Tensor, Tensor, Tensor]:
         """Forward the input through the layer.
 
         Args:
@@ -236,9 +233,9 @@ class MomentShortcut(nn.Module):
         Args:
             x (Tensor): Input tensor of shape (B, C, H, W) and values ranging
                 from 0.0 to 1.0.
-            beta (Tensor, optional): The beta tensor of shape (B, 1, H, W)
+            beta (Tensor | None, optional): The beta tensor of shape (B, 1, H, W)
                 and values ranging from -1.0 to 1.0. Defaults to None.
-            gamma (Tensor, optional): The gamma tensor of shape (B, 1, H, W)
+            gamma (Tensor | None, optional): The gamma tensor of shape (B, 1, H, W)
                 and values ranging from 0.0 to 1.0. Defaults to None.
 
         Returns:

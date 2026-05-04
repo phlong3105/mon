@@ -74,19 +74,13 @@ class RetinexNet_Trainer(Trainer):
 
         # Define model
         self._init_model()
-        if self.model is None:
-            raise RuntimeError(f"'model' is not initialized.")
 
         # Define optimizer & scheduler
         # self._init_optimizer()
-        # if self.optimizer is None:
-        #     raise RuntimeError(f"'optimizer' is not initialized.")
 
         # Define data
         self._init_train_dataloader()
         self._init_val_dataloader()
-        if self.train_dataloader is None:
-            raise RuntimeError(f"'train_dataloader' is not initialized.")
 
         # Define loggers
         self._init_loggers()
@@ -143,10 +137,15 @@ class RetinexNet_Trainer(Trainer):
 
         # 1. Setup
         self._setup()
+        # Validate that all necessary components are initialized
+        if self._model is None:
+            raise RuntimeError(f"'model' is not initialized.")
+        if self._train_dataloader is None:
+            raise RuntimeError(f"'train_dataloader' is not initialized.")
 
         # 2. Summarize the current run
         if config.verbose:
-            self.log_summary()
+            self._log_summary()
 
         # 3. Run benchmark
         if config.benchmark:
@@ -172,8 +171,8 @@ class RetinexNet_Trainer(Trainer):
                     )
 
                 # 4.2. Scheduler Step
-                if self.scheduler is not None:
-                    self.scheduler.step()
+                if self._scheduler is not None:
+                    self._scheduler.step()
 
                 # 4.3. Log
                 if self.verbose:
@@ -205,13 +204,13 @@ class RetinexNet_Trainer(Trainer):
 
                 # 5.2. Val epoch
                 val_outputs = {}
-                if self.val_dataloader is not None:
+                if self._val_dataloader is not None:
                     self.model.eval()
                     val_outputs = self._val_epoch(epoch=epoch, pbar=pbar)
 
                 # 5.3. Scheduler Step
-                if self.scheduler is not None:
-                    self.scheduler.step()
+                if self._scheduler is not None:
+                    self._scheduler.step()
 
                 # 5.4. Log
                 if self.verbose:
@@ -255,9 +254,9 @@ class RetinexNet_Trainer(Trainer):
 
         task = pbar.add_task(
             f"[bright_yellow]Train Epoch {epoch+1:03}",
-            total=len(self.train_dataloader)
+            total=len(self._train_dataloader)
         )
-        for i, datapoint in enumerate(self.train_dataloader):
+        for i, datapoint in enumerate(self._train_dataloader):
             # 2.1. Prepare inputs
             datapoint = datapoint.to(device)
             image = datapoint["image"]
@@ -298,9 +297,9 @@ class RetinexNet_Trainer(Trainer):
                 loss = l_relight + 3 * l_smooth_delta
 
             # 2.5. Backward pass
-            self.optimizer.zero_grad()
+            self._optimizer.zero_grad()
             loss.backward()
-            self.optimizer.step()
+            self._optimizer.step()
             losses.append(loss.item())
 
             pbar.update(task, advance=1)
@@ -341,9 +340,9 @@ class RetinexNet_Trainer(Trainer):
 
         task = pbar.add_task(
             f"[bright_cyan]Val Epoch {epoch+1:03}",
-            total=len(self.val_dataloader)
+            total=len(self._val_dataloader)
         )
-        for i, datapoint in enumerate(self.val_dataloader):
+        for i, datapoint in enumerate(self._val_dataloader):
             # 2.1. Prepare inputs
             datapoint = datapoint.to(device)
             image = datapoint["image"]

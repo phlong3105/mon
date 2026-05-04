@@ -44,7 +44,12 @@ class Metric(nn.Module, ABC):
 
     # --- Lifecycle & Initialization ---
     def __init__(self, device: torch.device = torch.device("cpu")):
-        """Initialize a new instance."""
+        """Initialize a new instance.
+
+        Args:
+            device (torch.device): The device to run the metric on.
+                Defaults to "cpu".
+        """
         super().__init__()
 
         # Assign attributes

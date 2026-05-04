@@ -27,7 +27,7 @@ from torch.nn import functional as F
 from torchvision.transforms import functional as F_tv, InterpolationMode
 
 from mon import TensorOrArray
-from mon.core import Backend, BackendLike, Size, UPSAMPLERS
+from mon.core import Backend, Size, UPSAMPLERS
 from .filter import FastGuidedFilter
 from .proc import to_image_array, to_image_tensor
 
@@ -172,11 +172,11 @@ class InterpolationUpsample(ImageUpsampler):
     """Interpolation model for super-resolution."""
 
     # --- Lifecycle & Initialization ---
-    def __init__(self, backend: BackendLike = Backend.CV2, *args, **kwargs):
+    def __init__(self, backend: Backend = Backend.CV2, *args, **kwargs):
         """Initialize a new instance.
 
         Args:
-            backend (BackendLike, optional): Backend to use for image resizing.
+            backend (Backend, optional): Backend to use for image resizing.
                 Can be either 'cv2' for OpenCV or 'torchvision' for PyTorch's
                 torchvision. Defaults to Backend.CV2.
             verbose (bool, optional): Verbosity mode. Defaults to True.

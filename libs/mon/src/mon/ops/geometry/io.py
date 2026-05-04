@@ -17,18 +17,7 @@ import numpy as np
 from box import Box
 from numpy import ndarray
 
-from mon.core import (
-    BBoxes,
-    BBoxFormat,
-    BBoxFormatLike,
-    DictLike,
-    load_yaml,
-    log_error,
-    Path,
-    PathLike,
-    Size,
-    SizeLike,
-)
+from mon.core import BBoxes, BBoxFormat, load_yaml, Path, Size
 from mon.ops.image import read_imgsz
 
 # ==============================================================================
@@ -54,18 +43,17 @@ _DEFAULT_TRACK_ID = -1.0
 # ==============================================================================
 
 def load_bbox_yolo(
-    path: PathLike,
-    remap: DictLike | PathLike | None = None,
+    path: Path,
+    remap: dict | Path | None = None,
     has_angle: bool = False,
     has_score: bool = False,
     has_track_id: bool = False,
-    verbose: bool = False,
     *args, **kwargs
 ) -> ndarray:
     """Load all bounding boxes in a YOLO-format .txt file.
 
     Each line in the label file should contain:
-    class_id, cx, cy, w, h | angle, score, track_id (optional)
+    class_id, cx, cy, w, h, angle, score, track_id
     where:
         - class_id: is the class index (0-based).
         - cx, cy, w, h: are normalized values relative to the image dimensions.
@@ -75,9 +63,9 @@ def load_bbox_yolo(
         - track_id: is an optional value representing the tracking ID.
 
     Args:
-        path (PathLike): Path to the YOLO .txt label file.
-        remap (DictType | PathLike, optional): Mapping to remap class IDs.
-            Can be a dictionary or a path to a YAML file containing the mapping.
+        path (Path): Path to the YOLO .txt label file.
+        remap (dict | Path, optional): Mapping to remap class IDs. Can be a
+            dictionary or a path to a YAML file containing the mapping.
             Defaults to None.
         has_angle (bool): Whether the label file includes angle information.
             Defaults to False.
@@ -85,7 +73,6 @@ def load_bbox_yolo(
             Defaults to False.
         has_track_id (bool): Whether the label file includes tracking ID.
             Defaults to False.
-        verbose (bool): Verbosity mode. Defaults to True.
 
     Returns:
         ndarray: An array of shape (N, 8+) where each row represents a bounding
@@ -95,8 +82,6 @@ def load_bbox_yolo(
 
     # 1. Handle invalid or empty label file
     if not path.is_txt_file(exist=True):
-        if verbose:
-            log_error(f"Label file not found at: {path}")
         return np.empty((0, 8), dtype=np.float32)
 
     # Using np.loadtxt is significantly faster for large label files. It handles
@@ -106,8 +91,6 @@ def load_bbox_yolo(
         if raw_data.size == 0:
             return np.empty((0, 8), dtype=np.float32)
     except Exception as e:
-        if verbose:
-            log_error(f"Failed to parse {path}: {e}")
         return np.empty((0, 8), dtype=np.float32)
 
     # 2. Handle remapping class ids
@@ -174,42 +157,36 @@ def load_bbox_yolo(
 
 
 def load_bbox(
-    path: PathLike,
-    fmt: BBoxFormatLike,
-    remap: DictLike | PathLike | None = None,
-    imgsz: SizeLike | None = None,
-    image_file: PathLike | None = None,
+    path: Path,
+    fmt: BBoxFormat,
+    remap: dict | Path | None = None,
+    imgsz: Size | None = None,
+    image_file: Path | None = None,
     as_array: bool = False,
-    verbose: bool = False,
     *args, **kwargs
 ) -> BBoxes | ndarray:
     """Load bounding boxes from a file.
 
     Args:
         path (PathLike): Path to the label file.
-        fmt (BBoxFormatType): Format of the bounding boxes in the file.
-        remap (DictType | PathLike | None, optional): Class ID remapping.
+        fmt (BBoxFormat): Format of the bounding boxes in the file.
+        remap (dict | Path, optional): Class ID remapping. Defaults to None.
+        imgsz (Size, optional): Image size (width, height). Required if
+            ``as_array`` is False and ``image_file`` is not provided.
             Defaults to None.
-        imgsz (SizeLike | None, optional): Image size (width, height).
-            Required if `as_array` is False and `image_file` is not provided.
-            Defaults to None.
-        image_file (PathLike | None, optional): Path to the corresponding image
-            file. Used to infer image size if `imgsz` is not provided.
-            Defaults to None.
+        image_file (Path, optional): Path to the corresponding image file.
+            Used to infer image size if `imgsz` is not provided. Defaults to None.
         as_array (bool, optional): If True, return the bounding box array,
             otherwise return a BBoxes instance. Defaults to False.
-        verbose (bool, optional): Verbosity mode. Defaults to False.
     """
     # 1. Normalize inputs
-    fmt = BBoxFormatLike(fmt)
+    fmt = BBoxFormat(fmt)
 
     # 2. Load bounding boxes array
     if fmt == BBoxFormat.CXCYWHN:
-        bbox = load_bbox_yolo(path, remap, verbose=verbose, *args, **kwargs)
+        bbox = load_bbox_yolo(path=path, remap=remap, *args, **kwargs)
     else:
-        raise ValueError(
-            f"The loading method for '{fmt}' format is not supported yet."
-        )
+        raise ValueError(f"The loading method for '{fmt}' format is not supported yet.")
 
     # 3. Return bbox array if requested
     if as_array:
@@ -220,7 +197,7 @@ def load_bbox(
         imgsz = Size.from_value(imgsz)
     elif image_file:
         image_file = Path(image_file).normalize()
-        if image_file.is_txt_file(exist=True):
+        if image_file.is_image_file(exists=True):
             imgsz = read_imgsz(image_file)
     else:
         raise ValueError(
@@ -236,7 +213,10 @@ def load_bbox(
     elif fmt == BBoxFormat.XYWH:
         bbox = BBoxes.from_xywh(bbox=bbox, imgsz=imgsz, path=path)
     else:
-        raise ValueError(f"Unsupported bbox format: {fmt}")
+        raise ValueError(
+            f"Unsupported bbox format: {fmt}. "
+            f"Must be one of: {BBoxFormat.formats()}."
+        )
 
     return bbox
 
@@ -246,6 +226,79 @@ def load_bbox(
 # ==============================================================================
 # region OUTPUT
 # ==============================================================================
+
+def write_bbox_yolo(
+    bbox: BBoxes,
+    path: Path,
+    imgsz: Size | None = None,
+    *args, **kwargs
+):
+    """Write bounding boxes to a YOLO-format .txt file.
+
+    Each line in the label file should contain:
+    class_id, cx, cy, w, h, angle, score, track_id
+    where:
+        - class_id: is the class index (0-based).
+        - cx, cy, w, h: are normalized values relative to the image dimensions.
+        - angle: is the rotation angle in degrees. For horizontal bounding
+          boxes, this value is typically 0.
+        - score: is an optional value representing the confidence score.
+        - track_id: is an optional value representing the tracking ID.
+
+    Args:
+        bbox (BBoxes): The bounding boxes to be written.
+        path (Path): The file path to write the bounding boxes to.
+        imgsz (Size, optional): The image size (width, height) to use for
+            normalization if needed. Required if ``fmt`` is a normalized format.
+    """
+    # Normalize inputs
+    path = Path(path).normalize()
+
+    # Create parent directory
+    if not path.exists():
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Convert bbox to the desired output format
+    bbox_ = bbox.cxcywhn(imgsz=imgsz)
+
+    # Write bboxes to label file
+    with open(str(path), "w", encoding="utf-8") as f:
+        for b in bbox_:
+            f.write(
+                f"{int(b[0])} "
+                f"{float(b[1])} {float(b[2])} {float(b[3])} {float(b[4])} "
+                f"{float(b[5])} "
+                f"{float(b[6])} "
+                f"{int(b[7])} "
+                f"\n"
+            )
+
+
+def write_bbox(
+    bbox: BBoxes,
+    path: Path,
+    fmt: BBoxFormat,
+    imgsz: Size | None = None,
+    *args, **kwargs
+):
+    """Write bounding boxes to a YOLO-format .txt file.
+
+    Each line in the label file should contain:
+    class_id, cx, cy, w, h, angle, score, track_id
+    where:
+        - class_id: is the class index (0-based).
+        - cx, cy, w, h: are normalized values relative to the image dimensions.
+        - angle: is the rotation angle in degrees. For horizontal bounding
+          boxes, this value is typically 0.
+        - score: is an optional value representing the confidence score.
+        - track_id: is an optional value representing the tracking ID.
+
+    Args:
+        bbox (BBoxes): The bounding boxes to be written.
+        path (Path): The file path to write the bounding boxes to.
+        imgsz (Size, optional): The image size (width, height) to use for
+            normalization if needed. Required if ``fmt`` is a normalized format.
+    """
 
 # endregion
 

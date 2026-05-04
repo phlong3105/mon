@@ -11,7 +11,6 @@ from __future__ import annotations
 __all__ = [
     "Weights",
     "WeightsEnum",
-    "WeightsEnumLike",
     "WeightsLike",
     "create_weights",
     "is_weights_type",
@@ -27,7 +26,6 @@ from mon.core.base.enum import Enum, EnumMeta
 from mon.core.console import log
 from mon.core.constants import K
 from mon.core.path import Path
-from mon.core.typing import PathLike
 from mon.core.utils import is_valid_str
 
 
@@ -41,18 +39,19 @@ class Weights:
     weights.
 
     Attributes:
-        path (Path): The local path where the weights are stored.
-        url (Path, optional): The URL where the weights can be downloaded.
+        name (str, optional): The name of the weights. Defaults to "".
+        path (Path | None, optional): The local path where the weights are stored.
+        url (Path | None, optional): The URL where the weights can be downloaded.
             Defaults to None.
-        num_classes (int, optional): The number of classes. Defaults to None.
-        transforms (Callable, optional): A callable that constructs the
+        num_classes (int | None, optional): The number of classes. Defaults to None.
+        transforms (Callable | None, optional): A callable that constructs the
             preprocessing method (or validation preset transforms) needed to
             use the model. The reason we attach a constructor method rather
             than an already constructed object is because the specific object
             might have memory, and thus we want to delay initialization until
             needed. Defaults to None.
-        meta (dict[str, Any]): Stores meta-data related to the weights of the
-            model and its configuration. These can be informative attributes
+        meta (dict[str, Any], optional): Stores meta-data related to the weights
+            of the model and its configuration. These can be informative attributes
             (for example, the number of parameters/flops, recipe link/methods
             used in training, etc.), configuration parameters (for example, the
             ``num_classes``) needed to construct the model or important
@@ -72,7 +71,7 @@ class Weights:
         """Perform post-initialization tasks."""
         # Validate inputs
         if is_valid_str(self.path):
-            self.path = Path(self.path).normalize()
+            self.path: Path = Path(self.path).normalize()
             if (
                 not self.path.is_weights_file(exists=False)
                 and not self.path.is_dir()
@@ -174,7 +173,7 @@ class Weights:
             raise RuntimeError(f"Failed to load weights from {path}: {e}")
 
     # --- Mutation ---
-    def rectify_path(self, root: PathLike):
+    def rectify_path(self, root: Path):
         """Check if the path is valid and rectify it if not.
 
         The search order is as follows:
@@ -183,7 +182,7 @@ class Weights:
             3. Check the global zoo directory.
 
         Args:
-            root (PathLike): The local project root to check for the weights file.
+            root (Path): The local project root to check for the weights file.
         """
         # Check if the path is valid
         if self.path is None:
@@ -305,7 +304,9 @@ class WeightsEnum(Enum, metaclass=WeightsEnumMeta):
             RuntimeError: If loading the weights fails.
         """
         return self.value.state_dict(
-            overwrite=overwrite, weights_only=weights_only, *args, **kwargs
+            overwrite=overwrite,
+            weights_only=weights_only,
+            *args, **kwargs
         )
 
 # endregion
@@ -315,8 +316,7 @@ class WeightsEnum(Enum, metaclass=WeightsEnumMeta):
 # region TYPE DEFINITIONS
 # ==============================================================================
 
-WeightsEnumLike: TypeAlias = Union[WeightsEnum, str]
-WeightsLike: TypeAlias = Union[Weights, WeightsEnum, PathLike]
+WeightsLike: TypeAlias = Union[Weights, WeightsEnum, Path, str]
 
 # endregion
 
@@ -325,8 +325,16 @@ WeightsLike: TypeAlias = Union[Weights, WeightsEnum, PathLike]
 # region CREATION
 # ==============================================================================
 
-def create_weights(weights: Weights | PathLike, *args, **kwargs) -> Weights | None:
-    """Create a ``Weights`` object from a path or a ``Weights`` object."""
+def create_weights(weights: Weights | Path, *args, **kwargs) -> Weights | None:
+    """Create a ``Weights`` object from a path or a ``Weights`` object.
+
+    Args:
+        weights (Weights | Path): The input weights, which can be a Weights
+            object or a path to a weights file.
+
+    Returns:
+        Weights | None: A Weights object if the input is valid, otherwise None.
+    """
     if isinstance(weights, Weights):
         # If it's already a Weights object, return it directly
         return weights
@@ -347,12 +355,17 @@ def create_weights(weights: Weights | PathLike, *args, **kwargs) -> Weights | No
 # ==============================================================================
 
 def is_weights_type(value: Any, exists: bool = True) -> bool:
-    """Check if a value is of type ``WeightsType``."""
+    """Check if a value is of type ``WeightsType``.
+
+    Args:
+        value (Any): The value to check.
+        exists (bool, optional): If True, also check if the weights file exists.
+            Defaults to True.
+    """
     if isinstance(value, (Weights, WeightsEnum)):
         return value.exists if exists else True
     else:
         return False
-
 
 # endregion
 

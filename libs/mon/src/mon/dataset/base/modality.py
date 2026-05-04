@@ -12,7 +12,6 @@ __all__ = [
     "DepthModality",
     "FrameModality",
     "ImageModality",
-    "ModalitiesLike",
     "Modality",
     "ModalityList",
     "build_modalities",
@@ -20,7 +19,7 @@ __all__ = [
 
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, Iterable, TypeAlias, Union
+from typing import Any, Iterable
 
 from mon.core import (
     AlbumTargetType,
@@ -100,7 +99,7 @@ class ModalityList(IndexList[Modality]):
         """Initialize a new instance.
 
         Args:
-            data (Iterable, optional): Initial data to populate the list.
+            data (Iterable | None, optional): Initial data to populate the list.
                 Defaults to None.
         """
         # We hardcode the item_type and key here
@@ -115,7 +114,7 @@ class ModalityList(IndexList[Modality]):
 
     # --- Creation ---
     @classmethod
-    def from_list(cls, modalities: list[ModalityType], **kwargs) -> "ModalityList":
+    def from_list(cls, modalities: list[Modality | dict[str, Any]], **kwargs) -> "ModalityList":
         """Create a new instance from a list of modality configurations."""
         # Validate inputs
         if not isinstance(modalities, list):
@@ -147,25 +146,15 @@ DepthModality = partial(Modality, ext=".jpg", module=Image, type=AlbumTargetType
 
 
 # ==============================================================================
-# region TYPE DEFINITIONS
-# ==============================================================================
-
-ModalityType: TypeAlias = Union[Modality, dict[str, Any]]
-ModalitiesLike: TypeAlias = Union[ModalityList, list[ModalityType]]
-
-# endregion
-
-
-# ==============================================================================
 # region CREATION
 # ==============================================================================
 
-def build_modalities(value: ModalitiesLike | None) -> ModalityList:
+def build_modalities(value: Any) -> ModalityList:
     """Build a ``ModalityList`` from a given value.
 
     Args:
-        value (ModalitiesLike | None): Either a ``ModalityList`` instance or a
-            list of modality configurations.
+        value (Any): Either a ``ModalityList`` instance or a list of modality
+            configurations.
 
     Returns:
         ModalityList: A ``ModalityList`` instance.

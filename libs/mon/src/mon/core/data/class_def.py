@@ -12,17 +12,16 @@ from __future__ import annotations
 __all__ = [
     "Class",
     "ClassList",
-    "ClassListLike",
     "build_classlist",
 ]
 
 from dataclasses import dataclass
-from typing import Any, Iterable, TypeAlias, Union
+from typing import Any, Iterable
 
 from mon.core.base import IndexList
 from mon.core.fileio import load_yaml, save_yaml
 from mon.core.path import Path
-from mon.core.typing import PathLike
+from mon.core.typing import Int3
 
 
 # ==============================================================================
@@ -50,12 +49,12 @@ class Class:
     train_id: int = -1
     category: str = "unknown"
     category_id: int = -1
-    color: tuple[int, int, int] = (255, 255, 255)
+    color: Int3 = (255, 255, 255)
     ignore_in_eval: bool = False
 
     # --- Properties ---
     @property
-    def id_color(self) -> tuple[int, int, int]:
+    def id_color(self) -> Int3:
         """Return a tuple of the class ID repeated three times for color image."""
         return (self.id,) * 3
 
@@ -77,7 +76,7 @@ class ClassList(IndexList[Class]):
         """Initialize a new instance.
 
         Args:
-            data (Iterable, optional): Initial data to populate the list.
+            data (Iterable | None, optional): Initial data to populate the list.
                 Defaults to None.
         """
         # We hardcode the item_type, key, and id here
@@ -106,17 +105,17 @@ class ClassList(IndexList[Class]):
         return list(self._id_map.keys())
 
     @property
-    def palette(self) -> list[tuple[int, int, int]]:
+    def palette(self) -> list[Int3]:
         """Return the color palette as a list of RGB tuples."""
         return [item.color for item in self.data]
 
     # --- Input ---
     @classmethod
-    def load(cls, path: PathLike, *args, **kwargs) -> "ClassList":
+    def load(cls, path: Path, *args, **kwargs) -> "ClassList":
         """Load class definitions from a YAML file.
 
         Args:
-            path (PathLike): Path to the input YAML file.
+            path (Path): Path to the input YAML file.
 
         Returns:
             ClassList: A new instance of ``ClassList`` populated with the
@@ -131,11 +130,11 @@ class ClassList(IndexList[Class]):
         return cls([Class(**c) for c in classes], *args, **kwargs)
 
     # --- Output ---
-    def save(self, path: PathLike):
+    def save(self, path: Path):
         """Save class definitions to a YAML file.
 
         Args:
-            path (PathLike): Path to the output YAML file.
+            path (Path): Path to the output YAML file.
 
         Raises:
             ValueError: If ``path`` is not a YAML file.
@@ -151,19 +150,9 @@ class ClassList(IndexList[Class]):
 
     # --- Creation ---
     @classmethod
-    def from_file(cls, path: PathLike) -> "ClassList":
+    def from_file(cls, path: Path) -> "ClassList":
         """Create a new instance from a YAML file."""
         return cls.load(path)
-
-# endregion
-
-
-# ==============================================================================
-# region TYPE DEFINITIONS
-# ==============================================================================
-
-ClassLike: TypeAlias = Union[Class, dict[str, Any]]
-ClassListLike: TypeAlias = Union[ClassList, list[ClassLike], PathLike]
 
 # endregion
 
@@ -172,13 +161,12 @@ ClassListLike: TypeAlias = Union[ClassList, list[ClassLike], PathLike]
 # region CREATION
 # ==============================================================================
 
-def build_classlist(value: ClassListLike | None) -> ClassList:
+def build_classlist(value: Any) -> ClassList:
     """Build a ``ClassList`` instance from a given value.
 
     Args:
-        value (ClassListLike | None): Either a ``ClassList`` instance, a list
-            of class definitions, or a path to a YAML file containing class
-            definitions.
+        value (Any): Either a ``ClassList`` instance, a list of class
+            definitions, or a path to a YAML file containing class definitions.
 
     Returns:
         ClassList: A ``ClassList`` instance.
@@ -199,7 +187,6 @@ def build_classlist(value: ClassListLike | None) -> ClassList:
         raise TypeError(
             f"Unsupported ClassList type: {type(value).__name__}."
         )
-
 
 # endregion
 

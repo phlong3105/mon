@@ -18,7 +18,7 @@ from abc import ABC, abstractmethod
 import torch
 from torch import nn
 
-from mon.core import Config, DeviceLike, Path, PathLike, Size, sys_ctx
+from mon.core import Config, Path, Size, sys_ctx
 from mon.dataset import DataLoader
 from mon.nn import Model
 
@@ -46,7 +46,7 @@ class Runner(ABC):
 
         # Allocate resources
         # We will initialize these attributes later to avoid a long initialization time
-        self._model: Model | None = None
+        self._model: Model = None
 
     @abstractmethod
     def _setup(self):
@@ -91,7 +91,7 @@ class Runner(ABC):
 
     # --- Logging ---
     @abstractmethod
-    def log_summary(self):
+    def _log_summary(self):
         """Log a summary of the current run."""
         pass
 
@@ -100,7 +100,7 @@ class Runner(ABC):
         """Run the benchmark for the model.
 
         Args:
-            imgsz (Size, optional): The input image size for benchmarking.
+            imgsz (Size | None, optional): The input image size for benchmarking.
                 Defaults to None, which means using the default size.
         """
         if self.model is None:
@@ -119,23 +119,23 @@ class Evaluator(ABC):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        input_dir: PathLike,
-        target_dir: PathLike | None,
-        result_file: PathLike | None,
+        input_dir: Path,
+        target_dir: Path | None,
+        result_file: Path | None,
         metrics: list[str],
-        device: DeviceLike,
+        device: torch.device | str | int,
         verbose: bool = True,
     ):
         """Initialize a new instance.
 
         Args:
-            input_dir (PathLike): The directory containing the input data.
-            target_dir (PathLike | None): The directory containing the target
-                data. If None, it will be inferred from the input directory.
-            result_file (PathLike | None): The file to save the evaluation
-                results. If None, results will not be saved.
+            input_dir (Path): The directory containing the input data.
+            target_dir (Path | None): The directory containing the target data.
+                If None, it will be inferred from the input directory.
+            result_file (Path | None): The file to save the evaluation results.
+                If None, results will not be saved.
             metrics (list[str]): The list of metrics to evaluate.
-            device (DeviceLike): The device to use for evaluation.
+            device (torch.device | str | int): The device to use for evaluation.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         # Assign attributes
@@ -163,7 +163,7 @@ class Evaluator(ABC):
         return self._input_dir
 
     @input_dir.setter
-    def input_dir(self, input_dir: PathLike):
+    def input_dir(self, input_dir: Path):
         """Set the input directory."""
         self._input_dir = Path(input_dir).normalize()
 
@@ -173,7 +173,7 @@ class Evaluator(ABC):
         return self._target_dir
 
     @target_dir.setter
-    def target_dir(self, target_dir: PathLike | None):
+    def target_dir(self, target_dir: Path | None):
         """Set the target directory."""
         target_dir = Path(target_dir).normalize() if target_dir else None
         if target_dir:
@@ -197,7 +197,7 @@ class Evaluator(ABC):
         return self._device
 
     @device.setter
-    def device(self, device: DeviceLike):
+    def device(self, device: torch.device | str | int):
         """Set the device to use."""
         self._device = sys_ctx.get_torch_device(device)
 

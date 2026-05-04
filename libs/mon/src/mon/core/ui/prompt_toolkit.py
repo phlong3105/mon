@@ -33,7 +33,6 @@ from prompt_toolkit.layout.processors import BeforeInput, PasswordProcessor
 from prompt_toolkit.styles import Style
 
 from mon.core.path import Path
-from mon.core.typing import PathLike
 from mon.core.utils import to_float_list, to_int_list, truncate_string
 
 
@@ -67,10 +66,18 @@ class PromptBase(Generic[PromptType]):
     to support types such as ``int``, ``float``, or ``Path``.
 
     Attributes:
-        response_type (type): Target type for free-form tokens. Defaults to ``str``.
+        response_type (type): Target type for free-form tokens
         validate_error_message (str): Shown when nothing is selected.
-        invalid_choice_message (str): Shown when a strict-mode value is not in ``choices``.
-        invalid_type_message (str): Shown when a free-form token cannot be converted.
+        invalid_choice_message (str): Shown when a strict-mode value is not
+            in ``choices``.
+        invalid_type_message (str): Shown when a free-form token cannot be
+            converted.
+        skip_message (str): Label for the "Skip" option when ``skip=True``.
+        choices (list[str] | None): List of selectable options. If None, only
+            free-form direct input is accepted.
+        choices_repr (list[str] | None): List of selectable options to display,
+            corresponding 1-to-1 with ``choices``. If None, ``choices`` is used
+            for display.
     """
 
     response_type: type = str   # subclasses override this
@@ -107,14 +114,15 @@ class PromptBase(Generic[PromptType]):
         Args:
             prompt (str, optional): Prompt text shown as the header.
                 Defaults to "".
-            choices (list[str], optional): List of selectable options. If
-                None, only free-form direct input is accepted. Defaults to None.
-            choices_repr (list[str], optional): List of selectable options to
-                display, corresponding 1-to-1 with ``choices``. If None,
+            choices (list[str] | None, optional): List of selectable options.
+                If None, only free-form direct input is accepted. Defaults to None.
+            choices_repr (list[str] | None, optional): List of selectable options
+                to display, corresponding 1-to-1 with ``choices``. If None,
                 ``choices`` is used for display. Defaults to None.
-            defaults (str | int | list[str | int], optional): Pre-selected values.
-                Each item may be a 0-based ``int`` index, a 1-based number string
-                (``"1"``), or the choice value itself. Defaults to None.
+            defaults (str | int | list[str | int] | None, optional):
+                Pre-selected values. Each item may be a 0-based ``int`` index,
+                a 1-based number string (``"1"``), or the choice value itself.
+                Defaults to None.
             password (bool, optional): Mask typed characters in the input
                 buffer. The live preview shows a count instead of values.
                 Defaults to False.
@@ -138,7 +146,7 @@ class PromptBase(Generic[PromptType]):
             show_default (bool, optional): Display pre-selected values in
                 the header. Defaults to True.
             show_choices (bool, optional): Render the choices list. When
-                False the list is hidden but choices are still used for
+                 False, the list is hidden, but choices are still used for
                 input resolution and validation. Defaults to True.
             show_column (bool, optional): Render the choices list in columns.
                 Defaults to False.
@@ -201,7 +209,10 @@ class PromptBase(Generic[PromptType]):
         In single-select mode only the first default is applied.
 
         Args:
-            defaults: Default values or indices.
+            defaults (str | int | list[str | int] | None, optional):
+                Pre-selected values.  Each item may be a 0-based ``int`` index,
+                a 1-based number string (``"1"``), or the choice value itself.
+                Defaults to None.
         """
         if not defaults:
             if self.multiple:
@@ -293,15 +304,15 @@ class PromptBase(Generic[PromptType]):
         Args:
             prompt (str, optional): Prompt text shown as the header.
                 Defaults to "".
-            choices (list[str], optional): List of selectable options. If
-                None, only free-form direct input is accepted.
-                Defaults to None.
-            choices_repr (list[str], optional): List of selectable options to
-                display, corresponding 1-to-1 with ``choices``. If None,
+            choices (list[str] | None, optional): List of selectable options.
+                If None, only free-form direct input is accepted. Defaults to None.
+            choices_repr (list[str] | None, optional): List of selectable options
+                to display, corresponding 1-to-1 with ``choices``. If None,
                 ``choices`` is used for display. Defaults to None.
-            defaults (str | int | list[str | int], optional): Pre-selected values.
-                Each item may be a 0-based ``int`` index, a 1-based number string
-                (``"1"``), or the choice value itself. Defaults to None.
+            defaults (str | int | list[str | int] | None, optional):
+                Pre-selected values.  Each item may be a 0-based ``int`` index,
+                a 1-based number string (``"1"``), or the choice value itself.
+                Defaults to None.
             password (bool, optional): Mask typed characters in the input
                 buffer. The live preview shows a count instead of values.
                 Defaults to False.
@@ -325,7 +336,7 @@ class PromptBase(Generic[PromptType]):
             show_default (bool, optional): Display pre-selected values in
                 the header. Defaults to True.
             show_choices (bool, optional): Render the choices list. When
-                False the list is hidden but choices are still used for
+                False, the list is hidden, but choices are still used for
                 input resolution and validation. Defaults to True.
             show_column (bool, optional): Render the choices list in columns.
                 Defaults to False.
@@ -364,7 +375,7 @@ class PromptBase(Generic[PromptType]):
             3. Strict-mode membership — uses ``invalid_choice_message``.
 
         Args:
-            final (Any): Value returned by ``_get_final()``.
+            final (Any): Value returned by ``self._get_final()``.
 
         Returns:
             str: Non-empty error message if invalid, else "".
@@ -408,7 +419,7 @@ class PromptBase(Generic[PromptType]):
         """Compute the confirmed result from the current selection state.
 
         Predefined choices are returned as plain strings. Free-form tokens are
-        passed through ``_convert()`` to cast them to ``response_type``.
+        passed through ``self._convert()`` to cast them to ``response_type``.
 
         Returns:
             response_type | list[response_type] | None: Returns None on
@@ -1198,7 +1209,7 @@ class PathPrompt(PromptBase[Path]):
         case_sensitive: bool = True,
         truncate_length: int | None = None,
         truncate_side: Literal["left", "middle", "right"] = "middle",
-        commonpath: PathLike | None = None,
+        commonpath: Path | None = None,
         show_default: bool = True,
         show_choices: bool = True,
         show_column: bool = False,
@@ -1234,7 +1245,7 @@ class PathPrompt(PromptBase[Path]):
                 Which side to truncate on. ``"middle"`` preserves both the
                 root and the filename, which is usually most readable for
                 paths. Defaults to ``"middle"``.
-            commonpath (PathLike, optional): If provided, trim this part from
+            commonpath (Path | None, optional): If provided, trim this part from
                 the start of each choice for display. Defaults to None.
             show_default (bool, optional): Display pre-selected values in
                 the header. Defaults to True.
@@ -1279,7 +1290,7 @@ class PathPrompt(PromptBase[Path]):
         case_sensitive: bool = True,
         truncate_length: int | None = None,
         truncate_side: Literal["left", "middle", "right"] = "middle",
-        commonpath: PathLike | None = None,
+        commonpath: Path | None = None,
         show_default: bool = True,
         show_choices: bool = True,
         show_column: bool = False,
@@ -1289,12 +1300,12 @@ class PathPrompt(PromptBase[Path]):
         Args:
             prompt (str, optional): Prompt text shown as the header.
             Defaults to "".
-            choices (list[str], optional): List of selectable options. If
-                None, only free-form direct input is accepted.
+            choices (list[str] | None, optional): List of selectable options.
+                If None, only free-form direct input is accepted. Defaults to None.
+            defaults (str | int | list[str | int] | None, optional):
+                Pre-selected values. Each item may be a 0-based ``int`` index,
+                a 1-based number string (``"1"``), or the choice value itself.
                 Defaults to None.
-            defaults (str | int | list[str | int], optional): Pre-selected values.
-                Each item may be a 0-based ``int`` index, a 1-based number string
-                (``"1"``), or the choice value itself. Defaults to None.
             password (bool, optional): Mask typed characters in the input
                 buffer. The live preview shows a count instead of values.
                 Defaults to False.
@@ -1308,14 +1319,14 @@ class PathPrompt(PromptBase[Path]):
                 Defaults to False.
             case_sensitive (bool, optional): Whether name matching against
                 ``choices`` is case-sensitive. Defaults to True.
-            truncate_length (int, optional): Maximum display length for paths
-                in the choices list and header. None means no truncation.
+            truncate_length (int | None, optional): Maximum display length for
+                paths in the choices list and header. None means no truncation.
                 Defaults to None.
             truncate_side (Literal["left", "middle", "right"], optional):
                 Which side to truncate on. ``"middle"`` preserves both the
                 root and the filename, which is usually most readable for
                 paths. Defaults to ``"middle"``.
-            commonpath (PathLike, optional): If provided, trim this part from
+            commonpath (Path | None, optional): If provided, trim this part from
                 the start of each choice for display. Defaults to None.
             show_default (bool, optional): Display pre-selected values in
                 the header. Defaults to True.

@@ -35,7 +35,6 @@ __all__ = [
     "NonMember",
     "OrderedEnum",
     "ReprEnum",
-    "SqliteEnum",
     "StrEnum",
     "Unique",
     "UniqueEnum",

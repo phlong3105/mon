@@ -39,7 +39,6 @@ from rich.text import Text
 from mon.core.console import console
 from mon.core.context import sys_ctx
 from mon.core.dtype import MemoryUnit
-from mon.core.typing import MemoryUnitLike
 
 
 # ==============================================================================
@@ -58,18 +57,18 @@ class MemoryUsageColumn(ProgressColumn):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        unit: MemoryUnitLike = "GB",
+        unit: MemoryUnit = MemoryUnit.GB,
         update_interval: float = 1.0,
         table_column: Column | None = None,
     ):
         """Initialize a new instance.
 
         Args:
-            unit (MemoryUnitType, optional): Memory unit to use for reporting.
-                Defaults to "GB".
+            unit (MemoryUnit, optional): Memory unit to use for reporting.
+                Defaults to MemoryUnit.GB.
             update_interval (float, optional): Minimum time in seconds between
                 updates. Defaults to 1.0.
-            table_column (Column, optional): Column for custom styling.
+            table_column (Column | None, optional): Column for custom styling.
                 Defaults to None.
         """
         super().__init__(table_column=table_column)
@@ -128,12 +127,12 @@ class ProcessedItemsColumn(ProgressColumn):
     """
 
     # --- Lifecycle & Initialization ---
-    def __init__(self, table_column: Column = None):
+    def __init__(self, table_column: Column | None = None):
         """Initialize a new instance.
 
         Args:
-            table_column (Column, optional): Optional rich.table.Column for
-                custom styling. Defaults to None.
+            table_column (Column | None, optional): Optional rich.table.Column
+                for custom styling. Defaults to None.
         """
         super().__init__(table_column=table_column)
 
@@ -199,10 +198,7 @@ class ProcessingSpeedColumn(ProgressColumn):
 # region CREATION
 # ==============================================================================
 
-def create_download_bar(
-    transient: bool = False,
-    disable: bool = False,
-) -> Progress:
+def create_download_bar(transient: bool = False, disable: bool = False) -> Progress:
     """Create a download progress bar.
 
     Args:

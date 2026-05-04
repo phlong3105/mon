@@ -216,8 +216,8 @@ class FINERLinear(nn.Module):
             in_features (int): Size of each input sample.
             out_features (int): Size of each output sample.
             w0 (float, optional): Frequency scaling factor. Defaults to 30.0.
-            first_bias_scale (float, optional): Scaling factor for the first
-                layer bias. Defaults to None.
+            first_bias_scale (float | None, optional): Scaling factor for the
+                first layer bias. Defaults to None.
             scale_req_grad (bool, optional): Flag indicating whether the scaling
                 factor requires gradient computation. Defaults to False.
             is_first (bool, optional): Flag indicating if this is the first layer.

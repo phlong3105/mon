@@ -85,11 +85,11 @@ class SwinBackBone(ModelRegisterMixin, nn.Module):
             window_size (list[int]): Window size of the Swin Transformer.
             stochastic_depth_prob (float): Probability of dropping a depth unit
                 in each stage.
-            weights (Weights, optional): Pre-trained weights to load.
+            weights (Weights | None, optional): Pre-trained weights to load.
                 Defaults to None.
-            out_indices (list[int], optional): List of layer indices to extract
-                features from. If None, defaults to [1, 3, 5, 7].
-            verbose (bool): Verbosity mode. Defaults to True.
+            out_indices (list[int] | None, optional): List of layer indices to
+                extract features from. If None, defaults to [1, 3, 5, 7].
+            verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         super().__init__(name=name)
 
@@ -343,8 +343,8 @@ def swin_t(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     return SwinBackBone(
         name="swin_t",
@@ -371,8 +371,8 @@ def swin_s(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     return SwinBackBone(
         name="swin_s",
@@ -399,8 +399,8 @@ def swin_b(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     return SwinBackBone(
         name="swin_b",
@@ -427,8 +427,8 @@ def swin_v2_t(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     return SwinBackBone(
         name="swin_v2_t",
@@ -455,8 +455,8 @@ def swin_v2_s(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     return SwinBackBone(
         name="swin_v2_s",
@@ -483,8 +483,8 @@ def swin_v2_b(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     return SwinBackBone(
         name="swin_v2_b",

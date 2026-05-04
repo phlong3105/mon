@@ -19,23 +19,18 @@ File Structure:
 
 from __future__ import annotations
 
+from typing import Any
+
 from box import Box
 
 from mon.core import (
     DATASETS,
-    DictLike,
     log_error,
     Path,
-    PathLike,
     resolve_dataset_dir,
 )
 from .base import *
-from .transform import (
-    build_compose,
-    build_transform,
-    ComposeLike,
-    TransformLike,
-)
+from .transform import build_compose, build_transform
 from .zoo import *
 
 
@@ -44,10 +39,10 @@ from .zoo import *
 # ==============================================================================
 
 def build_dataset(
-    src: DictLike | PathLike,
-    dataset_dir: PathLike | None = None,
-    cwd: PathLike | None = None,
-    transforms: ComposeLike | None = None,
+    src: dict | Path,
+    dataset_dir: Path | None = None,
+    cwd: Path | None = None,
+    transforms: Any = None,
     keep_original: bool = False,
     verbose: bool = False,
     *args, **kwargs
@@ -55,15 +50,14 @@ def build_dataset(
     """Build a dataset from a given source.
 
     Args:
-        src (DictLike | PathLike): The source to build the dataset from. It can
+        src (dict | Path): The source to build the dataset from. It can
             be either a dataset configuration dictionary or a path to the
             dataset directory.
-        dataset_dir (PathLike, optional): Specific dataset directory.
+        dataset_dir (Path | None, optional): Specific dataset directory.
             Defaults to None.
-        cwd (PathLike, optional): The current working directory to resolve the
-            dataset directory from. Defaults to None.
-        transforms (ComposeLike, optional): Transformations to apply.
-            Defaults to None.
+        cwd (Path | None, optional): The current working directory to resolve
+            the dataset directory from. Defaults to None.
+        transforms (Any, optional): Transformations to apply. Defaults to None.
         keep_original (bool, optional): Whether to keep the original data
             alongside the transformed data. Defaults to False.
         verbose (bool, optional): Verbosity mode. Defaults to False.
@@ -132,10 +126,10 @@ def build_dataset(
 
 
 def build_dataloader(
-    src: DictLike | PathLike,
-    dataset_dir: PathLike | None = None,
-    cwd: PathLike | None = None,
-    transforms: ComposeLike | None = None,
+    src: dict | Path,
+    dataset_dir: Path | None = None,
+    cwd: Path | None = None,
+    transforms: Any = None,
     keep_original: bool = False,
     batch_size: int = 1,
     verbose: bool = False,
@@ -144,14 +138,12 @@ def build_dataloader(
     """Build a dataloader from a given source.
 
     Args:
-        src (DictLike | PathLike): A dataloader configuration dictionary or a
-            source path.
-        dataset_dir (PathLike, optional): Specific dataset directory.
+        src (dict | Path): A dataloader configuration dictionary or a source path.
+        dataset_dir (Path | None, optional): Specific dataset directory.
             Defaults to None.
-        cwd (PathLike, optional): The current working directory to resolve the
-            dataset directory from. Defaults to None.
-        transforms (ComposeLike, optional): Transformations to apply.
-            Defaults to None.
+        cwd (Path | None, optional): The current working directory to resolve
+            the dataset directory from. Defaults to None.
+        transforms (Any, optional): Transformations to apply. Defaults to None.
         keep_original (bool, optional): Whether to keep the original data
             alongside the transformed data. Defaults to False.
         batch_size (int, optional): Batch size for the dataloader. Defaults to 1.

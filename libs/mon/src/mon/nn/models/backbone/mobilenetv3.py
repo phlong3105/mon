@@ -72,11 +72,11 @@ class MobileNetV3BackBone(ModelRegisterMixin, nn.Module):
             name (str): Name of the model variant.
             inverted_residual_setting: Network structure configuration.
             last_channel (int): Number of output channels for the last layer.
-            weights (Weights, optional): Pre-trained weights to load.
+            weights (Weights | None, optional): Pre-trained weights to load.
                 Defaults to None.
-            out_indices (list[int], optional): List of layer indices to extract
-                features from.
-            verbose (bool): Verbosity mode. Defaults to True.
+            out_indices (list[int] | None, optional): List of layer indices to
+                extract features from.
+            verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         super().__init__(name=name)
 
@@ -232,8 +232,8 @@ def mobilenet_v3_large(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     inverted_residual_setting, last_channel = _mobilenet_v3_conf(
         arch="mobilenet_v3_large",
@@ -260,8 +260,8 @@ def mobilenet_v3_small(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     inverted_residual_setting, last_channel = _mobilenet_v3_conf(
         arch="mobilenet_v3_small",

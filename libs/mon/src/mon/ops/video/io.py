@@ -20,7 +20,7 @@ import cv2
 from numpy import ndarray
 from torch import Tensor
 
-from mon.core import Path, PathLike, Size, SizeLike, TensorOrArray
+from mon.core import Path, Size, TensorOrArray
 from mon.ops.image import to_image_array
 
 
@@ -55,8 +55,8 @@ class VideoWriter(ABC):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        path: PathLike,
-        imgsz: SizeLike = (480, 640),
+        path: Path,
+        imgsz: Size = (480, 640),
         frame_rate: float = 24,
         verbose: bool = False,
         *args, **kwargs,
@@ -64,8 +64,8 @@ class VideoWriter(ABC):
         """Initialize a new instance.
 
         Args:
-            path (PathLike): Video output file.
-            imgsz (SizeLike, optional): Output video resolution as (H, W).
+            path (Path): Video output file.
+            imgsz (Size, optional): Output video resolution as (H, W).
                 Defaults to (480, 640).
             frame_rate (float): Output video frame rate. Defaults to 24.
             verbose (bool): Verbosity mode. Defaults to False.
@@ -118,7 +118,7 @@ class VideoWriter(ABC):
     def __call__(
         self,
         frame: TensorOrArray,
-        path: PathLike | None = None,
+        path: Path | None = None,
         *args, **kwargs
     ):
         """Write a ``frame`` to the video output.
@@ -127,7 +127,7 @@ class VideoWriter(ABC):
             frame (TensorOrArray): Video frame, formatted as an array of
                 shape (H, W, C) and values ranging from 0 to 255; or as a
                 tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
-            path (PathLike, optional): Optional path to also save the ``frame``
+            path (Path, optional): Optional path to also save the ``frame``
                 as an image. Defaults to None.
 
         Raises:
@@ -167,8 +167,8 @@ class VideoWriterCV(VideoWriter):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        path: PathLike,
-        imgsz: SizeLike = (480, 640),
+        path: Path,
+        imgsz: Size = (480, 640),
         frame_rate: float = 24,
         fourcc: str = "mp4v",
         verbose: bool = False,
@@ -178,8 +178,8 @@ class VideoWriterCV(VideoWriter):
 
         Args:
             Args:
-            path (PathLike): Video output file.
-            imgsz (SizeLike, optional): Output video resolution as (H, W).
+            path (Path): Video output file.
+            imgsz (Size, optional): Output video resolution as (H, W).
                 Defaults to (480, 640).
             frame_rate (float): Output video frame rate. Defaults to 24.
             fourcc (str): FourCC code for the video codec. Defaults to "mp4v".

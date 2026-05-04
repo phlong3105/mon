@@ -76,11 +76,11 @@ class DenseNetBackBone(ModelRegisterMixin, nn.Module):
                 pooling block.
             num_init_features (int): The number of filters to learn in the
                 first convolution layer.
-            weights (Weights, optional): Pre-trained weights to load.
+            weights (Weights | None, optional): Pre-trained weights to load.
                 Defaults to None.
-            out_indices (list[int], optional): List of layer indices to extract
-                features from. If None, defaults to [3, 5, 7, 11].
-            verbose (bool): Verbosity mode. Defaults to True.
+            out_indices (list[int] | None, optional): List of layer indices to
+                extract features from. If None, defaults to [3, 5, 7, 11].
+            verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         super().__init__(name=name)
 
@@ -271,8 +271,8 @@ def densenet121(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to DenseNet121_Weights.DEFAULT.
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     return DenseNetBackBone(
         name="densenet121",
@@ -296,8 +296,8 @@ def densenet161(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     return DenseNetBackBone(
         name="densenet161",
@@ -321,8 +321,8 @@ def densenet169(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     return DenseNetBackBone(
         name="densenet169",
@@ -346,8 +346,8 @@ def densenet201(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     return DenseNetBackBone(
         name="densenet201",

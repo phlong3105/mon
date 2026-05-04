@@ -31,10 +31,10 @@ def compute_depth_metrics(
     Args:
         pred (ndarray): Predicted depth map.
         target (ndarray): Target depth map.
-        valid_mask (ndarray | None): Optional boolean mask indicating valid
-            pixels. If None, all pixels are considered valid. Defaults to None.
-        normalize (bool): Whether to normalize the predicted depth map to the
-            same range as the target depth map before computing metrics.
+        valid_mask (ndarray | None, optional): Optional boolean mask indicating
+            valid pixels. If None, all pixels are considered valid. Defaults to None.
+        normalize (bool, optional): Whether to normalize the predicted depth
+            map to the same range as the target depth map before computing metrics.
             Defaults to True.
 
     Returns:

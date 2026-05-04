@@ -66,11 +66,11 @@ class Trainer(Runner, ABC):
         # Allocate resources
         # We will initialize these attributes later to avoid a long
         # initialization time
-        self._optimizer: Optimizer | None = None
-        self._scheduler: LRScheduler | None = None
-        self._train_dataloader: DataLoader | None = None
-        self._val_dataloader: DataLoader | None = None
-        self._tb_logger: SummaryWriter | None = None
+        self._optimizer: Optimizer = None
+        self._scheduler: LRScheduler = None
+        self._train_dataloader: DataLoader = None
+        self._val_dataloader: DataLoader = None
+        self._tb_logger: SummaryWriter = None
         self._best: dict[str, float] = {
             "loss": float("inf"),
         }
@@ -87,19 +87,13 @@ class Trainer(Runner, ABC):
 
         # Define model
         self._init_model()
-        if self.model is None:
-            raise RuntimeError(f"'model' is not initialized.")
 
         # Define optimizer & scheduler
         self._init_optimizer()
-        if self.optimizer is None:
-            raise RuntimeError(f"'optimizer' is not initialized.")
 
         # Define data
         self._init_train_dataloader()
         self._init_val_dataloader()
-        if self.train_dataloader is None:
-            raise RuntimeError(f"'train_dataloader' is not initialized.")
 
         # Define loggers
         self._init_loggers()
@@ -114,22 +108,24 @@ class Trainer(Runner, ABC):
         config = self.config
         dataloader = self.config.train_dataloader
 
-        self._train_dataloader = build_dataloader(
-            src=dataloader,
-            dataset_dir=config.data_dir,
-            split=Split.TRAIN,
-        )[1]
+        if dataloader is not None:
+            self._train_dataloader = build_dataloader(
+                src=dataloader,
+                dataset_dir=config.data_dir,
+                split=Split.TRAIN,
+            )[1]
 
     def _init_val_dataloader(self):
         """Initialize ``self._val_dataloader`` attribute."""
         config = self.config
         dataloader = self.config.val_dataloader
 
-        self._val_dataloader = build_dataloader(
-            src=dataloader,
-            dataset_dir=config.data_dir,
-            split=Split.VAL,
-        )[1]
+        if dataloader is not None:
+            self._val_dataloader = build_dataloader(
+                src=dataloader,
+                dataset_dir=config.data_dir,
+                split=Split.VAL,
+            )[1]
 
     def _init_loggers(self):
         """Initialize external loggers for tracking training progress and metrics.
@@ -146,49 +142,24 @@ class Trainer(Runner, ABC):
 
     # --- Properties ---
     @property
-    def optimizer(self) -> Optimizer:
-        """Return the optimizer object."""
-        return self._optimizer
-
-    @property
-    def scheduler(self) -> LRScheduler | None:
-        """Return the scheduler object."""
-        return self._scheduler
-
-    @property
     def lr(self) -> float:
         """Return the current learning rate from the optimizer."""
-        if self.optimizer is None:
+        if self._optimizer is None:
             return 0.0
-        for param_group in self.optimizer.param_groups:
+        for param_group in self._optimizer.param_groups:
             return param_group["lr"]
         return 0.0
 
-    @property
-    def train_dataloader(self) -> DataLoader:
-        """Return the training dataloader."""
-        return self._train_dataloader
-
-    @property
-    def val_dataloader(self) -> DataLoader:
-        """Return the validation dataloader."""
-        return self._val_dataloader
-
-    @property
-    def best(self) -> dict[str, float]:
-        """Return the best dictionary."""
-        return self._best
-
     # --- Creation ---
     @classmethod
-    def from_cli(cls, prompt: bool = False, *args, **kwargs) -> "Trainer":
+    def from_cli(cls, prompt: bool = False, **kwargs) -> "Trainer":
         """Create an instance of Trainer from command-line arguments.
 
         Args:
             prompt (bool, optional): Whether to prompt the user for input if
                 necessary. Defaults to False.
         """
-        config_ctx = ConfigContext.from_cli(*args, **kwargs)
+        config_ctx = ConfigContext.from_cli(**kwargs)
         config = config_ctx.config_for(RunMode.TRAIN, prompt=prompt)
         return cls(config)
 
@@ -199,10 +170,17 @@ class Trainer(Runner, ABC):
 
         # 1. Setup
         self._setup()
+        # Validate that all necessary components are initialized
+        if self._model is None:
+            raise RuntimeError(f"'model' is not initialized.")
+        if self._optimizer is None:
+            raise RuntimeError(f"'optimizer' is not initialized.")
+        if self._train_dataloader is None:
+            raise RuntimeError(f"'train_dataloader' is not initialized.")
 
         # 2. Summarize the current run
         if config.verbose:
-            self.log_summary()
+            self._log_summary()
 
         # 3. Run benchmark
         if config.benchmark:
@@ -227,20 +205,20 @@ class Trainer(Runner, ABC):
 
                 # 4.2. Val epoch
                 val_outputs = {}
-                if self.val_dataloader is not None:
+                if self._val_dataloader is not None:
                     self.model.eval()
                     val_outputs = self._val_epoch(epoch=epoch, pbar=pbar)
 
                 # 4.3. Scheduler Step
-                if self.scheduler is not None:
-                    if isinstance(self.scheduler, ReduceLROnPlateau):
+                if self._scheduler is not None:
+                    if isinstance(self._scheduler, ReduceLROnPlateau):
                         # If it's a Plateau scheduler, it needs a metric (usually Val Loss)
                         # Fallback to train loss if val loss isn't available
                         metric = val_outputs.get("loss", train_outputs.get("loss"))
-                        self.scheduler.step(metric)
+                        self._scheduler.step(metric)
                     else:
                         # For all other standard schedulers (StepLR, CosineAnnealing, etc.)
-                        self.scheduler.step()
+                        self._scheduler.step()
 
                 # 4.4. Log
                 if self.verbose:
@@ -286,7 +264,7 @@ class Trainer(Runner, ABC):
 
     # --- Logging ---
     @override
-    def log_summary(self):
+    def _log_summary(self):
         """Log a summary of the current run."""
         self.config.log_summary()
 
@@ -374,18 +352,18 @@ class Trainer(Runner, ABC):
                 than a higher value. Defaults to False.
         """
         # If the key is not in the best dictionary, save the new value
-        if key not in self.best:
-            self.best[key] = value
+        if key not in self._best:
+            self._best[key] = value
             return
 
         # If the new value is not better than the best value, skip saving
-        if lower_is_better and value >= self.best[key]:
+        if lower_is_better and value >= self._best[key]:
             return
-        elif not lower_is_better and value <= self.best[key]:
+        elif not lower_is_better and value <= self._best[key]:
             return
 
         # Otherwise, update the best value and save the model checkpoint
-        self.best[key] = value
+        self._best[key] = value
 
         save_dir = self.config.output_dir
         save_dir.mkdir(exist_ok=True, parents=True)

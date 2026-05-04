@@ -81,11 +81,11 @@ class ViTBackBone(ModelRegisterMixin, nn.Module):
             num_heads (int): Number of attention heads.
             hidden_dim (int): Dimension of the hidden layers.
             mlp_dim (int): Dimension of the MLP layers.
-            weights (Weights, optional): Pre-trained weights to load.
+            weights (Weights | None, optional): Pre-trained weights to load.
                 Defaults to None.
-            out_indices (list[int], optional): List of layer indices to extract
-                features from. If None, defaults to [2, 5, 8, 11].
-            verbose (bool): Verbosity mode. Defaults to True.
+            out_indices (list[int] | None, optional): List of layer indices to
+                extract features from. If None, defaults to [2, 5, 8, 11].
+            verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         super().__init__(name=name)
 
@@ -451,8 +451,8 @@ def vit_b_16(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     return ViTBackBone(
         name="vit_b_16",
@@ -478,8 +478,8 @@ def vit_b_32(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     return ViTBackBone(
         name="vit_b_32",
@@ -505,8 +505,8 @@ def vit_l_16(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     return ViTBackBone(
         name="vit_l_16",
@@ -532,8 +532,8 @@ def vit_l_32(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     return ViTBackBone(
         name="vit_l_32",
@@ -559,8 +559,8 @@ def vit_h_14(
     Args:
         weights (Weights, optional): Pre-trained weights to load.
             Defaults to "default".
-        out_indices (list[int], optional): List of layer indices to extract
-            features from. Defaults to None.
+        out_indices (list[int] | None, optional): List of layer indices to
+            extract features from. Defaults to None.
     """
     return ViTBackBone(
         name="vit_h_14",

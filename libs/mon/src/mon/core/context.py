@@ -29,7 +29,7 @@ import torch
 from .base import singleton
 from .data import Device, DeviceList
 from .dtype import DeviceType
-from .typing import DeviceLike, IntOrTuple2, MISSING
+from .typing import IntOrTuple2, MISSING
 
 
 # ==============================================================================
@@ -100,11 +100,12 @@ class SystemContext:
         return self._devices
 
     # --- Retrieval ---
-    def get_device(self, device: DeviceLike = MISSING) -> Device:
+    def get_device(self, device: torch.device | str | int = MISSING) -> Device:
         """Return the device object for the specified device.
 
         Args:
-            device (DeviceLike, optional): Device to retrieve. Defaults to _MISSING.
+            device (torch.device | str | int, optional): Device to retrieve.
+                Defaults to _MISSING.
 
         Returns:
             Device: The corresponding Device object.
@@ -133,7 +134,7 @@ class SystemContext:
         else:
             raise ValueError(f"Unsupported device specifier: {device}")
 
-    def get_torch_device(self, device: DeviceLike = MISSING) -> torch.device:
+    def get_torch_device(self, device: torch.device | str | int = MISSING) -> torch.device:
         """Return the torch device object for the specified device."""
         return self.get_device(device).torch_device
 
@@ -148,7 +149,7 @@ class SystemContext:
         Args:
             max_mem_util (float, optional): Maximum allowed VRAM utilization
                 ratio (0.0 to 1.0). Defaults to 0.5 (50%).
-            max_compute_util (int): Maximum allowed compute utilization
+            max_compute_util (int, optional): Maximum allowed compute utilization
                 percentage (0 to 100). Defaults to 50.
 
         Returns:

@@ -11,7 +11,6 @@ from __future__ import annotations
 __all__ = [
     "Frame",
     "Image",
-
 ]
 
 from dataclasses import dataclass
@@ -22,7 +21,7 @@ from numpy import ndarray
 from torch import Tensor
 
 from mon.core.path import Path
-from mon.core.typing import PathLike
+from mon.core.typing import Int3
 from mon.core.utils import is_valid_str
 from .data import Data
 from .size import Size
@@ -39,9 +38,10 @@ class Image(Data):
     Attributes:
         image (ndarray): RGB or grayscale image array of shape (H, W, C) and
             values ranging from 0 to 255.
-        path (Path, optional): Path to the image file. Defaults to None.
-        base_dir (Path, optional): Base directory for relative paths. This is
-            useful to resolve other files related to the data. Defaults to None.
+        path (Path | None, optional): Path to the image file. Defaults to None.
+        base_dir (Path | None, optional): Base directory for relative paths.
+            This is useful to resolve other files related to the data.
+            Defaults to None.
     """
 
     image: ndarray
@@ -68,7 +68,7 @@ class Image(Data):
                 f"but got {self.image.ndim}D array."
             )
         if is_valid_str(self.path):
-            self.path = Path(self.path).normalize()
+            self.path: Path = Path(self.path).normalize()
             if not self.path.is_image_file(exists=True):
                 # We only care about the validity of the path, not its existence
                 raise ValueError(f"Image file not found at: {self.path}")
@@ -91,7 +91,7 @@ class Image(Data):
         return self.image
 
     @property
-    def shape(self) -> tuple[int, int, int]:
+    def shape(self) -> Int3:
         """Return the data shape."""
         shape = self.image.shape
         return shape[0], shape[1], shape[2]
@@ -143,16 +143,16 @@ class Image(Data):
     def from_tensor(
         cls,
         image: Tensor,
-        path: PathLike | None = None,
-        base_dir: PathLike | None = None
+        path: Path | None = None,
+        base_dir: Path | None = None
     ) -> Image:
         """Create an image from a PyTorch tensor.
 
         Args:
             image (Tensor): Image tensor of shape (1, C, H, W) and values
                 ranging from 0.0 to 1.0.
-            path (PathLike, optional): Path to the image file. Defaults to None.
-            base_dir (Path, optional): Base directory for relative paths.
+            path (Path | None, optional): Path to the image file. Defaults to None.
+            base_dir (Path | None, optional): Base directory for relative paths.
                 This is useful to resolve other files related to the data.
                 Defaults to None.
 

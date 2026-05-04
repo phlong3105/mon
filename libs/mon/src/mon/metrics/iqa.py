@@ -91,6 +91,8 @@ class ImageQualityAssessment(Metric):
                 statistics. Defaults to 25.
             eps (float, optional): Small constant for numerical stability.
                 Defaults to 1e-6.
+            device (torch.device, optional): The device to run the metric on.
+                Defaults to "cpu".
         """
         super().__init__(device=device)
 
@@ -165,7 +167,12 @@ class CompositeImageQualityScore(Metric):
 
     # --- Lifecycle & Initialization ---
     def __init__(self, device: torch.device = torch.device("cpu")):
-        """Initialize a new instance."""
+        """Initialize a new instance.
+
+        Args:
+            device (torch.device, optional): The device to run the metric on.
+                Defaults to "cpu".
+        """
         super().__init__(device=device)
 
         # Define components

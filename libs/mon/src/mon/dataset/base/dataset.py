@@ -28,9 +28,7 @@ from mon.core import (
     Metadata,
     MetadataDictList,
     Path,
-    PathLike,
     Split,
-    SplitLike,
 )
 from .modality import Modality, ModalityList
 
@@ -83,17 +81,17 @@ class Dataset(Dataset_, ABC):
             2.   ``verify()``                : Validate the integrity of the loaded data.
 
         Args:
-            metapoints (MetadataDictList, optional): A dictionary containing the
-                modalities' keys and lists of metadata associated with each
-                datapoint. Defaults to None.
-            modalities (ModalityList, optional): A list of ``Modality``
+            metapoints (MetadataDictList | None, optional): A dictionary
+                containing the modalities' keys and lists of metadata associated
+                with each datapoint. Defaults to None.
+            modalities (ModalityList | None, optional): A list of ``Modality``
                 definitions. By default, the first modality is considered the
                 primary one. If provided, it overrides the class-level default.
                 Defaults to None.
-            classes (ClassList, optional): Class definitions associated with
-                the dataset. If provided, it overrides the class-level default.
-                Defaults to None.
-            verbose (bool): Verbosity mode. Defaults to True.
+            classes (ClassList | None, optional): Class definitions associated
+                with the dataset. If provided, it overrides the class-level
+                default. Defaults to None.
+            verbose (bool, optional): Verbosity mode. Defaults to True.
             *args: Positional arguments for ``Dataset`` constructor.
             **kwargs: Keyword arguments for ``Dataset`` constructor.
 
@@ -168,7 +166,7 @@ class Dataset(Dataset_, ABC):
     @property
     def primary(self) -> tuple[str, Modality]:
         """Return the primary modality and its key."""
-        modality = self.modalities[0]
+        modality: Modality = self.modalities[0]
         return modality.name, modality
 
     @property
@@ -188,13 +186,13 @@ class Dataset(Dataset_, ABC):
     def list_modality_from_dir(
         self,
         modality: Modality,
-        base_dir: PathLike,
+        base_dir: Path,
     ) -> list[Metadata]:
         """List modality data files from a base directory.
 
         Args:
             modality (Modality): Primary modality definition.
-            base_dir (PathLike): Base directory to search for data files.
+            base_dir (Path): Base directory to search for data files.
 
         Returns:
             list[Metadata]: List of metadata for the modality.
@@ -222,7 +220,7 @@ class Dataset(Dataset_, ABC):
         modality: Modality,
         ref_modality: Modality,
         ref_metadata: list[Metadata],
-        base_dir: PathLike | None = None
+        base_dir: Path | None = None
     ) -> list[Metadata]:
         """List modality data files based on a reference modality.
 
@@ -231,7 +229,7 @@ class Dataset(Dataset_, ABC):
             ref_modality (Modality): Reference modality definition.
             ref_metadata (list[Metadata]): List of metadata for the reference
                 modality.
-            base_dir (PathLike, optional): Base directory to search for data
+            base_dir (Path | None, optional): Base directory to search for data
                 files. Defaults to None.
 
         Returns:
@@ -315,8 +313,8 @@ class Dataset(Dataset_, ABC):
             index (int): Index of metapoint.
 
         Returns:
-            dict[str, Metadata]: A metapoint dictionary containing all modalities,
-                each associated with a 'key'.
+            dict[str, Metadata]: A metapoint dictionary containing all
+                modalities, each associated with a 'key'.
         """
         return {k: m[index] for k, m in self.metapoints.items()}
 
@@ -338,7 +336,8 @@ class Dataset(Dataset_, ABC):
         # For each modality, use the corresponding loader to load the data from
         # the metadata
         for k, metadata in metapoint.items():
-            loader = self.modalities[k].loader
+            modality: Modality = self.modalities[k]
+            loader = modality.loader
             if metadata is not None and loader is not None:
                 datapoint[k] = loader(metadata)
 
@@ -374,8 +373,8 @@ class StandardDataset(Dataset, ABC):
             ``root``. (i.e., ``root/subdir``). Use this if the current dataset
             is a subset of another dataset. If provided, it will be automatically
             appended to the ``root`` path. Defaults to an "", meaning no subdirectory.
-        splits (list[Split]): List of supported data splits. Defaults to an empty
-            list, which must be overridden in subclasses.
+        splits (list[Split], optional): List of supported data splits.
+            Defaults to an empty list, which must be overridden in subclasses.
     """
 
     dirname: str = ""
@@ -385,8 +384,8 @@ class StandardDataset(Dataset, ABC):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        root: PathLike,
-        split: SplitLike,
+        root: Path,
+        split: Split,
         dirname: str = "",
         subdir: str = "",
         *args, **kwargs
@@ -394,9 +393,9 @@ class StandardDataset(Dataset, ABC):
         """Initialize a new instance.
 
         Args:
-            root (PathLike): Path to the root directory of the dataset.
-            split (SplitType): Data split subset to use. Must be one of the
-                options defined in ``splits``.
+            root (Path): Path to the root directory of the dataset.
+            split (Split): Data split subset to use. Must be one of the options
+                defined in ``splits``.
             dirname (str, optional): Name of the dataset directory within the
                 root path. Use this if the given ``root`` path does not contain
                 the dataset directory itself. Defaults to "".
@@ -450,11 +449,11 @@ class StandardDataset(Dataset, ABC):
         return self._root
 
     @root.setter
-    def root(self, value: PathLike):
+    def root(self, value: Path):
         """Set the dataset root directory.
 
         Args:
-            value (PathLike): Path to the root directory of the dataset.
+            value (Path): Path to the root directory of the dataset.
 
         Raises:
             FileNotFoundError: If the ``root`` directory does not exist.
@@ -488,12 +487,12 @@ class StandardDataset(Dataset, ABC):
         return self._split
 
     @split.setter
-    def split(self, value: SplitLike):
+    def split(self, value: Split):
         """Set the current dataset split.
 
         Args:
-            value (SplitType): Data split subset to use. Must be one of the
-                options defined in ``splits``.
+            value (Split): Data split subset to use. Must be one of the options
+                defined in ``splits``.
 
         Raises:
             ValueError: If ``split`` is not one of the supported ``splits``.
@@ -555,17 +554,12 @@ class InputTargetDataset(Dataset, ABC):
     """A dataset structure that contains input and target directories."""
 
     # --- Lifecycle & Initialization ---
-    def __init__(
-        self,
-        input_dir: PathLike,
-        target_dir: PathLike,
-        *args, **kwargs
-    ):
+    def __init__(self, input_dir: Path, target_dir: Path, *args, **kwargs):
         """Initialize a new instance.
 
         Args:
-            input_dir (PathLike): Path to the input directory.
-            target_dir (PathLike): Path to the target directory.
+            input_dir (Path): Path to the input directory.
+            target_dir (Path): Path to the target directory.
             *args: Positional arguments for ``Dataset`` constructor.
             **kwargs: Keyword arguments for ``Dataset`` constructor.
         """
@@ -583,11 +577,11 @@ class InputTargetDataset(Dataset, ABC):
         return self._input_dir
 
     @input_dir.setter
-    def input_dir(self, value: PathLike):
+    def input_dir(self, value: Path):
         """Set the input directory.
 
         Args:
-            value (PathLike): Path to the input directory.
+            value (Path): Path to the input directory.
 
         Raises:
             TypeError: If ``input_dir`` is None.
@@ -611,11 +605,11 @@ class InputTargetDataset(Dataset, ABC):
         return self._target_dir
 
     @target_dir.setter
-    def target_dir(self, value: PathLike | None):
+    def target_dir(self, value: Path | None):
         """Set the target directory.
 
         Args:
-            value (PathLike, optional): Path to the target directory.
+            value (Path | None): Path to the target directory.
 
         Raises:
             FileNotFoundError: If the ``target_dir`` directory does not exist.

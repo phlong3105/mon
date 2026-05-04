@@ -39,16 +39,16 @@ class Model(nn.Module, ABC):
     """A base class for all deep learning models.
 
     Attributes:
-        in_keys (set): A set of strings representing the input keys that the
-            model expects. Subclasses should override this to define their
-            input specifications.
-        out_keys (set): A set of strings representing the output keys that the
-            model produces. Subclasses should override this to define their
-            output specifications.
-        debug_keys (set): A set of strings representing any additional keys that
-            the model produces for debugging purposes. This is optional and can
-            be used to return intermediate results when ``save_debug=True`` is
-            passed to the call method.
+        in_keys (set, optional): A set of strings representing the input keys
+            that the model expects. Subclasses should override this to define
+            their input specifications.
+        out_keys (set, optional): A set of strings representing the output keys
+            that the model produces. Subclasses should override this to define
+            their output specifications.
+        debug_keys (set, optional): A set of strings representing any additional
+            keys that the model produces for debugging purposes. This is
+            optional and can be used to return intermediate results when
+            ``save_debug=True`` is passed to the call method.
     """
 
     in_keys: set = {}
@@ -94,7 +94,8 @@ class Model(nn.Module, ABC):
         """Override the call method to forward the input through the model.
 
         Args:
-            data (TensorDict, optional): A TensorDict containing a single datapoint.
+            data (TensorDict | None, optional): A TensorDict containing a
+                single datapoint.
             save_debug (bool, optional): If True, return intermediate results
                 for debugging. Defaults to False.
             **kwargs: Direct keyword arguments to pass to the forward step.
@@ -218,8 +219,9 @@ class ModelRegisterMixin(ABC):
     Attributes:
         name (str, optional): Name of the dataset. Defaults to "" and should be
             overridden in subclasses or set during initialization.
-        tasks (list[Task]): List of supported tasks. Defaults to an empty list
-            and should be overridden in subclasses or set during initialization.
+        tasks (list[Task], optional): List of supported tasks. Defaults to an
+            empty list and should be overridden in subclasses or set during
+            initialization.
     """
 
     arch: str = ""
@@ -245,11 +247,11 @@ class ModelRegisterMixin(ABC):
                 overrides the class-level default. Defaults to None.
             name (str, optional): Name of the data container. If provided, it
                 overrides the class-level default. Defaults to "".
-            tasks (list[Task], optional): List of supported tasks. If provided,
-                it overrides the class-level default. Defaults to None.
-            strategies (list[Strategy], optional): List of supported strategies.
+            tasks (list[Task] | None, optional): List of supported tasks.
                 If provided, it overrides the class-level default. Defaults to None.
-            model_dir (Path, optional): Directory where the model is defined.
+            strategies (list[Strategy] | None, optional): List of supported strategies.
+                If provided, it overrides the class-level default. Defaults to None.
+            model_dir (Path | None, optional): Directory where the model is defined.
                 If provided, it overrides the class-level default. Defaults to None.
             *args: Positional arguments to forward to the superclass constructor.
             **kwargs: Keyword arguments to forward to the superclass constructor.

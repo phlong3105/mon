@@ -30,13 +30,10 @@ from torch import Tensor
 from mon.core import (
     console,
     create_progress_bar,
-    DeviceLike,
     log_error,
     METRICS,
     Path,
-    PathLike,
     Size,
-    SizeLike,
 )
 from mon.dataset import DataLoader, IQADataset, transform as T
 from mon.metrics import compute_depth_metrics
@@ -56,15 +53,15 @@ class IQAEvaluator(Evaluator):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        input_dir: PathLike,
-        target_dir: PathLike | None,
-        result_file: PathLike | None,
+        input_dir: Path,
+        target_dir: Path | None,
+        result_file: Path | None,
         arch: str,
         model: str,
         data: str,
         metrics: list[str],
-        device: DeviceLike,
-        imgsz: SizeLike = 512,
+        device: torch.device | str | int,
+        imgsz: Size = (512, 512),
         resize: bool = False,
         use_gt_mean: bool = False,
         verbose: bool = True,
@@ -72,18 +69,18 @@ class IQAEvaluator(Evaluator):
         """Initialize a new instance.
 
         Args:
-            input_dir (PathLike): Input image directory.
-            target_dir (PathLike | None): Ground-truth image directory. If None,
+            input_dir (Path): Input image directory.
+            target_dir (Path | None): Ground-truth image directory. If None,
                 it will be inferred from ``input_dir``.
-            result_file (PathLike | None): Result file. If None, results will
+            result_file (Path | None): Result file. If None, results will
                 not be saved.
             arch (str): Model's architecture.
             model (str): Model's fullname.
             data (str): Source data name.
             metrics (list[str]): List of metrics to measure.
-            device (DeviceLike): Running device.
-            imgsz (SizeLike, optional): Image size for resizing. If resize is
-                False, this will be ignored. Defaults to 512.
+            device (torch.device | str | int): Running device.
+            imgsz (Size, optional): Image size for resizing. If resize is False,
+                this will be ignored. Defaults to 512.
             resize (bool, optional): Whether to resize images to ``imgsz``
                 before measuring metrics. Defaults to False.
             use_gt_mean (bool, optional): Whether to use the mean of ground-truth
@@ -139,7 +136,7 @@ class IQAEvaluator(Evaluator):
         return self._imgsz
 
     @imgsz.setter
-    def imgsz(self, value: SizeLike):
+    def imgsz(self, value: Size):
         """Set the image size for resizing."""
         self._imgsz = Size.from_value(value)
 
@@ -333,24 +330,24 @@ class InstanceIQAEvaluator(Evaluator):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        input_dir: PathLike,
-        result_file: PathLike | None,
+        input_dir: Path,
+        result_file: Path | None,
         metrics: list[str],
-        device: DeviceLike,
-        imgsz: SizeLike = 512,
+        device: torch.device | str | int,
+        imgsz: Size = (512, 512),
         resize: bool = False,
         verbose: bool = True,
     ):
         """Initialize a new instance.
 
         Args:
-            input_dir (PathLike): Input image directory.
-            result_file (PathLike | None): Result file. If None, results will
+            input_dir (Path): Input image directory.
+            result_file (Path | None): Result file. If None, results will
                 not be saved.
             metrics (list[str]): List of metrics to measure.
-            device (DeviceLike): Running device.
-            imgsz (SizeLike, optional): Image size for resizing. If resize is
-                False, this will be ignored. Defaults to 512.
+            device (torch.device | str | int): Running device.
+            imgsz (Size, optional): Image size for resizing. If resize is False,
+                this will be ignored. Defaults to 512.
             resize (bool, optional): Whether to resize images to ``imgsz``
                 before measuring metrics. Defaults to False.
             verbose (bool, optional): Verbosity mode. Defaults to True.
@@ -397,7 +394,7 @@ class InstanceIQAEvaluator(Evaluator):
         return self._imgsz
 
     @imgsz.setter
-    def imgsz(self, value: SizeLike):
+    def imgsz(self, value: Size):
         """Set the image size for resizing."""
         self._imgsz = Size.from_value(value)
 
@@ -574,15 +571,15 @@ class DQAEvaluator(Evaluator):
     # --- Lifecycle & Initialization ---
     def __init__(
         self,
-        input_dir: PathLike,
-        target_dir: PathLike,
-        result_file: PathLike | None,
+        input_dir: Path,
+        target_dir: Path,
+        result_file: Path | None,
         arch: str,
         model: str,
         data: str,
         metrics: list[str],
-        device: DeviceLike,
-        imgsz: SizeLike = 512,
+        device: torch.device | str | int,
+        imgsz: Size = (512, 512),
         resize: bool = False,
         normalize: bool = False,
         use_color: bool = False,
@@ -591,18 +588,17 @@ class DQAEvaluator(Evaluator):
         """Initialize a new instance.
 
         Args:
-            input_dir (PathLike): Input image directory.
-            target_dir (PathLike | None): Ground-truth image directory. If None,
-                it will be inferred from ``input_dir``.
-            result_file (PathLike | None): Result file. If None, results will
-                not be saved.
+            input_dir (Path): Input image directory.
+            target_dir (Path): Ground-truth image directory.
+            result_file (Path | None): Result file. If None, results will not
+                be saved.
             arch (str): Model's architecture.
             model (str): Model's fullname.
             data (str): Source data name.
             metrics (list[str]): List of metrics to measure.
-            device (DeviceLike): Running device.
-            imgsz (SizeLike, optional): Image size for resizing. If resize is
-                False, this will be ignored. Defaults to 512.
+            device (torch.device | str | int): Running device.
+            imgsz (Size, optional): Image size for resizing. If resize is False,
+                this will be ignored. Defaults to 512.
             resize (bool, optional): Whether to resize images to ``imgsz``
                 before measuring metrics. Defaults to False.
             normalize (bool, optional): Whether to normalize depth maps before
@@ -645,7 +641,7 @@ class DQAEvaluator(Evaluator):
         return self._imgsz
 
     @imgsz.setter
-    def imgsz(self, value: SizeLike):
+    def imgsz(self, value: Size):
         """Set the image size for resizing."""
         self._imgsz = Size.from_value(value)
 

@@ -26,7 +26,6 @@ import logging
 import os
 import platform
 import sys
-from typing import Union
 
 from box import Box
 from rich import pretty
@@ -132,8 +131,9 @@ def _enable_default_loggers():
     """
     # A list of common libraries that produce verbose output.
     # `None` refers to the root logger.
-    noisy_loggers = [None, "torch", "tensorflow", "tensorboard", "mmcv",
-                     "fsspec", "urllib3"]
+    noisy_loggers = [
+        None, "torch", "tensorflow", "tensorboard", "mmcv", "fsspec", "urllib3",
+    ]
     for name in noisy_loggers:
         logging.getLogger(name).setLevel(logging.INFO)
 
@@ -151,8 +151,9 @@ def _disable_default_loggers():
 
     # A list of common libraries that produce verbose output.
     # `None` refers to the root logger.
-    noisy_loggers = [None, "torch", "tensorflow", "tensorboard", "mmcv",
-                     "fsspec", "urllib3"]
+    noisy_loggers = [
+        None, "torch", "tensorflow", "tensorboard", "mmcv", "fsspec", "urllib3",
+    ]
     for name in noisy_loggers:
         logging.getLogger(name).setLevel(SILENCE_LEVEL)
 
@@ -182,11 +183,11 @@ _disable_default_loggers()
 # region BASIC LOGGING
 # ==============================================================================
 
-def pprint_dict(value: Box | dict, title: str = ""):
+def pprint_dict(value: dict, title: str = ""):
     """Pretty-print a dictionary inside a ``rich`` Panel.
 
     Args:
-        value (Box | dict): Dictionary to print.
+        value (dict): Dictionary to print.
         title (str, optional): Panel title. Defaults to "".
     """
     # Normalize inputs
@@ -204,11 +205,11 @@ def pprint_dict(value: Box | dict, title: str = ""):
     console.log(p)
 
 
-def rprint_dict(value: Box | dict, title: str = ""):
+def rprint_dict(value: dict, title: str = ""):
     """Pretty-print a dictionary as a two-column table.
 
     Args:
-        value (Box | dict): Dictionary to print.
+        value (dict): Dictionary to print.
         title (str, optional): Panel title. Defaults to "".
     """
     # Normalize inputs
@@ -231,15 +232,15 @@ def rprint_dict(value: Box | dict, title: str = ""):
     console.log(tab)
 
 
-def rprint_list_dicts(values: list[Union[Box, dict]]):
+def rprint_list_dicts(values: list[dict]):
     """Pretty-print a list of dictionaries as a table with shared columns.
 
     Args:
-        values (list[Box | dict]): List of dictionaries to print.s
+        values (list[dict]): List of dictionaries to print.s
 
     Raises:
-        ValueError: If ``values`` is not a non-empty list, or if the
-            dictionaries do not share identical keys.
+        ValueError: If ``values`` is not a non-empty list, or if the dictionaries
+            do not share identical keys.
     """
     if not is_list_of(values, dict):
         raise ValueError(

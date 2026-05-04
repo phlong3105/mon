@@ -26,7 +26,7 @@ import torch
 from torch import nn, Tensor
 from torch.nn import functional as F
 
-from mon.core import Size, SizeLike
+from mon.core import Size
 from mon.nn.modules import FINERLinear, FourierPE, SineLinear
 
 
@@ -123,7 +123,7 @@ class Siren(nn.Module):
             in_features (int): Size of each input sample.
             out_features (int): Size of each output sample.
             hidden_dim (int): Hidden channel dimensions.
-            num_layers (int): Number of layers in the MLP. Defaults to 4.
+            num_layers (int, optional): Number of layers in the MLP. Defaults to 4.
             w0 (float, optional): Frequency scaling factor for the first layer.
                 Defaults to 30.0.
             w (float, optional): Frequency scaling factor for the hidden layers.
@@ -191,13 +191,13 @@ class Finer(nn.Module):
             in_features (int): Size of each input sample.
             out_features (int): Size of each output sample.
             hidden_dim (int): Hidden channel dimensions.
-            num_layers (int): Number of layers in the MLP. Defaults to 4.
+            num_layers (int, optional): Number of layers in the MLP. Defaults to 4.
             w0 (float, optional): Frequency scaling factor for the first layer.
                 Defaults to 30.0.
             w (float, optional): Frequency scaling factor for the hidden layers.
                 Defaults to 30.0.
-            first_bias_scale (float, optional): Bias scale for the first layer.
-                Defaults to None.
+            first_bias_scale (float | None, optional): Bias scale for the first
+                layer. Defaults to None.
             scale_req_grad (bool, optional): Scale requires gradient if True.
                 Defaults to False.
         """
@@ -270,7 +270,7 @@ class Finer_PP(nn.Module):
             in_features (int): Size of each input sample.
             out_features (int): Size of each output sample.
             hidden_dim (int): Hidden channel dimensions.
-            num_layers (int): Number of layers in the MLP. Defaults to 4.
+            num_layers (int, optional): Number of layers in the MLP. Defaults to 4.
             w0 (float, optional): Frequency scaling factor for the first layer.
                 Defaults to 30.0.
             w (float, optional): Frequency scaling factor for the hidden layers.
@@ -332,11 +332,11 @@ class Finer_PP(nn.Module):
 
 # --- Coordinate Generation & Embedding ---
 
-def create_coords(size: SizeLike, device: torch.device) -> Tensor:
+def create_coords(size: Size, device: torch.device) -> Tensor:
     """Create a normalized square coordinates grid.
 
     Args:
-        size (SizeLike): Size of the grid.
+        size (Size): Size of the grid.
         device (torch.device): Device to place the coordinates on.
 
     Returns:

@@ -24,19 +24,16 @@ from tensordict import TensorDict
 from typing_extensions import override
 
 from mon.core import (
-    DictLike,
     K,
     MODELS,
     Path,
-    PathLike,
     PREDICTORS,
     Size,
     Split,
-    SplitLike,
     TimeProfiler,
 )
 from mon.dataset import build_dataset, DataLoader, Dataset, transform as T
-from mon.ops import normalize_minmax, vis_heatmap
+from mon.ops import vis_heatmap
 from mon.runners import Predictor
 
 current_file = Path(__file__).normalize()
@@ -74,19 +71,18 @@ class DAV2_Predictor(Predictor):
     @override
     def _build_dataloader(
         self,
-        source: DictLike | PathLike,
-        split: SplitLike = Split.TEST,
+        source: dict | Path,
+        split: Split = Split.TEST,
         transforms: T.Compose | None = None,
     ) -> tuple[str, Dataset | DataLoader]:
         """Initialize and return a dataset or dataloader.
 
         Args:
-            source (DictLike | PathLike): A dataset/dataloader configuration
-                dictionary or a source path.
-            split (SplitLike, optional): The data split to use.
-                Defaults to Split.TEST.
-            transforms (T.Compose, optional): The data transformations to apply.
-                Defaults to None.
+            source (dict | Path): A dataset/dataloader configuration dictionary
+                or a source path.
+            split (Split, optional): The data split to use. Defaults to Split.TEST.
+            transforms (T.Compose | None, optional): The data transformations
+                to apply. Defaults to None.
 
         Returns:
             tuple[str, Dataset | DataLoader]: A tuple containing the name of the

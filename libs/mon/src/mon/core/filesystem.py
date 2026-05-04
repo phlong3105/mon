@@ -27,7 +27,6 @@ import requests
 from .console import log, log_error
 from .constants import K
 from .path import Path
-from .typing import PathLike
 from .ui import create_download_bar
 from .utils import depascalize, is_valid_str
 
@@ -36,11 +35,11 @@ from .utils import depascalize, is_valid_str
 # region FILESYSTEM
 # ==============================================================================
 
-def delete_files(path: PathLike, regex: str = "", recursive: bool = False):
+def delete_files(path: Path, regex: str = "", recursive: bool = False):
     """Delete files matching a pattern under a given path.
 
     Args:
-        path (PathLike): File or directory path to search under.
+        path (Path): File or directory path to search under.
         regex (str, optional): Glob pattern to match files. Defaults to ".
         recursive (bool, optional): If True, search subdirectories recursively.
             Defaults to False.
@@ -70,16 +69,12 @@ def delete_files(path: PathLike, regex: str = "", recursive: bool = False):
             log_error(f"Failed to delete {f}: {err}")
 
 
-def download_url_to_file(
-    url: PathLike,
-    path: PathLike,
-    overwrite: bool = False
-) -> Path:
+def download_url_to_file(url: Path, path: Path, overwrite: bool = False) -> Path:
     """Download a file from a URL to the local filesystem.
 
     Args:
-        url (PathLike): URL to download the file from.
-        path (PathLike): Destination path to save the file.
+        url (Path): URL to download the file from.
+        path (Path): Destination path to save the file.
         overwrite (bool, optional): If True, overwrite the destination file if
             it exists. Defaults to False.
 
@@ -156,12 +151,12 @@ def parse_model_fullname(name: str, data: str = "", suffix: str = "") -> str:
     return fullname
 
 
-def resolve_project_root(cwd: PathLike) -> Path | None:
+def resolve_project_root(cwd: Path) -> Path | None:
     """Resolve the absolute path to the project root directory.
 
     Args:
-        cwd (PathLike): Current working directory to resolve from. This can be
-            any location within the project.
+        cwd (Path): Current working directory to resolve from. This can be any
+            location within the project.
 
     Returns:
         Path | None: Path to the project root directory if found, otherwise None.
@@ -177,13 +172,13 @@ def resolve_project_root(cwd: PathLike) -> Path | None:
     return None
 
 
-def resolve_data_dir(cwd: PathLike) -> Path | None:
+def resolve_data_dir(cwd: Path) -> Path | None:
     """Resolve the absolute path to the directory containing all datasets in
     the current project.
 
     Args:
-        cwd (PathLike): Current working directory to resolve from. This can be
-            any location within the project.
+        cwd (Path): Current working directory to resolve from. This can be any
+            location within the project.
 
     Returns:
         Path | None: Path to the dataset directory if found, otherwise None.
@@ -192,7 +187,7 @@ def resolve_data_dir(cwd: PathLike) -> Path | None:
         ValueError: If neither ``data_root`` nor ``cwd`` are provided.
     """
     # Normalize inputs
-    cwd = Path(cwd).normalize()
+    cwd: Path = Path(cwd).normalize()
     if not cwd.has_name("data", exists=True):
         cwd = resolve_project_root(cwd)
         cwd = cwd / "data"
@@ -200,15 +195,14 @@ def resolve_data_dir(cwd: PathLike) -> Path | None:
     return cwd
 
 
-def resolve_dataset_dir(dataset_name: str, data_root: PathLike) -> Path | None:
+def resolve_dataset_dir(dataset_name: str, data_root: Path) -> Path | None:
     """Resolve the absolute path to one specific dataset.
 
     Args:
         dataset_name (str): Specific dataset name.
-        data_root (PathLike, optional): The absolute path to all datasets in
-            the current project. If the given path is invalid, it will trigger
-            resolution to the project root directory and then resolve to the
-            'data' subdirectory.
+        data_root (Path): The absolute path to all datasets in the current
+            project. If the given path is invalid, it will trigger resolution
+            to the project root directory and then resolve to the 'data' subdirectory.
 
     Returns:
         Path | None: Path to the dataset directory if found, otherwise the
@@ -218,7 +212,7 @@ def resolve_dataset_dir(dataset_name: str, data_root: PathLike) -> Path | None:
         ValueError: If neither ``data_root`` nor ``cwd`` are provided.
     """
     # Normalize inputs
-    data_root = resolve_data_dir(data_root)
+    data_root: Path = resolve_data_dir(data_root)
 
     # Resolve the dataset root
     dataset_dir = data_root / dataset_name
@@ -232,9 +226,9 @@ def resolve_dataset_dir(dataset_name: str, data_root: PathLike) -> Path | None:
 
 
 def resolve_config_file(
-    config: PathLike,
-    root: PathLike,
-    model_dir: PathLike | None = None,
+    config: Path,
+    root: Path,
+    model_dir: Path | None = None,
 ) -> Path | None:
     """Resolve the absolute path to a config file.
 
@@ -242,9 +236,9 @@ def resolve_config_file(
     config file if found.
 
     Args:
-        config (PathLike): Config's filename or path.
-        root (PathLike): Project root directory.
-        model_dir (PathLike, optional): Model root directory. Defaults to None.
+        config (Path): Config's filename or path.
+        root (Path): Project root directory.
+        model_dir (Path | None, optional): Model root directory. Defaults to None.
 
     Returns:
         Path | None: Path to the config file if found, otherwise None.
@@ -285,13 +279,13 @@ def resolve_config_file(
     return None
 
 
-def resolve_weights_dir(root: PathLike, weights_path: PathLike | None) -> Path | None:
+def resolve_weights_dir(root: Path, weights_path: Path | None) -> Path | None:
     """Resolve the weight directory from the project root and weights' name or
     relative path.
 
     Args:
-        root (PathLike): Project root directory.
-        weights_path (PathLike): Weights' file or directory.
+        root (Path): Project root directory.
+        weights_path (Path | None): Weights' file or directory.
 
     Returns:
         Path | None: Path to the weight directory if found, otherwise None.
@@ -321,13 +315,13 @@ def resolve_weights_dir(root: PathLike, weights_path: PathLike | None) -> Path |
     return None
 
 
-def resolve_weights_file(root: PathLike, weights_file: PathLike | None) -> Path | None:
+def resolve_weights_file(root: Path, weights_file: Path | None) -> Path | None:
     """Resolve the weight file from the project root and weights' name or
     relative path.
 
     Args:
-        root (PathLike): Project root directory.
-        weights_file (PathLike): Weights' filename or path.
+        root (Path): Project root directory.
+        weights_file (Path | None): Weights' filename or path.
 
     Returns:
         Path | None: Path to the weight file if found, otherwise None.
@@ -356,11 +350,11 @@ def resolve_weights_file(root: PathLike, weights_file: PathLike | None) -> Path 
 
 
 def resolve_output_dir(
-    root: PathLike,
+    root: Path,
     dirname: str = "",
     arch: str = "",
     model: str = "",
-    data: PathLike | None = None,
+    data: Path | None = None,
 ) -> Path:
     """Construct an output directory path based on the project root and
     optional components.
@@ -371,14 +365,14 @@ def resolve_output_dir(
     Each component is only appended if it is a valid string.
 
     Args:
-        root (PathLike): Project root directory.
+        root (Path): Project root directory.
         dirname (str, optional): Directory name to append to the output path.
             Defaults to "".
         arch (str, optional): Architecture name to append to the output path.
             Defaults to "".
         model (str, optional): Model name to append to the output path.
             Defaults to "".
-        data (PathLike, optional): Dataset name to append to the output path.
+        data (Path | None, optional): Dataset name to append to the output path.
             Defaults to None.
 
     Returns:
@@ -399,10 +393,10 @@ def resolve_output_dir(
 
 
 def resolve_save_dir(
-    output_dir: PathLike,
+    output_dir: Path,
     dirname: str,
     subdirname: str = "",
-    src_path: PathLike | None = None,
+    src_path: Path | None = None,
     keep_subdirs: bool = False,
     near_src: bool = False,
 ) -> Path:
@@ -431,13 +425,13 @@ def resolve_save_dir(
         >>> # /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/data/dicm/test/image_zerodce
 
     Args:
-        output_dir (PathLike): Path to the output directory.
+        output_dir (Path): Path to the output directory.
         dirname (str): Directory name to append to the output path
             (e.g., 'pred', 'debug').
-        subdirname (str): Subdirectory name to append to the output path
-            (e.g., 'debug'/'mask'). Defaults to "".
-        src_path (PathLike, optional): Source path to determine the subdirectory
-            hierarchy. Defaults to None.
+        subdirname (str, optional): Subdirectory name to append to the output
+            path (e.g., 'debug'/'mask'). Defaults to "".
+        src_path (Path | None, optional): Source path to determine the
+            subdirectory hierarchy. Defaults to None.
         keep_subdirs (bool, optional): If True, preserve the subdirectory
             structure of ``src_path`` relative to ``dirname``. Defaults to False.
         near_src (bool, optional): If True, change the ``output_dir`` to the
@@ -483,6 +477,7 @@ def resolve_save_dir(
 
 
 # --- Aggregation ---
+
 
 # endregion
 

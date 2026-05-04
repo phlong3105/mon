@@ -19,7 +19,6 @@ from box import Box
 
 from mon.core.constants import K
 from mon.core.path import Path
-from mon.core.typing import PathLike
 from mon.core.utils import merge_dicts
 
 
@@ -27,20 +26,23 @@ from mon.core.utils import merge_dicts
 # region INPUT
 # ==============================================================================
 
-def load_config(path: PathLike | None = None, config: dict | None = None) -> Box:
+def load_config(path: Path | None = None, config: dict | None = None) -> Box:
     """Load configurations from a YAML file.
 
     Args:
-        path (PathLike, optional): Path to the YAML configuration file.
+        path (Path | None, optional): Path to the YAML configuration file.
             Defaults to None.
-        config (dict, optional): Additional configuration to merge with the
-            loaded config. Defaults to empty dict.
+        config (dict | None, optional): Additional configuration to merge with
+            the loaded config. Defaults to empty dict.
+
+    Returns:
+        Box: The loaded and merged configuration as a Box for easy attribute access.
     """
     # 1. Normalize inputs
     config: dict = config or {}
 
     # 2. Load configurations from the YAML file
-    if path is not None:
+    if path:
         path: Path = Path(path).normalize()
         if not path.has_ext(".yaml", ".yml", exists=True):
             raise TypeError(

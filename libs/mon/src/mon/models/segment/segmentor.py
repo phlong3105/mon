@@ -18,17 +18,18 @@ from typing import Any, override
 
 import cv2
 import numpy as np
+import torch
 from numpy import ndarray
 from torch import nn
 
 from mon.core import (
     BBoxes,
-    DeviceLike,
     Int3,
     MODELS,
     Path,
     Size,
     sys_ctx,
+    Weights,
     WeightsLike,
 )
 
@@ -50,7 +51,7 @@ class Segmentor(ABC):
         weights: Weights | None = None,
         fg_color: Int3 = (255, 255, 255),
         bg_color: Int3 = (0, 0, 0),
-        device: DeviceLike = "cpu",
+        device: torch.device | str | int = "cpu",
         verbose: bool = True,
         *args, **kwargs
     ):
@@ -64,8 +65,8 @@ class Segmentor(ABC):
                 Defaults to (255, 255, 255).
             bg_color (Int3, optional): Background color for masks.
                 Defaults to (0, 0, 0).
-            device (DeviceLike, optional): Device to run the model on.
-                Defaults to "cpu".
+            device (torch.device | str | int, optional): Device to run the
+                model on. Defaults to "cpu".
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         super().__init__(name=name)

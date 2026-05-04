@@ -29,15 +29,14 @@ from torch import Tensor
 
 from mon.core import (
     Image,
+    Int3,
     Loader,
     Metadata,
     Path,
-    PathLike,
     singleton,
     Size,
     TensorOrArray,
 )
-
 
 # ==============================================================================
 # region CONSTANTS
@@ -72,11 +71,11 @@ _PIL_MODE_TO_CHANNELS = {
 # region INPUT
 # ==============================================================================
 
-def read_image(path: PathLike, flags: int = cv2.IMREAD_COLOR) -> ndarray:
+def read_image(path: Path, flags: int = cv2.IMREAD_COLOR) -> ndarray:
     """Read an image from a path using OpenCV.
 
     Args:
-        path (PathLike): Absolute path to the image file.
+        path (Path): Absolute path to the image file.
         flags (int): OpenCV flag to read the image. Defaults to cv2.IMREAD_COLOR.
 
     Returns:
@@ -118,11 +117,11 @@ def read_image(path: PathLike, flags: int = cv2.IMREAD_COLOR) -> ndarray:
     return image
 
 
-def read_image_shape(path: PathLike) -> tuple[int, int, int]:
+def read_image_shape(path: Path) -> Int3:
     """Read the image's shape as (H, W, C) from a file path.
 
     Args:
-        path (PathLike): Absolute path to the image file.
+        path (Path): Absolute path to the image file.
 
     Returns:
         tuple[int, int, int]: Height, width, and number of channels of the image.
@@ -152,11 +151,11 @@ def read_image_shape(path: PathLike) -> tuple[int, int, int]:
     return h, w, c
 
 
-def read_imgsz(path: PathLike) -> Size:
+def read_imgsz(path: Path) -> Size:
     """Read the image's size as (H, W) from a file path.
 
     Args:
-        path (PathLike): Absolute path to the image file.
+        path (Path): Absolute path to the image file.
 
     Returns:
         Size: Height and width of the image.
@@ -240,25 +239,26 @@ class MaskLoader(Loader):
 # region OUTPUT
 # ==============================================================================
 
-def write_image(image: TensorOrArray, path: PathLike):
+def write_image(image: TensorOrArray, path: Path):
     """Save an image to a file path on disk.
 
     Args:
         image (TensorOrArray): Image, formatted as a tensor of shape (B, C, H, W)
             and values ranging from 0.0 to 1.0; or as an array of shape (H, W, C)
             and values ranging from 0 to 255.
-        path (PathLike): Absolute path to save the image.
+        path (Path): Absolute path to save the image.
 
     Raises:
         TypeError: If ``image`` is not a tensor or array.
     """
     # Normalize inputs
-    path: Path = Path(path).normalize()
+    path = Path(path).normalize()
 
     # Create parent directory
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
 
+    # Write image to file
     if isinstance(image, Tensor):
         # Handle tensor (B, C, H, W)
         # torchvision handles the [0, 1] -> [0, 255] conversion internally

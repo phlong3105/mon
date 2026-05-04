@@ -21,14 +21,11 @@ import torch
 from mon.core import (
     console,
     create_progress_bar,
-    DeviceLike,
     MODELS,
     Path,
     Size,
-    SizeLike,
     sys_ctx,
     Task,
-    TaskLike,
 )
 from mon.core.ui.prompt_toolkit import (
     ConfirmPrompt,
@@ -52,9 +49,9 @@ class Benchmarker(PromptContextMixin):
     def __init__(
         self,
         models: list[str],
-        imgsz: SizeLike,
+        imgsz: Size,
         num_runs: int,
-        device: DeviceLike,
+        device: torch.device | str | int,
         verbose: bool = True,
     ):
         """Initialize a new instance.
@@ -63,7 +60,7 @@ class Benchmarker(PromptContextMixin):
             models (list[str]): List of model fullnames to benchmark.
             imgsz (SizeLike): Image size for benchmarking.
             num_runs (int): Number of runs for latency measurement.
-            device (DeviceLike): Running device.
+            device (torch.device | str | int): Running device.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
         super().__init__()
@@ -86,7 +83,7 @@ class Benchmarker(PromptContextMixin):
         return self._task
 
     @task.setter
-    def task(self, value: TaskLike | None):
+    def task(self, value: Task | None):
         """Set the task type."""
         if value in Task:
             value = Task(value)
@@ -111,7 +108,7 @@ class Benchmarker(PromptContextMixin):
         return self._imgsz
 
     @imgsz.setter
-    def imgsz(self, value: SizeLike):
+    def imgsz(self, value: Size):
         """Set the image size."""
         self._imgsz = Size.from_value(value)
 
@@ -121,7 +118,7 @@ class Benchmarker(PromptContextMixin):
         return self._device
 
     @device.setter
-    def device(self, value: DeviceLike):
+    def device(self, value: torch.device | str | int):
         """Set the device to use for computation."""
         self._device = sys_ctx.get_torch_device(value)
 
@@ -132,7 +129,7 @@ class Benchmarker(PromptContextMixin):
 
     # --- Creation ---
     @classmethod
-    def from_cli(cls, task: TaskLike, **kwargs) -> "Benchmarker":
+    def from_cli(cls, task: Task, **kwargs) -> "Benchmarker":
         """Create an instance of Benchmarker from command-line arguments."""
         parser = argparse.ArgumentParser(description="benchmark")
         parser.add_argument("--model",    type=str, action="append", help="Model fullnames.")

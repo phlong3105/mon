@@ -82,9 +82,9 @@ class SCI_Trainer(Trainer):
 
         task = pbar.add_task(
             f"[bright_yellow]Train Epoch {epoch+1:03}",
-            total=len(self.train_dataloader)
+            total=len(self._train_dataloader)
         )
-        for i, datapoint in enumerate(self.train_dataloader):
+        for i, datapoint in enumerate(self._train_dataloader):
             # 2.1. Prepare inputs
             datapoint = datapoint.to(device)
             image = datapoint["image"]
@@ -96,11 +96,11 @@ class SCI_Trainer(Trainer):
             loss = criterion(**outputs)
 
             # 2.4. Backward pass
-            self.optimizer.zero_grad()
-            self.optimizer.param_groups[0]["capturable"] = True
+            self._optimizer.zero_grad()
+            self._optimizer.param_groups[0]["capturable"] = True
             loss.backward()
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), grad_clip_norm)
-            self.optimizer.step()
+            self._optimizer.step()
             losses.append(loss.item())
 
             pbar.update(task, advance=1)
@@ -142,9 +142,9 @@ class SCI_Trainer(Trainer):
 
         task = pbar.add_task(
             f"[bright_cyan]Val Epoch {epoch+1:03}",
-            total=len(self.val_dataloader)
+            total=len(self._val_dataloader)
         )
-        for i, datapoint in enumerate(self.val_dataloader):
+        for i, datapoint in enumerate(self._val_dataloader):
             # 2.1. Prepare inputs
             datapoint = datapoint.to(device)
             image = datapoint["image"]

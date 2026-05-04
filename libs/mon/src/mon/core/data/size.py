@@ -10,17 +10,16 @@ from __future__ import annotations
 
 __all__ = [
     "Size",
-    "SizeLike",
 ]
 
 import math
 from dataclasses import dataclass
-from typing import Any, Literal, TypeAlias, Union
+from typing import Any, Literal
 
 from numpy import ndarray
 from torch import Tensor
 
-from mon.core.typing import IntOrTuple2, TensorOrArray
+from mon.core.typing import Int2, IntOrTuple2
 
 
 # ==============================================================================
@@ -72,12 +71,12 @@ class Size:
         return self.width
 
     @property
-    def hw(self) -> tuple[int, int]:
+    def hw(self) -> Int2:
         """Returns (Height, Width) for PyTorch and NumPy."""
         return self.height, self.width
 
     @property
-    def wh(self) -> tuple[int, int]:
+    def wh(self) -> Int2:
         """Returns (Width, Height) for OpenCV and PIL."""
         return self.width, self.height
 
@@ -87,21 +86,21 @@ class Size:
 
     # --- Creation ---
     @classmethod
-    def from_tuple(cls, size: IntOrTuple2, format: Literal["hw", "wh"] = "hw") -> "Size":
+    def from_tuple(cls, size: IntOrTuple2, fmt: Literal["hw", "wh"] = "hw") -> "Size":
         """Create a new instance from a tuple.
 
         Args:
             size (IntOrTuple2): Tuple containing the height and width.
-            format (Literal["hw", "wh"], optional): String describing the format.
+            fmt (Literal["hw", "wh"], optional): String describing the format.
                 Defaults to "hw".
         """
         if isinstance(size, (int, float)):
             return cls(height=size, width=size)
-        elif format.lower() == "hw":
+        elif fmt.lower() == "hw":
             return cls(height=size[0], width=size[1])
-        elif format.lower() == "wh":
+        elif fmt.lower() == "wh":
             return cls(height=size[1], width=size[0])
-        raise ValueError(f"Expected format 'hw' or 'wh', got '{format}'.")
+        raise ValueError(f"Expected format 'hw' or 'wh', got '{fmt}'.")
 
     @classmethod
     def from_value(cls, value: Any, divisor: int | None = None) -> "Size":
@@ -109,7 +108,7 @@ class Size:
 
         Args:
             value (Any): Size-like (i.e., scalar or sequence) or an image.
-            divisor (int, optional): Divisor size for height and width.
+            divisor (int | None, optional): Divisor size for height and width.
                 Defaults to None.
         """
         size = None
@@ -150,13 +149,6 @@ class Size:
         return cls(height=size[0], width=size[1])
 
 # endregion
-
-
-# ==============================================================================
-# region TYPE DEFINITIONS
-# ==============================================================================
-
-SizeLike: TypeAlias = Union[Size, IntOrTuple2, TensorOrArray]
 
 
 # ==============================================================================
