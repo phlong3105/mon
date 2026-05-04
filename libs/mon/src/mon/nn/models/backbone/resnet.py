@@ -111,10 +111,10 @@ class ResNetBackBone(ModelRegisterMixin, nn.Module):
         if weights is not None and is_weights_type(weights):
             base_model.load_state_dict(weights.state_dict())
             if self.verbose:
-                log(f"Initialized '{name}' from weights: '{weights.path.as_posix()}'.")
+                log(f"initialized {name} from weights {weights.path.as_posix()}.")
         else:
             if self.verbose:
-                log(f"Initialized '{name}' from scratch.")
+                log(f"initialized {name} from scratch.")
 
         # Remove the global average pool and classifier head
         # For ResNet, we usually want the features before the final layers

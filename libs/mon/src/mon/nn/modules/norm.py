@@ -157,7 +157,9 @@ class HalfInstanceNorm2d(nn.Module):
         """
         super().__init__()
         if num_features % 2 != 0:
-            raise ValueError(f"``num_features`` must be even, got {num_features}.")
+            raise ValueError(
+                f"expected num_features to be even, got {num_features}."
+            )
 
         self.norm = nn.InstanceNorm2d(
             num_features // 2, eps, momentum, affine=affine, *args, **kwargs,

@@ -248,7 +248,7 @@ class CoLIE(ModelRegisterMixin, Model):
 
         # 7. Log
         if self.verbose:
-            log(f"Best Epoch: {(best_epoch + 1):03} | Loss = {best_loss:.6f}")
+            log(f"best epoch {(best_epoch + 1):03} | loss = {best_loss:.6f}")
 
         # 8. Final inference
         model.load_state_dict(best_state_dict)

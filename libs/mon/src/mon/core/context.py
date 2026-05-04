@@ -132,7 +132,7 @@ class SystemContext:
             key = f"cuda:{device}" if device >= 0 else "cpu"
             return self.devices[key] if key in self.devices else self.devices["cpu"]
         else:
-            raise ValueError(f"Unsupported device specifier: '{device}'")
+            raise TypeError(f"unsupported device specifier {device}.")
 
     def get_torch_device(self, device: torch.device | str | int = MISSING) -> torch.device:
         """Return the torch device object for the specified device."""

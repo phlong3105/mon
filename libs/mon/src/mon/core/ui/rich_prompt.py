@@ -474,8 +474,10 @@ class Prompt(PromptBase[str]):
                     if 0 <= idx < len(self.choices):
                         processed_values.append(self.choices[idx])
                     else:
-                        raise IndexError(f"Index {idx} out of range for choices "
-                                         f"of size {len(self.choices)}.")
+                        raise IndexError(
+                            f"index {idx} is out of range for choices of size "
+                            f"{len(self.choices)}."
+                        )
                 # Check if part is a direct choice match
                 elif self.check_choice(part):
                     processed_values.append(part)
@@ -738,7 +740,7 @@ class OptionPrompt(PromptBase[str]):
                     processed_values.append(self.choices[idx])
                 else:
                     raise IndexError(
-                        f"Index {idx} out of range for choices of size "
+                        f"index {idx} is out of range for choices of size "
                         f"{len(self.choices)}."
                     )
             elif self.check_choice(part):
@@ -838,7 +840,9 @@ class OptionPrompt(PromptBase[str]):
         """Render the default as (y) or (n) rather than True/False."""
         if isinstance(default, int):
             if not (0 <= default < len(self.choices)):
-                raise ValueError(f"Default index {default} out of range.")
+                raise ValueError(
+                    f"index {default} is out of range [0, {len(self.choices)}]."
+                )
             return Text(f"({self.choices[default]})", "prompt.default")
         else:
             default = default.strip()

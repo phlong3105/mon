@@ -57,7 +57,7 @@ class Size:
         elif index == 1:
             return self.width
         else:
-            raise IndexError(f"Index {index} is out of range.")
+            raise IndexError(f"index {index} is out of range.")
 
     # --- Properties ---
     @property
@@ -100,7 +100,9 @@ class Size:
             return cls(height=size[0], width=size[1])
         elif fmt.lower() == "wh":
             return cls(height=size[1], width=size[0])
-        raise ValueError(f"Expected format 'hw' or 'wh', got '{fmt}'.")
+        raise ValueError(
+            f"unsupported format {fmt.lower()}, must be one of ['hw', 'wh']."
+        )
 
     @classmethod
     def from_value(cls, value: Any, divisor: int | None = None) -> "Size":
@@ -137,7 +139,7 @@ class Size:
                 size = (int(shape[0]), int(shape[1]))
 
         if size is None:
-            raise TypeError(f"Could not get size from {type(value).__name__}.")
+            raise TypeError(f"could not resolve size from {type(value).__name__}.")
 
         # Apply Divisor (Rounding up to the nearest multiple)
         if divisor:

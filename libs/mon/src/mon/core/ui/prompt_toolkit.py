@@ -532,8 +532,7 @@ class PromptBase(Generic[PromptType]):
             return self.response_type(value)
         except (ValueError, TypeError):
             raise ValueError(
-                f"'{value}' cannot be converted to "
-                f"'{self.response_type.__name__}'"
+                f"cannot convert {value} to {self.response_type.__name__}."
             )
 
     # --- Visualization ---
@@ -903,7 +902,7 @@ class PromptBase(Generic[PromptType]):
 
         @kb.add("c-c")
         def _interrupt(event):
-            raise KeyboardInterrupt
+            raise KeyboardInterrupt()
 
         return kb
 

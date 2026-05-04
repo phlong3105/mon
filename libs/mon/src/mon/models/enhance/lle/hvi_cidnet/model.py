@@ -107,10 +107,10 @@ class HVI_CIDNet(ModelRegisterMixin, Model):
         if weights is not None and is_weights_type(weights):
             self.model.load_state_dict(weights.state_dict())
             if self.verbose:
-                log(f"Initialized '{name}' from weights: '{weights.path.as_posix()}'.")
+                log(f"initialized {name} from weights {weights.path.as_posix()}.")
         else:
             if self.verbose:
-                log(f"Initialized '{name}' from scratch.")
+                log(f"initialized {name} from scratch.")
 
     # --- Callable & Context Manager ---
     @override
@@ -137,7 +137,7 @@ class HVI_CIDNet(ModelRegisterMixin, Model):
                 ranging from 0.0 to 1.0.
         """
         image = image ** gamma
-        
+
         if use_patch:
             return self.forward_patch(image=image, *args, **kwargs)
         else:

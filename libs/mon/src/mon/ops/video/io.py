@@ -71,17 +71,16 @@ class VideoWriter(ABC):
             verbose (bool, optional): Verbosity mode. Defaults to False.
         """
         # Validate inputs
-        if isinstance(path, (Path, str)):
-            raise TypeError(
-                f"Expected 'path' to point to a video file, "
-                f"but got: {type(path).__name__}."
-            )
         path = Path(path).normalize()
         if not path.video_file():
-            raise ValueError(f"Expected 'path' to point to a video file, but got: '{path.as_posix()}'.")
+            raise ValueError(
+                f"expected path to be a video file, got {path.as_posix()}."
+            )
 
         if frame_rate <= 0:
-            raise ValueError(f"Expected 'frame_rate' to be positive, but got: {frame_rate}.")
+            raise ValueError(
+                f"expected frame_rate to be positive, got {frame_rate}."
+            )
 
         # Assign attributes
         self.verbose = verbose
@@ -131,8 +130,8 @@ class VideoWriter(ABC):
         """
         if not isinstance(frame, (ndarray, Tensor)):
             raise TypeError(
-                f"Expected 'frame' to be a 'np.ndarray' or 'torch.Tensor', "
-                f"but got: {type(frame).__name__}."
+                f"expected frame to be an array or tensor, "
+                f"got {type(frame).__name__}."
             )
         self.write(frame)
 
@@ -183,7 +182,9 @@ class VideoWriterCV(VideoWriter):
         """
         # Validate inputs
         if not isinstance(fourcc, str):
-            raise TypeError(f"Expected 'fourcc' to be a str, but got: {type(fourcc).__name__}.")
+            raise TypeError(
+                f"expected fourcc to be a str, got {type(fourcc).__name__}."
+            )
 
         # Assign attributes
         self.fourcc = fourcc
@@ -224,7 +225,7 @@ class VideoWriterCV(VideoWriter):
         )
 
         if not self.video_writer.isOpened():
-            raise RuntimeError(f"Could not open 'VideoWriter' at: {video_file}.")
+            raise RuntimeError(f"could not open 'VideoWriter' at {video_file}.")
 
     @override
     def close(self):

@@ -136,10 +136,10 @@ class DAV2(ModelRegisterMixin, Model):
         if weights is not None and is_weights_type(weights):
             base_model.load_state_dict(weights.state_dict(weights_only=True))
             if self.verbose:
-                log(f"Initialized '{name}' from weights: '{weights.path.as_posix()}'.")
+                log(f"initialized {name} from weights {weights.path.as_posix()}.")
         else:
             if self.verbose:
-                log(f"Initialized '{name}' from scratch.")
+                log(f"initialized {name} from scratch.")
 
         # Assign the base model
         self.model = base_model

@@ -374,9 +374,7 @@ def create_patches(image: Tensor, kernel_size: int = 7) -> Tensor:
         ValueError: If the input ``image`` does not have 4 dimensions.
     """
     if image.ndim != 4:
-        raise ValueError(
-            f"Expected 'image' to be a 4D tensor, but got: {image.ndim}D."
-        )
+        raise ValueError(f"expected image to be a 4D tensor, got {image.ndim}D.")
 
     b, c, h, w = image.shape
     k = kernel_size

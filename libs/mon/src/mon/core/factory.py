@@ -75,7 +75,7 @@ class Factory(UserDict[str, Any | Callable[..., Any]]):
         """
         # Validate inputs
         if not name:
-            raise ValueError(f"Expected 'name' to be a non-empty string, but got: '{name}'.")
+            raise ValueError(f"expected name to be a non-empty string, got {name}.")
 
         # Assign attributes
         self.verbose = verbose
@@ -143,10 +143,7 @@ class Factory(UserDict[str, Any | Callable[..., Any]]):
         """
         # Validate inputs
         if not (inspect.isclass(module) or inspect.isfunction(module)):
-            raise TypeError(
-                f"Expected 'module' to be a class or function, "
-                f"but got: {type(module).__name__}."
-            )
+            raise TypeError(f"expected a class or function, got {type(module).__name__}.")
 
         # Determine the registration key.
         # Priority: explicit name > class attributes > class name.
@@ -160,8 +157,8 @@ class Factory(UserDict[str, Any | Callable[..., Any]]):
         if not replace and key in self:
             if self.verbose:
                 log_error(
-                    f"'{key}' has been already registered in the '{self.name}' "
-                    f"factory. Skipping registration."
+                    f"{key} has already been registered in {self.name} factory, "
+                    f"skipping registration."
                 )
             return
 
@@ -187,7 +184,7 @@ class Factory(UserDict[str, Any | Callable[..., Any]]):
         """
         # Validate inputs
         if not name:
-            raise ValueError(f"Cannot build from an empty name in the '{self.name}' factory.")
+            raise ValueError(f"expected a valid {self.name}'s name.")
 
         # Normalize name
         key = depascalize(name) if self.decamelize else name
@@ -198,8 +195,8 @@ class Factory(UserDict[str, Any | Callable[..., Any]]):
         # Create the instance
         if key is None:
             raise ValueError(
-                f"'{name}' is not a registered name in the '{self.name}' "
-                f"factory. Available names: {list(self.keys())}."
+                f"{name} is not a registered name in the {self.name} factory, "
+                f"must be one of {list(self.keys())}."
             )
         return self._create_instance(self[key], name, *args, **kwargs)
 
@@ -308,7 +305,9 @@ class DatasetFactory(Factory):
         # Validate inputs
         if not any([task, mode]):
             if self.verbose:
-                log_error(f"Expected at least one of 'task' or 'mode', but got: {task}, {mode}.")
+                log_error(
+                    f"expected at least one of task or mode, got {task}, {mode}."
+                )
             return []
 
         return self.filter(task=task, mode=mode)
@@ -436,8 +435,7 @@ class ModelFactory(Factory):
         """
         if not (inspect.isclass(module) or inspect.isfunction(module)):
             raise TypeError(
-                f"Expected 'module' to be a class or function, "
-                f"but got: {type(module).__name__}."
+                f"expected a class or function, got {type(module).__name__}."
             )
 
         # Determine the registration key.
@@ -456,8 +454,8 @@ class ModelFactory(Factory):
         if not replace and model in self[arch]:
             if self.verbose:
                 log_error(
-                    f"'{model}' is already registered in the '{self.name}' "
-                    f"factory. Skipping registration."
+                    f"{model} has already been registered in {self.name} factory, "
+                    f"skipping registration."
                 )
             return
 
@@ -492,7 +490,7 @@ class ModelFactory(Factory):
         """
         # Validate inputs
         if not name:
-            raise ValueError(f"Cannot build from an empty name in the '{self.name}' factory.")
+            raise ValueError(f"expected name to be a non-empty string, got {name}.")
 
         flatten = self.models_flat
 
@@ -505,8 +503,8 @@ class ModelFactory(Factory):
         # Create the instance
         if key is None:
             raise ValueError(
-                f"'{name}' is not a registered name in the '{self.name}' "
-                f"factory. Available names: {list(flatten.keys())}."
+                f"{name} is not a registered name in the {self.name} factory, "
+                f"must be one of {list(flatten.keys())}."
             )
         return self._create_instance(flatten[key]["module"], key, *args, **kwargs)
 
@@ -526,7 +524,9 @@ class ModelFactory(Factory):
         """
         if not arch and not task:
             if self.verbose:
-                log_error(f"Expected at least one of 'arch' or 'task', but got: {arch}, {task}.")
+                log_error(
+                    f"expected at least one of arch or task, got {arch}, {task}."
+                )
             return []
 
         return self.filter(arch=arch, task=task)
@@ -743,7 +743,7 @@ class OptimizerFactory(Factory):
         """
         # Validate inputs
         if not name:
-            raise ValueError(f"Cannot build from an empty name in the '{self.name}' factory.")
+            raise ValueError(f"expected name to be a non-empty string, got {name}.")
 
         # Normalize name
         key = depascalize(name) if self.decamelize else name
@@ -754,8 +754,8 @@ class OptimizerFactory(Factory):
         # Create the instance
         if key is None:
             raise ValueError(
-                f"'{name}' is not a registered name in the '{self.name}' "
-                f"factory. Available names: {list(self.keys())}."
+                f"{name} is not a registered name in the {self.name} factory, "
+                f"must be one of {list(self.keys())}."
             )
         return self[key](params=params, *args, **kwargs)
 
@@ -860,8 +860,8 @@ class MetricFactory(Factory):
         if not replace and key in self:
             if self.verbose:
                 log_error(
-                    f"'{key}' has been already registered in the '{self.name}' "
-                    f"factory. Skipping registration."
+                    f"{key} has already been registered in {self.name} factory, "
+                    f"skipping registration."
                 )
             return
 
@@ -891,7 +891,7 @@ class MetricFactory(Factory):
         """
         # Validate inputs
         if not name:
-            raise ValueError(f"Cannot build from an empty name in the '{self.name}' factory.")
+            raise ValueError(f"expected name to be a non-empty string, got {name}.")
 
         # Normalize name
         key = depascalize(name) if self.decamelize else name
@@ -902,8 +902,8 @@ class MetricFactory(Factory):
         # Create the instance
         if key is None:
             raise ValueError(
-                f"'{name}' is not a registered name in the '{self.name}' "
-                f"factory. Available names: {list(self.keys())}."
+                f"{name} is not a registered name in the {self.name} factory, "
+                f"must be one of {list(self.keys())}."
             )
         return self._create_instance(self[key]["module"], name, *args, **kwargs)
 

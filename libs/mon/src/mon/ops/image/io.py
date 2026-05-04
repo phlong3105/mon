@@ -101,7 +101,7 @@ def read_image(path: Path, flags: int = cv2.IMREAD_COLOR) -> ndarray:
         # Handle Standard Images (OpenCV)
         image = cv2.imread(path.as_posix(), flags)
         if image is None:
-            raise RuntimeError(f"OpenCV could not decode image at: {path.as_posix()}")
+            raise RuntimeError(f"OpenCV could not decode image at {path.as_posix()}")
 
         # Standardize dimensions: [H, W] -> [H, W, 1]
         if image.ndim == 2:
@@ -145,7 +145,9 @@ def read_image_shape(path: Path) -> Int3:
             w, h = img.size
             c  = _PIL_MODE_TO_CHANNELS.get(img.mode)
             if c is None:
-                raise ValueError(f"Unsupported 'mode': {img.mode} for image at: {path.as_posix()}.")
+                raise ValueError(
+                    f"unsupported mode {img.mode} for image at {path.as_posix()}"
+                )
 
     return h, w, c
 
@@ -283,7 +285,9 @@ def write_image(image: TensorOrArray, path: Path):
                 image = cv2.cvtColor(image, cv2.COLOR_RGBA2BGRA)
         cv2.imwrite(path.as_posix(), image)
     else:
-        raise TypeError( f"Expected 'image' to be a tensor or array, but got: {type(image).__name__}.")
+        raise TypeError(
+            f"expected image to be a tensor or array, got {type(image).__name__}."
+        )
 
 # endregion
 

@@ -120,7 +120,7 @@ def build_dataset(
 
     # 3. If neither is a dataset nor a dataloader config dict, return None
     if verbose:
-        log_error(f"Cannot build dataset from source: {src}.")
+        log_error(f"cannot build dataset from source {src.as_posix()}.")
     # raise ValueError(f"Unsupported source type: {src}.")
     return None, None
 
@@ -175,14 +175,14 @@ def build_dataloader(
             *args, **kwargs
         )
         if dataset_ is None:
-            raise RuntimeError(f"Failed to build dataset from source: {src}.")
+            raise RuntimeError(f"cannot build dataset from source {src.as_posix()}.")
 
         dataloader_ = DataLoader(dataset=dataset_, batch_size=batch_size, *args, **kwargs)
         return name, dataloader_
 
     # 3. If neither is a dataset nor a dataloader config dict, return None
     if verbose:
-        log_error(f"Cannot build dataloader from source: {src}.")
+        log_error(f"cannot build dataloader from source {src.as_posix()}.")
     return None, None
 
 # endregion

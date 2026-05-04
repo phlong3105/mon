@@ -69,7 +69,7 @@ class Device:
         """
         # Validate inputs
         if self.is_cuda and self.index < 0:
-            raise ValueError(f"Invalid CUDA device index: {self.index}")
+            raise ValueError(f"invalid CUDA device index at {self.index}.")
 
     # --- Representation ---
     def __str__(self) -> str:
@@ -209,7 +209,7 @@ def query_vram_usage(device: int = 0, unit: MemoryUnit = MemoryUnit.GB) -> Float
         NVMLError: If there is an error communicating with the NVIDIA driver.
     """
     if not pynvml_available:
-        raise ImportError("Please install 'nvidia-ml-py3' to use 'pynvml'.")
+        raise ImportError("please install 'nvidia-ml-py3' to use 'pynvml'.")
     try:
         pynvml.nvmlInit()
         handle = pynvml.nvmlDeviceGetHandleByIndex(device)

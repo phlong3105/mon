@@ -435,7 +435,9 @@ class Config:
         try:
             return getattr(self._config, name)
         except AttributeError:
-            raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{name}'.")
+            raise AttributeError(
+                f"{self.__class__.__name__} has no attribute {name}."
+            )
 
     def __setattr__(self, name: str, value: Any):
         """Intercept every attribute assignment.
@@ -1103,8 +1105,8 @@ class Config:
         self.root = self.root
         if not self.root or not self.root.is_dir():
             log_error(
-                f"Project root not found at: {self.root}.\n"
-                f"Set to the current working directory: {Path.cwd()}."
+                f"project root not found at {self.root.as_posix()},\n"
+                f"use the current working directory {Path.cwd().as_posix()}."
             )
             self.root = Path.cwd()
 
@@ -1181,8 +1183,8 @@ class Config:
         self.root = self.root
         if not self.root or not self.root.is_dir():
             log_error(
-                f"Project root not found at: {self.root}.\n"
-                f"Set to the current working directory: {Path.cwd()}."
+                f"project root not found at {self.root.as_posix()},\n"
+                f"use the current working directory {Path.cwd().as_posix()}."
             )
             self.root = Path.cwd()
 
@@ -1318,7 +1320,7 @@ class ConfigContext(Config, PromptContextMixin):
         # Validate inputs
         root: Path = Path(root).normalize()
         if not root.is_dir():
-            raise FileNotFoundError(f"Project root isn't found at: '{root.as_posix()}'.")
+            raise FileNotFoundError(f"root not found at {root.as_posix()}")
 
         # Continue the initialization chain
         super().__init__(config=config, config_file=config_file, root=root, **kwargs)
@@ -1435,8 +1437,7 @@ class ConfigContext(Config, PromptContextMixin):
             self.prepare_for_predict()
         else:
             raise ValueError(
-                f"Unsupported run mode: '{mode}'. "
-                f"Must be one of: '{RunMode.list()}'."
+                f"unsupported run mode {mode}, must be one of {RunMode.list()}."
             )
 
         return self  # self.as_config()

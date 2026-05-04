@@ -78,7 +78,7 @@ class Weights:
             ):
                 # We only care about the validity of the path, not its existence
                 raise ValueError(
-                    f"Weights file or directory not found at: '{self.path.as_posix()}'"
+                    f"weights file/directory not found at {self.path.as_posix()}"
                 )
         if is_valid_str(self.url):
             self.url: Path = Path(self.url)
@@ -153,12 +153,12 @@ class Weights:
         path = Path(self.path).normalize()
         if not path.exists():
             log(
-                f"Weights file not found at {path.as_posix()}. "
-                f"Trying to download from {self.url.as_posix()}..."
+                f"weights file not found at {path.as_posix()}. "
+                f"trying to download from {self.url.as_posix()}..."
             )
 
             if not self.url:
-                raise ValueError(f"No URL or local file found.")
+                raise ValueError(f"no URL or local file found.")
 
             from mon.core.filesystem import download_url_to_file
             download_url_to_file(self.url, path, overwrite)
@@ -170,7 +170,7 @@ class Weights:
         try:
             return torch.load(path.as_posix(), weights_only=weights_only, *args, **kwargs)
         except Exception as e:
-            raise RuntimeError(f"Failed to load weights from {path.as_posix()}: {e}")
+            raise RuntimeError(f"failed to load weights from {path.as_posix()}: {e}")
 
     # --- Mutation ---
     def rectify_path(self, root: Path):
@@ -246,7 +246,7 @@ class WeightsEnum(Enum, metaclass=WeightsEnumMeta):
                 return list(cls)[0]
 
         # 3. Otherwise, it's an invalid extension
-        raise ValueError(f"'{value}' is not a valid {cls.__name__}.")
+        raise ValueError(f"{value} is not a valid {cls.__name__}.")
 
     # --- Properties ---
     @property

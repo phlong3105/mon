@@ -16,3 +16,7 @@ b = "./ecdet/ecdet_s.yaml"
 c = a.parent / b
 print(c)
 print(c.is_config_file())
+
+d = ["dec", "ac"]
+if not isinstance(c, list):
+    raise TypeError(f"Expected data to be TensorDict, got {type(d).__name__}.")

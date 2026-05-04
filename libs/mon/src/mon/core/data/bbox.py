@@ -66,18 +66,16 @@ class BBox(Data):
         # Validate inputs
         if not isinstance(self.bbox, ndarray):
             raise TypeError(
-                f"Expected 'image' to be a array, "
-                f"but got: '{type(self.bbox).__name__}'."
+                f"expected bbox to be a 1D array, got {type(self.bbox).__name__}."
             )
         if len(self.bbox) < 8:
             raise ValueError(
-                f"Expected 'bbox' to be a 1D array of shape (8+), "
-                f"but got: 1D array of '{len(self.bbox)}' elements."
+                f"expected bbox to be a 1D array of shape (8+), "
+                f"got {len(self.bbox)}."
             )
         if any(self.bbox[4:] < 0):
             raise ValueError(
-                f"Expected all elements of 'bbox' to be non-negative, "
-                f"but got: '{self.bbox[4:]}'.",
+                f"expected bbox to be non-negative, got {list(self.bbox[4:])}."
             )
         if not isinstance(self.imgsz, Size):
             self.imgsz = Size.from_value(self.imgsz)
@@ -352,16 +350,15 @@ class BBoxes(Data):
         # Validate inputs
         if not isinstance(self.bbox, ndarray):
             raise TypeError(
-                f"Expected 'image' to be a array, "
-                f"but got: '{type(self.bbox).__name__}'."
+                f"expected bbox to be a 2D array, got {type(self.bbox).__name__}."
             )
         if self.bbox.ndim != 2 or self.bbox.shape[1] < 8:
             raise ValueError(
-                f"Expected 'bbox' to be a 2D array of shape (N, 8+), "
-                f"but got: {self.bbox.shape}D array."
+                f"expected bbox to be a 2D array of shape (N, 8+), "
+                f"got {self.bbox.shape}."
             )
         if (self.bbox[:, 4:] < 0).any():
-            raise ValueError(f"Expected all elements of 'bbox' to be non-negative.")
+            raise ValueError(f"expected bbox to be non-negative.")
         if not isinstance(self.imgsz, Size):
             self.imgsz = Size.from_value(self.imgsz)
         if is_valid_str(self.path):

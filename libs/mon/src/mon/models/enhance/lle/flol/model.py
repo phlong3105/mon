@@ -131,10 +131,10 @@ class FLOL(ModelRegisterMixin, Model):
                 torch.save(state_dict, str(weights.path))
             self.load_state_dict(state_dict)
             if self.verbose:
-                log(f"Initialized '{name}' from weights: '{weights.path.as_posix()}'.")
+                log(f"initialized {name} from weights {weights.path.as_posix()}.")
         else:
             if self.verbose:
-                log(f"Initialized '{name}' from scratch.")
+                log(f"initialized {name} from scratch.")
 
     # --- Callable & Context Manager ---
     @override

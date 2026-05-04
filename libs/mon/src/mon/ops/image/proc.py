@@ -122,7 +122,7 @@ def parse_image_shape(image: TensorOrArray) -> Int3:
         elif isinstance(image, ndarray):
             return image.shape[-3], image.shape[-2], image.shape[-1]
 
-    raise ValueError(f"Could not get shape from {type(image)}.")
+    raise ValueError(f"could not get shape from {type(image).__name__}.")
 
 
 def parse_imgsz(value: Any, divisor: int | None = None) -> Size:
@@ -212,8 +212,8 @@ def to_image_array(image: Tensor) -> ndarray:
         or image.shape[1] not in [1, 3, 4]
     ):
         raise TypeError(
-            f"Expected 'image' to be a 4D tensor, "
-            f"but got: {image.ndim}D {type(image).__name__},"
+            f"expected image to be a 4D tensor, "
+            f"got {image.ndim}D {type(image).__name__}."
         )
 
     # If 4D, select the first image in the batch
@@ -244,8 +244,8 @@ def to_image_tensor(image: ndarray, normalize: bool = False) -> Tensor:
     """
     if not isinstance(image, ndarray) or image.ndim != 3:
         raise TypeError(
-            f"Expected 'image' to be a 4D tensor, "
-            f"but got: {image.ndim}D {type(image).__name__},"
+            f"expected image to be a 4D tensor, "
+            f"got {image.ndim}D {type(image).__name__}."
         )
 
     # Convert to tensor and permute: [H, W, C] -> [C, H, W]

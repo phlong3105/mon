@@ -501,7 +501,9 @@ class StandardDataset(Dataset, ABC):
 
         # Validate inputs
         if value not in self.splits:
-            raise ValueError(f"Unsupported 'split': {value}. Must be one of: {self.splits}.")
+            raise ValueError(
+                f"unsupported split {value}, must be one of {self.splits}."
+            )
 
         self._split = value
 

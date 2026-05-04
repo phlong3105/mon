@@ -123,7 +123,7 @@ class ClassList(IndexList[Class]):
         """
         path = Path(path).normalize()
         if not path.has_ext(".yaml", ".yml", exists=True):
-            raise ValueError(f"YAML file not found at '{path.as_posix()}'.")
+            raise ValueError(f"YAML file not found at {path.as_posix()}")
 
         classes: dict = load_yaml(path=path)
         classes = classes.get("classes", [])
@@ -141,7 +141,7 @@ class ClassList(IndexList[Class]):
         """
         path: Path = Path(path).normalize()
         if not path.has_ext(".yaml", ".yml", exists=False):
-            raise ValueError(f"Expected a valid YAML file, but got: '{path.as_posix()}'.")
+            raise ValueError(f"expected a valid YAML file, got {path.as_posix()}")
 
         classes_dict = {"classes": [item.__dict__ for item in self.data]}
         save_yaml(data=classes_dict, path=path)
@@ -181,7 +181,7 @@ def build_classlist(value: Any) -> ClassList:
     elif isinstance(value, (Path, str)):
         return ClassList.from_file(value)
     else:
-        raise TypeError(f"Unsupported ClassList type: {type(value).__name__}.")
+        raise TypeError(f"unsupported ClassList type {type(value).__name__}.")
 
 # endregion
 

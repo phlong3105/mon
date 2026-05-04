@@ -130,11 +130,13 @@ class IndexList(UserList, Generic[T]):
             try:
                 return self.item_type(**item)
             except TypeError as e:
-                raise TypeError(f"Cannot cast dict to '{self.item_type.__name__}': {e}.")
+                raise TypeError(
+                    f"cannot cast dict to {self.item_type.__name__}: {e}."
+                )
 
         raise TypeError(
-            f"Expected item of type '{self.item_type.__name__}' or a compatible "
-            f"dict, but got: '{type(item).__name__}'."
+            f"expected item of type {self.item_type.__name__} or a compatible "
+            f"dict, got {type(item).__name__}."
         )
 
     def _rebuild_indices(self):
@@ -203,7 +205,7 @@ class IndexList(UserList, Generic[T]):
             try:
                 return self._key_map[index]
             except KeyError:
-                raise KeyError(f"Item with '{self.key_attr}={index}' not found.")
+                raise KeyError(f"item with {self.key_attr}={index} not found.")
 
         # Fallback to standard list behavior (int/slice)
         return super().__getitem__(index)
@@ -290,7 +292,7 @@ class IndexList(UserList, Generic[T]):
 
         if value in self._id_map:
             return self._id_map[value]
-        raise KeyError(f"Item with '{self.id_attr}={value}' not found.")
+        raise KeyError(f"item with {self.id_attr}={value} not found.")
 
     # --- Mutation ---
     def apply(self, func: Callable):
@@ -446,11 +448,13 @@ class DictList(UserDict, Generic[K, V]):
             try:
                 return self.item_type(**item)
             except TypeError as e:
-                raise TypeError(f"Cannot to cast dict to '{self.item_type.__name__}': {e}.")
+                raise TypeError(
+                    f"cannot to cast dict to {self.item_type.__name__}: {e}."
+                )
 
         raise TypeError(
-            f"Expected item of type '{self.item_type.__name__}', a compatible "
-            f"dict, or None, but got: '{type(item).__name__}'."
+            f"expected item of type {self.item_type.__name__}, a compatible "
+            f"dict, or None, got {type(item).__name__}."
         )
 
     # --- Mathematical Operators ---
@@ -543,15 +547,12 @@ class DictList(UserDict, Generic[K, V]):
         """Verify the integrity of the dictionary."""
         for k, v in self.data.items():
             if not isinstance(v, list):
-                raise TypeError(f"Expected list for key '{k}', but got: '{type(v).__name__}'.")
+                raise TypeError(f"Expected a list, but got: {type(v).__name__}.")
             if (
                 self.item_type is not None
                 and any(not isinstance(item, self.item_type) for item in v)
             ):
-                raise TypeError(
-                    f"Expected all items in list '{k}' to be of type "
-                    f"'{self.item_type.__name__}'."
-                )
+                raise TypeError(f"Expected a list of {self.item_type.__name__}.")
 
     # --- Mutation ---
     def apply(self, func):

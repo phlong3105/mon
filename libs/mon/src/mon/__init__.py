@@ -28,4 +28,4 @@ from . import (
 )  # This will populate all factories
 
 _end_time = time.time()
-log(f"`mon` loaded in: {_end_time - _start_time:.4f} seconds.")
+log(f"mon loaded in {_end_time - _start_time:.4f} seconds.")

@@ -239,7 +239,7 @@ def find_unique(seq: Sequence) -> Sequence:
         TypeError: If ``seq`` is not a list or tuple.
     """
     if not isinstance(seq, (list, tuple)):
-        raise TypeError(f"Expected 'seq' to be a list or tuple, but got: {type(seq).__name__}.")
+        raise TypeError(f"expected a list or tuple, got {type(seq).__name__}.")
     return type(seq)(dict.fromkeys(seq))
 
 
@@ -278,7 +278,7 @@ def to_int(value: Any) -> int | None:
     try:
         return int(value)
     except (ValueError, TypeError):
-        raise ValueError(f"Expected 'value' to be convertible to an integer, but got: '{value}'.")
+        raise ValueError(f"cannot convert {value} to integer.")
 
 
 def to_float(value: Any) -> float | None:
@@ -292,7 +292,7 @@ def to_float(value: Any) -> float | None:
     try:
         return float(value)
     except (ValueError, TypeError):
-        raise ValueError(f"Expected 'value' to be convertible to a float, but got: '{value}'.")
+        raise ValueError(f"cannot convert {value} to float.")
 
 
 def to_str(value: Any, sep: str = ",") -> str:

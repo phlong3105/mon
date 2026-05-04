@@ -104,12 +104,14 @@ class Metadata:
         if is_valid_str(self.path):
             self.path: Path = Path(self.path).normalize()
         if not self.path.exists():
-            raise ValueError(f"Path not found at: '{self.path.as_posix()}'")
+            raise ValueError(f"path not found at {self.path.as_posix()}")
 
         if is_valid_str(self.base_dir):
             self.base_dir: Path = Path(self.base_dir).normalize()
             if not self.base_dir.exists():
-                raise ValueError(f"Base directory not found at: '{self.base_dir.as_posix()}'")
+                raise ValueError(
+                    f"base directory not found at {self.base_dir.as_posix()}"
+                )
 
 
 class MetadataDictList(DictList[str, list[Metadata]]):

@@ -364,7 +364,7 @@ class SALEO(ModelRegisterMixin, nn.Module):
 
             # 3.8. Log debugging information
             if self.verbose:
-                log(f"Epoch {i+1:4d}/{epochs:4d}: Loss = {(loss_epoch / num_items):6.2f}")
+                log(f"epoch {i+1:4d}/{epochs:4d}: loss = {(loss_epoch / num_items):6.2f}")
 
         # 4. Load best weights
         model.load_state_dict(best_weights)

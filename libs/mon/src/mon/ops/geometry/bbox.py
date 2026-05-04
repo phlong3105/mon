@@ -109,11 +109,11 @@ def to_2d_bbox(bbox: ndarray | list | tuple) -> ndarray:
             bbox = np.array(bbox, dtype=np.float32)
         except ValueError:
             # Handle jagged arrays (e.g., one box has 7 elements, another has 8)
-            raise ValueError("Expected all elements in 'bbox' to have the same shape.")
+            raise ValueError("expected all elements in bbox to have the same shape.")
 
     # Validate inputs
     if not isinstance(bbox, ndarray):
-        raise TypeError(f"Expected 'bbox' to be an array, but got: {type(bbox).__name__}.")
+        raise TypeError(f"expected bbox to be an array, got {type(bbox).__name__}.")
 
     # Handle various shapes
     if bbox.ndim == 1:

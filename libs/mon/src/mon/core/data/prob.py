@@ -46,13 +46,11 @@ class Prob(Data):
         # Validate inputs
         if not isinstance(self.prob, ndarray):
             raise TypeError(
-                f"Expected 'probs' to be an array, "
-                f"but got: '{type(self.prob).__name__}'."
+                f"expected prob to be an array, got {type(self.prob).__name__}."
             )
         if self.prob.ndim != 1:
             raise ValueError(
-                f"Expected 'image' to be a 1D array, "
-                f"but got: {self.prob.ndim}D array."
+                f"expected prob to be a 1D array, got {self.prob.ndim}D."
             )
 
     # --- Representation ---

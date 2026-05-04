@@ -97,10 +97,10 @@ class MobileNetV3BackBone(ModelRegisterMixin, nn.Module):
         if weights is not None and is_weights_type(weights):
             base_model.load_state_dict(weights.state_dict())
             if self.verbose:
-                log(f"Initialized '{name}' from weights: '{weights.path.as_posix()}'.")
+                log(f"initialized {name} from weights {weights.path.as_posix()}.")
         else:
             if self.verbose:
-                log(f"Initialized '{name}' from scratch.")
+                log(f"initialized {name} from scratch.")
 
         # In torchvision, MobileNetV3 already has a 'features' block
         self.features = base_model.features

@@ -45,7 +45,7 @@ def vis_heatmap(image: ndarray, colormap: str | Colormap = "Spectral_r") -> ndar
     if image.ndim == 3 and image.shape[-1] == 1:
         image = image.squeeze(-1)
     elif image.ndim != 2:
-        raise ValueError(f"Expected a 2D/3D array with 1 channel, but got: {image.shape}.")
+        raise ValueError(f"expected a 2D/3D array with 1-channel, got {image.shape}.")
 
     # 2. Safely normalize to [0.0, 1.0] for Matplotlib
     # If the image is uint8 or has values > 1.0, we assume it is scaled to 255
@@ -108,7 +108,7 @@ def draw_info(
     else:
         lines = info
     if not isinstance(info, list):
-        raise TypeError(f"Expected a list or dictionary, but got: {type(info).__name__}.")
+        raise TypeError(f"expected a list or dictionary, got {type(info).__name__}.")
 
     font = cv2.FONT_HERSHEY_SIMPLEX
     x, y = pos

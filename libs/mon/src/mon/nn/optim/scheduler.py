@@ -112,8 +112,8 @@ class CosineAnnealingRestartLR(LRScheduler):
         # Validate inputs
         if len(periods) != len(restart_weights):
             raise ValueError(
-                f"'periods' and 'restart_weights' should have the same length, "
-                f"but got: {len(periods)} != {len(restart_weights)}."
+                f"periods and restart_weights must have the same length, "
+                f"got {len(periods)} != {len(restart_weights)}."
             )
 
         # Assign attributes
@@ -181,8 +181,8 @@ class CosineAnnealingRestartCyclicLR(LRScheduler):
         # Validate inputs
         if len(periods) != len(restart_weights):
             raise ValueError(
-                f"'periods' and 'restart_weights' should have the same length, "
-                f"but got: {len(periods)} != {len(restart_weights)}."
+                f"periods and restart_weights must have the same length, "
+                f"got {len(periods)} != {len(restart_weights)}."
             )
 
         # Assign attributes
@@ -246,10 +246,7 @@ class GradualWarmupScheduler(LRScheduler):
         """
         # Validate inputs
         if multiplier < 1.0:
-            raise ValueError(
-                f"'multiplier' should be greater than or equal to 1.0, "
-                f"but got: {multiplier}."
-            )
+            raise ValueError(f"multiplier must be >= 1.0, got {multiplier}.")
 
         # Assign attributes
         self.multiplier = multiplier

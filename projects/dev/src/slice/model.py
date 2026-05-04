@@ -133,8 +133,7 @@ class SLICE(ModelRegisterMixin, Model):
         # Validate inputs
         if method not in self.methods:
             raise ValueError(
-                f"Unsupported ODE solver method '{method}'. "
-                f"Must be one of: {self.methods}"
+                f"unsupported ODE solver {method}, must be one of {self.methods}."
             )
 
         # Assign attributes
@@ -170,10 +169,10 @@ class SLICE(ModelRegisterMixin, Model):
         if weights is not None and is_weights_type(weights):
             self.load_state_dict(weights.state_dict())
             if self.verbose:
-                log(f"Initialized '{name}' from weights: '{weights.path.as_posix()}'.")
+                log(f"initialized {name} from weights {weights.path.as_posix()}.")
         else:
             if self.verbose:
-                log(f"Initialized '{name}' from scratch.")
+                log(f"Initialized {name} from scratch.")
 
     # --- Callable & Context Manager ---
     @override

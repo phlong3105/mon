@@ -133,9 +133,9 @@ class Predictor(Runner, ABC):
         self._setup()
         # Validate that all necessary components are initialized
         if self._model is None and self.verbose:
-            log(f"'model' is not initialized.")
+            log(f"model has not been initialized.")
         if self._transforms is None and self.verbose:
-            log(f"'transforms' is not initialized.")
+            log(f"transforms have not been initialized.")
 
         # 2. Summarize the current run
         if config.verbose:
@@ -241,7 +241,7 @@ class Predictor(Runner, ABC):
 
         # Validate
         if name is None and dataloader is None:
-            raise RuntimeError(f"Failed to build dataset/dataloader from the source: {source}.")
+            raise RuntimeError(f"cannot build dataloader from the source {source}.")
 
         # Return the name and dataloader
         return name, dataloader
@@ -332,8 +332,7 @@ class Predictor(Runner, ABC):
                     image = to_image_array(image)
                 if not isinstance(image, ndarray):
                     raise TypeError(
-                        f"Expected 'image' to be an array, "
-                        f"but got: {type(image).__name__}."
+                        f"expected image to be an array, got {type(image).__name__}."
                     )
 
                 # Use the key as the stem only if requested (for debug)

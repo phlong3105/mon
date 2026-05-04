@@ -99,7 +99,9 @@ def load_bbox_yolo(
             remap = load_yaml(path=remap)
         remap = getattr(remap, "remap", remap)
         if not isinstance(remap, (Box, dict)):
-            raise TypeError(f"Expected remap to be a dict, but got: {type(remap).__name__}.")
+            raise TypeError(
+                f"expected remap to be a dict, got {type(remap).__name__}."
+            )
 
     # 3. Parse raw data
     num_rows = raw_data.shape[0]
@@ -151,7 +153,7 @@ def load_bbox_yolo(
 
     # 5. Validate
     if bbox[:, 0:4].any() < 0:
-        raise ValueError("Bounding box coordinates must be non-negative.")
+        raise ValueError("bbox coordinates must be non-negative.")
 
     return bbox
 
@@ -186,7 +188,9 @@ def load_bbox(
     if fmt == BBoxFormat.CXCYWHN:
         bbox = load_bbox_yolo(path=path, remap=remap, *args, **kwargs)
     else:
-        raise ValueError(f"The loading method for '{fmt}' format is not supported yet.")
+        raise ValueError(
+            f"the loading method for '{fmt}' format has not been supported yet."
+        )
 
     # 3. Return bbox array if requested
     if as_array:
@@ -201,8 +205,8 @@ def load_bbox(
             imgsz = read_imgsz(image_file)
     else:
         raise ValueError(
-            f"Expected 'imgsz' or 'image_file' to be provided when "
-            f"'as_array=False', but got: imgsz={imgsz}, image_file={image_file}."
+            f"expected either imgsz or image_file to be provided when "
+            f"'as_array=False', got imgsz={imgsz} and image_file={image_file}."
         )
 
     # 5. Convert to BBoxes instance if requested
@@ -214,8 +218,7 @@ def load_bbox(
         bbox = BBoxes.from_xywh(bbox=bbox, imgsz=imgsz, path=path)
     else:
         raise ValueError(
-            f"Unsupported bbox format: {fmt}. "
-            f"Must be one of: {BBoxFormat.formats()}."
+            f"unsupported bbox format {fmt}, must be one of {BBoxFormat.formats()}."
         )
 
     return bbox

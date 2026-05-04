@@ -177,7 +177,9 @@ def metric(args: argparse.Namespace):
     # 2. Define constants
     root = resolve_project_root(current_dir)
     if root is None:
-        raise FileNotFoundError(f"Could not find project root from {current_dir}")
+        raise FileNotFoundError(
+            f"could not find project root from {current_dir.as_posix()}"
+        )
 
     data_dir = root / "data"
     run_dir = root / "run" / "predict"
@@ -273,7 +275,7 @@ def main(args: argparse.Namespace):
     elif args.benchmark:
         benchmark(args)
     else:
-        raise NotImplementedError("Run mode hasn't been implemented.")
+        raise NotImplementedError("run mode has not been implemented.")
 
 
 def parse_args() -> argparse.Namespace:

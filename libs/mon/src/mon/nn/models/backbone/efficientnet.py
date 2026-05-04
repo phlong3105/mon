@@ -99,7 +99,7 @@ class EfficientNetBackBone(ModelRegisterMixin, nn.Module):
                 the last layer.
             weights (Weights | None, optional): Pre-trained weights to load.
                 Defaults to None.
-            out_indices (list[int] | None, optional): List of layer indices to 
+            out_indices (list[int] | None, optional): List of layer indices to
                 extract features from. If None, defaults to [2, 3, 5, 8].
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
@@ -123,10 +123,10 @@ class EfficientNetBackBone(ModelRegisterMixin, nn.Module):
         if weights is not None and is_weights_type(weights):
             base_model.load_state_dict(weights.state_dict())
             if self.verbose:
-                log(f"Initialized '{name}' from weights: '{weights.path.as_posix()}'.")
+                log(f"initialized {name} from weights {weights.path.as_posix()}.")
         else:
             if self.verbose:
-                log(f"Initialized '{name}' from scratch.")
+                log(f"initialized {name} from scratch.")
 
         # In torchvision, DenseNet already has a 'features' block
         self.features = base_model.features

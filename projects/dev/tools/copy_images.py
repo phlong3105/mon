@@ -32,11 +32,11 @@ def main(args: argparse.Namespace):
 
     data_dir = Path(args.data_dir).normalize()
     if not data_dir.is_dir():
-        raise FileNotFoundError(f"Data directory not found: {data_dir}")
+        raise FileNotFoundError(f"data directory not found at {data_dir.as_posix()}")
 
     output_dir = Path(args.output_dir).normalize()
     if not output_dir.is_dir():
-        raise FileNotFoundError(f"Output directory not found: {output_dir}")
+        raise FileNotFoundError(f"output directory not found at {output_dir.as_posix()}")
 
     # Loop through all method directories in the data directory
     for image_file in data_dir.rglob(f"*/{dataset}/*/{filename}"):

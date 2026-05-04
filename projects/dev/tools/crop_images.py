@@ -40,7 +40,7 @@ def main(args: argparse.Namespace):
     resized_dir = data_dir / "resized"
 
     if not data_dir.is_dir():
-        raise FileNotFoundError(f"Data directory not found: {data_dir}")
+        raise FileNotFoundError(f"data directory not found at {data_dir.as_posix()}")
 
     cropped_dir.mkdir(parents=True, exist_ok=True)
     highlighted_dir.mkdir(parents=True, exist_ok=True)
@@ -48,7 +48,9 @@ def main(args: argparse.Namespace):
 
     box = [int(x) for x in args.box.split(",")]
     if len(box) != 4:
-        raise ValueError(f"Box must be in format '(top, left, height, width)', but got: {args.box}")
+        raise ValueError(
+            f"box must be in (top, left, height, width) format, got {args.box}."
+        )
 
     # Get all images
     image_files = list(data_dir.glob("*"))
