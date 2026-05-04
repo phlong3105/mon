@@ -236,7 +236,7 @@ def get_local_features(image: Tensor, kernel_size: int = 7) -> Tensor:
     if image.ndim != 4:
         raise ValueError(
             f"Expected 'image' to be Tensor of shape (B, C, H, W), "
-            f"but got {image.shape}."
+            f"but got: {image.shape}."
         )
 
     b, c, h, w = image.shape
@@ -282,7 +282,7 @@ def get_nearest_features(
     if image.ndim != 4:
         raise ValueError(
             f"Expected 'image' to be Tensor of shape (B, C, H, W), "
-            f"but got {image.shape}."
+            f"but got: {image.shape}."
         )
 
     b, c, h_in, w_in = image.shape

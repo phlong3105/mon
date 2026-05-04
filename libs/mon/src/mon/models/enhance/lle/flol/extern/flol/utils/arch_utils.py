@@ -184,7 +184,7 @@ def resize_flow(flow,
         output_h, output_w = sizes[0], sizes[1]
     else:
         raise ValueError(
-            f'Size type should be ratio or shape, but got type {size_type}.')
+            f'Size type should be ratio or shape, but got: type {size_type}.')
 
     input_flow = flow.clone()
     ratio_h = output_h / flow_h

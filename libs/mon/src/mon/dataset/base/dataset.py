@@ -116,7 +116,7 @@ class Dataset(Dataset_, ABC):
             else:
                 raise TypeError(
                     f"Expected 'metapoints' to be a MetadataDictList, "
-                    f"but got {type(metapoints).__name__}."
+                    f"but got: {type(metapoints).__name__}."
                 )
         else:
             # Else, retrieve metapoints
@@ -290,7 +290,7 @@ class Dataset(Dataset_, ABC):
         if not isinstance(metapoints, MetadataDictList):
             raise TypeError(
                 f"Expected 'metapoints' to be a MetadataDictList, "
-                f"but got {type(metapoints).__name__}."
+                f"but got: {type(metapoints).__name__}."
             )
         if keys != list(metapoints.keys()):
             raise ValueError(
@@ -477,7 +477,7 @@ class StandardDataset(Dataset, ABC):
 
         # Validate inputs
         if not value.is_dir():
-            raise FileNotFoundError(f"Dataset root not found at: {value}")
+            raise FileNotFoundError(f"Dataset root isn't found at: '{value.as_posix()}'")
 
         self._root = value
 
@@ -501,9 +501,7 @@ class StandardDataset(Dataset, ABC):
 
         # Validate inputs
         if value not in self.splits:
-            raise ValueError(
-                f"Unsupported 'split': {value}. Must be one of: {self.splits}."
-            )
+            raise ValueError(f"Unsupported 'split': {value}. Must be one of: {self.splits}.")
 
         self._split = value
 
@@ -590,12 +588,12 @@ class InputTargetDataset(Dataset, ABC):
         if value is None:
             raise TypeError(
                 f"Expected 'input_dir' to be a Path or str, "
-                f"but got {type(value).__name__}."
+                f"but got: {type(value).__name__}."
             )
 
         value = Path(value).normalize()
         if not value.is_dir():
-            raise FileNotFoundError(f"Input directory not found at: {value}")
+            raise FileNotFoundError(f"Input directory isn't found at: '{value.as_posix()}'")
 
         self._input_dir = value
 
@@ -617,7 +615,7 @@ class InputTargetDataset(Dataset, ABC):
         if value is not None:
             value = Path(value).normalize()
             if isinstance(value, Path) and not value.is_dir():
-                raise FileNotFoundError(f"Target directory not found at: {value}")
+                raise FileNotFoundError(f"Target directory isn't found at: '{value.as_posix()}'")
             self._target_dir = value
         else:
             self._target_dir = None

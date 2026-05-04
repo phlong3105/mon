@@ -39,7 +39,7 @@ def load_json(path: Path) -> dict | list:
     path = Path(path).normalize()
 
     if not path.has_suffix(".json"):
-        raise ValueError(f"Expected a valid JSON file, but got '{path}'.")
+        raise ValueError(f"Expected a valid JSON file, but got: '{path.as_posix()}'.")
 
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)
@@ -54,7 +54,7 @@ def load_yaml(path: Path) -> dict | list:
     path = Path(path).normalize()
 
     if not path.has_ext(".yaml", ".yml"):
-        raise ValueError(f"Expected a valid YAML file, but got '{path}'.")
+        raise ValueError(f"Expected a valid YAML file, but got: '{path.as_posix()}'.")
 
     with open(path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
@@ -69,7 +69,7 @@ def load_txt(path: Path) -> list[str]:
     path = Path(path).normalize()
 
     if not path.has_ext(".txt"):
-        raise ValueError(f"Expected a valid text file, but got '{path}'.")
+        raise ValueError(f"Expected a valid text file, but got: '{path.as_posix()}'.")
 
     with open(path, "r", encoding="utf-8") as f:
         return [line.strip() for line in f.readlines()]

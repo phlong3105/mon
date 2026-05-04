@@ -76,7 +76,8 @@ def read_image(path: Path, flags: int = cv2.IMREAD_COLOR) -> ndarray:
 
     Args:
         path (Path): Absolute path to the image file.
-        flags (int): OpenCV flag to read the image. Defaults to cv2.IMREAD_COLOR.
+        flags (int, optional): OpenCV flag to read the image.
+            Defaults to cv2.IMREAD_COLOR.
 
     Returns:
         ndarray: Image array of shape (H, W, C) and pixel values ranging from
@@ -89,7 +90,7 @@ def read_image(path: Path, flags: int = cv2.IMREAD_COLOR) -> ndarray:
 
     if path.is_raw_image_file(exists=True):
         # Handle RAW Images
-        with rawpy.imread(str(path)) as raw:
+        with rawpy.imread(path.as_posix()) as raw:
             # use_camera_wb=True often provides a more natural look
             image = raw.postprocess(
                 use_camera_wb=True,
@@ -98,9 +99,9 @@ def read_image(path: Path, flags: int = cv2.IMREAD_COLOR) -> ndarray:
             )
     else:
         # Handle Standard Images (OpenCV)
-        image = cv2.imread(str(path), flags)
+        image = cv2.imread(path.as_posix(), flags)
         if image is None:
-            raise RuntimeError(f"OpenCV could not decode image at: {path}")
+            raise RuntimeError(f"OpenCV could not decode image at: {path.as_posix()}")
 
         # Standardize dimensions: [H, W] -> [H, W, 1]
         if image.ndim == 2:
@@ -133,20 +134,18 @@ def read_image_shape(path: Path) -> Int3:
 
     if path.is_raw_image_file(exists=True):
         # Handle RAW Images
-        with rawpy.imread(str(path)) as raw:
+        with rawpy.imread(path.as_posix()) as raw:
             # Visible dimensions ignore the 'black' masked pixels at sensor edges
             h, w = raw.raw_image_visible.shape
             # Most RAW post-processing yields 3 channels (RGB)
             c = 3
     else:
          # Handle Standard Images (using lazy-load PIL)
-        with PIL.Image.open(str(path)) as img:
+        with PIL.Image.open(path.as_posix()) as img:
             w, h = img.size
             c  = _PIL_MODE_TO_CHANNELS.get(img.mode)
             if c is None:
-                raise ValueError(
-                    f"Unsupported 'mode': {img.mode} for image at: {path}."
-                )
+                raise ValueError(f"Unsupported 'mode': {img.mode} for image at: {path.as_posix()}.")
 
     return h, w, c
 
@@ -182,9 +181,10 @@ class ImageLoader(Loader):
         """Load image data from the given ``metadata``.
 
         Args:
-            metadata (Metadata, optional): Metadata describing the image to be
+            metadata (Metadata | None): Metadata describing the image to be
                 loaded. Defaults to None.
-            flags (int): OpenCV flag to read the image. Defaults to cv2.IMREAD_COLOR.
+            flags (int, optional): OpenCV flag to read the image.
+                Defaults to cv2.IMREAD_COLOR.
 
         Returns:
             Image | None: An ``Image`` instance containing the loaded image,
@@ -217,9 +217,10 @@ class MaskLoader(Loader):
         """Load image data from the given ``metadata``.
 
         Args:
-            metadata (Metadata, optional): Metadata describing the image to be
+            metadata (Metadata | None): Metadata describing the image to be
                 loaded. Defaults to None.
-            flags (int): OpenCV flag to read the image. Defaults to cv2.IMREAD_GRAYSCALE.
+            flags (int, optional): OpenCV flag to read the image.
+                Defaults to cv2.IMREAD_GRAYSCALE.
 
         Returns:
             Image | None: An ``Image`` instance containing the loaded image,
@@ -263,7 +264,7 @@ def write_image(image: TensorOrArray, path: Path):
         # Handle tensor (B, C, H, W)
         # torchvision handles the [0, 1] -> [0, 255] conversion internally
         # We ensure it's on CPU before saving
-        torchvision.utils.save_image(image.detach().cpu(), str(path))
+        torchvision.utils.save_image(image.detach().cpu(), path.as_posix())
     elif isinstance(image, ndarray):
         # Handle array (H, W, C)
         # Ensure it's 8-bit for OpenCV
@@ -280,12 +281,9 @@ def write_image(image: TensorOrArray, path: Path):
                 image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
             elif image.shape[-1] == 4:
                 image = cv2.cvtColor(image, cv2.COLOR_RGBA2BGRA)
-        cv2.imwrite(str(path), image)
+        cv2.imwrite(path.as_posix(), image)
     else:
-        raise TypeError(
-            f"Expected 'image' to be a tensor or array, "
-            f"but got {type(image).__name__}."
-        )
+        raise TypeError( f"Expected 'image' to be a tensor or array, but got: {type(image).__name__}.")
 
 # endregion
 

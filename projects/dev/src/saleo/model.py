@@ -113,7 +113,7 @@ class SALEO(ModelRegisterMixin, nn.Module):
     def forward(
         self,
         image: Tensor,
-        depth: Tensor = None,
+        depth: Tensor | None = None,
         epochs: int = 100,
         batch_size: int = 8,
         E: float = 0.1,
@@ -129,7 +129,7 @@ class SALEO(ModelRegisterMixin, nn.Module):
         Args:
             image (Tensor): Image tensor of shape (B, 3, H, W) and values
                 ranging from 0.0 to 1.0.
-            depth (Tensor, optional): Depth map tensor of shape (B, 1, H, W)
+            depth (Tensor | None, optional): Depth map tensor of shape (B, 1, H, W)
                 and values ranging from 0.0 to 1.0. Defaults to None.
             epochs (int, optional): Number of optimization steps. Defaults to 100.
             batch_size (int, optional): Batch size. Defaults to 8.
@@ -207,7 +207,7 @@ class SALEO(ModelRegisterMixin, nn.Module):
         Args:
             image_i (Tensor): Illumination map tensor of shape (B, 1, H, W) and
                 values ranging from 0.0 to 1.0.
-            depth (Tensor, optional): Depth map tensor of shape (B, 1, H, W)
+            depth (Tensor | None, optional): Depth map tensor of shape (B, 1, H, W)
                 and values ranging from 0.0 to 1.0. Defaults to None.
             epochs (int, optional): Number of optimization steps. Defaults to 100.
             batch_size (int, optional): Batch size. Defaults to 8.
@@ -268,7 +268,7 @@ class SALEO(ModelRegisterMixin, nn.Module):
             model (nn.Module): INR network to optimize.
             image_i (Tensor): Illumination map tensor of shape (B, 1, H, W) and
                 values ranging from 0.0 to 1.0.
-            depth (Tensor, optional): Depth map tensor of shape (B, 1, H, W)
+            depth (Tensor | None, optional): Depth map tensor of shape (B, 1, H, W)
                 and values ranging from 0.0 to 1.0. Defaults to None.
             epochs (int, optional): Number of optimization steps. Defaults to 100.
             batch_size (int, optional): Batch size. Defaults to 8.
@@ -384,7 +384,7 @@ class SALEO(ModelRegisterMixin, nn.Module):
             model (nn.Module): Trained INR network.
             image_i: Illumination map tensor of shape (B, 1, H, W) and values
                 ranging from 0.0 to 1.0.
-            depth (Tensor, optional): Depth map tensor of shape (B, 1, H, W)
+            depth (Tensor | None, optional): Depth map tensor of shape (B, 1, H, W)
                 and values ranging from 0.0 to 1.0. Defaults to None.
             tile_size (int, optional): Tile size for inference. Defaults to 256.
 

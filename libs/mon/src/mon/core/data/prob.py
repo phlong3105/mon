@@ -47,12 +47,12 @@ class Prob(Data):
         if not isinstance(self.prob, ndarray):
             raise TypeError(
                 f"Expected 'probs' to be an array, "
-                f"but got '{type(self.prob).__name__}'."
+                f"but got: '{type(self.prob).__name__}'."
             )
         if self.prob.ndim != 1:
             raise ValueError(
                 f"Expected 'image' to be a 1D array, "
-                f"but got {self.prob.ndim}D array."
+                f"but got: {self.prob.ndim}D array."
             )
 
     # --- Representation ---
@@ -136,12 +136,12 @@ class Prob(Data):
         if num_classes <= 0:
             raise ValueError(
                 f"Expected 'num_classes' to be a positive integer, "
-                f"but got {num_classes}."
+                f"but got: {num_classes}."
             )
         if not (0 <= class_id < num_classes):
             raise ValueError(
                 f"Expected 'class_id' in range [0, {num_classes}), "
-                f"but got {class_id}."
+                f"but got: {class_id}."
             )
 
         prob = np.zeros(num_classes, dtype=np.float32)

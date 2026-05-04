@@ -116,15 +116,15 @@ class SLICE(ModelRegisterMixin, Model):
                 for encoding. Defaults to 256.
             method (str, optional): ODE solver method. Defaults to "dopri5".
             tol (float, optional): Tolerance for solver. Defaults to 1e-5.
-            ode_options (dict, optional): Additional options to pass to the ODE
-                solver. Defaults to None.
+            ode_options (dict | None, optional): Additional options to pass to
+                the ODE solver. Defaults to None.
             noise_level (float | None, optional): The noise level to add to the
                 input. If None, no noise is added. Defaults to None.
             use_depth (bool, optional): Whether to use depth as an additional
                 input channel. Defaults to False.
             use_anscombe (bool, optional): Whether to apply the Anscombe
                 transform to the input before denoising. Defaults to False.
-            weights (Weights, optional): Pre-trained weights to load.
+            weights (Weights | None, optional): Pre-trained weights to load.
                 Defaults to None.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
@@ -133,8 +133,8 @@ class SLICE(ModelRegisterMixin, Model):
         # Validate inputs
         if method not in self.methods:
             raise ValueError(
-                f"Invalid ODE solver method: '{method}'. "
-                f"Must be one of {self.methods}."
+                f"Unsupported ODE solver method '{method}'. "
+                f"Must be one of: {self.methods}"
             )
 
         # Assign attributes
@@ -170,7 +170,7 @@ class SLICE(ModelRegisterMixin, Model):
         if weights is not None and is_weights_type(weights):
             self.load_state_dict(weights.state_dict())
             if self.verbose:
-                log(f"Initialized '{name}' from weights: '{weights.path}'.")
+                log(f"Initialized '{name}' from weights: '{weights.path.as_posix()}'.")
         else:
             if self.verbose:
                 log(f"Initialized '{name}' from scratch.")

@@ -120,7 +120,7 @@ class ModalityList(IndexList[Modality]):
         if not isinstance(modalities, list):
             raise TypeError(
                 f"Expected a list of modality configurations, "
-                f"but got {type(modalities).__name__}."
+                f"but got: {type(modalities).__name__}."
             )
 
         # Build the object
@@ -170,9 +170,7 @@ def build_modalities(value: Any) -> ModalityList:
     elif isinstance(value, list):
         return ModalityList.from_list(value)
     else:
-        raise TypeError(
-            f"Unsupported ModalityList type: {type(value).__name__}."
-        )
+        raise TypeError(f"Unsupported modalities type: {type(value).__name__}.")
 
 # endregion
 

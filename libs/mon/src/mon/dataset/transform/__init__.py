@@ -65,7 +65,7 @@ class BasicTransform(BaseTransform_):
         name = config.pop("name", config.pop("type", None))
 
         if name is None:
-            raise KeyError(f"Missing 'name' or 'type' key in config: {config}.")
+            raise KeyError(f"Missing 'name' or 'type' key in 'config': {config}.")
 
         # Build the object
         config |= kwargs
@@ -88,7 +88,7 @@ class Compose(Compose_):
         if not isinstance(transforms_, list):
             raise TypeError(
                 f"Expected a list of transformations, "
-                f"but got {type(transforms_).__name__}."
+                f"but got: {type(transforms_).__name__}."
             )
 
         # Build the objects
@@ -107,7 +107,7 @@ class Compose(Compose_):
         if not isinstance(transforms, list):
             raise TypeError(
                 f"Expected a list of transformations, "
-                f"but got {type(transforms).__name__}."
+                f"but got: {type(transforms).__name__}."
             )
 
         # Build the objects
@@ -177,6 +177,6 @@ def build_compose(value: Any, **kwargs) -> Compose | None:
     elif isinstance(value, dict):
         return Compose.from_config(value, **kwargs)
     else:
-        raise TypeError(f"Unsupported Compose type: {type(value).__name__}.")
+        raise TypeError(f"Unsupported compose type: {type(value).__name__}.")
 
 # endregion

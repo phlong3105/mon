@@ -55,7 +55,7 @@ def delete_files(path: Path, regex: str = "", recursive: bool = False):
                 # Safety check: Do not delete directories without a pattern.
                 log(f"Path is a directory. To delete, use `path.rmdir()`.")
         except Exception as err:
-            log_error(f"Could not delete {path}: {err}")
+            log_error(f"Could not delete {path.as_posix()}: {err}")
         return
 
     # If a pattern is given, search for matching files and delete them.
@@ -88,7 +88,7 @@ def download_url_to_file(url: Path, path: Path, overwrite: bool = False) -> Path
 
     # Check URL
     if not Path(url).is_url():
-        raise ValueError(f"Expected a valid URL, but got '{url}'.")
+        raise ValueError(f"Expected a valid URL, but got: '{url.as_posix()}'.")
 
     # Create parent directories if needed
     path.parent.mkdir(parents=True, exist_ok=True)

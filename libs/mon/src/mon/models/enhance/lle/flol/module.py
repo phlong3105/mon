@@ -97,7 +97,7 @@ class Upsample(nn.Sequential):
             m.append(nn.Conv2d(channels, 9 * channels, 3, 1, 1))
             m.append(nn.PixelShuffle(3))
         else:
-            raise ValueError(f"Expected scale to be 2^n or 3, but got {scale}.")
+            raise ValueError(f"Expected scale to be 2^n or 3, but got: {scale}.")
 
         # Continue the initialization chain
         super().__init__(*m)

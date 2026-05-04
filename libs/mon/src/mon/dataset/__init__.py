@@ -80,7 +80,7 @@ def build_dataset(
     if not isinstance(src, (Path, str)):
         raise TypeError(
             f"Expected 'src' to be a source path, or a dataset name, "
-            f"but got {type(src).__name__}."
+            f"but got: {type(src).__name__}."
         )
 
     # Build the corresponding Dataset instance

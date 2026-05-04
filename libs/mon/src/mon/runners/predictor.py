@@ -19,7 +19,7 @@ from typing import override
 from numpy import ndarray
 from rich.progress import Progress
 from tensordict import TensorDict
-from torch import nn, Tensor
+from torch import Tensor
 
 from mon.core import (
     BBoxes,
@@ -38,12 +38,8 @@ from mon.core import (
     TimeProfiler,
     UPSAMPLERS,
 )
-from mon.dataset import (
-    build_dataloader,
-    DataLoader,
-    transform as T,
-)
-from mon.ops import to_image_array, write_image
+from mon.dataset import build_dataloader, DataLoader, transform as T
+from mon.ops import ImageUpsampler, to_image_array, write_image
 from .base import Runner
 
 current_file = Path(__file__).normalize()
@@ -70,7 +66,7 @@ class Predictor(Runner, ABC):
         # Allocate resources
         # These attributes will be initialized later to avoid a long initialization time
         self._transforms: T.Compose = None
-        self._upsampler: nn.Module = None
+        self._upsampler: ImageUpsampler = None
 
     @override
     def _setup(self):
@@ -109,7 +105,7 @@ class Predictor(Runner, ABC):
             # Only build the upsampler if the strategy is RESIZE and upscaling
             # is requested, since other strategies (e.g., NATIVE, PATCH) do not
             # require upsampling
-            upsampler = UPSAMPLERS.build(**self.config.upsampler)
+            upsampler: ImageUpsampler = UPSAMPLERS.build(**self.config.upsampler)
         else:
             upsampler = None
 
@@ -245,9 +241,7 @@ class Predictor(Runner, ABC):
 
         # Validate
         if name is None and dataloader is None:
-            raise RuntimeError(
-                f"Failed to build dataset/dataloader from the source: {source}."
-            )
+            raise RuntimeError(f"Failed to build dataset/dataloader from the source: {source}.")
 
         # Return the name and dataloader
         return name, dataloader
@@ -302,7 +296,7 @@ class Predictor(Runner, ABC):
             outputs (TensorDict): The dictionary containing the main
                 prediction results. Each key in the dictionary is a batch of
                 prediction results.
-            dirname (str): The directory name for the output files.
+            dirname (str, optional): The directory name for the output files.
                 Defaults to K.PRED_DIR.
             subdirname (str, optional): Subdirectory name to append to the
                 output path (e.g., 'debug'/'mask'). Defaults to "".
@@ -330,7 +324,7 @@ class Predictor(Runner, ABC):
 
                 # Resize the image if needed
                 imgsz = Size.from_value(image)
-                if (upsampler is not None) and (imgsz != size):
+                if upsampler and (imgsz != size):
                     image = upsampler(x_lr=image, y_hr=y_hr, imgsz=size)
 
                 # Convert to array
@@ -339,7 +333,7 @@ class Predictor(Runner, ABC):
                 if not isinstance(image, ndarray):
                     raise TypeError(
                         f"Expected 'image' to be an array, "
-                        f"but got {type(image).__name__}."
+                        f"but got: {type(image).__name__}."
                     )
 
                 # Use the key as the stem only if requested (for debug)
@@ -369,8 +363,8 @@ class Predictor(Runner, ABC):
                 path.
             dirname (str, optional): The directory name for the output file.
                 Defaults to K.PRED_DIR.
-            subdirname (str): Subdirectory name to append to the output path
-                (e.g., 'debug'/'mask'). Defaults to "".
+            subdirname (str, optional): Subdirectory name to append to the
+                output path (e.g., 'debug'/'mask'). Defaults to "".
             stem (str, optional): An optional string to be appended to the
                 output file name for differentiation. If not provided, the
                 output file name will be the same as the source file name.
@@ -412,8 +406,8 @@ class Predictor(Runner, ABC):
                 path.
             dirname (str, optional): The directory name for the output file.
                 Defaults to K.PRED_DIR.
-            subdirname (str): Subdirectory name to append to the output path
-                (e.g., 'debug'/'mask'). Defaults to "".
+            subdirname (str, optional): Subdirectory name to append to the
+                output path (e.g., 'debug'/'mask'). Defaults to "".
             stem (str, optional): An optional string to be appended to the
                 output file name for differentiation. If not provided, the
                 output file name will be the same as the source file name.

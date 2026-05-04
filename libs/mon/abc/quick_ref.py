@@ -22,12 +22,12 @@ class RaiseStatements(abc.ABC):
 
     def type_error(self, name):
         # TypeError: Use when an object is of the wrong type
-        raise TypeError(f"Expected 'name' to be a string, but got {type(name).__name__}.")
+        raise TypeError(f"Expected 'name' to be a string, but got: {type(name).__name__}.")
 
     def value_error(self, split, valid_splits):
         # ValueError: Use when the type is correct, but the content is invalid
         # (e.g., an empty list or an unsupported string).
-        raise ValueError(f"Expected 'split' in {valid_splits}, but got '{split}'")
+        raise ValueError(f"Expected 'split' in {valid_splits}, but got: '{split}'.")
         raise ValueError(f"Unsupported 'split': {split}. Must be one of: {valid_splits}.")
 
     def assertion_error(self, images, labels):
@@ -43,17 +43,17 @@ class RaiseStatements(abc.ABC):
 
     def file_not_found_error(self, path):
         # FileNotFoundError: The most specific error for missing files or directories.
-        raise FileNotFoundError(f"Dataset root not found at: {path}")
+        raise FileNotFoundError(f"Dataset root not found at:' {path}'.")
 
     def file_exist_error(self, path):
         # FileExistsError: Use when trying to save or create a directory that
         # already exists and shouldn't.
-        raise FileExistsError(f"Export directory already exists: {path}")
+        raise FileExistsError(f"Export directory already exists: '{path}'.")
 
     def index_error(self, index):
         # IndexError: Use if a user requests a specific index from a dataset
         # that is out of bounds.
-        raise IndexError(f"Index {index} out of range for dataset of size {len(self)}.")
+        raise IndexError(f"Index {index} out of range for dataset of size: {len(self)}.")
 
     def key_error(self, model_name):
         # KeyError: Use when a registry lookup fails.

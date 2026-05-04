@@ -160,10 +160,10 @@ class VideoOnlyDataset(StandardDataset, AlbumentationsDataset):
 
         # Setup video capture
         src = self.base_dir
-        self.video_capture = cv2.VideoCapture(str(src), cv2.CAP_FFMPEG)
+        self.video_capture = cv2.VideoCapture(src.as_posix(), cv2.CAP_FFMPEG)
 
         if not self.video_capture.isOpened():
-            raise RuntimeError(f"Failed to open video source at: {src}")
+            raise RuntimeError(f"Failed to open video source at: {src.as_posix()}")
 
         # Retrieve video metadata
         h = int(self.video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -233,9 +233,7 @@ class VideoOnlyDataset(StandardDataset, AlbumentationsDataset):
         if not success:
             if self.is_stream:
                 raise StopIteration
-            raise IndexError(
-                f"Index {index} out of range for video of length {len(self)}."
-            )
+            raise IndexError(f"Index {index} out of range for video of length {len(self)}.")
 
         self.curr_index = index
 

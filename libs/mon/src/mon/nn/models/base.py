@@ -68,7 +68,7 @@ class Model(nn.Module, ABC):
         for attr in ["in_keys", "out_keys"]:
             if not getattr(cls, attr):
                 raise AttributeError(
-                    f"Class {cls.__name__} must define '{attr}' attribute "
+                    f"Class '{cls.__name__}' must define '{attr}' attribute "
                     f"(defined locally or inherited)."
                 )
 
@@ -125,14 +125,14 @@ class Model(nn.Module, ABC):
             if data_kwargs:
                 data.update(data_kwargs)
         else:
-            raise TypeError(f"Expected 'data' to be TensorDict, but got {type(data).__name__}.")
+            raise TypeError(f"Expected 'data' to be TensorDict, but got: '{type(data).__name__}'.")
 
         # 2. Contract enforcement (Input)
         missing_inputs = self.in_keys - data.keys()
         if missing_inputs:
             raise KeyError(
-                f"{self.__class__.__name__} missing required inputs: "
-                f"{missing_inputs}. Provided keys: {list(data.keys())}"
+                f"'{self.__class__.__name__}' missing required inputs: "
+                f"'{missing_inputs}'. Provided keys: '{list(data.keys())}'."
             )
 
         # 3. Execution
@@ -151,14 +151,14 @@ class Model(nn.Module, ABC):
             # Already a dict, just convert
             outputs = to_tensordict(outputs, batch_size=[])
         else:
-            raise TypeError(f"Unsupported output type: {type(outputs).__name__}")
+            raise TypeError(f"Unsupported output type: '{type(outputs).__name__}'.")
 
         # 5. Contract enforcement (Output)
         missing_outputs = self.out_keys - outputs.keys()
         if missing_outputs:
             raise KeyError(
-                f"{self.__class__.__name__} missing required outputs: "
-                f"{missing_outputs}. Provided keys: {list(outputs.keys())}"
+                f"'{self.__class__.__name__}' missing required outputs: "
+                f"'{missing_outputs}'. Provided keys: '{list(outputs.keys())}'."
             )
 
         # 6. Filtering & return
@@ -287,7 +287,7 @@ class ModelRegisterMixin(ABC):
         for attr in ["name", "tasks", "strategies", "model_dir"]:
             if not getattr(cls, attr):
                 raise AttributeError(
-                    f"Class {cls.__name__} must define '{attr}' attribute "
+                    f"Class '{cls.__name__}' must define '{attr}' attribute "
                     f"(defined locally or inherited)."
                 )
 

@@ -159,8 +159,8 @@ class BrightnessAttentionMap(nn.Module):
             gamma (float, optional): The exponent used to compute the BAM.
                 Higher values increase the contrast between dark and bright
                 regions. Defaults to 2.5.
-            eps (float, optional): A small constant is added to the BAM computation
-                to prevent division by zero. Defaults to 1e-8.
+            eps (float, optional): A small constant is added to the BAM
+                computation to prevent division by zero. Defaults to 1e-8.
         """
         super().__init__()
         # Assign attributes

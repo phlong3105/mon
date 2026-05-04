@@ -239,9 +239,7 @@ def find_unique(seq: Sequence) -> Sequence:
         TypeError: If ``seq`` is not a list or tuple.
     """
     if not isinstance(seq, (list, tuple)):
-        raise TypeError(
-            f"Expected 'seq' to be a list or tuple, but got {type(seq).__name__}.",
-        )
+        raise TypeError(f"Expected 'seq' to be a list or tuple, but got: {type(seq).__name__}.")
     return type(seq)(dict.fromkeys(seq))
 
 
@@ -280,10 +278,7 @@ def to_int(value: Any) -> int | None:
     try:
         return int(value)
     except (ValueError, TypeError):
-        raise ValueError(
-            f"Expected 'value' to be convertible to an integer, "
-            f"but got 'f{value}'.",
-        )
+        raise ValueError(f"Expected 'value' to be convertible to an integer, but got: '{value}'.")
 
 
 def to_float(value: Any) -> float | None:
@@ -297,21 +292,15 @@ def to_float(value: Any) -> float | None:
     try:
         return float(value)
     except (ValueError, TypeError):
-        raise ValueError(
-            f"Expected 'value' to be convertible to a float, "
-            f"but got '{value}'.",
-        )
+        raise ValueError(f"Expected 'value' to be convertible to a float, but got: '{value}'.")
 
 
-def to_str(value: Any, sep: str | tuple[str, ...] | list[str] = ",") -> str:
+def to_str(value: Any, sep: str = ",") -> str:
     """Convert ``value`` to a string.
 
     Args:
         value (Any): Input value to convert.
-        sep (str | tuple | list, optional): Delimiters for splitting if the
-            input is a string.
-            If a string, it is treated as a regex pattern.
-            If a tuple/list, the items are escaped and treated as literal delimiters.
+        sep (str): Delimiters for joining if the input is a list or dict.
             Defaults to ",".
     """
     if not value:
@@ -346,7 +335,6 @@ def to_list(value: Any, sep: str | tuple[str, ...] | list[str] = ",|;|:") -> lis
     if isinstance(value, str):
         # Create a regex pattern safely
         pattern = "|".join(map(re.escape, sep)) if isinstance(sep, (tuple, list)) else sep
-
         # Split, strip whitespace, and ignore empty strings
         # (e.g., "a,,b" becomes ['a', 'b'])
         return [item.strip() for item in re.split(pattern, value) if item.strip()]

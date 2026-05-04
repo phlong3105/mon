@@ -123,7 +123,7 @@ class Enum(Enum_):
                 return list(cls)[0]
 
         # 3. Otherwise, it's an invalid extension
-        raise ValueError(f"'{value}' is not a valid {cls.__name__} extension.")
+        raise ValueError(f"'{value}' is not a valid '{cls.__name__}' extension.")
 
     # --- Retrieval ---
     @classmethod
@@ -156,7 +156,7 @@ class StrEnum(StrEnum_):
                 return list(cls)[0]
 
         # 3. Otherwise, it's an invalid extension
-        raise ValueError(f"'{value}' is not a valid {cls.__name__} extension.")
+        raise ValueError(f"'{value}' is not a valid '{cls.__name__}' extension.")
 
     # --- Retrieval ---
     @classmethod
@@ -185,7 +185,7 @@ class MultiStrEnum(str, MultiValueEnum):
                 return list(cls)[0]
 
         # 3. If it's not None, and not a valid string, crash cleanly.
-        raise ValueError(f"'{value}' is not a valid {cls.__name__} extension.")
+        raise ValueError(f"'{value}' is not a valid '{cls.__name__}' extension.")
 
     # --- Representation ---
     def __str__(self) -> str:

@@ -38,8 +38,8 @@ class Class:
         train_id (int, optional): Training identifier for the class. Defaults to -1.
         category (str, optional): Category of the class. Defaults to "unknown".
         category_id (int, optional): Identifier for the category. Defaults to -1.
-        color (tuple[int, int, int], optional): RGB color representation for
-            visualization. Defaults to (255, 255, 255).
+        color (Int3, optional): RGB color representation for visualization.
+            Defaults to (255, 255, 255).
         ignore_in_eval (bool, optional): Flag indicating if the class should be
             ignored during evaluation. Defaults to False.
     """
@@ -123,9 +123,9 @@ class ClassList(IndexList[Class]):
         """
         path = Path(path).normalize()
         if not path.has_ext(".yaml", ".yml", exists=True):
-            raise ValueError(f"YAML file not found at '{path}'.")
+            raise ValueError(f"YAML file not found at '{path.as_posix()}'.")
 
-        classes = load_yaml(path=path)
+        classes: dict = load_yaml(path=path)
         classes = classes.get("classes", [])
         return cls([Class(**c) for c in classes], *args, **kwargs)
 
@@ -139,13 +139,11 @@ class ClassList(IndexList[Class]):
         Raises:
             ValueError: If ``path`` is not a YAML file.
         """
-        path = Path(path).normalize()
+        path: Path = Path(path).normalize()
         if not path.has_ext(".yaml", ".yml", exists=False):
-            raise ValueError(f"Expected a valid YAML file, but got '{path}'.")
+            raise ValueError(f"Expected a valid YAML file, but got: '{path.as_posix()}'.")
 
-        classes_dict = {
-            "classes": [item.__dict__ for item in self.data]
-        }
+        classes_dict = {"classes": [item.__dict__ for item in self.data]}
         save_yaml(data=classes_dict, path=path)
 
     # --- Creation ---
@@ -165,15 +163,14 @@ def build_classlist(value: Any) -> ClassList:
     """Build a ``ClassList`` instance from a given value.
 
     Args:
-        value (Any): Either a ``ClassList`` instance, a list of class
-            definitions, or a path to a YAML file containing class definitions.
+        value (Any): Either a ``ClassList`` instance, a list of class definitions,
+            or a path to a YAML file containing class definitions.
 
     Returns:
         ClassList: A ``ClassList`` instance.
 
     Raises:
-        TypeError: If the input value is not a valid type for building a
-            ``ClassList``.
+        TypeError: If the input value is not a valid type for building a ``ClassList``.
     """
     if value is None:
         return ClassList()
@@ -184,9 +181,7 @@ def build_classlist(value: Any) -> ClassList:
     elif isinstance(value, (Path, str)):
         return ClassList.from_file(value)
     else:
-        raise TypeError(
-            f"Unsupported ClassList type: {type(value).__name__}."
-        )
+        raise TypeError(f"Unsupported ClassList type: {type(value).__name__}.")
 
 # endregion
 

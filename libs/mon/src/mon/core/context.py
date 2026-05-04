@@ -66,7 +66,7 @@ class SystemContext:
     @property
     def mps(self) -> Device:
         """Return the MPS device if available, otherwise "cpu"."""
-        return self.get(device="mps")
+        return self.get_device(device="mps")
 
     @property
     def cudas(self) -> list[Device]:
@@ -132,7 +132,7 @@ class SystemContext:
             key = f"cuda:{device}" if device >= 0 else "cpu"
             return self.devices[key] if key in self.devices else self.devices["cpu"]
         else:
-            raise ValueError(f"Unsupported device specifier: {device}")
+            raise ValueError(f"Unsupported device specifier: '{device}'")
 
     def get_torch_device(self, device: torch.device | str | int = MISSING) -> torch.device:
         """Return the torch device object for the specified device."""

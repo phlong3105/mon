@@ -147,7 +147,7 @@ class SAMBoxSegmentor(Segmentor):
         if bbox.ndim != 2 or bbox.shape[-1] < 4:
             raise ValueError(
                 f"Expected 'bbox' to be a 2D array of shape (N, 4), "
-                f"but got {bbox.shape}."
+                f"but got: {bbox.shape}."
             )
 
         # Convert bbox to XYXY format if necessary

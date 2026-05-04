@@ -71,9 +71,7 @@ class Trainer(Runner, ABC):
         self._train_dataloader: DataLoader = None
         self._val_dataloader: DataLoader = None
         self._tb_logger: SummaryWriter = None
-        self._best: dict[str, float] = {
-            "loss": float("inf"),
-        }
+        self._best: dict[str, float] = {"loss": float("inf")}
 
     @override
     def _setup(self):
@@ -200,7 +198,7 @@ class Trainer(Runner, ABC):
                 if "loss" not in train_outputs:
                     raise ValueError(
                         f"Expected 'loss' from 'self._train_epoch()', "
-                        f"but got {train_outputs.keys()}."
+                        f"but got: {train_outputs.keys()}."
                     )
 
                 # 4.2. Val epoch

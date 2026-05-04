@@ -136,7 +136,7 @@ class DAV2(ModelRegisterMixin, Model):
         if weights is not None and is_weights_type(weights):
             base_model.load_state_dict(weights.state_dict(weights_only=True))
             if self.verbose:
-                log(f"Initialized '{name}' from weights: '{weights.path}'.")
+                log(f"Initialized '{name}' from weights: '{weights.path.as_posix()}'.")
         else:
             if self.verbose:
                 log(f"Initialized '{name}' from scratch.")
@@ -195,7 +195,7 @@ class DAV2(ModelRegisterMixin, Model):
         else:
             raise TypeError(
                 f"Expected input to be a Tensor or ndarray, "
-                f"but got {type(x).__name__}."
+                f"but got: {type(x).__name__}."
             )
         depth = normalize_minmax(depth) * 255.0
         depth = depth.astype(np.uint8)

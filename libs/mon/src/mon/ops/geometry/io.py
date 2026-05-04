@@ -87,7 +87,7 @@ def load_bbox_yolo(
     # Using np.loadtxt is significantly faster for large label files. It handles
     # whitespace stripping and conversion in one pass.
     try:
-        raw_data = np.loadtxt(str(path), dtype=np.float32, ndmin=2)
+        raw_data = np.loadtxt(path.as_posix(), dtype=np.float32, ndmin=2)
         if raw_data.size == 0:
             return np.empty((0, 8), dtype=np.float32)
     except Exception as e:
@@ -99,7 +99,7 @@ def load_bbox_yolo(
             remap = load_yaml(path=remap)
         remap = getattr(remap, "remap", remap)
         if not isinstance(remap, (Box, dict)):
-            raise TypeError(f"Expected remap to be a dict, but got {type(remap).__name__}.")
+            raise TypeError(f"Expected remap to be a dict, but got: {type(remap).__name__}.")
 
     # 3. Parse raw data
     num_rows = raw_data.shape[0]
@@ -248,7 +248,7 @@ def write_bbox_yolo(
     Args:
         bbox (BBoxes): The bounding boxes to be written.
         path (Path): The file path to write the bounding boxes to.
-        imgsz (Size, optional): The image size (width, height) to use for
+        imgsz (Size | None, optional): The image size (width, height) to use for
             normalization if needed. Required if ``fmt`` is a normalized format.
     """
     # Normalize inputs
@@ -262,7 +262,7 @@ def write_bbox_yolo(
     bbox_ = bbox.cxcywhn(imgsz=imgsz)
 
     # Write bboxes to label file
-    with open(str(path), "w", encoding="utf-8") as f:
+    with open(path.as_posix(), "w", encoding="utf-8") as f:
         for b in bbox_:
             f.write(
                 f"{int(b[0])} "

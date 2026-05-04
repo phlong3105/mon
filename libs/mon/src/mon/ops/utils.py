@@ -36,10 +36,10 @@ def normalize_minmax(
 
     Args:
         value (TensorOrArray): Value tensor or array to normalize.
-        scale (float): Optional scaling factor to apply to the input values before
-            normalization. Defaults to 1.0 (no scaling).
-        eps (float): Small value to prevent division by zero when the image has
-            constant pixel values. Defaults to 1e-8.
+        scale (float, optional): Optional scaling factor to apply to the input
+            values before normalization. Defaults to 1.0 (no scaling).
+        eps (float, optional): Small value to prevent division by zero when the
+            image has constant pixel values. Defaults to 1e-8.
 
     Returns:
         TensorOrArray: Normalized value tensor or array with values ranging
@@ -56,6 +56,7 @@ def normalize_minmax(
 
 
 # --- Geometric ---
+
 
 # endregion
 

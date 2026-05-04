@@ -36,7 +36,6 @@ except ImportError:
     pynvml = None
     pynvml_available = False
 
-
     # Define a placeholder for the exception if pynvml is not installed
     class NVMLError(Exception):
         pass

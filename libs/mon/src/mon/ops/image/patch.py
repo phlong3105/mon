@@ -33,7 +33,7 @@ class ImagePatcher:
     """Base class for stitching several patches together into a single image."""
 
     # We use a small epsilon to avoid division by zero during normalization
-    eps = 1e-8
+    eps: float = 1e-8
 
     # --- Lifecycle & Initialization ---
     def __init__(
@@ -47,7 +47,7 @@ class ImagePatcher:
         """Initialize a new instance.
 
         Args:
-            name (str): Name of the patcher.
+            name (str, optional): Name of the patcher. Defaults to "hann_window".
             image (Tensor): Original image tensor of shape (B, C, H, W) and
                 values ranging from 0.0 to 1.0. This is used to allocate the
                 output tensor and compute the number of patches.
@@ -220,7 +220,13 @@ class UniformAveragingImagePatcher(ImagePatcher):
     """
 
     # --- Lifecycle & Initialization ---
-    def __init__(self, image: Tensor, size: int = 512, stride: int = 384, *args, **kwargs):
+    def __init__(
+        self,
+        image: Tensor,
+        size: int = 512,
+        stride: int = 384,
+        *args, **kwargs
+    ):
         """Initialize a new instance.
 
         Args:
@@ -259,7 +265,13 @@ class HannWindowImagePatcher(ImagePatcher):
     """
 
     # --- Lifecycle & Initialization ---
-    def __init__(self, image: Tensor, size: int = 512, stride: int = 384, *args, **kwargs):
+    def __init__(
+        self,
+        image: Tensor,
+        size: int = 512,
+        stride: int = 384,
+        *args, **kwargs
+    ):
         """Initialize a new instance.
 
         Args:

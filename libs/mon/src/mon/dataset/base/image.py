@@ -375,16 +375,16 @@ class ImageOnlyDataset(StandardDataset, AlbumentationsDataset):
         if src.is_image_file():
             # If is a single image file, return a list with only that image
             paths = [src]
-        elif "*" in str(src):
+        elif "*" in src.as_posix():
             # If is a glob pattern, list the matching files
             # Using iglob (iterator) is more memory efficient than glob.glob
-            paths = [Path(p) for p in glob.iglob(str(src), recursive=True)]
+            paths = [Path(p) for p in glob.iglob(src.as_posix(), recursive=True)]
         elif src.is_dir():
             # If is a directory, list all files recursively
             paths = list(src.rglob("*"))
         else:
             raise ValueError(
-                f"Invalid source '{src}' for primary modality '{pk}'. "
+                f"Invalid source '{src.as_posix()}' for primary modality '{pk}'. "
                 f"Expected a directory, a glob pattern, or an image file."
             )
 

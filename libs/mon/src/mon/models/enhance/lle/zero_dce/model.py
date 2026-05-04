@@ -129,7 +129,7 @@ class ZeroDCE(ModelRegisterMixin, Model):
         if weights is not None and is_weights_type(weights):
             self.load_state_dict(weights.state_dict())
             if self.verbose:
-                log(f"Initialized '{name}' from weights: '{weights.path}'.")
+                log(f"Initialized '{name}' from weights: '{weights.path.as_posix()}'.")
         else:
             if self.verbose:
                 log(f"Initialized '{name}' from scratch.")
@@ -340,7 +340,7 @@ class ZeroDCEPP(ModelRegisterMixin, Model):
         if weights is not None and is_weights_type(weights):
             self.load_state_dict(weights.state_dict())
             if self.verbose:
-                log(f"Initialized '{name}' from weights: '{weights.path}'.")
+                log(f"Initialized '{name}' from weights: '{weights.path.as_posix()}'.")
         else:
             if self.verbose:
                 log(f"Initialized '{name}' from scratch.")

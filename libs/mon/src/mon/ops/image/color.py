@@ -109,9 +109,10 @@ class RgbToHvi(nn.Module):
         """Initialize a new instance.
 
         Args:
-            eps (float): Epsilon value to avoid division by zero. Defaults to 1e-8.
-            requires_grad (bool): If True, allows gradient computation for
-                ``density_k``. Defaults to False.
+            eps (float, optional): Epsilon value to avoid division by zero.
+                Defaults to 1e-8.
+            requires_grad (bool, optional): If True, allows gradient computation
+                for ``density_k``. Defaults to False.
         """
         super().__init__()
         # Assign attributes

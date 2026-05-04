@@ -40,7 +40,7 @@ def _diff_x(image: Tensor, r: int) -> Tensor:
     # Validate inputs
     if image.ndim != 4:
         raise ValueError(
-            f"Expected 'image' to have 4 dimensions, but got {image.ndim}."
+            f"Expected 'image' to have 4 dimensions, but got: {image.ndim}."
         )
 
     left = image[:, :, r:2 * r + 1]
@@ -63,9 +63,7 @@ def _diff_y(image: Tensor, r: int) -> Tensor:
     """
     # Validate inputs
     if image.ndim != 4:
-        raise ValueError(
-            f"Expected 'image' to have 4 dimensions, but got {image.ndim}."
-        )
+        raise ValueError(f"Expected 'image' to have 4 dimensions, but got: {image.ndim}.")
 
     left = image[:, :, :, r:2 * r + 1]
     middle = image[:, :, :, 2 * r + 1:] - image[:, :, :, :-2 * r - 1]
@@ -135,9 +133,7 @@ def sobel_filter(image: ndarray, kernel_size: int = 3) -> ndarray:
         TypeError: If ``image`` is not a numpy.ndarray with 2 or 3 dimensions.
     """
     if image.ndim not in [2, 3]:
-        raise TypeError(
-            f"Expected 'image' to have 2 or 3 dimensions, but got {image.ndim}."
-        )
+        raise TypeError(f"Expected 'image' to have 2 or 3 dimensions, but got: {image.ndim}.")
 
     # Automatic Color Handling
     # If the image is (H, W, 3), convert to gray.

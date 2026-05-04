@@ -105,7 +105,7 @@ class Runner(ABC):
         """
         if self.model is None:
             raise RuntimeError(
-                "Model has not been initialized. Please call ''_init_model()'' "
+                "Model has not been initialized. Please call '_init_model()' "
                 "before benchmarking."
             )
 

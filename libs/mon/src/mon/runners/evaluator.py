@@ -119,6 +119,7 @@ class IQAEvaluator(Evaluator):
                 func = METRICS.build(name=m, device=self.device)
             else:
                 log_error(f"Unsupported metric: {m}. Skipping...")
+                func = None
 
             _metrics[m] = {
                 "func": func,
@@ -377,6 +378,7 @@ class InstanceIQAEvaluator(Evaluator):
                 func = METRICS.build(name=m, device=self.device)
             else:
                 log_error(f"Unsupported metric: {m}. Skipping...")
+                func = None
 
             _metrics[m] = {
                 "func": func,

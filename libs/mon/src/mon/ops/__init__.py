@@ -15,7 +15,8 @@ File Structure:
     ├── image/          # Image processing operations
     ├── text/           # Text processing operations
     ├── video/          # Video processing operations
-    └── draw.py/        # General drawing utilities
+    ├── draw.py         # General drawing utilities
+    └── utils.py        # General-purpose utility operations.
 """
 
 from __future__ import annotations

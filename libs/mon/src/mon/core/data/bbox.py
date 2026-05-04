@@ -20,7 +20,7 @@ import numpy as np
 from numpy import ndarray
 
 from mon.core.path import Path
-from mon.core.typing import Int2, IntOrTuple2
+from mon.core.typing import Int2
 from mon.core.utils import is_valid_str
 from .data import Data
 from .size import Size
@@ -38,7 +38,7 @@ class BBox(Data):
         bbox (ndarray): Bounding box array of shape (8+) and in CXCYWHN format
             (i.e., YOLO). The data format is: [cx, cy, w, h, angle, class_id,
             score, track_id].
-        imgsz (Size | IntOrTuple2): Size of the corresponding image as (H, W).
+        imgsz (Size): Size of the corresponding image as (H, W).
         index (int, optional): Index of the bounding box in the image.
             Defaults to -1.
         path (Path | None, optional): Path to the label file. Defaults to None.
@@ -48,7 +48,7 @@ class BBox(Data):
     """
 
     bbox: ndarray
-    imgsz: Size | IntOrTuple2
+    imgsz: Size
     index: int = -1
     path: Path | None = None
     base_dir: Path | None = None
@@ -67,17 +67,17 @@ class BBox(Data):
         if not isinstance(self.bbox, ndarray):
             raise TypeError(
                 f"Expected 'image' to be a array, "
-                f"but got '{type(self.bbox).__name__}'."
+                f"but got: '{type(self.bbox).__name__}'."
             )
         if len(self.bbox) < 8:
             raise ValueError(
                 f"Expected 'bbox' to be a 1D array of shape (8+), "
-                f"but got 1D array of {len(self.bbox)} elements."
+                f"but got: 1D array of '{len(self.bbox)}' elements."
             )
         if any(self.bbox[4:] < 0):
             raise ValueError(
                 f"Expected all elements of 'bbox' to be non-negative, "
-                f"but got {self.bbox[4:]}.",
+                f"but got: '{self.bbox[4:]}'.",
             )
         if not isinstance(self.imgsz, Size):
             self.imgsz = Size.from_value(self.imgsz)
@@ -207,7 +207,10 @@ class BBox(Data):
         h = bbox[3] / (imgsz.h + eps)
         return cls(
             bbox=np.array([cx, cy, w, h, *bbox[4:]], dtype=np.float32),
-            imgsz=imgsz, index=index, path=path, base_dir=base_dir
+            imgsz=imgsz,
+            index=index,
+            path=path,
+            base_dir=base_dir,
         )
 
     # --- Computation ---
@@ -324,7 +327,7 @@ class BBoxes(Data):
         bbox (ndarray): Bounding box array of shape (N, 8+) and in CXCYWHN format.
            (i.e., YOLO). The data format is: [cx, cy, w, h, angle, class_id,
             score, track_id].
-        imgsz (Size | IntOrTuple2): Size of the corresponding image as (H, W).
+        imgsz (Size): Size of the corresponding image as (H, W).
         path (Path | None, optional): Path to the label file. Defaults to None.
         base_dir (Path | None, optional): Base directory for relative paths.
             This is useful to resolve other files related to the data.
@@ -332,7 +335,7 @@ class BBoxes(Data):
     """
 
     bbox: ndarray
-    imgsz: Size | IntOrTuple2
+    imgsz: Size
     path: Path | None = None
     base_dir: Path | None = None
 
@@ -350,17 +353,15 @@ class BBoxes(Data):
         if not isinstance(self.bbox, ndarray):
             raise TypeError(
                 f"Expected 'image' to be a array, "
-                f"but got '{type(self.bbox).__name__}'."
+                f"but got: '{type(self.bbox).__name__}'."
             )
         if self.bbox.ndim != 2 or self.bbox.shape[1] < 8:
             raise ValueError(
                 f"Expected 'bbox' to be a 2D array of shape (N, 8+), "
-                f"but got {self.bbox.shape}D array."
+                f"but got: {self.bbox.shape}D array."
             )
         if (self.bbox[:, 4:] < 0).any():
-            raise ValueError(
-                f"Expected all elements of 'bbox' to be non-negative."
-            )
+            raise ValueError(f"Expected all elements of 'bbox' to be non-negative.")
         if not isinstance(self.imgsz, Size):
             self.imgsz = Size.from_value(self.imgsz)
         if is_valid_str(self.path):
@@ -457,7 +458,9 @@ class BBoxes(Data):
         """
         return cls(
             bbox=np.array([b.bbox for b in bbox_list], dtype=np.float32),
-            imgsz=imgsz, path=path, base_dir=base_dir
+            imgsz=imgsz,
+            path=path,
+            base_dir=base_dir,
         )
 
     @classmethod

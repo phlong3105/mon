@@ -133,8 +133,8 @@ class L_spa(Loss):
                 ranging from 0.0 to 1.0.
             pred (Tensor): Predicted image tensor of shape (B, C, H, W) and
                 values ranging from 0.0 to 1.0.
-            depth (Tensor, optional): Depth tensor of shape (B, 1, H, W) and values
-                ranging from 0.0 (far) to 1.0 (near). Defaults to None.
+            depth (Tensor | None, optional): Depth tensor of shape (B, 1, H, W)
+                and values ranging from 0.0 (far) to 1.0 (near). Defaults to None.
 
         Returns:
             Tensor: Loss value.
@@ -304,8 +304,8 @@ class L_tv(Loss):
         Args:
             input (Tensor): Predicted image tensor of shape (B, C, H, W) and
                 values ranging from 0.0 to 1.0.
-            depth (Tensor): Depth tensor of shape (B, 1, H, W) and values
-                ranging from 0.0 (far) to 1.0 (near). Defaults to None.
+            depth (Tensor | None, optional): Depth tensor of shape (B, 1, H, W)
+                and values ranging from 0.0 (far) to 1.0 (near). Defaults to None.
 
         Returns:
             Tensor: Loss value.
@@ -382,8 +382,8 @@ class L_tv_image(Loss):
                 ranging from 0.0 to 1.0.
             pred (Tensor): Predicted image tensor of shape (B, C, H, W) and
                 values ranging from 0.0 to 1.0.
-            depth (Tensor, optional): Depth tensor of shape (B, 1, H, W) and
-                values ranging from 0.0 (far) to 1.0 (near). Defaults to None.
+            depth (Tensor | None, optional): Depth tensor of shape (B, 1, H, W)
+                and values ranging from 0.0 (far) to 1.0 (near). Defaults to None.
 
         Returns:
             Tensor: Loss value.

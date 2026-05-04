@@ -435,7 +435,7 @@ class Config:
         try:
             return getattr(self._config, name)
         except AttributeError:
-            raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{name}'")
+            raise AttributeError(f"'{self.__class__.__name__}' has no attribute '{name}'.")
 
     def __setattr__(self, name: str, value: Any):
         """Intercept every attribute assignment.
@@ -477,7 +477,7 @@ class Config:
         return self._config.config_file
 
     @config_file.setter
-    def config_file(self, value: Path | None):
+    def config_file(self, value: Path | str | None):
         """Set the path to the configuration file."""
         # Validate inputs
         if not is_valid_str(value):
@@ -527,7 +527,7 @@ class Config:
         return self.config.root
 
     @root.setter
-    def root(self, value: Path | None):
+    def root(self, value: Path | str | None):
         """Set the project root directory."""
         root = Path(value).normalize() if is_valid_str(value) else None
         if root and root.is_dir():
@@ -542,7 +542,7 @@ class Config:
         return self._config.output_dir
 
     @output_dir.setter
-    def output_dir(self, value: Path | None):
+    def output_dir(self, value: Path | str | None):
         """Set the output directory."""
         output_dir = Path(value).normalize() if is_valid_str(value) else None
         if output_dir:  # and output_dir.is_dir():
@@ -554,7 +554,7 @@ class Config:
         return self._config.task
 
     @task.setter
-    def task(self, value: Task | None):
+    def task(self, value: Task | str | None):
         """Set the task type."""
         if value is not None:
             self._config.task = Task(value)
@@ -565,7 +565,7 @@ class Config:
         return self._config.mode
 
     @mode.setter
-    def mode(self, value: RunMode | None):
+    def mode(self, value: RunMode | str | None):
         """Set the run mode."""
         if value is not None:
             self._config.mode = RunMode(value)
@@ -598,7 +598,7 @@ class Config:
         return self._config.model.weights
 
     @weights.setter
-    def weights(self, value: Weights | Path | None):
+    def weights(self, value: Weights | Path | str | None):
         """Set the model weights."""
         if isinstance(value, Weights):
             # If the value is already a Weights object, set it directly
@@ -617,7 +617,7 @@ class Config:
         return self._config.model.finetune
 
     @finetune.setter
-    def finetune(self, value: Weights | Path | None):
+    def finetune(self, value: Weights | Path | str | None):
         """Set the model weights."""
         if isinstance(value, Weights):
             # If the value is already a Weights object, set it directly
@@ -647,7 +647,7 @@ class Config:
         return self._config.predict.data
 
     @data.setter
-    def data(self, value: list[Path] | Path | None):
+    def data(self, value: list[Path | str] | Path | str | None):
         """Set the list of inference data sources."""
         # Normalize inputs
         data = []
@@ -673,7 +673,7 @@ class Config:
         return self._config.predict.strategy
 
     @strategy.setter
-    def strategy(self, value: Strategy | None):
+    def strategy(self, value: Strategy | str | None):
         """Set the prediction strategy."""
         if value is not None:
             self._config.predict.strategy = Strategy(value)
@@ -694,7 +694,7 @@ class Config:
         return self._config.predict.imgsz
 
     @imgsz.setter
-    def imgsz(self, value: Size | None):
+    def imgsz(self, value: Size | int | list[int] | tuple[int, int] | None):
         """Set the image size for prediction."""
         if value is not None:
             self._config.predict.imgsz = Size.from_value(value)
@@ -900,7 +900,7 @@ class Config:
         return self._current_data or ""
 
     @infer_data.setter
-    def infer_data(self, value: Path | None):
+    def infer_data(self, value: Path | str | None):
         """Set the current inference data source."""
         self._current_data = Path(value).normalize() if is_valid_str(value) else None
 
@@ -969,7 +969,7 @@ class Config:
         self,
         dirname: str,
         src_path: Path,
-        subdirname: str = ""
+        subdirname: str = "",
     ) -> Path:
         """Compute the saving file path for an output type based on the output
         directory and optional components.
@@ -1020,15 +1020,25 @@ class Config:
 
     # --- Mutation ---
     def update_from_yaml(self, path: Path | None):
-        """Update the current configuration with values from a YAML file."""
+        """Update the current configuration with values from a YAML file.
+
+        Args:
+            path (Path | None): Path to the YAML configuration file. If None,
+                no update is performed.
+        """
         # Load the configuration from the YAML file
         file_config = load_config(path=path)
         # Update the current configuration with the loaded values
         self.update_from_dict(file_config)
         self.config_file = path
 
-    def update_from_cli(self, value: dict):
-        """Update the current configuration with values from CLI arguments."""
+    def update_from_cli(self, value: dict[str, Any]):
+        """Update the current configuration with values from CLI arguments.
+
+        Args:
+            value (dict): A dictionary containing the CLI arguments and their
+                values.
+        """
         for k, v in value.items():
             if (
                 (k in ARGUMENTS and v == ARGUMENTS[k].get("default"))
@@ -1051,8 +1061,13 @@ class Config:
             else:
                 self._config[k] = v
 
-    def update_from_dict(self, value: dict):
-        """Update the current configuration with values from a dictionary."""
+    def update_from_dict(self, value: dict[str, Any]):
+        """Update the current configuration with values from a dictionary.
+
+        Args:
+            value (dict): A dictionary containing the configuration attributes
+                and their values.
+        """
         for key, val in value.items():
             if val is None:
                 continue
@@ -1303,7 +1318,7 @@ class ConfigContext(Config, PromptContextMixin):
         # Validate inputs
         root: Path = Path(root).normalize()
         if not root.is_dir():
-            raise FileNotFoundError(f"Project root not found at: {root}")
+            raise FileNotFoundError(f"Project root isn't found at: '{root.as_posix()}'.")
 
         # Continue the initialization chain
         super().__init__(config=config, config_file=config_file, root=root, **kwargs)
@@ -1402,7 +1417,7 @@ class ConfigContext(Config, PromptContextMixin):
                 returning the configuration. Defaults to False.
 
         Returns:
-            Box: The resolved configuration for the specified run mode.
+            Config: The resolved configuration for the specified run mode.
         """
         # Normalize inputs
         mode = RunMode(mode)
@@ -1419,7 +1434,10 @@ class ConfigContext(Config, PromptContextMixin):
         elif mode in [RunMode.PREDICT]:
             self.prepare_for_predict()
         else:
-            raise ValueError(f"Invalid run mode: {mode}")
+            raise ValueError(
+                f"Unsupported run mode: '{mode}'. "
+                f"Must be one of: '{RunMode.list()}'."
+            )
 
         return self  # self.as_config()
 
@@ -1432,7 +1450,7 @@ class ConfigContext(Config, PromptContextMixin):
 
     # --- Prompting ---
     @override
-    def prompt(self) -> Box:
+    def prompt(self):
         """Run the interactive menu until completion."""
         self._index = 0
 

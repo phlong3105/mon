@@ -125,12 +125,12 @@ def parse_image_shape(image: TensorOrArray) -> Int3:
     raise ValueError(f"Could not get shape from {type(image)}.")
 
 
-def parse_imgsz(value: Any, divisor: int = None) -> Size:
+def parse_imgsz(value: Any, divisor: int | None = None) -> Size:
     """Extract the size of an image as a tuple of (H, W).
 
     Args:
         value (Any): Size-like (i.e., scalar or sequence) or an image.
-        divisor (int, optional): Divisor size for height and width.
+        divisor (int | None, optional): Divisor size for height and width.
             Defaults to None.
 
     Returns:
@@ -213,7 +213,7 @@ def to_image_array(image: Tensor) -> ndarray:
     ):
         raise TypeError(
             f"Expected 'image' to be a 4D tensor, "
-            f"but got {image.ndim}D {type(image).__name__},"
+            f"but got: {image.ndim}D {type(image).__name__},"
         )
 
     # If 4D, select the first image in the batch
@@ -229,7 +229,7 @@ def to_image_tensor(image: ndarray, normalize: bool = False) -> Tensor:
 
     Args:
         image: Image array of shape (H, W, C) and values ranging from 0 to 255.
-        normalize (bool): If True, scales pixel values to range [0.0, 1.0].
+        normalize (bool, optional): If True, scales pixel values to range [0.0, 1.0].
             Defaults to False.
 
     Returns:
@@ -245,7 +245,7 @@ def to_image_tensor(image: ndarray, normalize: bool = False) -> Tensor:
     if not isinstance(image, ndarray) or image.ndim != 3:
         raise TypeError(
             f"Expected 'image' to be a 4D tensor, "
-            f"but got {image.ndim}D {type(image).__name__},"
+            f"but got: {image.ndim}D {type(image).__name__},"
         )
 
     # Convert to tensor and permute: [H, W, C] -> [C, H, W]

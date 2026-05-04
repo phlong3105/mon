@@ -71,7 +71,7 @@ def _expand_stage(x: Tensor, target_shape: tuple[int, int] | None = None):
 def _compute_gaussian_pyramid(x: Tensor, n_levels: int = 4) -> list[Tensor]:
     b, c, _, _ = x.shape
     if c not in [1, 3]:
-        raise ValueError(f"Expected 1 or 3 channels, but got {c}.")
+        raise ValueError(f"Expected 1 or 3 channels, but got: {c}.")
 
     downsample_kernel = torch.tensor(
         data=[[1, 2, 1], [2, 4, 2], [1, 2, 1]],
@@ -115,7 +115,7 @@ def _merge_laplacian_pyramid(
 ) -> list[Tensor]:
     n_stages = len(image_pyramid)
     if n_stages != len(weight_pyramid):
-        raise ValueError(f"Expected {n_stages} stages, but got {len(weight_pyramid)}.")
+        raise ValueError(f"Expected {n_stages} stages, but got: {len(weight_pyramid)}.")
 
     merged_pyramid = []
     for lvl, (weight, img) in enumerate(zip(weight_pyramid, image_pyramid)):
@@ -252,7 +252,7 @@ def mertens(
     else:
         raise TypeError(
             f"Expected all images to be either tensor or array, "
-            f"but got {type(images)}."
+            f"but got: {type(images)}."
         )
 
 # endregion

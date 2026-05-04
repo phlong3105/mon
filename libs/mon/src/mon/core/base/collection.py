@@ -15,7 +15,16 @@ __all__ = [
 
 import inspect
 from collections import defaultdict, UserDict, UserList
-from typing import Any, Generic, Iterable, override, Type, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Generic,
+    Iterable,
+    override,
+    Type,
+    TypeVar,
+    Union,
+)
 
 
 # ==============================================================================
@@ -59,12 +68,13 @@ class IndexList(UserList, Generic[T]):
         """Initialize a new instance.
 
         Args:
-            item_type (Type[T], optional): The class type to enforce/cast.
+            item_type (Type[T] | None, optional): The class type to enforce/cast.
                 If None, it accepts any object. Defaults to None.
-            data (Iterable, optional): Initial list of items. Defaults to None.
+            data (Iterable | None, optional): Initial list of items.
+                Defaults to None.
             key (str, optional): The attribute name to use as the lookup key.
                 Defaults to 'name'.
-            id (str, optional): The attribute name to use as the lookup id.
+            id (str | None, optional): The attribute name to use as the lookup id.
                 If None, ID lookup is disabled. Defaults to None.
         """
         super().__init__()
@@ -87,7 +97,11 @@ class IndexList(UserList, Generic[T]):
 
     # noinspection PyMethodMayBeStatic
     def _infer_type(self, data: Iterable) -> Type[T] | None:
-        """Infer the item type from the first item in the iterable."""
+        """Infer the item type from the first item in the iterable.
+
+        Returns:
+            Type[T] | None: The inferred type, or None if it cannot be inferred.
+        """
         # Extract the first value from dict or kwargs
         first_val = data[0] if isinstance(data, list) and data else None
 
@@ -98,7 +112,11 @@ class IndexList(UserList, Generic[T]):
         return None
 
     def _ensure_type(self, item: Any) -> T:
-        """Validates or Casts the item."""
+        """Validates or casts the item.
+
+        Returns:
+            T: The validated/cast item.
+        """
         # If no type is enforced, accept everything
         if self.item_type is None:
             return item
@@ -112,13 +130,11 @@ class IndexList(UserList, Generic[T]):
             try:
                 return self.item_type(**item)
             except TypeError as e:
-                raise TypeError(
-                    f"Cannot cast dict to {self.item_type.__name__}: {e}"
-                )
+                raise TypeError(f"Cannot cast dict to '{self.item_type.__name__}': {e}.")
 
         raise TypeError(
             f"Expected item of type '{self.item_type.__name__}' or a compatible "
-            f"dict, but got {type(item).__name__}."
+            f"dict, but got: '{type(item).__name__}'."
         )
 
     def _rebuild_indices(self):
@@ -131,7 +147,11 @@ class IndexList(UserList, Generic[T]):
             self._update_indices(item)
 
     def _update_indices(self, item: T):
-        """Updates active indices for a single item."""
+        """Updates active indices for a single item.
+
+        Args:
+            item (T): The item to index.
+        """
         # 1. Update name index
         if hasattr(item, self.key_attr):
             self._key_map[getattr(item, self.key_attr)] = item
@@ -143,6 +163,7 @@ class IndexList(UserList, Generic[T]):
     # --- Representation ---
     @override
     def __repr__(self) -> str:
+        """Return the official string representation for developers."""
         type_name = self.item_type.__name__ if self.item_type else "Any"
         return f"<{self.__class__.__name__}[{type_name}] with {len(self)} items>"
 
@@ -170,13 +191,19 @@ class IndexList(UserList, Generic[T]):
         Support both list-style indexing and dictionary-style lookup by key:
             1. list[0]      --> Index lookup
             2. list["name"] --> Name lookup
+
+        Args:
+            index (int | str | slice): The index or key to retrieve.
+
+        Returns:
+            Union[T, IndexList[T]]: The retrieved item(s).
         """
         if isinstance(index, str):
             # Dictionary behavior (Lookup by key)
             try:
                 return self._key_map[index]
             except KeyError:
-                raise KeyError(f"Item with {self.key_attr}='{index}' not found.")
+                raise KeyError(f"Item with '{self.key_attr}={index}' not found.")
 
         # Fallback to standard list behavior (int/slice)
         return super().__getitem__(index)
@@ -228,6 +255,14 @@ class IndexList(UserList, Generic[T]):
         Supports retrieval by:
             1. get("name") -> Look in Key Map
             2. get(100)    -> Look in ID Map (IF enabled)
+
+        Args:
+            key (str | int): The key to look up.
+            default (Any, optional): The value to return if the key is not found.
+                Defaults to None.
+
+        Returns:
+            Union[T, Any]: The retrieved item or the default value if not found.
         """
         if isinstance(key, str):
             return self._key_map.get(key, default)
@@ -242,36 +277,59 @@ class IndexList(UserList, Generic[T]):
         return default
 
     def with_id(self, value: int) -> T:
-        """Explicitly retrieve by ID. Errors if feature disabled."""
+        """Explicitly retrieve by ID. Errors if feature disabled.
+
+        Args:
+            value (int): The ID value to look up.
+
+        Returns:
+            T: The retrieved item.
+        """
         if self._id_map is None:
             raise NotImplementedError("ID lookup is not enabled for this list.")
 
         if value in self._id_map:
             return self._id_map[value]
-        raise KeyError(f"Item with {self.id_attr}={value} not found.")
+        raise KeyError(f"Item with '{self.id_attr}={value}' not found.")
 
     # --- Mutation ---
-    def apply(self, func):
+    def apply(self, func: Callable):
         """Apply a function to all items in the list."""
         for item in self.data:
             self[item] = func(item)
 
     @override
     def append(self, item: Any):
-        """Add a new item to the end of the list."""
+        """Add a new item to the end of the list.
+
+        Args:
+            item (Any): The item to append. Will be validated/cast if
+                ``item_type`` is set.
+        """
         typed_item = self._ensure_type(item)
         super().append(typed_item)
         self._update_indices(typed_item)
 
     @override
     def extend(self, other: Iterable):
-        """Add multiple items to the end of the list."""
+        """Add multiple items to the end of the list.
+
+        Args:
+            other (Iterable): An iterable of items to append. Each item will be
+                validated/cast if ``item_type`` is set.
+        """
         for item in other:
             self.append(item)
 
     @override
     def insert(self, i: int, item: Any):
-        """Insert a new item at the given index."""
+        """Insert a new item at the given index.
+
+        Args:
+            i (int): The index at which to insert the item.
+            item (Any): The item to insert. Will be validated/cast if
+                ``item_type`` is set.
+        """
         typed_item = self._ensure_type(item)
         super().insert(i, typed_item)
         self._update_indices(typed_item)
@@ -314,10 +372,10 @@ class DictList(UserDict, Generic[K, V]):
         """Initialize a new instance.
 
         Args:
-            item_type (Type[V], optional): The class type to enforce/cast.
+            item_type (Type[V] | None, optional): The class type to enforce/cast.
                 If None, it tries to infer from ``data``. Defaults to None.
-            data (dict[K, Union[V, list[V]]], optional): Initial dictionary to
-                populate. Defaults to None.
+            data (dict[K, Union[V, list[V]]] | None, optional):
+                Initial dictionary to populate. Defaults to None.
             **kwargs: Additional key-value pairs to initialize.
         """
         super().__init__()
@@ -337,7 +395,14 @@ class DictList(UserDict, Generic[K, V]):
 
     # noinspection PyMethodMayBeStatic
     def _infer_type(self, data: dict[K, Union[V, list[V]]]) -> Type[V] | None:
-        """Infer the item type from the first item in the dictionary."""
+        """Infer the item type from the first item in the dictionary.
+
+        Args:
+            data (dict[K, Union[V, list[V]]]): The dictionary to infer from.
+
+        Returns:
+            Type[V] | None: The inferred type, or None if it cannot be inferred.
+        """
         first_val = None
 
         # Extract the first value from dict or kwargs
@@ -356,7 +421,14 @@ class DictList(UserDict, Generic[K, V]):
         return None
 
     def _ensure_type(self, item: Any) -> V:
-        """Validate and cast item if ``item_type`` is set."""
+        """Validate and cast item if ``item_type`` is set.
+
+        Args:
+            item (Any): The item to validate/cast.
+
+        Returns:
+            V: The validated/cast item.
+        """
         # If no type is enforced, accept everything
         if self.item_type is None:
             return item
@@ -374,13 +446,11 @@ class DictList(UserDict, Generic[K, V]):
             try:
                 return self.item_type(**item)
             except TypeError as e:
-                raise TypeError(
-                    f"Cannot to cast dict to {self.item_type.__name__}: {e}"
-                )
+                raise TypeError(f"Cannot to cast dict to '{self.item_type.__name__}': {e}.")
 
         raise TypeError(
             f"Expected item of type '{self.item_type.__name__}', a compatible "
-            f"dict, or None, but got {type(item).__name__}."
+            f"dict, or None, but got: '{type(item).__name__}'."
         )
 
     # --- Mathematical Operators ---
@@ -417,7 +487,14 @@ class DictList(UserDict, Generic[K, V]):
     # --- Container / Sequence Methods ---
     @override
     def __getitem__(self, key: K) -> list[V]:
-        """Return an item at the given ``key``."""
+        """Return the list of items associated with the given ``key``.
+
+        Args:
+            key (K): The key to retrieve.
+
+        Returns:
+            list[V]: The list of items associated with the key.
+        """
         return self.data[key]
 
     @override
@@ -453,6 +530,11 @@ class DictList(UserDict, Generic[K, V]):
     ) -> DictList[str, T]:
         """Create a new instance from a list of keys. Set all values to empty
         lists.
+
+        Args:
+            keys (Iterable[str]): The keys to initialize in the dictionary.
+            item_type (Type[T] | None, optional): The class type to enforce/cast
+                for items. If None, it accepts any object. Defaults to None.
         """
         return cls(data={k: [] for k in keys}, item_type=item_type)
 
@@ -461,9 +543,7 @@ class DictList(UserDict, Generic[K, V]):
         """Verify the integrity of the dictionary."""
         for k, v in self.data.items():
             if not isinstance(v, list):
-                raise TypeError(
-                    f"Expected list for key '{k}', but got {type(v).__name__}."
-                )
+                raise TypeError(f"Expected list for key '{k}', but got: '{type(v).__name__}'.")
             if (
                 self.item_type is not None
                 and any(not isinstance(item, self.item_type) for item in v)

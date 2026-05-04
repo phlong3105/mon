@@ -245,7 +245,7 @@ def rprint_list_dicts(values: list[dict]):
     if not is_list_of(values, dict):
         raise ValueError(
             f"Expected 'values' to be a non-empty list, "
-            f"but got {type(values).__name__}.",
+            f"but got: '{type(values).__name__}'.",
         )
 
     # Extract headers from the first dictionary and create a set for quick key
@@ -261,7 +261,7 @@ def rprint_list_dicts(values: list[dict]):
         if set(d.keys()) != header_set:
             raise ValueError(
                 f"All dicts must have the same keys. Expected keys "
-                f"{header_set}, but got {set(d.keys())} in dict: {d}.",
+                f"{header_set}, but got: {set(d.keys())} in dict: {d}.",
             )
         # Let rich handle rendering of values for better formatting.
         table.add_row(*(d[k] for k in headers))

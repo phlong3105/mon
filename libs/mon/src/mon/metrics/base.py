@@ -29,12 +29,14 @@ class Metric(nn.Module, ABC):
     to implement specific metric functions.
 
     Attributes:
-        metric_opts (dict): A dictionary of options for the metric function.
-        metric_mode (str): The mode of the metric, either "FR" (full-reference)
-            or "NR" (no-reference).
-        lower_better (bool): Whether a lower score indicates better performance.
-        score_range (tuple[float, float]): The valid range of scores for this
-            metric, as a tuple of (min_score, max_score).
+        metric_opts (dict, optional): A dictionary of options for the metric
+            function.
+        metric_mode (str. optional): The mode of the metric, either "FR"
+            (full-reference) or "NR" (no-reference).
+        lower_better (bool, optional): Whether a lower score indicates better
+            performance.
+        score_range (tuple[float, float], optional): The valid range of scores
+            for this metric, as a tuple of (min_score, max_score).
     """
 
     metric_opts: dict = {}

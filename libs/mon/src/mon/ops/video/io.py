@@ -67,25 +67,21 @@ class VideoWriter(ABC):
             path (Path): Video output file.
             imgsz (Size, optional): Output video resolution as (H, W).
                 Defaults to (480, 640).
-            frame_rate (float): Output video frame rate. Defaults to 24.
-            verbose (bool): Verbosity mode. Defaults to False.
+            frame_rate (float, optional): Output video frame rate. Defaults to 24.
+            verbose (bool, optional): Verbosity mode. Defaults to False.
         """
         # Validate inputs
         if isinstance(path, (Path, str)):
             raise TypeError(
                 f"Expected 'path' to point to a video file, "
-                f"but got {type(path).__name__}."
+                f"but got: {type(path).__name__}."
             )
         path = Path(path).normalize()
         if not path.video_file():
-            raise ValueError(
-                f"Expected 'path' to point to a video file, but got '{path}'."
-            )
+            raise ValueError(f"Expected 'path' to point to a video file, but got: '{path.as_posix()}'.")
 
         if frame_rate <= 0:
-            raise ValueError(
-                f"Expected 'frame_rate' to be positive, but got {frame_rate}."
-            )
+            raise ValueError(f"Expected 'frame_rate' to be positive, but got: {frame_rate}.")
 
         # Assign attributes
         self.verbose = verbose
@@ -127,7 +123,7 @@ class VideoWriter(ABC):
             frame (TensorOrArray): Video frame, formatted as an array of
                 shape (H, W, C) and values ranging from 0 to 255; or as a
                 tensor of shape (B, C, H, W) and values ranging from 0.0 to 1.0.
-            path (Path, optional): Optional path to also save the ``frame``
+            path (Path | None, optional): Optional path to also save the ``frame``
                 as an image. Defaults to None.
 
         Raises:
@@ -136,7 +132,7 @@ class VideoWriter(ABC):
         if not isinstance(frame, (ndarray, Tensor)):
             raise TypeError(
                 f"Expected 'frame' to be a 'np.ndarray' or 'torch.Tensor', "
-                f"but got {type(frame).__name__}."
+                f"but got: {type(frame).__name__}."
             )
         self.write(frame)
 
@@ -181,15 +177,13 @@ class VideoWriterCV(VideoWriter):
             path (Path): Video output file.
             imgsz (Size, optional): Output video resolution as (H, W).
                 Defaults to (480, 640).
-            frame_rate (float): Output video frame rate. Defaults to 24.
-            fourcc (str): FourCC code for the video codec. Defaults to "mp4v".
-            verbose (bool): Verbosity mode. Defaults to False.
+            frame_rate (float, optional): Output video frame rate. Defaults to 24.
+            fourcc (str, optional): FourCC code for the video codec. Defaults to "mp4v".
+            verbose (bool, optional): Verbosity mode. Defaults to False.
         """
         # Validate inputs
         if not isinstance(fourcc, str):
-            raise TypeError(
-                f"Expected 'fourcc' to be a str, but got {type(fourcc).__name__}."
-            )
+            raise TypeError(f"Expected 'fourcc' to be a str, but got: {type(fourcc).__name__}.")
 
         # Assign attributes
         self.fourcc = fourcc

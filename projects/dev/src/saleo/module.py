@@ -67,7 +67,7 @@ class ResidualINR(nn.Module):
             mapping_size (int, optional): Size of Fourier feature mapping.
                 Defaults to 256.
             B (float, optional): Fourier feature scaling factor. Defaults to 20.0.
-            weight_decay (Any): Weight decay parameters for each branch.
+            weight_decay (Any, optional): Weight decay parameters for each branch.
                 Defaults to None.
         """
         super().__init__()
@@ -155,7 +155,7 @@ class ReflectanceINR(nn.Module):
             mapping_size (int, optional): Size of Fourier feature mapping.
                 Defaults to 256.
             B (float, optional): Fourier feature scaling factor. Defaults to 20.0.
-            weight_decay (Any): Weight decay parameters for each branch.
+            weight_decay (Any, optional): Weight decay parameters for each branch.
                 Defaults to None.
         """
         super().__init__()
@@ -208,17 +208,12 @@ class InDi(nn.Module):
     """
 
     # --- Lifecycle & Initialization ---
-    def __init__(
-        self,
-        backbone: nn.Module,
-        weight_decay: Any = None,
-        *args, **kwargs
-    ):
+    def __init__(self, backbone: nn.Module, weight_decay: Any = None, *args, **kwargs):
         """Initialize a new instance.
 
         Args:
             backbone (nn.Module): Backbone network to use.
-            weight_decay (Any): Weight decay parameters for each branch.
+            weight_decay (Any, optional): Weight decay parameters for each branch.
                 Defaults to None.
         """
         super().__init__()

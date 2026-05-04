@@ -78,10 +78,10 @@ class Weights:
             ):
                 # We only care about the validity of the path, not its existence
                 raise ValueError(
-                    f"Weights file or directory not found at: '{self.path}'"
+                    f"Weights file or directory not found at: '{self.path.as_posix()}'"
                 )
         if is_valid_str(self.url):
-            self.url = Path(self.url)
+            self.url: Path = Path(self.url)
 
     # --- Comparison Operators ---
     @override
@@ -153,8 +153,8 @@ class Weights:
         path = Path(self.path).normalize()
         if not path.exists():
             log(
-                f"Weights file not found at {path}. "
-                f"Trying to download from {self.url}..."
+                f"Weights file not found at {path.as_posix()}. "
+                f"Trying to download from {self.url.as_posix()}..."
             )
 
             if not self.url:
@@ -168,9 +168,9 @@ class Weights:
 
         # Load with safety checks
         try:
-            return torch.load(str(path), weights_only=weights_only, *args, **kwargs)
+            return torch.load(path.as_posix(), weights_only=weights_only, *args, **kwargs)
         except Exception as e:
-            raise RuntimeError(f"Failed to load weights from {path}: {e}")
+            raise RuntimeError(f"Failed to load weights from {path.as_posix()}: {e}")
 
     # --- Mutation ---
     def rectify_path(self, root: Path):

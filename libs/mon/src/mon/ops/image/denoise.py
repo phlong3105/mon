@@ -158,7 +158,7 @@ def tv_denoise(
     else:
         raise TypeError(
             f"Expected 'image' to be a tensor or an array, "
-            f"but got {type(image).__name__}."
+            f"but got: {type(image).__name__}."
         )
 
 # endregion

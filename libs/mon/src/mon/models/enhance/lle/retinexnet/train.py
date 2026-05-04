@@ -167,7 +167,7 @@ class RetinexNet_Trainer(Trainer):
                 if "loss" not in train_outputs:
                     raise ValueError(
                         f"Expected 'loss' from 'self._train_epoch()', "
-                        f"but got {train_outputs.keys()}."
+                        f"but got: {train_outputs.keys()}."
                     )
 
                 # 4.2. Scheduler Step
@@ -199,7 +199,7 @@ class RetinexNet_Trainer(Trainer):
                 if "loss" not in train_outputs:
                     raise ValueError(
                         f"Expected 'loss' from 'self._train_epoch()', "
-                        f"but got {train_outputs.keys()}."
+                        f"but got: {train_outputs.keys()}."
                     )
 
                 # 5.2. Val epoch

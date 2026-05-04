@@ -75,9 +75,7 @@ class Factory(UserDict[str, Any | Callable[..., Any]]):
         """
         # Validate inputs
         if not name:
-            raise ValueError(
-                f"Expected 'name' to be a non-empty string, but got '{name}'."
-            )
+            raise ValueError(f"Expected 'name' to be a non-empty string, but got: '{name}'.")
 
         # Assign attributes
         self.verbose = verbose
@@ -147,7 +145,7 @@ class Factory(UserDict[str, Any | Callable[..., Any]]):
         if not (inspect.isclass(module) or inspect.isfunction(module)):
             raise TypeError(
                 f"Expected 'module' to be a class or function, "
-                f"but got {type(module).__name__}."
+                f"but got: {type(module).__name__}."
             )
 
         # Determine the registration key.
@@ -189,9 +187,7 @@ class Factory(UserDict[str, Any | Callable[..., Any]]):
         """
         # Validate inputs
         if not name:
-            raise ValueError(
-                f"Cannot build from an empty name in the '{self.name}' factory."
-            )
+            raise ValueError(f"Cannot build from an empty name in the '{self.name}' factory.")
 
         # Normalize name
         key = depascalize(name) if self.decamelize else name
@@ -312,10 +308,7 @@ class DatasetFactory(Factory):
         # Validate inputs
         if not any([task, mode]):
             if self.verbose:
-                log_error(
-                    f"Expected at least one of 'task' or 'mode', "
-                    f"but got: {task}, {mode}.",
-                )
+                log_error(f"Expected at least one of 'task' or 'mode', but got: {task}, {mode}.")
             return []
 
         return self.filter(task=task, mode=mode)
@@ -444,7 +437,7 @@ class ModelFactory(Factory):
         if not (inspect.isclass(module) or inspect.isfunction(module)):
             raise TypeError(
                 f"Expected 'module' to be a class or function, "
-                f"but got {type(module).__name__}."
+                f"but got: {type(module).__name__}."
             )
 
         # Determine the registration key.
@@ -499,9 +492,7 @@ class ModelFactory(Factory):
         """
         # Validate inputs
         if not name:
-            raise ValueError(
-                f"Cannot build from an empty name in the '{self.name}' factory."
-            )
+            raise ValueError(f"Cannot build from an empty name in the '{self.name}' factory.")
 
         flatten = self.models_flat
 
@@ -535,10 +526,7 @@ class ModelFactory(Factory):
         """
         if not arch and not task:
             if self.verbose:
-                log_error(
-                    f"Expected at least one of 'arch' or 'task',"
-                    f"but got: {arch}, {task}.",
-                )
+                log_error(f"Expected at least one of 'arch' or 'task', but got: {arch}, {task}.")
             return []
 
         return self.filter(arch=arch, task=task)
@@ -755,9 +743,7 @@ class OptimizerFactory(Factory):
         """
         # Validate inputs
         if not name:
-            raise ValueError(
-                f"Cannot build from an empty name in the '{self.name}' factory."
-            )
+            raise ValueError(f"Cannot build from an empty name in the '{self.name}' factory.")
 
         # Normalize name
         key = depascalize(name) if self.decamelize else name
@@ -905,9 +891,7 @@ class MetricFactory(Factory):
         """
         # Validate inputs
         if not name:
-            raise ValueError(
-                f"Cannot build from an empty name in the '{self.name}' factory."
-            )
+            raise ValueError(f"Cannot build from an empty name in the '{self.name}' factory.")
 
         # Normalize name
         key = depascalize(name) if self.decamelize else name
