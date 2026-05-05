@@ -115,7 +115,7 @@ class TVDenoise(ModelRegisterMixin, Model):
             dict[str, float]: A dictionary containing the benchmark results,
                 such as latency, FLOPs, and parameter count.
         """
-        imgsz = Size.from_value(imgsz)
+        imgsz = Size.from_any(imgsz)
         device = next(self.parameters()).device
 
         # Create dummy inputs

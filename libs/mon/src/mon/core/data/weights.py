@@ -12,7 +12,6 @@ __all__ = [
     "Weights",
     "WeightsEnum",
     "WeightsLike",
-    "create_weights",
     "is_weights_type",
 ]
 
@@ -127,6 +126,19 @@ class Weights:
         """Return if the weights file exists."""
         return self.path and self.path.is_weights_file(exists=True)
 
+    # --- Creation ---
+    @classmethod
+    def from_any(cls, value: Any, *args, **kwargs) -> Weights | None:
+        """Create a Weights object from arbitrary input."""
+        if isinstance(value, Weights):
+            return value
+        elif isinstance(value, (Path, str)):
+            weights = Path(value).normalize()
+            if weights.is_weights_file(exists=True):
+                return Weights(path=weights, *args, **kwargs)
+        # Otherwise, return None
+        return None
+
     # --- Retrieval ---
     def state_dict(
         self,
@@ -215,7 +227,7 @@ class WeightsEnumMeta(EnumMeta):
         if isinstance(value, Weights):
             return value
         if isinstance(value, (Path, str)) and value != "default":
-            return create_weights(weights=value) or value
+            return Weights.from_any(value) or value
 
         # Otherwise, delegate to the normal enum machinery (which calls _missing_)
         return super().__call__(value, *args, **kwargs)
@@ -317,35 +329,6 @@ class WeightsEnum(Enum, metaclass=WeightsEnumMeta):
 # ==============================================================================
 
 WeightsLike: TypeAlias = Union[Weights, WeightsEnum, Path, str]
-
-# endregion
-
-
-# ==============================================================================
-# region CREATION
-# ==============================================================================
-
-def create_weights(weights: Weights | Path, *args, **kwargs) -> Weights | None:
-    """Create a ``Weights`` object from a path or a ``Weights`` object.
-
-    Args:
-        weights (Weights | Path): The input weights, which can be a Weights
-            object or a path to a weights file.
-
-    Returns:
-        Weights | None: A Weights object if the input is valid, otherwise None.
-    """
-    if isinstance(weights, Weights):
-        # If it's already a Weights object, return it directly
-        return weights
-    elif isinstance(weights, (Path, str)):
-        # If it's a path, try to load it as a Weights object'
-        weights = Path(weights).normalize()
-        if weights.is_weights_file(exists=True):
-            return Weights(path=weights, *args, **kwargs)
-
-    # Otherwise, return None
-    return None
 
 # endregion
 

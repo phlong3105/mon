@@ -43,6 +43,7 @@ from albumentations.core.transforms_interface import (
     Transform3D,
 )
 
+from mon.core import is_list_of
 from .base import *
 from .nlp import *
 from .vision import *
@@ -60,16 +61,40 @@ class BasicTransform(BaseTransform_):
     # --- Creation ---
     @classmethod
     def from_config(cls, config: dict[str, Any], **kwargs) -> "BasicTransform":
-        """Create a new instance from a configuration dictionary."""
+        """Create a new instance from a configuration dictionary.
+
+        Args:
+            config (dict[str, Any]): Configuration dictionary containing the
+                necessary information to build the transformation.
+            **kwargs: Additional keyword arguments to pass to the constructor.
+        """
         # Extract relevant keys
         name = config.pop("name", config.pop("type", None))
-
         if name is None:
-            raise KeyError(f"Missing 'name' or 'type' key in 'config': {config}.")
+            raise KeyError(f"missing 'name' or 'type' key.")
 
         # Build the object
         config |= kwargs
         return ALBUMENTATIONS.build(name=name, **config)
+
+    @classmethod
+    def from_any(cls, value: Any, **kwargs) -> "BasicTransform":
+        """Create a new instance from arbitrary input.
+
+        Args:
+            value (Any): The input value to create a transformation from.
+                This can be a transformation instance, a configuration dictionary,
+                or any other type that can be converted to a configuration dictionary.
+            **kwargs: Additional keyword arguments to pass to the constructor.
+        """
+        if value is None:
+            return NoOp()
+        elif isinstance(value, cls):
+            return value
+        elif isinstance(value, dict):
+            return cls.from_config(value, **kwargs)
+        else:
+            raise TypeError(f"unsupported transformation type {type(value).__name__}.")
 
 
 class Compose(Compose_):
@@ -80,15 +105,20 @@ class Compose(Compose_):
     # --- Creation ---
     @classmethod
     def from_config(cls, config: dict[str, Any], **kwargs) -> "Compose":
-        """Create a new instance from a configuration dictionary."""
+        """Create a new instance from a configuration dictionary.
+
+        Args:
+            config (dict[str, Any]): Configuration dictionary containing the
+                necessary information to build the transformation pipeline.
+            **kwargs: Additional keyword arguments to pass to the constructor.
+        """
         # Extract relevant keys
         transforms_: list[Any] = config.pop("transforms", config.pop("ops", []))
 
         # Validate inputs
         if not isinstance(transforms_, list):
             raise TypeError(
-                f"Expected a list of transformations, "
-                f"but got: {type(transforms_).__name__}."
+                f"expected a list of transformations, got {type(transforms_).__name__}."
             )
 
         # Build the objects
@@ -102,81 +132,45 @@ class Compose(Compose_):
 
     @classmethod
     def from_transforms(cls, transforms: list[BasicTransform | dict[str, Any]], **kwargs) -> "Compose":
-        """Create a new instance from a list of transformations."""
-        # Validate inputs
-        if not isinstance(transforms, list):
-            raise TypeError(
-                f"Expected a list of transformations, "
-                f"but got: {type(transforms).__name__}."
-            )
+        """Create a new instance from a list of transformations.
 
-        # Build the objects
-        for i, t in enumerate(transforms):
-            if isinstance(t, dict):
-                transforms[i] = BasicTransform.from_config(t)
+        Args:
+            transforms (list[BasicTransform | dict[str, Any]]):
+                A list of transformations, where each transformation is either
+                a ``BasicTransform`` instance or a configuration dictionary to
+                build a ``BasicTransform`` instance from.
+            **kwargs: Additional keyword arguments to pass to the constructor.
+        """
+        # Normalize inputs
+        transforms = [BasicTransform.from_any(t) for t in transforms]
+
+        # Validate inputs
+        if not is_list_of(transforms, BasicTransform):
+            raise TypeError(f"expected a list of BasicTransform.")
 
         # Return the new instance
         return cls(transforms=transforms, **kwargs)
 
-# endregion
+    @classmethod
+    def from_any(cls, value: Any, **kwargs) -> "Compose":
+        """Create a new instance from arbitrary input.
 
-
-# ==============================================================================
-# region CREATION
-# ==============================================================================
-
-def build_transform(value: Any, **kwargs) -> BasicTransform | None:
-    """Build a transformation instance from a given value.
-
-    Args:
-        value (Any): Either a transformation instance or a configuration
-            dictionary to build the transformation from.
-        **kwargs: Additional keyword arguments to pass to the transformation
-            constructor.
-
-    Returns:
-        BasicTransform | None: A transformation instance, or None if the input
-            value is None.
-
-    Raises:
-        TypeError: If the input value is not a valid type for building a
-            transformation.
-    """
-    if value is None:
-        return None
-    elif isinstance(value, BasicTransform):
-        return value
-    elif isinstance(value, dict):
-        return BasicTransform.from_config(value, **kwargs)
-    else:
-        raise TypeError(f"Unsupported transformation type: {type(value).__name__}.")
-
-
-def build_compose(value: Any, **kwargs) -> Compose | None:
-    """Build a ``Compose`` instance from a given value.
-
-    Args:
-        value (Any): Either a ``Compose`` instance, a list of transformations,
-            or a configuration dictionary to build the ``Compose`` instance from.
-        **kwargs: Additional keyword arguments to pass to the ``Compose``
-            constructor.
-
-    Returns:
-        Compose | None: A ``Compose`` instance, or None if the input value is None.
-
-    Raises:
-        TypeError: If the input value is not a valid type for building a
-            ``Compose`` instance.
-    """
-    if value is None:
-        return None
-    elif isinstance(value, Compose):
-        return value
-    elif isinstance(value, list):
-        return Compose.from_transforms(value, **kwargs)
-    elif isinstance(value, dict):
-        return Compose.from_config(value, **kwargs)
-    else:
-        raise TypeError(f"Unsupported compose type: {type(value).__name__}.")
+        Args:
+            value (Any): The input value to create a transformation pipeline from.
+                This can be a ``Compose`` instance, a list of transformations,
+                a configuration dictionary, or any other type that can be converted
+                to a list of transformations or a configuration dictionary.
+            **kwargs: Additional keyword arguments to pass to the constructor.
+        """
+        if value is None:
+            return cls(transforms=[])
+        elif isinstance(value, cls):
+            return value
+        elif isinstance(value, list):
+            return cls.from_transforms(value, **kwargs)
+        elif isinstance(value, dict):
+            return cls.from_config(value, **kwargs)
+        else:
+            raise TypeError(f"unsupported Compose type {type(value).__name__}.")
 
 # endregion

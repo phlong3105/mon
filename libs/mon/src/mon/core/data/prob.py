@@ -133,13 +133,11 @@ class Prob(Data):
         # Validate inputs
         if num_classes <= 0:
             raise ValueError(
-                f"Expected 'num_classes' to be a positive integer, "
-                f"but got: {num_classes}."
+                f"expected num_classes to be a positive integer, got {num_classes}."
             )
         if not (0 <= class_id < num_classes):
             raise ValueError(
-                f"Expected 'class_id' in range [0, {num_classes}), "
-                f"but got: {class_id}."
+                f"expected class_id in range [0, {num_classes}), got {class_id}."
             )
 
         prob = np.zeros(num_classes, dtype=np.float32)

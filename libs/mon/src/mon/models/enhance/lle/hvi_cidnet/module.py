@@ -65,7 +65,7 @@ class LayerNorm(nn.Module):
             x = self.weight[:, None, None] * x + self.bias[:, None, None]
             return x
         else:
-            raise ValueError(f"Unsupported data format: {self.data_format}.")
+            raise ValueError(f"unsupported data format {self.data_format}.")
 
 
 class NormDownsample(nn.Module):

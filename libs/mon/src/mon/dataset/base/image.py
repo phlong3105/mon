@@ -24,7 +24,6 @@ from box import Box
 from tensordict import TensorDict
 
 from mon.core import (
-    build_classlist,
     ClassList,
     create_progress_bar,
     K,
@@ -34,13 +33,8 @@ from mon.core import (
     Split,
     to_tensordict,
 )
-from mon.dataset.base.modality import (
-    build_modalities,
-    ImageModality,
-    Modality,
-    ModalityList,
-)
-from mon.dataset.transform import build_compose, Compose
+from mon.dataset.base.modality import ImageModality, Modality, ModalityList
+from mon.dataset.transform import Compose
 from .dataset import Dataset, InputTargetDataset, StandardDataset
 
 
@@ -266,9 +260,9 @@ class ImageDataset(StandardDataset, AlbumentationsDataset):
         classes = config.pop("classes", None)
 
         # Build the objects
-        transforms = build_compose(transforms)
-        modalities = build_modalities(modalities)
-        classes = build_classlist(classes)
+        transforms = Compose.from_any(transforms)
+        modalities = ModalityList.from_any(modalities)
+        classes = ClassList.from_any(classes)
 
         # Return the new instance
         config |= kwargs
@@ -384,8 +378,8 @@ class ImageOnlyDataset(StandardDataset, AlbumentationsDataset):
             paths = list(src.rglob("*"))
         else:
             raise ValueError(
-                f"Invalid source '{src.as_posix()}' for primary modality '{pk}'. "
-                f"Expected a directory, a glob pattern, or an image file."
+                f"expected a directory, a glob pattern, or an image file for "
+                f"the primary modality {pk}, got {src.as_posix()}."
             )
 
         # List primary modality metadata files
@@ -411,9 +405,9 @@ class ImageOnlyDataset(StandardDataset, AlbumentationsDataset):
         classes = config.pop("classes", None)
 
         # Build the objects
-        transforms = build_compose(transforms)
-        modalities = build_modalities(modalities)
-        classes = build_classlist(classes)
+        transforms = Compose.from_any(transforms)
+        modalities = ModalityList.from_any(modalities)
+        classes = ClassList.from_any(classes)
 
         # Return the new instance
         config |= kwargs
@@ -494,9 +488,9 @@ class IQADataset(InputTargetDataset, AlbumentationsDataset):
         classes = config.pop("classes", None)
 
         # Build the objects
-        transforms = build_compose(transforms)
-        modalities = build_modalities(modalities)
-        classes = build_classlist(classes)
+        transforms = Compose.from_any(transforms)
+        modalities = ModalityList.from_any(modalities)
+        classes = ClassList.from_any(classes)
 
         # Return the new instance
         config |= kwargs

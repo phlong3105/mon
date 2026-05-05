@@ -78,7 +78,7 @@ class BBox(Data):
                 f"expected bbox to be non-negative, got {list(self.bbox[4:])}."
             )
         if not isinstance(self.imgsz, Size):
-            self.imgsz = Size.from_value(self.imgsz)
+            self.imgsz = Size.from_any(self.imgsz)
         if is_valid_str(self.path):
             self.path = Path(self.path).normalize()
         if is_valid_str(self.base_dir):
@@ -163,7 +163,7 @@ class BBox(Data):
         Returns:
             BBox: Created bounding box instance.
         """
-        imgsz = Size.from_value(imgsz)
+        imgsz = Size.from_any(imgsz)
         eps = 1e-7  # Avoid division by zero
         cx = ((bbox[0] + bbox[2]) / 2.0) / (imgsz.w + eps)
         cy = ((bbox[1] + bbox[3]) / 2.0) / (imgsz.h + eps)
@@ -197,7 +197,7 @@ class BBox(Data):
         Returns:
             BBox: Created bounding box instance.
         """
-        imgsz = Size.from_value(imgsz)
+        imgsz = Size.from_any(imgsz)
         eps = 1e-7  # Avoid division by zero
         cx = (bbox[0] + bbox[2] / 2.0) / (imgsz.w + eps)
         cy = (bbox[1] + bbox[3] / 2.0) / (imgsz.h + eps)
@@ -360,7 +360,7 @@ class BBoxes(Data):
         if (self.bbox[:, 4:] < 0).any():
             raise ValueError(f"expected bbox to be non-negative.")
         if not isinstance(self.imgsz, Size):
-            self.imgsz = Size.from_value(self.imgsz)
+            self.imgsz = Size.from_any(self.imgsz)
         if is_valid_str(self.path):
             self.path = Path(self.path).normalize()
         if is_valid_str(self.base_dir):
@@ -480,7 +480,7 @@ class BBoxes(Data):
         Returns:
             BBoxes: Created bounding boxes instance.
         """
-        imgsz = Size.from_value(imgsz)
+        imgsz = Size.from_any(imgsz)
         eps = 1e-7  # Avoid division by zero
         cx = ((bbox[:, 0] + bbox[:, 2]) / 2.0) / (imgsz[1] + eps)
         cy = ((bbox[:, 1] + bbox[:, 3]) / 2.0) / (imgsz[0] + eps)
@@ -511,7 +511,7 @@ class BBoxes(Data):
         Returns:
             BBoxes: Created bounding boxes instance.
         """
-        imgsz = Size.from_value(imgsz)
+        imgsz = Size.from_any(imgsz)
         eps = 1e-7  # Avoid division by zero
         cx = (bbox[:, 0] + bbox[:, 2] / 2.0) / (imgsz[1] + eps)
         cy = (bbox[:, 1] + bbox[:, 3] / 2.0) / (imgsz[0] + eps)

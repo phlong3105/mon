@@ -128,7 +128,7 @@ class SAMBoxSegmentor(Segmentor):
             model.eval()
             self._model = model
         else:
-            raise ValueError(f"Unsupported segmentation model: {name}")
+            raise ValueError(f"unsupported segmentation model {name}")
 
      # --- Callable & Context Manager ---
     @override
@@ -146,12 +146,12 @@ class SAMBoxSegmentor(Segmentor):
         """
         if bbox.ndim != 2 or bbox.shape[-1] < 4:
             raise ValueError(
-                f"Expected 'bbox' to be a 2D array of shape (N, 4), "
-                f"but got: {bbox.shape}."
+                f"expected bbox to be a 2D array of shape (N, 4), "
+                f"got: {bbox.shape}."
             )
 
         # Convert bbox to XYXY format if necessary
-        imgsz = Size.from_value(image)
+        imgsz = Size.from_any(image)
         bbox = BBoxes(bbox=bbox, imgsz=imgsz).xyxy()
 
         # Extract masks using SAM

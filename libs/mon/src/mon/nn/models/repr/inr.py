@@ -343,7 +343,7 @@ def create_coords(size: Size, device: torch.device) -> Tensor:
         Tensor: Coordinates tensor of shape (1, H, W, 2) and values ranging from
             -1.0 to 1.0.
     """
-    size = Size.from_value(size)
+    size = Size.from_any(size)
     h, w = size.hw
     # TODO: Old code normalize from 0 to 1. Delete later
     # x_range = torch.linspace(0, 1, w, device=device)

@@ -226,7 +226,7 @@ def create_dummy_image(imgsz: Size = (512, 512), device = torch.device("cpu")) -
             from 0.0 to 1.0.
     """
     # Normalize imgsz
-    imgsz = Size.from_value(imgsz)
+    imgsz = Size.from_any(imgsz)
 
     # Read dummy image (e.g., Lenna)
     image = read_image(str(K.DUMMY_IMAGE))

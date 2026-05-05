@@ -110,7 +110,7 @@ class Benchmarker(PromptContextMixin):
     @imgsz.setter
     def imgsz(self, value: Size):
         """Set the image size."""
-        self._imgsz = Size.from_value(value)
+        self._imgsz = Size.from_any(value)
 
     @property
     def device(self) -> torch.device:

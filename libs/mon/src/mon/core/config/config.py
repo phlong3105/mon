@@ -435,9 +435,7 @@ class Config:
         try:
             return getattr(self._config, name)
         except AttributeError:
-            raise AttributeError(
-                f"{self.__class__.__name__} has no attribute {name}."
-            )
+            raise AttributeError(f"{self.__class__.__name__} has no attribute {name}.")
 
     def __setattr__(self, name: str, value: Any):
         """Intercept every attribute assignment.
@@ -699,7 +697,7 @@ class Config:
     def imgsz(self, value: Size | int | list[int] | tuple[int, int] | None):
         """Set the image size for prediction."""
         if value is not None:
-            self._config.predict.imgsz = Size.from_value(value)
+            self._config.predict.imgsz = Size.from_any(value)
 
     @property
     def upscale(self) -> bool:

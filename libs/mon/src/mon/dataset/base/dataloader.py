@@ -71,8 +71,8 @@ class DataLoader(DataLoader_):
         # Validate inputs
         if not isinstance(dataset, Dataset):
             raise TypeError(
-                f"Expected 'dataset' to be an instance of Dataset, "
-                f"but got: {type(dataset).__name__}."
+                f"expected dataset to be an instance of Dataset, "
+                f"got {type(dataset).__name__}."
             )
 
         # Cache collate_fn to avoid repeated getattr calls
@@ -118,8 +118,8 @@ class DataLoader(DataLoader_):
                 dataset = Dataset.from_config(dataset)
         if not isinstance(dataset, Dataset):
             raise TypeError(
-                f"Expected 'dataset' to be a configuration dict or an instance "
-                f"of Dataset, but got: {type(dataset).__name__}."
+                f"expected dataset to be a configuration dict or an instance "
+                f"of Dataset, got {type(dataset).__name__}."
             )
 
         # Return the new instance

@@ -114,7 +114,7 @@ class HVI_CIDNet_Trainer(Trainer):
                     eta_min=1e-7,
                 )
         else:
-            raise ValueError(f"Unsupported 'lr_scheduler': {lr_scheduler.name}.")
+            raise ValueError(f"unsupported lr_scheduler {lr_scheduler.name}.")
 
         self._scheduler = scheduler
 

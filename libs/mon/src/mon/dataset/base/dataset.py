@@ -115,8 +115,8 @@ class Dataset(Dataset_, ABC):
                 self.metapoints = metapoints
             else:
                 raise TypeError(
-                    f"Expected 'metapoints' to be a MetadataDictList, "
-                    f"but got: {type(metapoints).__name__}."
+                    f"expected metapoints to be a MetadataDictList, "
+                    f"got {type(metapoints).__name__}."
                 )
         else:
             # Else, retrieve metapoints
@@ -289,20 +289,20 @@ class Dataset(Dataset_, ABC):
 
         if not isinstance(metapoints, MetadataDictList):
             raise TypeError(
-                f"Expected 'metapoints' to be a MetadataDictList, "
-                f"but got: {type(metapoints).__name__}."
+                f"expected metapoints to be a MetadataDictList, "
+                f"got {type(metapoints).__name__}."
             )
         if keys != list(metapoints.keys()):
             raise ValueError(
-                f"Modalities keys {keys} do not match "
+                f"modalities keys {keys} do not match with "
                 f"metapoints keys {list(metapoints.keys())}."
             )
 
         for k, v in metapoints.items():
             if len(v) > 0 and len(v) != num_datapoints:
                 raise ValueError(
-                    f"Modality '{k}' has inconsistent length with "
-                    f"the dataset: {len(v)} != {num_datapoints}."
+                    f"modality {k} has inconsistent length with the rest of the "
+                    f"dataset {len(v)} != {num_datapoints}."
                 )
 
     # --- Retrieval ---
@@ -421,7 +421,7 @@ class StandardDataset(Dataset, ABC):
 
         # Validate inputs
         if not self.splits:
-            raise ValueError("No 'splits' have been defined for the dataset.")
+            raise ValueError("no splits is defined for the dataset.")
 
         # Continue the initialization chain
         super().__init__(*args, **kwargs)
@@ -437,10 +437,7 @@ class StandardDataset(Dataset, ABC):
         # Check for EXPLICIT definition in the subclass (not inherited)
         for attr in ["splits"]:
             if not getattr(cls, attr):
-                raise AttributeError(
-                    f"Class {cls.__name__} must define '{attr}' attribute "
-                    f"(defined locally or inherited)."
-                )
+                raise AttributeError(f"{cls.__name__} must define '{attr}' attribute.")
 
     # --- Properties ---
     @property
@@ -477,7 +474,7 @@ class StandardDataset(Dataset, ABC):
 
         # Validate inputs
         if not value.is_dir():
-            raise FileNotFoundError(f"Dataset root isn't found at: '{value.as_posix()}'")
+            raise FileNotFoundError(f"dataset root not found at {value.as_posix()}")
 
         self._root = value
 
@@ -501,9 +498,7 @@ class StandardDataset(Dataset, ABC):
 
         # Validate inputs
         if value not in self.splits:
-            raise ValueError(
-                f"unsupported split {value}, must be one of {self.splits}."
-            )
+            raise ValueError(f"unsupported split {value}, must be one of {self.splits}.")
 
         self._split = value
 
@@ -589,13 +584,12 @@ class InputTargetDataset(Dataset, ABC):
         """
         if value is None:
             raise TypeError(
-                f"Expected 'input_dir' to be a Path or str, "
-                f"but got: {type(value).__name__}."
+                f"expected input_dir to be a valid Path, got: {type(value).__name__}."
             )
 
         value = Path(value).normalize()
         if not value.is_dir():
-            raise FileNotFoundError(f"Input directory isn't found at: '{value.as_posix()}'")
+            raise FileNotFoundError(f"input directory not found at {value.as_posix()}")
 
         self._input_dir = value
 
@@ -617,7 +611,7 @@ class InputTargetDataset(Dataset, ABC):
         if value is not None:
             value = Path(value).normalize()
             if isinstance(value, Path) and not value.is_dir():
-                raise FileNotFoundError(f"Target directory isn't found at: '{value.as_posix()}'")
+                raise FileNotFoundError(f"target directory not found at {value.as_posix()}")
             self._target_dir = value
         else:
             self._target_dir = None

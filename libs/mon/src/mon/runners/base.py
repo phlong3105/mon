@@ -109,7 +109,7 @@ class Runner(ABC):
                 "before benchmarking."
             )
 
-        imgsz = Size.from_value(imgsz or self.config.imgsz)
+        imgsz = Size.from_any(imgsz or self.config.imgsz)
         self.model.benchmark(imgsz=imgsz, verbose=self.verbose)
 
 

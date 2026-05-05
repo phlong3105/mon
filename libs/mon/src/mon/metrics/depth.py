@@ -43,8 +43,8 @@ def compute_depth_metrics(
     # Validate inputs
     if pred.shape != target.shape:
         raise ValueError(
-            f"Expected pred and target to have the same shape, "
-            f"but got: {pred.shape}, {target.shape}."
+            f"expected pred and target to have the same shape, "
+            f"got {pred.shape} != {target.shape}."
         )
 
     pred = pred.astype(np.float32)
@@ -54,7 +54,7 @@ def compute_depth_metrics(
     if valid_mask is None:
         valid_mask = (target > 0) & (~np.isnan(pred)) & (~np.isnan(target))
     if not np.any(valid_mask):
-        raise RuntimeError(f"No valid pixels found in the depth maps.")
+        raise RuntimeError(f"no valid pixels found in the depth maps.")
 
     # Normalize predicted depth map to target's range
     if normalize:
@@ -64,7 +64,7 @@ def compute_depth_metrics(
         # Avoid division by zero in normalization
         if target_max == target_min:
             raise ValueError(
-                f"Target depth map has zero range (min == max), cannot normalize."
+                f"target depth map has zero range (min == max), cannot normalize."
             )
 
         # Min-max normalization of predicted depths

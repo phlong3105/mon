@@ -140,7 +140,7 @@ class SLICE(ModelRegisterMixin, Model):
         self.verbose = verbose
         self.in_channels = in_channels
         self.out_channels = in_channels
-        self.imgsz = Size.from_value(imgsz)
+        self.imgsz = Size.from_any(imgsz)
         self.method = method
         self.tol = tol
         self.ode_options = ode_options
@@ -312,7 +312,7 @@ class SLICE(ModelRegisterMixin, Model):
         # 1. Prepare inputs
         x = image
         d = depth if self.use_depth else None
-        size0 = Size.from_value(x)
+        size0 = Size.from_any(x)
         size1 = self.imgsz
 
         # Downsample the inputs to self.imgsz so the CNN doesn't cause an OOM

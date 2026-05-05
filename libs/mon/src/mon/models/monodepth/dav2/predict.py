@@ -139,13 +139,13 @@ class DAV2_Predictor(Predictor):
         meta = datapoint["meta"]
         meta = meta[0] if isinstance(meta, (list, tuple)) else meta
         path = Path(meta["path"])
-        size = Size.from_value(meta["imgsz"])
+        size = Size.from_any(meta["imgsz"])
 
         depth = outputs["depth"]
         depth = np.repeat(depth[..., np.newaxis], 3, axis=-1)
 
         # Resize the image if needed
-        imgsz = Size.from_value(depth)
+        imgsz = Size.from_any(depth)
         if imgsz != size:
             depth = self._upsampler(x_lr=depth, imgsz=size)["y_hr"]
 
@@ -164,12 +164,12 @@ class DAV2_Predictor(Predictor):
         meta = datapoint["meta"]
         meta = meta[0] if isinstance(meta, (list, tuple)) else meta
         path = Path(meta["path"])
-        size = Size.from_value(meta["imgsz"])
+        size = Size.from_any(meta["imgsz"])
 
         depth_c = vis_heatmap(outputs["depth"], colormap="Spectral_r")
 
         # Resize the image if needed
-        imgsz = Size.from_value(depth_c)
+        imgsz = Size.from_any(depth_c)
         if imgsz != size:
             depth_c = self._upsampler(x_lr=depth_c, imgsz=size)["y_hr"]
 

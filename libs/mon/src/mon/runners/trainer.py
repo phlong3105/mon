@@ -170,11 +170,11 @@ class Trainer(Runner, ABC):
         self._setup()
         # Validate that all necessary components are initialized
         if self._model is None:
-            raise RuntimeError(f"'model' is not initialized.")
+            raise RuntimeError(f"model is not initialized.")
         if self._optimizer is None:
-            raise RuntimeError(f"'optimizer' is not initialized.")
+            raise RuntimeError(f"optimizer is not initialized.")
         if self._train_dataloader is None:
-            raise RuntimeError(f"'train_dataloader' is not initialized.")
+            raise RuntimeError(f"train_dataloader is not initialized.")
 
         # 2. Summarize the current run
         if config.verbose:
@@ -197,8 +197,8 @@ class Trainer(Runner, ABC):
                 train_outputs = self._train_epoch(epoch=epoch, pbar=pbar)
                 if "loss" not in train_outputs:
                     raise ValueError(
-                        f"Expected 'loss' from 'self._train_epoch()', "
-                        f"but got: {train_outputs.keys()}."
+                        f"expected loss to be returned from 'self._train_epoch()', "
+                        f"got {list(train_outputs.keys())}."
                     )
 
                 # 4.2. Val epoch

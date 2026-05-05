@@ -85,7 +85,7 @@ class VideoWriter(ABC):
         # Assign attributes
         self.verbose = verbose
         self.path = path
-        self.imgsz = Size.from_value(imgsz)
+        self.imgsz = Size.from_any(imgsz)
         self.frame_rate = frame_rate
         self.cur_idx = 0
         self.init()

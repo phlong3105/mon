@@ -547,12 +547,12 @@ class DictList(UserDict, Generic[K, V]):
         """Verify the integrity of the dictionary."""
         for k, v in self.data.items():
             if not isinstance(v, list):
-                raise TypeError(f"Expected a list, but got: {type(v).__name__}.")
+                raise TypeError(f"expected a list, but got: {type(v).__name__}.")
             if (
                 self.item_type is not None
                 and any(not isinstance(item, self.item_type) for item in v)
             ):
-                raise TypeError(f"Expected a list of {self.item_type.__name__}.")
+                raise TypeError(f"expected a list of {self.item_type.__name__}.")
 
     # --- Mutation ---
     def apply(self, func):

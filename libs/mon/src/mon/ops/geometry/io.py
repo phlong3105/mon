@@ -198,7 +198,7 @@ def load_bbox(
 
     # 4. Validate inputs
     if imgsz:
-        imgsz = Size.from_value(imgsz)
+        imgsz = Size.from_any(imgsz)
     elif image_file:
         image_file = Path(image_file).normalize()
         if image_file.is_image_file(exists=True):

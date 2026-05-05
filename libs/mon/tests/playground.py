@@ -12,11 +12,17 @@ current_dir = current_file.parents[0]
 
 
 a = Path("/Volumes/ssd_01/01_longpham/_/code/mon/projects/aic26_06/src/ecdetseg/configs/ecdet_s_coco.yaml")
-b = "./ecdet/ecdet_s.yaml"
-c = a.parent / b
-print(c)
-print(c.is_config_file())
 
-d = ["dec", "ac"]
-if not isinstance(c, list):
-    raise TypeError(f"Expected data to be TensorDict, got {type(d).__name__}.")
+
+class A:
+
+    @classmethod
+    def build(cls):
+        print(cls.__name__)
+
+
+class B(A):
+    pass
+
+
+B.build()

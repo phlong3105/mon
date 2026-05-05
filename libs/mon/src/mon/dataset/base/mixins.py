@@ -82,10 +82,7 @@ class DatasetRegisterMixin(ABC):
         # Check for EXPLICIT definition in the subclass (not inherited)
         for attr in ["name", "tasks"]:
             if not getattr(cls, attr):
-                raise AttributeError(
-                    f"Class {cls.__name__} must define '{attr}' attribute "
-                    f"(defined locally or inherited)."
-                )
+                raise AttributeError(f"{cls.__name__} must define '{attr}' attribute.")
 
 # endregion
 
@@ -145,9 +142,7 @@ class DatasetCollationMixin:
                 tuple to ensure immutability.
         """
         if not isinstance(batch, list):
-            raise TypeError(
-                f"Expected 'batch' to be a list, but got: {type(batch).__name__}."
-            )
+            raise TypeError(f"expected batch to be a list, got {type(batch).__name__}.")
         if not batch:
             return {}
 
@@ -157,14 +152,10 @@ class DatasetCollationMixin:
         # Validates batch item types and key sets
         for i, d in enumerate(batch):
             if not isinstance(d, dict):
-                raise TypeError(
-                    f"Expected 'batch' item at index {i} to be a dict, "
-                    f"but got: {type(d).__name__}."
-                )
+                raise TypeError(f"expected a dict, got {type(d).__name__}.")
             if set(d.keys()) != set(keys):
                 raise ValueError(
-                    f"Expected 'batch' item at index {i} to have keys "
-                    f"{set(keys)}, but got: {set(d.keys())}."
+                    f"expected a dict with keys {set(keys)}, got {set(d.keys())}."
                 )
 
         collated = {k: [d[k] for d in batch] for k in keys}

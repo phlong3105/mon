@@ -18,7 +18,6 @@ from typing import Any, override
 import cv2
 
 from mon.core import (
-    build_classlist,
     ClassList,
     Frame,
     MetadataDictList,
@@ -26,10 +25,10 @@ from mon.core import (
     Size,
     Split,
 )
-from mon.dataset.transform import build_compose, Compose
+from mon.dataset.transform import Compose
 from .dataset import Dataset, StandardDataset
 from .image import AlbumentationsDataset
-from .modality import build_modalities, FrameModality, ModalityList
+from .modality import FrameModality, ModalityList
 
 
 # ==============================================================================
@@ -163,7 +162,7 @@ class VideoOnlyDataset(StandardDataset, AlbumentationsDataset):
         self.video_capture = cv2.VideoCapture(src.as_posix(), cv2.CAP_FFMPEG)
 
         if not self.video_capture.isOpened():
-            raise RuntimeError(f"Failed to open video source at: {src.as_posix()}")
+            raise RuntimeError(f"failed to open video source at {src.as_posix()}")
 
         # Retrieve video metadata
         h = int(self.video_capture.get(cv2.CAP_PROP_FRAME_HEIGHT))
@@ -194,9 +193,9 @@ class VideoOnlyDataset(StandardDataset, AlbumentationsDataset):
         classes = config.pop("classes", None)
 
         # Build the objects
-        transforms = build_compose(transforms)
-        modalities = build_modalities(modalities)
-        classes = build_classlist(classes)
+        transforms = Compose.from_any(transforms)
+        modalities = ModalityList.from_any(modalities)
+        classes = ClassList.from_any(classes)
 
         # Return the new instance
         config |= kwargs
@@ -233,7 +232,7 @@ class VideoOnlyDataset(StandardDataset, AlbumentationsDataset):
         if not success:
             if self.is_stream:
                 raise StopIteration
-            raise IndexError(f"Index {index} out of range for video of length {len(self)}.")
+            raise IndexError(f"index {index} out of range for video of length {len(self)}.")
 
         self.curr_index = index
 

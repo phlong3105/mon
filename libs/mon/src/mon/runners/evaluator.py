@@ -139,7 +139,7 @@ class IQAEvaluator(Evaluator):
     @imgsz.setter
     def imgsz(self, value: Size):
         """Set the image size for resizing."""
-        self._imgsz = Size.from_value(value)
+        self._imgsz = Size.from_any(value)
 
     @property
     def results_gt_mean(self) -> dict[str, float]:
@@ -398,7 +398,7 @@ class InstanceIQAEvaluator(Evaluator):
     @imgsz.setter
     def imgsz(self, value: Size):
         """Set the image size for resizing."""
-        self._imgsz = Size.from_value(value)
+        self._imgsz = Size.from_any(value)
 
     # --- Creation ---
     @classmethod
@@ -645,7 +645,7 @@ class DQAEvaluator(Evaluator):
     @imgsz.setter
     def imgsz(self, value: Size):
         """Set the image size for resizing."""
-        self._imgsz = Size.from_value(value)
+        self._imgsz = Size.from_any(value)
 
     # --- Creation ---
     @classmethod

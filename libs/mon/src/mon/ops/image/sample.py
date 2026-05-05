@@ -101,8 +101,8 @@ def pair_downsample(image: Tensor) -> tuple[Tensor, Tensor]:
     """
     if not isinstance(image, Tensor) or image.ndim != 4:
         raise TypeError(
-            f"Expected 'image' to be a 4D tensor, "
-            f"but got: {image.ndim}D {type(image).__name__},"
+            f"expected image to be a 4D tensor, "
+            f"got {image.ndim}D {type(image).__name__},"
         )
 
     b, c, h, w  = image.shape
@@ -204,7 +204,7 @@ class InterpolationUpsample(ImageUpsampler):
                 array of shape (H1, W1, C) and values ranging from 0 to 255.
         """
         # Normalize input
-        imgsz = Size.from_value(imgsz)
+        imgsz = Size.from_any(imgsz)
 
         # 1. Numpy / OpenCV
         if self.backend == Backend.CV2:
@@ -231,7 +231,10 @@ class InterpolationUpsample(ImageUpsampler):
 
         # 3. Error: Unsupported backend
         else:
-            raise ValueError(f"Expected 'x_lr' to be a tensor or ndarray, but got: {type(x_lr).__name__}.")
+            raise ValueError(
+                f"expected x_lr to be a tensor or ndarray, "
+                f"got {type(x_lr).__name__}."
+            )
 
         return x_hr
 

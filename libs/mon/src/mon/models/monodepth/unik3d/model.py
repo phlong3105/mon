@@ -48,7 +48,7 @@ try:
     # Now we can safely import from the original repository
     import unik3d
 except ImportError:
-    raise ImportError(f"Failed to import 'unik3d' from the 'extern/unik3d' directory.")
+    raise ImportError(f"failed to import 'unik3d' from the 'extern/unik3d' directory.")
 
 
 # ==============================================================================

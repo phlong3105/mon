@@ -12,7 +12,6 @@ from __future__ import annotations
 __all__ = [
     "Class",
     "ClassList",
-    "build_classlist",
 ]
 
 from dataclasses import dataclass
@@ -22,6 +21,7 @@ from mon.core.base import IndexList
 from mon.core.fileio import load_yaml, save_yaml
 from mon.core.path import Path
 from mon.core.typing import Int3
+from mon.core.utils import is_list_of
 
 
 # ==============================================================================
@@ -148,40 +148,54 @@ class ClassList(IndexList[Class]):
 
     # --- Creation ---
     @classmethod
-    def from_file(cls, path: Path) -> "ClassList":
-        """Create a new instance from a YAML file."""
-        return cls.load(path)
+    def from_file(cls, path: Path, **kwargs) -> "ClassList":
+        """Create a new instance from a YAML file.
 
-# endregion
+        Args:
+            path (Path): Path to the input YAML file.
+            **kwargs: Additional keyword arguments to pass to the constructor.
+        """
+        return cls.load(path, **kwargs)
 
+    @classmethod
+    def from_list(cls, classes: list[dict | Class], **kwargs) -> "ClassList":
+        """Create a new instance from a list of class definitions.
 
-# ==============================================================================
-# region CREATION
-# ==============================================================================
+        Args:
+            classes (list[dict | Class]): A list of class definitions, where
+                each element is either a dictionary or a ``Class`` instance.
+            **kwargs: Additional keyword arguments to pass to the constructor.
+        """
+        # Normalize inputs
+        classes = [Class(**c) if isinstance(c, dict) else c for c in classes]
 
-def build_classlist(value: Any) -> ClassList:
-    """Build a ``ClassList`` instance from a given value.
+        # Validate inputs
+        if not is_list_of(classes, Class):
+            raise TypeError("expected a list of Class instances.")
 
-    Args:
-        value (Any): Either a ``ClassList`` instance, a list of class definitions,
-            or a path to a YAML file containing class definitions.
+        # Return the new instance
+        return cls(classes, **kwargs)
 
-    Returns:
-        ClassList: A ``ClassList`` instance.
+    @classmethod
+    def from_any(cls, value: Any, **kwargs) -> "ClassList":
+        """Create a new instance from a variety of input types.
 
-    Raises:
-        TypeError: If the input value is not a valid type for building a ``ClassList``.
-    """
-    if value is None:
-        return ClassList()
-    elif isinstance(value, ClassList):
-        return value
-    elif isinstance(value, list):
-        return ClassList(value)
-    elif isinstance(value, (Path, str)):
-        return ClassList.from_file(value)
-    else:
-        raise TypeError(f"unsupported ClassList type {type(value).__name__}.")
+        Args:
+            value (Any): A value that can be used to create a ``ClassList`` instance.
+                This can be a YAML file path, a list of class definitions,
+                or an existing ``ClassList`` instance.
+            **kwargs: Additional keyword arguments to pass to the constructor.
+        """
+        if value is None:
+            return cls()
+        elif isinstance(value, cls):
+            return value
+        elif isinstance(value, (Path, str)):
+            return cls.from_file(value, **kwargs)
+        elif isinstance(value, list):
+            return cls.from_list(value, **kwargs)
+        else:
+            raise TypeError(f"unsupported ClassList type {type(value).__name__}.")
 
 # endregion
 

@@ -316,14 +316,14 @@ class Predictor(Runner, ABC):
         for i, meta_i in enumerate(metas):
             path = Path(meta_i["path"])
             y_hr = batch_y_hr[i:i + 1]
-            size = Size.from_value(meta_i["imgsz"])
+            size = Size.from_any(meta_i["imgsz"])
 
             for k, images in batch_images_dict.items():
                 # Slice once per key per item
                 image = images[i:i + 1]
 
                 # Resize the image if needed
-                imgsz = Size.from_value(image)
+                imgsz = Size.from_any(image)
                 if upsampler and (imgsz != size):
                     image = upsampler(x_lr=image, y_hr=y_hr, imgsz=size)
 

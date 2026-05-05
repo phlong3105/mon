@@ -325,12 +325,12 @@ class ResizeDivisibleBy(DualTransform):
         Returns:
             ndarray: Resized image.
         """
-        size = Size.from_value(img)
+        size = Size.from_any(img)
         if self._height > 0 or self._width > 0:
             new_h, new_w = self._height, self._width
         else:
             new_h, new_w = size.hw
-        new_size = Size.from_value((new_h, new_w), divisor=self._divisor)
+        new_size = Size.from_any((new_h, new_w), divisor=self._divisor)
 
         is_downscale  = new_size < size
         interpolation = self._interpolation
@@ -348,12 +348,12 @@ class ResizeDivisibleBy(DualTransform):
         Returns:
             ndarray: Resized mask.
         """
-        size = Size.from_value(mask)
+        size = Size.from_any(mask)
         if self._height > 0 or self._width > 0:
             new_h, new_w = self._height, self._width
         else:
             new_h, new_w = size.hw
-        new_size = Size.from_value((new_h, new_w), divisor=self._divisor)
+        new_size = Size.from_any((new_h, new_w), divisor=self._divisor)
 
         is_downscale  = new_size < size
         interpolation = self._mask_interpolation
@@ -385,7 +385,7 @@ class ResizeDivisibleBy(DualTransform):
         Returns:
             ndarray: Resized keypoints.
         """
-        size = Size.from_value(params["shape"][:2])
+        size = Size.from_any(params["shape"][:2])
         if self._height > 0 or self._width > 0:
             new_h, new_w = self._height, self._width
         else:

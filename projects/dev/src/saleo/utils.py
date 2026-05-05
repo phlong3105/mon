@@ -316,7 +316,7 @@ def get_nearest_features(
 
 def interpolate_image(image: Tensor, size: Size) -> Tensor:
     """Reshapes the image based on new resolution."""
-    size = Size.from_value(size)
+    size = Size.from_any(size)
     return F.interpolate(image, size=size.hw)
 
 
@@ -366,7 +366,7 @@ class JitteredGridSampler:
         self.image = image
         self.depth = depth
         self.patch_size = patch_size
-        self.imgsz = Size.from_value(image)
+        self.imgsz = Size.from_any(image)
         self.device = device or image.device
 
         # Move the device
@@ -511,7 +511,7 @@ class RandomPixelSampler:
         self.image = image
         self.depth = depth
         self.window_size = window_size
-        self.imgsz = Size.from_value(image)
+        self.imgsz = Size.from_any(image)
         self.device = device or image.device
 
         # We blur the input for feature extraction to prevent the network

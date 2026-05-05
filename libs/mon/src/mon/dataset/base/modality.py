@@ -14,7 +14,6 @@ __all__ = [
     "ImageModality",
     "Modality",
     "ModalityList",
-    "build_modalities",
 ]
 
 from dataclasses import dataclass
@@ -26,6 +25,7 @@ from mon.core import (
     Frame,
     Image,
     IndexList,
+    is_list_of,
     is_valid_str,
     Loader,
 )
@@ -115,21 +115,43 @@ class ModalityList(IndexList[Modality]):
     # --- Creation ---
     @classmethod
     def from_list(cls, modalities: list[Modality | dict[str, Any]], **kwargs) -> "ModalityList":
-        """Create a new instance from a list of modality configurations."""
-        # Validate inputs
-        if not isinstance(modalities, list):
-            raise TypeError(
-                f"Expected a list of modality configurations, "
-                f"but got: {type(modalities).__name__}."
-            )
+        """Create a new instance from a list of modality configurations.
 
-        # Build the object
-        for i, m in enumerate(modalities):
-            if isinstance(m, dict):
-                modalities[i] = Modality(**m)
+        Args:
+            modalities (list[Modality | dict[str, Any]]):
+                A list of modality configurations, where each configuration is
+                either a ``Modality`` instance or a dictionary of parameters to
+                create a ``Modality`` instance.
+            **kwargs: Additional keyword arguments to pass to the constructor.
+        """
+        # Normalize inputs
+        modalities = [Modality(**m) if isinstance(m, dict) else m for m in modalities]
+
+        # Validate inputs
+        if not is_list_of(modalities, Modality):
+            raise TypeError(f"expected a list of Modality.")
 
         # Return the new instance
         return cls(modalities, **kwargs)
+
+    @classmethod
+    def from_any(cls, value: Any, **kwargs) -> "ModalityList":
+        """Create a new instance from arbitrary input.
+
+        Args:
+            value (Any): The input value to create a ``ModalityList`` from.
+                This can be a ``ModalityList`` instance, a list of modality configurations,
+                or any other type that can be converted to a list of modality configurations.
+            **kwargs: Additional keyword arguments to pass to the constructor.
+        """
+        if value is None:
+            return ModalityList()
+        elif isinstance(value, cls):
+            return value
+        elif isinstance(value, list):
+            return cls.from_list(value, **kwargs)
+        else:
+            raise TypeError(f"unsupported ModalityList type {type(value).__name__}.")
 
 # endregion
 
@@ -141,36 +163,6 @@ class ModalityList(IndexList[Modality]):
 ImageModality = partial(Modality, ext=".jpg", module=Image, type=AlbumTargetType.IMAGE, loader=ImageLoader())
 FrameModality = partial(Modality, ext=".jpg", module=Frame, type=AlbumTargetType.IMAGE, loader=None)
 DepthModality = partial(Modality, ext=".jpg", module=Image, type=AlbumTargetType.IMAGE, loader=MaskLoader())
-
-# endregion
-
-
-# ==============================================================================
-# region CREATION
-# ==============================================================================
-
-def build_modalities(value: Any) -> ModalityList:
-    """Build a ``ModalityList`` from a given value.
-
-    Args:
-        value (Any): Either a ``ModalityList`` instance or a list of modality
-            configurations.
-
-    Returns:
-        ModalityList: A ``ModalityList`` instance.
-
-    Raises:
-        TypeError: If the input value is not a valid type for building a
-            ``ModalityList``.
-    """
-    if value is None:
-        return ModalityList()
-    elif isinstance(value, ModalityList):
-        return value
-    elif isinstance(value, list):
-        return ModalityList.from_list(value)
-    else:
-        raise TypeError(f"Unsupported modalities type: {type(value).__name__}.")
 
 # endregion
 

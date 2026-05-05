@@ -136,7 +136,7 @@ def parse_imgsz(value: Any, divisor: int | None = None) -> Size:
     Returns:
         Size: Image size as (H, W).
     """
-    return Size.from_value(value=value, divisor=divisor)
+    return Size.from_any(value=value, divisor=divisor)
 
 
 # --- Selection ---

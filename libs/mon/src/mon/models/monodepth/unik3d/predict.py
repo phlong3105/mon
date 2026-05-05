@@ -61,7 +61,7 @@ def predict(config: Config):
     weights = "default"
 
     # 4. Define model
-    imgsz = Size.from_value(config.imgsz)
+    imgsz = Size.from_any(config.imgsz)
 
     model = MODELS.build(device=device, **config.model | {"weights": weights})
     model = model.to(device)

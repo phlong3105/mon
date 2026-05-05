@@ -22,53 +22,53 @@ class RaiseStatements(abc.ABC):
 
     def type_error(self, name):
         # TypeError: Use when an object is of the wrong type
-        raise TypeError(f"Expected 'name' to be a string, but got: {type(name).__name__}.")
+        raise TypeError(f"expected name to be a string, got {type(name).__name__}.")
 
     def value_error(self, split, valid_splits):
         # ValueError: Use when the type is correct, but the content is invalid
         # (e.g., an empty list or an unsupported string).
-        raise ValueError(f"Expected 'split' in {valid_splits}, but got: '{split}'.")
-        raise ValueError(f"Unsupported 'split': {split}. Must be one of: {valid_splits}.")
+        raise ValueError(f"expected split in {valid_splits}, got {split}.")
+        raise ValueError(f"unsupported split {split}, must be one of {valid_splits}.")
 
     def assertion_error(self, images, labels):
         # AssertionError: Use assert for conditions that should be impossible
         # if the code is correct (internal sanity checks).
-        assert len(images) == len(labels), "Mismatched input/target count."
+        assert len(images) == len(labels), "mismatched input/target count."
 
     def attribute_error(self):
         # AttributeError: Use when an object is of the wrong type, or a class is
         # missing a required attribute.
-        raise AttributeError(f"'{type(self).__name__}' object has no attribute '_datapoints'.")
+        raise AttributeError(f"{type(self).__name__} object has no attribute '...'.")
         raise TypeError(f"Class {self.__name__} must define '_name' attribute.")
 
     def file_not_found_error(self, path):
         # FileNotFoundError: The most specific error for missing files or directories.
-        raise FileNotFoundError(f"Dataset root not found at:' {path}'.")
+        raise FileNotFoundError(f"dataset root not found at {path}")
 
     def file_exist_error(self, path):
         # FileExistsError: Use when trying to save or create a directory that
         # already exists and shouldn't.
-        raise FileExistsError(f"Export directory already exists: '{path}'.")
+        raise FileExistsError(f"export directory already exists: {path}")
 
     def index_error(self, index):
         # IndexError: Use if a user requests a specific index from a dataset
         # that is out of bounds.
-        raise IndexError(f"Index {index} out of range for dataset of size: {len(self)}.")
+        raise IndexError(f"index {index} out of range for dataset of size {len(self)}.")
 
     def key_error(self, model_name):
         # KeyError: Use when a registry lookup fails.
-        raise KeyError(f"Model '{model_name}' not found in the model registry.")
+        raise KeyError(f"model {model_name} not found in the model registry.")
 
     @abc.abstractmethod
     def not_implemented_error(self):
         # NotImplementedError: Use for abstract methods or features you plan to
         # support but haven't written yet.
-        raise NotImplementedError("This method is not yet supported.")
+        raise NotImplementedError("this method is not yet supported.")
 
     def import_error(self, path):
         # ImportError / ModuleNotFoundError: Use when an optional dependency is
         # missing
-        raise ImportError("Please install 'segment-anything' to use SAMSegmentor.")
+        raise ImportError("please install 'segment-anything' to use SAMSegmentor.")
 
     def runtime_error(self):
         # RuntimeError: A "catch-all" for errors that don't fit elsewhere, often

@@ -143,7 +143,7 @@ class SGZ_Predictor(Predictor):
                 Defaults to None, which means using the default size.
         """
         config = self.config
-        imgsz = Size.from_value(imgsz or config.imgsz)
+        imgsz = Size.from_any(imgsz or config.imgsz)
 
         scale_factor = config.model.get("scale_factor")
         if scale_factor:

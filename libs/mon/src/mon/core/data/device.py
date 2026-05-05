@@ -54,6 +54,11 @@ class Device:
         type (DeviceType): The type of the device (CPU, CUDA, MPS).
         index (int, optional): The index of the device if applicable (e.g., 0
             for "cuda:0"). Defaults to -1.
+
+    Example:
+        >>> cpu = Device("cpu", DeviceType.CPU)
+        >>> cuda = Device("cuda:0", DeviceType.CUDA, index=0)
+        >>> cuda1 = Device("cuda:1", DeviceType.CUDA, index=1)
     """
 
     name: str
@@ -137,6 +142,19 @@ class DeviceList(IndexList[Device]):
 
     Extend ``IndexList`` to provide dictionary-like access to ``Device``
     instances by their ``name`` attribute.
+
+    Example:
+        >>> devices = DeviceList([
+        >>>     Device("cpu", DeviceType.CPU),
+        >>>     Device("cuda:0", DeviceType.CUDA, index=0),
+        >>>     Device("cuda:1", DeviceType.CUDA, index=1),
+        >>> ])
+        >>> # Index-based access
+        >>> devices[0]         # Device(name='cpu', type=DeviceType.CPU, index=-1)
+        >>> # Name-based access
+        >>> devices["cuda:0"]  # Device(name='cuda:0', type=DeviceType.CUDA, index=0)
+        >>> devices.names      # ['cpu', 'cuda:0', 'cuda:1']
+        >>> devices.values     # [Device(name='cpu', type=DeviceType.CPU, index=-1), ...]
     """
 
     # --- Lifecycle & Initialization ---

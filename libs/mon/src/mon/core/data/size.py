@@ -16,6 +16,9 @@ import math
 from dataclasses import dataclass
 from typing import Any, Literal
 
+import numpy as np
+import PIL.Image
+import torch
 from numpy import ndarray
 from torch import Tensor
 
@@ -33,6 +36,20 @@ class Size:
     Attributes:
         height (int): Height of the image.
         width (int): Width of the image.
+
+    Example:
+        >>> size0 = Size(height=100, width=200)
+        Size(height=100, width=200)
+        >>> size0.h
+        100
+        >>> size0.w
+         200
+        >>> size0.hw
+        (100, 200)
+        >>> size0.wh
+        (200, 100)
+        >>> size0.area
+        20000
     """
 
     height: int
@@ -93,6 +110,10 @@ class Size:
             size (IntOrTuple2): Tuple containing the height and width.
             fmt (Literal["hw", "wh"], optional): String describing the format.
                 Defaults to "hw".
+
+        Example:
+            >>> size0 = Size.from_tuple((100, 200))
+            >>> size1 = Size.from_tuple((200, 100), fmt="wh")
         """
         if isinstance(size, (int, float)):
             return cls(height=size, width=size)
@@ -105,13 +126,27 @@ class Size:
         )
 
     @classmethod
-    def from_value(cls, value: Any, divisor: int | None = None) -> "Size":
+    def from_any(cls, value: Any, divisor: int | None = None) -> "Size":
         """Create a new instance from an arbitrary value.
 
         Args:
             value (Any): Size-like (i.e., scalar or sequence) or an image.
             divisor (int | None, optional): Divisor size for height and width.
                 Defaults to None.
+
+        Example:
+            >>> size0 = Size.from_any(100)
+            Size(height=100, width=100)
+            >>> size1 = Size.from_any((100, 200))
+            Size(height=100, width=200)
+            >>> size2 = Size.from_any((200, 100), divisor=32)
+            Size(height=224, width=128)
+            >>> size3 = Size.from_any(torch.rand(1, 3, 224, 224))
+            Size(height=224, width=224)
+            >>> size4 = Size.from_any(np.random.rand(224, 224, 3))
+            Size(height=224, width=224)
+            >>> size5 = Size.from_any(PIL.Image.open("path/to/image.jpg"))
+            Size(height=..., width=...)
         """
         size = None
 

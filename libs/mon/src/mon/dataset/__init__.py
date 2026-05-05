@@ -30,7 +30,6 @@ from mon.core import (
     resolve_dataset_dir,
 )
 from .base import *
-from .transform import build_compose, build_transform
 from .zoo import *
 
 
@@ -79,8 +78,7 @@ def build_dataset(
     # Validate inputs
     if not isinstance(src, (Path, str)):
         raise TypeError(
-            f"Expected 'src' to be a source path, or a dataset name, "
-            f"but got: {type(src).__name__}."
+            f"expected src to be a path or a dataset name, got: {type(src).__name__}."
         )
 
     # Build the corresponding Dataset instance
@@ -96,10 +94,7 @@ def build_dataset(
     if src.name in DATASETS:
         data_root = dataset_dir or cwd
         if data_root is None:
-            raise RuntimeError(
-                "Dataset directory is required to build dataset from name, "
-                "but 'dataset_dir' and 'cwd' are both None."
-            )
+            raise RuntimeError("dataset root is required to build dataset.")
         module: Dataset = DATASETS[src.name]
         dataset_dir = resolve_dataset_dir(
             dataset_name=src.name,
@@ -121,7 +116,7 @@ def build_dataset(
     # 3. If neither is a dataset nor a dataloader config dict, return None
     if verbose:
         log_error(f"cannot build dataset from source {src.as_posix()}.")
-    # raise ValueError(f"Unsupported source type: {src}.")
+
     return None, None
 
 
@@ -183,6 +178,7 @@ def build_dataloader(
     # 3. If neither is a dataset nor a dataloader config dict, return None
     if verbose:
         log_error(f"cannot build dataloader from source {src.as_posix()}.")
+
     return None, None
 
 # endregion
