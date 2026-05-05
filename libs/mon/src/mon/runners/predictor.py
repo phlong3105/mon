@@ -228,8 +228,7 @@ class Predictor(Runner, ABC):
             tuple[str, DataLoader]: A tuple containing the name of the
                 dataloader and the dataset/dataloader object itself.
         """
-        # Apply pre-processing transforms inside the dataset or dataloader
-        name, dataloader = build_dataloader(
+        return build_dataloader(
             src=source,
             dataset_dir=self.config.data_dir,
             split=Split.TEST,
@@ -238,13 +237,6 @@ class Predictor(Runner, ABC):
             batch_size=1,
             num_workers=1,
         )
-
-        # Validate
-        if name is None and dataloader is None:
-            raise RuntimeError(f"cannot build dataloader from the source {source}.")
-
-        # Return the name and dataloader
-        return name, dataloader
 
     # --- Output ---
     @abstractmethod

@@ -106,24 +106,22 @@ class Trainer(Runner, ABC):
         config = self.config
         dataloader = self.config.train_dataloader
 
-        if dataloader is not None:
-            self._train_dataloader = build_dataloader(
-                src=dataloader,
-                dataset_dir=config.data_dir,
-                split=Split.TRAIN,
-            )[1]
+        self._train_dataloader = build_dataloader(
+            src=dataloader,
+            dataset_dir=config.data_dir,
+            split=Split.TRAIN,
+        )[1]
 
     def _init_val_dataloader(self):
         """Initialize ``self._val_dataloader`` attribute."""
         config = self.config
         dataloader = self.config.val_dataloader
 
-        if dataloader is not None:
-            self._val_dataloader = build_dataloader(
-                src=dataloader,
-                dataset_dir=config.data_dir,
-                split=Split.VAL,
-            )[1]
+        self._val_dataloader = build_dataloader(
+            src=dataloader,
+            dataset_dir=config.data_dir,
+            split=Split.VAL,
+        )[1]
 
     def _init_loggers(self):
         """Initialize external loggers for tracking training progress and metrics.

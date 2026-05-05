@@ -23,12 +23,7 @@ from typing import Any
 
 from box import Box
 
-from mon.core import (
-    DATASETS,
-    log_error,
-    Path,
-    resolve_dataset_dir,
-)
+from mon.core import DATASETS, log_error, Path, resolve_dataset_dir, Split
 from .base import *
 from .zoo import *
 
@@ -39,13 +34,13 @@ from .zoo import *
 
 def build_dataset(
     src: dict | Path,
-    dataset_dir: Path | None = None,
-    cwd: Path | None = None,
+    dataset_dir: Path = Path.cwd(),
+    split: Split = Split.TEST ,
     transforms: Any = None,
     keep_original: bool = False,
     verbose: bool = False,
     *args, **kwargs
-) -> tuple[str | None, Dataset | None]:
+) -> tuple[str, Dataset]:
     """Build a dataset from a given source.
 
     Args:
@@ -53,9 +48,8 @@ def build_dataset(
             be either a dataset configuration dictionary or a path to the
             dataset directory.
         dataset_dir (Path | None, optional): Specific dataset directory.
-            Defaults to None.
-        cwd (Path | None, optional): The current working directory to resolve
-            the dataset directory from. Defaults to None.
+            Defaults to the current working directory.
+        split (Split, optional): Dataset split to use. Defaults to Split.TEST.
         transforms (Any, optional): Transformations to apply. Defaults to None.
         keep_original (bool, optional): Whether to keep the original data
             alongside the transformed data. Defaults to False.
@@ -78,28 +72,25 @@ def build_dataset(
     # Validate inputs
     if not isinstance(src, (Path, str)):
         raise TypeError(
-            f"expected src to be a path or a dataset name, got: {type(src).__name__}."
+            f"expected src to be a path or a dataset name, got {type(src).__name__}."
         )
 
     # Build the corresponding Dataset instance
     config = kwargs | {
+        "split": split,
         "transforms": transforms,
         "keep_original": keep_original,
         "verbose": verbose,
     }
-
     src: Path = Path(src).normalize()
 
     # 2.1. If src is a registered dataset name, use the corresponding class
     if src.name in DATASETS:
-        data_root = dataset_dir or cwd
-        if data_root is None:
+        if dataset_dir is None:
             raise RuntimeError("dataset root is required to build dataset.")
+
         module: Dataset = DATASETS[src.name]
-        dataset_dir = resolve_dataset_dir(
-            dataset_name=src.name,
-            data_root=data_root
-        )
+        dataset_dir = resolve_dataset_dir(dataset_name=src.name, data_root=dataset_dir)
         config["root"] = dataset_dir
         return src.name, module.from_config(config)
 
@@ -114,30 +105,26 @@ def build_dataset(
         return src.name, VideoOnlyDataset.from_config(config)
 
     # 3. If neither is a dataset nor a dataloader config dict, return None
-    if verbose:
-        log_error(f"cannot build dataset from source {src.as_posix()}.")
-
-    return None, None
+    raise RuntimeError(f"cannot build dataset from source {src.as_posix()}.")
 
 
 def build_dataloader(
     src: dict | Path,
-    dataset_dir: Path | None = None,
-    cwd: Path | None = None,
+    dataset_dir: Path = Path.cwd(),
+    split: Split = Split.TEST,
     transforms: Any = None,
     keep_original: bool = False,
     batch_size: int = 1,
     verbose: bool = False,
     *args, **kwargs
-) -> tuple[str | None, DataLoader | None]:
+) -> tuple[str, DataLoader]:
     """Build a dataloader from a given source.
 
     Args:
         src (dict | Path): A dataloader configuration dictionary or a source path.
         dataset_dir (Path | None, optional): Specific dataset directory.
-            Defaults to None.
-        cwd (Path | None, optional): The current working directory to resolve
-            the dataset directory from. Defaults to None.
+            Defaults to the current working directory.
+        split (Split, optional): Dataset split to use. Defaults to Split.TEST.
         transforms (Any, optional): Transformations to apply. Defaults to None.
         keep_original (bool, optional): Whether to keep the original data
             alongside the transformed data. Defaults to False.
@@ -158,11 +145,10 @@ def build_dataloader(
 
     # 2. Otherwise, build the dataset and DataLoader instances separately
     if isinstance(src, (Path, str)):
-        split = kwargs.pop("split", None)
+        src = Path(src).normalize()
         name, dataset_ = build_dataset(
             src=src,
             dataset_dir=dataset_dir,
-            cwd=cwd,
             split=split,
             transforms=transforms,
             keep_original=keep_original,
@@ -176,9 +162,6 @@ def build_dataloader(
         return name, dataloader_
 
     # 3. If neither is a dataset nor a dataloader config dict, return None
-    if verbose:
-        log_error(f"cannot build dataloader from source {src.as_posix()}.")
-
-    return None, None
+    raise RuntimeError(f"cannot build dataloader from source {src.as_posix()}.")
 
 # endregion

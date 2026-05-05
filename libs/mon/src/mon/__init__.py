@@ -29,3 +29,6 @@ from . import (
 
 _end_time = time.time()
 log(f"mon loaded in {_end_time - _start_time:.4f} seconds.")
+
+cwd = Path.cwd()
+print(cwd)
