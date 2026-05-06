@@ -149,7 +149,7 @@ class RetinexNet_Trainer(Trainer):
 
         # 3. Run benchmark
         if config.benchmark:
-            self.benchmark()
+            self._benchmark()
 
         # 4. Main loop (DecomNet)
         self._init_optimizer(phase="decom")

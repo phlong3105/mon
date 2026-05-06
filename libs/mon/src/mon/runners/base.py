@@ -14,6 +14,7 @@ __all__ = [
 ]
 
 from abc import ABC, abstractmethod
+from typing import Any
 
 import torch
 from torch import nn
@@ -96,7 +97,7 @@ class Runner(ABC):
         pass
 
     # --- Benchmark ---
-    def benchmark(self, imgsz: Size | None = None):
+    def _benchmark(self, imgsz: Size | None = None):
         """Run the benchmark for the model.
 
         Args:
@@ -208,8 +209,12 @@ class Evaluator(ABC):
 
     # --- Measure ---
     @abstractmethod
-    def measure(self):
-        """Run the evaluation."""
+    def measure(self) -> dict[str, Any]:
+        """Run the evaluation.
+
+        Returns:
+            dict[str, Any]: A dictionary containing the evaluation results.
+        """
         pass
 
     @abstractmethod
@@ -219,12 +224,12 @@ class Evaluator(ABC):
 
     # --- Logging ---
     @abstractmethod
-    def log_summary(self):
+    def _log_summary(self):
         """Log a summary of the current run."""
         pass
 
     @abstractmethod
-    def log_results(self):
+    def _log_results(self):
         """Log the evaluation results."""
         pass
 

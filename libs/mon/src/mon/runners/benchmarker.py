@@ -204,15 +204,15 @@ class Benchmarker(PromptContextMixin):
                 prompt="Verbose",
                 defaults=self.verbose,
             )
-        if self._index == self.num_prompts - 1:
+        if self._index == self._num_prompts - 1:
             # Finish
             finish = ConfirmPrompt.ask(prompt="Finish/Re-input", defaults=True)
             if finish:
-                self._index = self.num_prompts
+                self._index = self._num_prompts
 
     @override
     @property
-    def num_prompts(self) -> int:
+    def _num_prompts(self) -> int:
         """Return the total number of interactive steps."""
         return 6
 
@@ -255,7 +255,7 @@ class Benchmarker(PromptContextMixin):
                 model.eval()
 
                 # Run benchmark
-                stats = model.benchmark(imgsz=imgsz, num_runs=num_runs, verbose=False)
+                stats = model._benchmark(imgsz=imgsz, num_runs=num_runs, verbose=False)
                 results[m] = stats
 
                 # Wait for the GPU to finish whatever it was doing when it crashed

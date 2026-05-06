@@ -172,10 +172,14 @@ class IQAEvaluator(Evaluator):
 
     # --- Measure ---
     @override
-    def measure(self):
-        """Run the metric measurement process."""
+    def measure(self) -> dict[str, float]:
+        """Run the metric measurement process.
+
+        Returns:
+            dict[str, Any]: A dictionary containing the evaluation results.
+        """
         # Summarize the current run
-        self.log_summary()
+        self._log_summary()
 
         # Resolve dataloader
         # We don't persist the dataset to avoid memory consumption
@@ -183,12 +187,14 @@ class IQAEvaluator(Evaluator):
 
         # Processing
         self._results = self._measure(dataloader=dataloader, use_gt_mean=False)
-
         if self.use_gt_mean:
             self._results_gt_mean = self._measure(dataloader=dataloader, use_gt_mean=True)
 
         # Print results
-        self.log_results()
+        self._log_results()
+
+        # Return results
+        return self._results
 
     def _measure(self, dataloader: DataLoader, use_gt_mean: bool = False) -> dict[str, float]:
         """Measure IQA metrics based on the configuration.
@@ -277,18 +283,19 @@ class IQAEvaluator(Evaluator):
 
     # --- Logging ---
     @override
-    def log_summary(self):
+    def _log_summary(self):
         """Log a summary of the current run."""
         if not self.verbose:
             logger = logging.getLogger()
             logger.disabled = True
+
         console.rule(f"[bold red] {self.model}")
         console.log(f"[bold green]Model : {self.model}")
         console.log(f"[bold red]Data  : {self.data}")
         console.log(f"[bold]Device: {self.device}")
 
     @override
-    def log_results(self):
+    def _log_results(self):
         """Print the measured results."""
         results = self.results
         results_gt_mean = self.results_gt_mean
@@ -421,16 +428,23 @@ class InstanceIQAEvaluator(Evaluator):
 
     # --- Measure ---
     @override
-    def measure(self):
-        """Run the metric measurement process."""
+    def measure(self) -> dict[str, float]:
+        """Run the metric measurement process.
+
+        Returns:
+            dict[str, float]: A dictionary containing the evaluation results.
+        """
         # Summarize the current run
-        self.log_summary()
+        self._log_summary()
 
         # Processing
         self._results = self._measure()
 
         # Print results
-        self.log_results()
+        self._log_results()
+
+        # Return results
+        return self._results
 
     @torch.inference_mode()
     def _measure(self) -> dict[str, float]:
@@ -521,17 +535,18 @@ class InstanceIQAEvaluator(Evaluator):
 
     # --- Logging ---
     @override
-    def log_summary(self):
+    def _log_summary(self):
         """Log a summary of the current run."""
         if not self.verbose:
             logger = logging.getLogger()
             logger.disabled = True
+
         console.rule(f"[bold red] IQA Metric")
         console.log(f"[bold]Data  : {self.input_dir.name}")
         console.log(f"[bold]Device: {self.device}")
 
     @override
-    def log_results(self):
+    def _log_results(self):
         """Print the measured results."""
         results = self.results
         pad = 7
@@ -672,10 +687,14 @@ class DQAEvaluator(Evaluator):
 
     # --- Measure ---
     @override
-    def measure(self):
-        """Run the metric measurement process."""
+    def measure(self) -> dict[str, float]:
+        """Run the metric measurement process.
+
+        Returns:
+            dict[str, float]: A dictionary containing the evaluation results.
+        """
         # Summarize the current run
-        self.log_summary()
+        self._log_summary()
 
         # Resolve dataloader
         # We don't persist the dataset to avoid memory consumption
@@ -685,7 +704,10 @@ class DQAEvaluator(Evaluator):
         self._results = self._measure(dataloader=dataloader)
 
         # Print results
-        self.log_results()
+        self._log_results()
+
+        # Return results
+        return self._results
 
     def _measure(self, dataloader: DataLoader) -> dict[str, float]:
         """Measure IQA metrics based on the configuration.
@@ -765,18 +787,19 @@ class DQAEvaluator(Evaluator):
 
     # --- Logging ---
     @override
-    def log_summary(self):
+    def _log_summary(self):
         """Log a summary of the current run."""
         if not self.verbose:
             logger = logging.getLogger()
             logger.disabled = True
+
         console.rule(f"[bold red] {self.model}")
         console.log(f"[bold green]Model : {self.model}")
         console.log(f"[bold red]Data  : {self.data}")
         console.log(f"[bold]Device: {self.device}")
 
     @override
-    def log_results(self):
+    def _log_results(self):
         """Print the measured results."""
         results = self.results
 

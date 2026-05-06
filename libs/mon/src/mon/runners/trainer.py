@@ -180,7 +180,7 @@ class Trainer(Runner, ABC):
 
         # 3. Run benchmark
         if config.benchmark:
-            self.benchmark()
+            self._benchmark()
 
         # 4. Main loop
         epochs = config.epochs

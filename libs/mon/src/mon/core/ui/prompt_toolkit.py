@@ -1589,7 +1589,7 @@ class PromptContextMixin(ABC):
 
         while True:
             self._display_prompt()
-            if self._index == self.num_prompts:
+            if self._index == self._num_prompts:
                 return
             self._next()
 
@@ -1600,17 +1600,17 @@ class PromptContextMixin(ABC):
 
     @property
     @abstractmethod
-    def num_prompts(self) -> int:
+    def _num_prompts(self) -> int:
         """Return the total number of interactive steps."""
         pass
 
     def _next(self):
         """Advance the prompt index by one."""
-        self._index = (self._index + 1) % self.num_prompts
+        self._index = (self._index + 1) % self._num_prompts
 
     def _prev(self):
         """Move the prompt index back by one."""
-        self._index = (self._index - 1) % self.num_prompts
+        self._index = (self._index - 1) % self._num_prompts
 
 # endregion
 

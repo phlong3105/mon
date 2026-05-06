@@ -143,7 +143,7 @@ class Predictor(Runner, ABC):
 
         # 3. Run benchmark (if requested)
         if config.benchmark:
-            self.benchmark()
+            self._benchmark()
 
         # 4. Main loop
         with create_progress_bar() as pbar:

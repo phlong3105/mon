@@ -135,7 +135,7 @@ class SGZ_Predictor(Predictor):
 
     # --- Utilities ---
     @override
-    def benchmark(self, imgsz: Size | None = None):
+    def _benchmark(self, imgsz: Size | None = None):
         """Run the benchmark for the model.
 
         Args:

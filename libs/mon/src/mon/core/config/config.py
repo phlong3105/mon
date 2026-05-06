@@ -1455,7 +1455,7 @@ class ConfigContext(Config, PromptContextMixin):
 
         while True:
             self._display_prompt()
-            if self._index == self.num_prompts:
+            if self._index == self._num_prompts:
                 return self.config
             self._next()
 
@@ -1686,16 +1686,16 @@ class ConfigContext(Config, PromptContextMixin):
                 prompt=ARGUMENTS.verbose.prompt_text,
                 defaults=self.verbose,
             )
-        if self._index == self.num_prompts - 1:
+        if self._index == self._num_prompts - 1:
             # Finish
             pprint_dict(self.config, title="Input Arguments")
             finish = ConfirmPrompt.ask(prompt="Finish/Re-input", defaults=True)
             if finish:
-                self._index = self.num_prompts
+                self._index = self._num_prompts
 
     @override
     @property
-    def num_prompts(self) -> int:
+    def _num_prompts(self) -> int:
         """Return the total number of interactive steps."""
         return 22
 
