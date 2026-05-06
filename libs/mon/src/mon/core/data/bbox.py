@@ -16,12 +16,13 @@ __all__ = [
 from dataclasses import dataclass
 from typing import Any
 
+import cv2
 import numpy as np
 from numpy import ndarray
 
 from mon import BBoxFormat
 from mon.core.path import Path
-from mon.core.typing import Int2
+from mon.core.typing import Int2, Int3
 from mon.core.utils import is_valid_str
 from .data import Data
 from .size import Size
@@ -306,6 +307,79 @@ class BBox(Data):
         w = w * imgsz.w
         h = h * imgsz.h
         return np.array([x, y, w, h, *self.bbox[4:]], dtype=np.float32)
+
+    # --- Visualization ---
+    def draw(
+        self,
+        image: ndarray,
+        label: str | int | None = None,
+        imgsz: Size | None = None,
+        color: Int3 = (255, 255, 255),
+        alpha: float = 0.3,
+        scale: float = 0.6,
+        thickness: int = 2,
+    ) -> ndarray:
+        """Draw the bounding box on the given image.
+
+        Args:
+            image (ndarray): The image on which to draw the bounding box.
+            label (str | int | None, optional): The label to display on the
+                bounding box. Can be either a string or a tracking ID.
+                Defaults to None.
+            imgsz (Size | None, optional): Image size as (H, W). If None, use
+                the stored ``self.imgsz``. Defaults to None.
+            color (Int3, optional): The color of the bounding box in BGR format.
+                Defaults to (255, 255, 255) for white.
+            alpha (float, optional): The transparency of the bounding box.
+                Defaults to 0.3.
+            scale (float, optional): Font scale for the text. Defaults to 0.6.
+            thickness (int, optional): The thickness of the bounding box lines.
+                Defaults to 2.
+
+        Returns:
+            ndarray: The image with the bounding box drawn on it.
+        """
+        # 1. Prepare bbox coordinates
+        xyxy = self.xyxy(imgsz=imgsz or self.imgsz)
+        x1, y1, x2, y2 = xyxy[0:4].astype(int)
+
+        # 2. Create a semi-transparent fill for the bounding box
+        overlay = image.copy()
+        cv2.rectangle(overlay, (x1, y1), (x2, y2), color, -1)  # -1 means filled
+        cv2.addWeighted(overlay, alpha, image, 1.0 - alpha, 0.0, image)
+
+        # 3. Draw the bounding box border (optional, but makes edges crisp)
+        cv2.rectangle(image, (x1, y1), (x2, y2), color, thickness)
+
+        # 4. Setup the text properties
+        label = str(label or self.class_id)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        # Get the width and height of the text to size the background box properly
+        (text_w, text_h), baseline = cv2.getTextSize(label, font, scale, thickness)
+
+        # 5. Draw the solid background rectangle for the text
+        # We adjust y_min so the label doesn't get cut off if the box is at the
+        # very top of the image
+        label_y = max(y1, text_h + 10)
+        cv2.rectangle(
+            image,
+            (x1, label_y - text_h - 10),
+            (x1 + text_w + 10, label_y),
+            color,
+            -1,
+        )  # Solid fill
+
+        # 6. Draw the text over the solid background
+        cv2.putText(
+            image, label,
+            (x1 + 5, label_y - 5),
+            font,
+            scale,
+            (0, 0, 0),
+            thickness
+        )
+
+        return image
 
 
 @dataclass

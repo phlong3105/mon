@@ -45,8 +45,8 @@ def normalize_minmax(
         TensorOrArray: Normalized value tensor or array with values ranging
             from 0.0 to 1.0.
     """
-    value = value * scale
-    return (value - value.min()) / (value.max() - value.min() + eps)
+    v = value * scale
+    return (v - v.min()) / (v.max() - v.min() + eps)
 
 
 # --- Structural ---

@@ -15,13 +15,15 @@ __all__ = [
 
 from dataclasses import dataclass
 
+import cv2
 import numpy as np
 import torch
+from box import Box
 from numpy import ndarray
 from torch import Tensor
 
 from mon.core.path import Path
-from mon.core.typing import Int3
+from mon.core.typing import Int2, Int3
 from mon.core.utils import is_valid_str
 from .data import Data
 from .size import Size
@@ -220,6 +222,49 @@ class Image(Data):
             pad_width.append((0, 0))  # Don't pad the channel dimension
 
         return np.pad(self.image, pad_width, mode=mode, constant_values=value)
+
+    # --- Visualization ---
+    def draw_info(
+        self,
+        info: dict | list,
+        pos: Int2 = (20, 40),
+        scale: float = 0.8,
+        thickness: int = 2,
+    ) -> ndarray:
+        """Draw information on the image.
+
+        Args:
+            info (dict | list): Information to draw. Can be a dictionary
+                (key-value pairs) or a list of strings.
+            pos (Int2, optional): Position (x, y) where the information will be
+                drawn. Defaults to (20, 40).
+            scale (float, optional): Font scale for the text. Defaults to 0.8.
+            thickness (int, optional): Thickness of the text. Defaults to 2.
+
+        Returns:
+            ndarray: Image with the drawn information.
+        """
+        # Prepare text
+        if isinstance(info, (Box, dict)):
+            lines = [f"{k}: {v}" for k, v in info.items()]
+        else:
+            lines = info
+        if not isinstance(info, list):
+            raise TypeError(f"expected a list or dictionary, got {type(info).__name__}.")
+
+        # Setup text properties
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        x, y = pos
+        spacing = int(40 * scale)
+
+        # Draw text
+        image = self.image.copy()
+        for i, line in enumerate(lines):
+            current_y = y + (i * spacing)
+            cv2.putText(image, line, (x, current_y), font, scale, (0,   0, 0), thickness + 2, cv2.LINE_AA)
+            cv2.putText(image, line, (x, current_y), font, scale, (0, 255, 0), thickness,     cv2.LINE_AA)
+
+        return image
 
 
 @dataclass

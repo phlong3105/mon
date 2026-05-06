@@ -397,20 +397,20 @@ class Trainer(Runner, ABC):
         images = []
         for k, v in outputs.items():
             if column_first:
-                # Stack the tensors vertically (i.e., concatenate along the
-                # width dimension)
+                # Stack the tensors vertically (i.e., concatenate along the width dimension)
                 image = to_image_array(torch.cat(list(v), dim=1).unsqueeze(0))
             else:
-                # Stack the tensors horizontally (i.e., concatenate along the
-                # height dimension)
+                # Stack the tensors horizontally (i.e., concatenate along the height dimension)
                 image = to_image_array(torch.cat(list(v), dim=2).unsqueeze(0))
 
             if image.shape[2] == 1:
                 # If the image is grayscale, repeat it to make it RGB
                 image = np.repeat(image, 3, axis=2)
+
             if show_info:
                 # Draw the key as a label on the image
                 image = draw_info(image, [f"{pascalize(k)}"])
+
             images.append(image)
 
         if column_first:

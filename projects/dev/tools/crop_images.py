@@ -48,9 +48,8 @@ def main(args: argparse.Namespace):
 
     box = [int(x) for x in args.box.split(",")]
     if len(box) != 4:
-        raise ValueError(
-            f"box must be in (top, left, height, width) format, got {args.box}."
-        )
+        raise ValueError(f"box must be in (top, left, height, width) format, "
+                         f"got {args.box}.")
 
     # Get all images
     image_files = list(data_dir.glob("*"))
