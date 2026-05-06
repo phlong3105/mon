@@ -91,7 +91,7 @@ class IndexList(UserList, Generic[T]):
         # Primary Index (Name) - Always active
         self._key_map: dict[str, T] = {}
         # Secondary Index (ID) - Active only if requested
-        self._id_map: dict[int, T] | None = {} if id else None
+        self._id_map: dict[int, T] = {} if id else None
         if data is not None:
             self.extend(data)
 

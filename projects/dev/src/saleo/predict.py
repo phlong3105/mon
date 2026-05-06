@@ -117,15 +117,14 @@ class SALEO_Predictor(Predictor):
 
         Args:
             datapoint (TensorDict): The dictionary containing the input data.
-            outputs (TensorDict): The dictionary containing the main
-                prediction results. Each key in the dictionary is a batch of
-                prediction results.
+            outputs (TensorDict): The dictionary containing the main results.
+                Each key in the dictionary is a batch of results.
         """
         self._save_batch_image(
             keys=["enhanced"],
             datapoint=datapoint,
             outputs=outputs,
-            dirname=K.PRED_DIR,
+            dirname=K.IMAGE_DIR,
             subdirname="",
             use_stem=False,
         )
@@ -136,9 +135,8 @@ class SALEO_Predictor(Predictor):
 
         Args:
             datapoint (TensorDict): The dictionary containing the input data.
-            outputs (TensorDict): The dictionary containing the main
-                prediction results. Each key in the dictionary is a batch of
-                prediction results.
+            outputs (TensorDict): The dictionary containing the main results.
+                Each key in the dictionary is a batch of results.
         """
         self._save_batch_image(
             keys=["image_i", "image_i_res", "image_i_fixed", "image_r"],

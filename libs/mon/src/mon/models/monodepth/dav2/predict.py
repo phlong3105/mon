@@ -132,10 +132,11 @@ class DAV2_Predictor(Predictor):
 
         Args:
             datapoint (TensorDict): The dictionary containing the input data.
-            outputs (TensorDict): The dictionary containing the main
-                prediction results. Each key in the dictionary is a batch of
-                prediction results.
+            outputs (TensorDict): The dictionary containing the main results.
+                Each key in the dictionary is a batch of results.
         """
+        upsampler = self._upsampler
+
         meta = datapoint["meta"]
         meta = meta[0] if isinstance(meta, (list, tuple)) else meta
         path = Path(meta["path"])
@@ -147,9 +148,15 @@ class DAV2_Predictor(Predictor):
         # Resize the image if needed
         imgsz = Size.from_any(depth)
         if imgsz != size:
-            depth = self._upsampler(x_lr=depth, imgsz=size)["y_hr"]
+            depth = upsampler(x_lr=depth, y_hr=None, imgsz=size)
 
-        self._save_image(depth, path, dirname=K.PRED_DIR)
+        self._save_image(
+            image=depth,
+            src_path=path,
+            dirname=K.DEPTH_DIR,
+            subdirname="",
+            stem="",
+        )
 
     @override
     def _save_debug(self, datapoint: TensorDict, outputs: TensorDict):
@@ -157,10 +164,11 @@ class DAV2_Predictor(Predictor):
 
         Args:
             datapoint (TensorDict): The dictionary containing the input data.
-            outputs (TensorDict): The dictionary containing the main
-                prediction results. Each key in the dictionary is a batch of
-                prediction results.
+            outputs (TensorDict): The dictionary containing the main results.
+                Each key in the dictionary is a batch of results.
         """
+        upsampler = self._upsampler
+
         meta = datapoint["meta"]
         meta = meta[0] if isinstance(meta, (list, tuple)) else meta
         path = Path(meta["path"])
@@ -171,9 +179,15 @@ class DAV2_Predictor(Predictor):
         # Resize the image if needed
         imgsz = Size.from_any(depth_c)
         if imgsz != size:
-            depth_c = self._upsampler(x_lr=depth_c, imgsz=size)["y_hr"]
+            depth_c = upsampler(x_lr=depth_c, y_hr=None, imgsz=size)
 
-        self._save_image(depth_c, path, dirname=K.DEBUG_DIR, stem="depth_c")
+        self._save_image(
+            image=depth_c,
+            src_path=path,
+            dirname=K.DEPTH_DIR,
+            subdirname="",
+            stem="depth_c",
+        )
 
 # endregion
 

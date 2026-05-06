@@ -19,6 +19,7 @@ from typing import Any
 import numpy as np
 from numpy import ndarray
 
+from mon import BBoxFormat
 from mon.core.path import Path
 from mon.core.typing import Int2
 from mon.core.utils import is_valid_str
@@ -155,9 +156,6 @@ class BBox(Data):
             path (Path | None, optional): Path to the label file. Defaults to None.
             base_dir (Path | None, optional): Base directory for relative paths.
                 Defaults to None.
-
-        Returns:
-            BBox: Created bounding box instance.
         """
         imgsz = Size.from_any(imgsz)
         eps = 1e-7  # Avoid division by zero
@@ -189,9 +187,6 @@ class BBox(Data):
             path (Path | None, optional): Path to the label file. Defaults to None.
             base_dir (Path | None, optional): Base directory for relative paths.
                 Defaults to None.
-
-        Returns:
-            BBox: Created bounding box instance.
         """
         imgsz = Size.from_any(imgsz)
         eps = 1e-7  # Avoid division by zero
@@ -442,9 +437,6 @@ class BBoxes(Data):
             path (Path | None, optional): Path to the label file. Defaults to None.
             base_dir (Path | None, optional): Base directory for relative paths.
                 Defaults to None.
-
-        Returns:
-            BBoxes: Created bounding boxes instance.
         """
         return cls(
             bbox=np.array([b.bbox for b in bbox_list], dtype=np.float32),
@@ -469,9 +461,6 @@ class BBoxes(Data):
             path (Path | None, optional): Path to the label file. Defaults to None.
             base_dir (Path | None, optional): Base directory for relative paths.
                 Defaults to None.
-
-        Returns:
-            BBoxes: Created bounding boxes instance.
         """
         imgsz = Size.from_any(imgsz)
         eps = 1e-7  # Avoid division by zero
@@ -500,9 +489,6 @@ class BBoxes(Data):
             path (Path | None, optional): Path to the label file. Defaults to None.
             base_dir (Path | None, optional): Base directory for relative paths.
                 Defaults to None.
-
-        Returns:
-            BBoxes: Created bounding boxes instance.
         """
         imgsz = Size.from_any(imgsz)
         eps = 1e-7  # Avoid division by zero
@@ -514,6 +500,36 @@ class BBoxes(Data):
             bbox=np.array([cx, cy, w, h, *bbox[:, 4:].T], dtype=np.float32).T,
             imgsz=imgsz, path=path, base_dir=base_dir
         )
+
+    @classmethod
+    def from_any(
+        cls,
+        bbox: ndarray | list[BBox] | list[ndarray],
+        imgsz: Size,
+        fmt: BBoxFormat = BBoxFormat.CXCYWHN,
+        path: Path | None = None,
+        base_dir: Path | None = None,
+    ) -> "BBoxes":
+        """Create bounding boxes from an arbitrary format.
+
+        Args:
+            bbox (ndarray | list[BBox] | list[ndarray]): Bounding box data in
+                various formats. Can be a single array of shape (N, 8+),
+                a list of BBox instances, or a list of arrays.
+            imgsz (Size): Size of the corresponding image as (H, W).
+            fmt (BBoxFormat, optional): Format of the input bounding box data.
+                Defaults to BBoxFormat.CXCYWHN.
+            path (Path | None, optional): Path to the label file. Defaults to None.
+            base_dir (Path | None, optional): Base directory for relative paths.
+        """
+        if fmt == BBoxFormat.CXCYWHN:
+            return cls(bbox=bbox, imgsz=imgsz, path=path, base_dir=base_dir)
+        elif fmt == BBoxFormat.XYXY:
+            return cls.from_xyxy(bbox=bbox, imgsz=imgsz, path=path, base_dir=base_dir)
+        elif fmt == BBoxFormat.XYWH:
+            return cls.from_xywh(bbox=bbox, imgsz=imgsz, path=path, base_dir=base_dir)
+        else:
+            raise ValueError(f"unsupported bbox format {fmt}.")
 
     # --- Computation ---
     def area(self, imgsz: Size | None = None) -> ndarray:

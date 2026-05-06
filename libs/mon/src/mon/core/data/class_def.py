@@ -197,6 +197,31 @@ class ClassList(IndexList[Class]):
         else:
             raise TypeError(f"unsupported ClassList type {type(value).__name__}.")
 
+    # --- Retrieval ---
+    def get_class_color(self, label: int | str) -> Int3:
+        """Return the RGB color for a given class label.
+
+        Args:
+            label (int | str): The class label, which can be either an integer ID
+                or a string name.
+
+        Returns:
+            Int3: The RGB color associated with the specified class label.
+        """
+        if isinstance(label, int):
+            cls = self._id_map.get(label)
+            if cls is None:
+                raise ValueError(f"no class found with ID {label}.")
+            return cls.color
+        elif isinstance(label, str):
+            cls = self._key_map.get(label)
+            if cls is None:
+                raise ValueError(f"no class found with name '{label}'.")
+            return cls.color
+        else:
+            raise TypeError(f"expected label to be an int or str, "
+                            f"got {type(label).__name__}.")
+
 # endregion
 
 

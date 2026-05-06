@@ -370,8 +370,8 @@ class Trainer(Runner, ABC):
         self,
         epoch: int,
         outputs: dict[str, TensorOrArray],
-        dirname: str = K.PRED_DIR,
-        stem: str = "debug",
+        dirname: str = K.DEBUG_DIR,
+        stem: str = "",
         column_first: bool = False,
         show_info: bool = True,
     ):
@@ -381,10 +381,10 @@ class Trainer(Runner, ABC):
             epoch (int): The current epoch number.
             outputs (dict[str, TensorOrArray]): A dictionary containing the
                 outputs from the model.
-            stem (str, optional): The stem of the output file name.
-                Defaults to "debug".
             dirname (str, optional): The directory name for the output file.
-                Defaults to K.PRED_DIR.
+                Defaults to K.DEBUG_DIR.
+            stem (str, optional): The stem of the output file name.
+                Defaults to "".
             column_first (bool, optional): Whether to save the image in column
                 format (i.e., stack outputs vertically). Defaults to True.
             show_info (bool, optional): Whether to draw the keys of the outputs

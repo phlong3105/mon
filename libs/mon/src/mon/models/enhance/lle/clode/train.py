@@ -234,7 +234,7 @@ class CLODE_Trainer(Trainer):
         self._save_image(
             epoch=epoch,
             outputs=debug_image,
-            dirname=K.PRED_DIR,
+            dirname=K.IMAGE_DIR,
             stem="debug",
         )
 

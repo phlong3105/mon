@@ -8,6 +8,7 @@ This package contains concrete dataset implementations.
 
 from __future__ import annotations
 
+from .coco import *
 from .darkface import *
 from .exdark import *
 from .fivek import *

@@ -24,6 +24,7 @@ from torch import Tensor
 from mon.core import (
     BBoxes,
     Config,
+    BBoxFormat,
     ConfigContext,
     create_progress_bar,
     K,
@@ -39,7 +40,7 @@ from mon.core import (
     UPSAMPLERS,
 )
 from mon.dataset import build_dataloader, DataLoader, transform as T
-from mon.ops import ImageUpsampler, to_image_array, write_image
+from mon.ops import ImageUpsampler, to_image_array, write_image, write_bbox
 from .base import Runner
 
 current_file = Path(__file__).normalize()
@@ -245,9 +246,8 @@ class Predictor(Runner, ABC):
 
         Args:
             datapoint (TensorDict): The dictionary containing the input data.
-            outputs (TensorDict): The dictionary containing the main
-                prediction results. Each key in the dictionary is a batch of
-                prediction results.
+            outputs (TensorDict): The dictionary containing the main results.
+                Each key in the dictionary is a batch of results.
         """
         pass
 
@@ -257,9 +257,8 @@ class Predictor(Runner, ABC):
 
         Args:
             datapoint (TensorDict): The dictionary containing the input data.
-            outputs (TensorDict): The dictionary containing the main
-                prediction results. Each key in the dictionary is a batch of
-                prediction results.
+            outputs (TensorDict): The dictionary containing the main results.
+                Each key in the dictionary is a batch of results.
         """
         pass
 
@@ -275,7 +274,7 @@ class Predictor(Runner, ABC):
         keys: list[str],
         datapoint: TensorDict,
         outputs: TensorDict,
-        dirname: str = K.PRED_DIR,
+        dirname: str = K.IMAGE_DIR,
         subdirname: str = "",
         use_stem: bool = False
     ):
@@ -285,11 +284,10 @@ class Predictor(Runner, ABC):
             keys (list[str]): The list of keys in the output dictionary that
                 correspond to the images to be post-processed.
             datapoint (TensorDict): The dictionary containing the input data.
-            outputs (TensorDict): The dictionary containing the main
-                prediction results. Each key in the dictionary is a batch of
-                prediction results.
+            outputs (TensorDict): The dictionary containing the main results.
+                Each key in the dictionary is a batch of results.
             dirname (str, optional): The directory name for the output files.
-                Defaults to K.PRED_DIR.
+                Defaults to K.IMAGE_DIR.
             subdirname (str, optional): Subdirectory name to append to the
                 output path (e.g., 'debug'/'mask'). Defaults to "".
             use_stem (bool, optional): Whether to use the source file name stem
@@ -301,14 +299,14 @@ class Predictor(Runner, ABC):
 
         # Pre-extract the batches for the requested keys to avoid dict lookups
         # in the loop
-        metas = datapoint["meta"]
+        batch_metas = datapoint["meta"]
         batch_y_hr = datapoint[f"image_{K.ORIGINAL}"].to(device)  # For upsampler that needs high-res image (e.g., guided filter)
         batch_images_dict = {k: outputs[k] for k in keys if k in outputs}
 
-        for i, meta_i in enumerate(metas):
-            path = Path(meta_i["path"])
+        for i, meta in enumerate(batch_metas):
+            path = Path(meta["path"])
             y_hr = batch_y_hr[i:i + 1]
-            size = Size.from_any(meta_i["imgsz"])
+            size = Size.from_any(meta["imgsz"])
 
             for k, images in batch_images_dict.items():
                 # Slice once per key per item
@@ -340,7 +338,7 @@ class Predictor(Runner, ABC):
         self,
         image: TensorOrArray,
         src_path: Path,
-        dirname: str = K.PRED_DIR,
+        dirname: str = K.IMAGE_DIR,
         subdirname: str = "",
         stem: str = "",
     ):
@@ -352,7 +350,7 @@ class Predictor(Runner, ABC):
             src_path (Path): The source path, used to determine the output file
                 path.
             dirname (str, optional): The directory name for the output file.
-                Defaults to K.PRED_DIR.
+                Defaults to K.IMAGE_DIR.
             subdirname (str, optional): Subdirectory name to append to the
                 output path (e.g., 'debug'/'mask'). Defaults to "".
             stem (str, optional): An optional string to be appended to the
@@ -380,22 +378,63 @@ class Predictor(Runner, ABC):
         # Save the image
         write_image(image=image, path=save_path)
 
+    def _save_batch_bboxes(
+        self,
+        bboxes: list[BBoxes],
+        fmt: BBoxFormat,
+        datapoint: TensorDict,
+        outputs: TensorDict,
+        dirname: str = K.ANN_DIR,
+        subdirname: str = "",
+    ):
+        """Save a batch of bounding box outputs.
+
+        Args:
+            bboxes (list[BBoxes]): The list of bounding boxes for each image in
+                the batch.
+            fmt (BBoxFormat): The format of the bounding boxes to be saved.
+            datapoint (TensorDict): The dictionary containing the input data.
+            outputs (TensorDict): The dictionary containing the main results.
+                Each key in the dictionary is a batch of results.
+            dirname (str, optional): The directory name for the output files.
+                Defaults to K.ANN_DIR.
+            subdirname (str, optional): Subdirectory name to append to the
+                output path (e.g., 'debug'/'mask'). Defaults to "".
+        """
+        # Pre-extract the batches for the requested keys to avoid dict lookups
+        # in the loop
+        batch_metas = datapoint["meta"]
+
+        # Process each item in the batch
+        for i, meta in enumerate(batch_metas):
+            path = Path(meta["path"])
+            bboxes = bboxes[i]
+            self._save_bboxes(
+                bboxes=bboxes,
+                fmt=fmt,
+                src_path=path,
+                dirname=dirname,
+                subdirname=subdirname,
+            )
+
     def _save_bboxes(
         self,
-        boxes: BBoxes,
+        bboxes: BBoxes,
+        fmt: BBoxFormat,
         src_path: Path,
-        dirname: str = K.PRED_DIR,
+        dirname: str = K.ANN_DIR,
         subdirname: str = "",
         stem: str = "",
     ):
         """Save all bounding boxes for a single image.
 
         Args:
-            boxes (BBoxes): The predicted bounding boxes.
+            bboxes (BBoxes): The predicted bounding boxes.
+            fmt (BBoxFormat): The format of the bounding boxes to be saved.
             src_path (Path): The source path, used to determine the output file
                 path.
             dirname (str, optional): The directory name for the output file.
-                Defaults to K.PRED_DIR.
+                Defaults to K.ANN_DIR.
             subdirname (str, optional): Subdirectory name to append to the
                 output path (e.g., 'debug'/'mask'). Defaults to "".
             stem (str, optional): An optional string to be appended to the
@@ -415,6 +454,9 @@ class Predictor(Runner, ABC):
             save_path = save_dir / f"{src_path.stem}_{stem}{K.LABEL_EXT}"
         else:
             save_path = save_dir / f"{src_path.stem}{K.LABEL_EXT}"
+
+        # Save the bbox
+        write_bbox(bbox=bboxes, path=save_path, fmt=fmt)
 
 # endregion
 

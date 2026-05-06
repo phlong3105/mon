@@ -411,18 +411,14 @@ def resolve_save_dir(
         >>> dirname = "pred"
         >>> subdirname = ""
         >>> src_path = "/Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/data/dicm/test/image/01.jpg"
-        >>> save_dir = resolve_save_dir(output_dir, dirname, subdirname, src_path, False, False)
-        >>> print(save_dir)
-        >>> # /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/run/predict/zerodce/zerodce/dicm/pred
-        >>> save_dir = resolve_save_dir(output_dir, dirname, subdirname, src_path, True, False)
-        >>> print(save_dir)
-        >>> # /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/run/predict/zerodce/zerodce/dicm/test/image
-        >>> save_dir = resolve_save_dir(output_dir, dirname, subdirname, src_path, False, True)
-        >>> print(save_dir)
-        >>> # /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/data/dicm/test/pred
-        >>> save_dir = resolve_save_dir(output_dir, dirname, subdirname, src_path, True, True)
-        >>> print(save_dir)
-        >>> # /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/data/dicm/test/image_zerodce
+        >>> print(resolve_save_dir(output_dir, dirname, subdirname, src_path, False, False).as_posix())
+        /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/run/predict/zerodce/zerodce/dicm/pred
+        >>> print(resolve_save_dir(output_dir, dirname, subdirname, src_path, True, False).as_posix())
+        /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/run/predict/zerodce/zerodce/dicm/test/image
+        >>> print(resolve_save_dir(output_dir, dirname, subdirname, src_path, False, True).as_posix())
+       /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/data/dicm/test/pred
+        >>> print(resolve_save_dir(output_dir, dirname, subdirname, src_path, True, True).as_posix())
+        /Volumes/ssd_01/10_workspace/11_code/mon/projects/enhance/data/dicm/test/image_zerodce
 
     Args:
         output_dir (Path): Path to the output directory.

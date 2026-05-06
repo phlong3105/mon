@@ -10,7 +10,7 @@ from __future__ import annotations
 
 __all__ = [
     "load_bbox",
-    "load_bbox_yolo",
+    "write_bbox",
 ]
 
 import numpy as np
@@ -24,9 +24,9 @@ from mon.ops.image import read_imgsz
 # region CONSTANTS
 # ==============================================================================
 
-_DEFAULT_ANGLE = 0.0
-_DEFAULT_SCORE = 0.0
-_DEFAULT_TRACK_ID = -1.0
+_DEFAULT_ANGLE: float = 0.0
+_DEFAULT_SCORE: float = 0.0
+_DEFAULT_TRACK_ID: float = -1.0
 
 # endregion
 
@@ -42,7 +42,7 @@ _DEFAULT_TRACK_ID = -1.0
 # region INPUT
 # ==============================================================================
 
-def load_bbox_yolo(
+def _load_bbox_yolo(
     path: Path,
     remap: dict | Path | None = None,
     has_angle: bool = False,
@@ -179,44 +179,34 @@ def load_bbox(
         as_array (bool, optional): If True, return the bounding box array,
             otherwise return a BBoxes instance. Defaults to False.
     """
-    # 1. Normalize inputs
+    # Normalize inputs
     fmt = BBoxFormat(fmt)
 
-    # 2. Load bounding boxes array
+    # Load bounding boxes array
     if fmt == BBoxFormat.CXCYWHN:
-        bbox = load_bbox_yolo(path=path, remap=remap, *args, **kwargs)
+        bbox = _load_bbox_yolo(path=path, remap=remap, *args, **kwargs)
     else:
         raise ValueError(f"the loading method for '{fmt}' format has not been "
                          f"supported yet.")
 
-    # 3. Return bbox array if requested
+    # Return bbox array if requested
     if as_array:
         return bbox
-
-    # 4. Validate inputs
-    if imgsz:
-        imgsz = Size.from_any(imgsz)
-    elif image_file:
-        image_file = Path(image_file).normalize()
-        if image_file.is_image_file(exists=True):
-            imgsz = read_imgsz(image_file)
+    # Convert to BBoxes instance if requested
     else:
-        raise ValueError(f"expected either imgsz or image_file to be provided "
-                         f"when 'as_array=False', "
-                         f"got imgsz={imgsz} and image_file={image_file}.")
+        if imgsz:
+            imgsz = Size.from_any(imgsz)
+        elif image_file:
+            image_file = Path(image_file).normalize()
+            if image_file.is_image_file(exists=True):
+                imgsz = read_imgsz(image_file)
+        else:
+            raise ValueError(
+                f"expected either imgsz or image_file to be provided when "
+                f"'as_array=False', got imgsz={imgsz} and image_file={image_file}."
+            )
 
-    # 5. Convert to BBoxes instance if requested
-    if fmt == BBoxFormat.CXCYWHN:
-        bbox = BBoxes(bbox=bbox, imgsz=imgsz, path=path)
-    elif fmt == BBoxFormat.XYXY:
-        bbox = BBoxes.from_xyxy(bbox=bbox, imgsz=imgsz, path=path)
-    elif fmt == BBoxFormat.XYWH:
-        bbox = BBoxes.from_xywh(bbox=bbox, imgsz=imgsz, path=path)
-    else:
-        raise ValueError(f"unsupported bbox format {fmt}, "
-                         f"must be one of {BBoxFormat.formats()}.")
-
-    return bbox
+        return BBoxes.from_any(bbox=bbox, imgsz=imgsz, fmt=fmt, path=path)
 
 # endregion
 
@@ -225,7 +215,7 @@ def load_bbox(
 # region OUTPUT
 # ==============================================================================
 
-def write_bbox_yolo(
+def _write_bbox_yolo(
     bbox: BBoxes,
     path: Path,
     imgsz: Size | None = None,
@@ -294,9 +284,19 @@ def write_bbox(
     Args:
         bbox (BBoxes): The bounding boxes to be written.
         path (Path): The file path to write the bounding boxes to.
+        fmt (BBoxFormat): The format to write the bounding boxes in.
         imgsz (Size, optional): The image size (width, height) to use for
             normalization if needed. Required if ``fmt`` is a normalized format.
     """
+    # Normalize inputs
+    fmt = BBoxFormat(fmt)
+
+    # Write bounding boxes in the desired format
+    if fmt == BBoxFormat.CXCYWHN:
+        _write_bbox_yolo(bbox=bbox, path=path, imgsz=imgsz, *args, **kwargs)
+    else:
+        raise ValueError(f"the writing method for '{fmt}' format has not been "
+                         f"supported yet.")
 
 # endregion
 

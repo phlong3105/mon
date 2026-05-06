@@ -207,7 +207,7 @@ class SCI_Trainer(Trainer):
             train_outputs (TensorDict): The outputs from the training epoch.
             val_outputs (TensorDict): The outputs from the validation epoch.
         """
-        debug_image = {
+        debug_images = {
             "image": val_outputs["image"],
             "target": val_outputs["target"],
             "enhanced": val_outputs["enhanced"],
@@ -216,10 +216,11 @@ class SCI_Trainer(Trainer):
         }
         self._save_image(
             epoch=epoch,
-            outputs=debug_image,
-            dirname=K.PRED_DIR,
-            stem="debug",
+            outputs=debug_images,
+            dirname=K.DEBUG_DIR,
+            stem="",
             column_first=True,
+            show_info=True,
         )
 
 
@@ -386,7 +387,7 @@ class SCI_Finetuner(Trainer):
             train_outputs (TensorDict): The outputs from the training epoch.
             val_outputs (TensorDict): The outputs from the validation epoch.
         """
-        debug_image = {
+        debug_images = {
             "image": val_outputs["image"],
             "target": val_outputs["target"],
             "enhanced": val_outputs["enhanced"],
@@ -394,10 +395,11 @@ class SCI_Finetuner(Trainer):
         }
         self._save_image(
             epoch=epoch,
-            outputs=debug_image,
-            dirname=K.PRED_DIR,
-            stem="debug",
+            outputs=debug_images,
+            dirname=K.DEBUG_DIR,
+            stem="",
             column_first=True,
+            show_info=True,
         )
 
 
@@ -607,7 +609,7 @@ class SCI_PP_Trainer(Trainer):
             train_outputs (TensorDict): The outputs from the training epoch.
             val_outputs (TensorDict): The outputs from the validation epoch.
         """
-        debug_image = {
+        debug_images = {
             "image": val_outputs["image"],
             "target": val_outputs["target"],
             "enhanced": val_outputs["enhanced"],
@@ -616,10 +618,11 @@ class SCI_PP_Trainer(Trainer):
         }
         self._save_image(
             epoch=epoch,
-            outputs=debug_image,
-            dirname=K.PRED_DIR,
-            stem="debug",
+            outputs=debug_images,
+            dirname=K.DEBUG_DIR,
+            stem="",
             column_first=True,
+            show_info=True,
         )
 
 
