@@ -114,10 +114,8 @@ class Dataset(Dataset_, ABC):
             if isinstance(metapoints, MetadataDictList):
                 self.metapoints = metapoints
             else:
-                raise TypeError(
-                    f"expected metapoints to be a MetadataDictList, "
-                    f"got {type(metapoints).__name__}."
-                )
+                raise TypeError(f"expected metapoints to be a MetadataDictList, "
+                                f"got {type(metapoints).__name__}.")
         else:
             # Else, retrieve metapoints
             self.metapoints = MetadataDictList()
@@ -288,22 +286,16 @@ class Dataset(Dataset_, ABC):
         num_datapoints = len(self)
 
         if not isinstance(metapoints, MetadataDictList):
-            raise TypeError(
-                f"expected metapoints to be a MetadataDictList, "
-                f"got {type(metapoints).__name__}."
-            )
+            raise TypeError(f"expected metapoints to be a MetadataDictList, "
+                            f"got {type(metapoints).__name__}.")
         if keys != list(metapoints.keys()):
-            raise ValueError(
-                f"modalities keys {keys} do not match with "
-                f"metapoints keys {list(metapoints.keys())}."
-            )
+            raise ValueError(f"modalities keys {keys} do not match with "
+                             f"metapoints keys {list(metapoints.keys())}.")
 
         for k, v in metapoints.items():
             if len(v) > 0 and len(v) != num_datapoints:
-                raise ValueError(
-                    f"modality {k} has inconsistent length with the rest of the "
-                    f"dataset {len(v)} != {num_datapoints}."
-                )
+                raise ValueError(f"modality {k} has inconsistent length with the "
+                                 f"rest of the dataset {len(v)} != {num_datapoints}.")
 
     # --- Retrieval ---
     def get_metapoint(self, index: int) -> dict[str, Metadata]:
@@ -583,9 +575,8 @@ class InputTargetDataset(Dataset, ABC):
             FileNotFoundError: If the ``input_dir`` directory does not exist.
         """
         if value is None:
-            raise TypeError(
-                f"expected input_dir to be a valid Path, got: {type(value).__name__}."
-            )
+            raise TypeError(f"expected input_dir to be a valid Path, "
+                            f"got {type(value).__name__}.")
 
         value = Path(value).normalize()
         if not value.is_dir():

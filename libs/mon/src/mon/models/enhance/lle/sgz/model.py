@@ -121,9 +121,8 @@ class SGZ(ModelRegisterMixin, Model):
         elif conv_type == "tc":
             conv = TC
         else:
-            raise ValueError(
-                f"unsupported conv_type {conv_type}, must be one of ['dsc', 'tc']."
-            )
+            raise ValueError(f"unsupported conv_type {conv_type}, "
+                             f"must be one of ['dsc', 'tc'].")
 
         # Zero-DCE DWC + p-shared
         self.e_conv1 = conv(in_channels, hidden_dim)

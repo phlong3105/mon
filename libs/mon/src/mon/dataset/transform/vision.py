@@ -89,10 +89,8 @@ class NormalizeWithMask(BasicTransform):
                 or self.std is None
                 or (self.max_pixel_value is None and self.normalization == "standard")
             ):
-                raise ValueError(
-                    "mean, std, and max_pixel_value must be provided for "
-                    "standard normalization.",
-                )
+                raise ValueError("mean, std, and max_pixel_value must be "
+                                 "provided for standard normalization.")
             return self
 
     # --- Lifecycle & Initialization ---

@@ -840,9 +840,8 @@ class OptionPrompt(PromptBase[str]):
         """Render the default as (y) or (n) rather than True/False."""
         if isinstance(default, int):
             if not (0 <= default < len(self.choices)):
-                raise ValueError(
-                    f"index {default} is out of range [0, {len(self.choices)}]."
-                )
+                raise ValueError(f"index {default} is out of range "
+                                 f"[0, {len(self.choices)}].")
             return Text(f"({self.choices[default]})", "prompt.default")
         else:
             default = default.strip()

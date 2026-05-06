@@ -1434,9 +1434,8 @@ class ConfigContext(Config, PromptContextMixin):
         elif mode in [RunMode.PREDICT]:
             self.prepare_for_predict()
         else:
-            raise ValueError(
-                f"unsupported run mode {mode}, must be one of {RunMode.list()}."
-            )
+            raise ValueError(f"unsupported run mode {mode}, must be one of "
+                             f"{RunMode.list()}.")
 
         return self  # self.as_config()
 

@@ -143,7 +143,8 @@ class Factory(UserDict[str, Any | Callable[..., Any]]):
         """
         # Validate inputs
         if not (inspect.isclass(module) or inspect.isfunction(module)):
-            raise TypeError(f"expected a class or function, got {type(module).__name__}.")
+            raise TypeError(f"expected a class or function, "
+                            f"got {type(module).__name__}.")
 
         # Determine the registration key.
         # Priority: explicit name > class attributes > class name.
@@ -194,10 +195,8 @@ class Factory(UserDict[str, Any | Callable[..., Any]]):
 
         # Create the instance
         if key is None:
-            raise ValueError(
-                f"{name} is not a registered name in the {self.name} factory, "
-                f"must be one of {list(self.keys())}."
-            )
+            raise ValueError(f"{name} is not a registered name in the {self.name} "
+                             f"factory, must be one of {list(self.keys())}.")
         return self._create_instance(self[key], name, *args, **kwargs)
 
     def _create_instance(self, cls: type, name: str, *args, **kwargs) -> Any:
@@ -434,9 +433,8 @@ class ModelFactory(Factory):
             KeyError: If ``replace`` is False and the key is already registered.
         """
         if not (inspect.isclass(module) or inspect.isfunction(module)):
-            raise TypeError(
-                f"expected a class or function, got {type(module).__name__}."
-            )
+            raise TypeError(f"expected a class or function, "
+                            f"got {type(module).__name__}.")
 
         # Determine the registration key.
         # Priority: explicit name > class attributes > class name.
@@ -502,10 +500,8 @@ class ModelFactory(Factory):
 
         # Create the instance
         if key is None:
-            raise ValueError(
-                f"{name} is not a registered name in the {self.name} factory, "
-                f"must be one of {list(flatten.keys())}."
-            )
+            raise ValueError(f"{name} is not a registered name in the {self.name} "
+                             f"factory, must be one of {list(flatten.keys())}.")
         return self._create_instance(flatten[key]["module"], key, *args, **kwargs)
 
     # --- Discovery ---
@@ -753,10 +749,8 @@ class OptimizerFactory(Factory):
 
         # Create the instance
         if key is None:
-            raise ValueError(
-                f"{name} is not a registered name in the {self.name} factory, "
-                f"must be one of {list(self.keys())}."
-            )
+            raise ValueError(f"{name} is not a registered name in the {self.name} "
+                             f"factory, must be one of {list(self.keys())}.")
         return self[key](params=params, *args, **kwargs)
 
 
@@ -901,10 +895,8 @@ class MetricFactory(Factory):
 
         # Create the instance
         if key is None:
-            raise ValueError(
-                f"{name} is not a registered name in the {self.name} factory, "
-                f"must be one of {list(self.keys())}."
-            )
+            raise ValueError(f"{name} is not a registered name in the {self.name} "
+                             f"factory, must be one of {list(self.keys())}.")
         return self._create_instance(self[key]["module"], name, *args, **kwargs)
 
 # endregion

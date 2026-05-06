@@ -42,10 +42,8 @@ def compute_depth_metrics(
     """
     # Validate inputs
     if pred.shape != target.shape:
-        raise ValueError(
-            f"expected pred and target to have the same shape, "
-            f"got {pred.shape} != {target.shape}."
-        )
+        raise ValueError(f"expected pred and target to have the same shape, "
+                         f"got {pred.shape} != {target.shape}.")
 
     pred = pred.astype(np.float32)
     target = target.astype(np.float32)
@@ -63,9 +61,8 @@ def compute_depth_metrics(
 
         # Avoid division by zero in normalization
         if target_max == target_min:
-            raise ValueError(
-                f"target depth map has zero range (min == max), cannot normalize."
-            )
+            raise ValueError(f"target depth map has zero range (min == max), "
+                             f"cannot normalize.")
 
         # Min-max normalization of predicted depths
         valid_pred = pred[valid_mask]

@@ -154,9 +154,8 @@ class DatasetCollationMixin:
             if not isinstance(d, dict):
                 raise TypeError(f"expected a dict, got {type(d).__name__}.")
             if set(d.keys()) != set(keys):
-                raise ValueError(
-                    f"expected a dict with keys {set(keys)}, got {set(d.keys())}."
-                )
+                raise ValueError(f"expected a dict with keys {set(keys)}, "
+                                 f"got {set(d.keys())}.")
 
         collated = {k: [d[k] for d in batch] for k in keys}
 

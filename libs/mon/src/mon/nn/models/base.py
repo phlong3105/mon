@@ -122,17 +122,13 @@ class Model(nn.Module, ABC):
             if data_kwargs:
                 data.update(data_kwargs)
         else:
-            raise TypeError(
-                f"expected data to be a TensorDict, got {type(data).__name__}."
-            )
+            raise TypeError(f"expected data to be a TensorDict, got {type(data).__name__}.")
 
         # 2. Contract enforcement (Input)
         missing_inputs = self.in_keys - data.keys()
         if missing_inputs:
-            raise KeyError(
-                f"missing {missing_inputs} arguments for "
-                f"{self.__class__.__name__}'s call."
-            )
+            raise KeyError(f"missing {missing_inputs} arguments for "
+                           f"{self.__class__.__name__}'s call.")
 
         # 3. Execution
         # We pass the unpacked TensorDict and the remaining flags
@@ -155,10 +151,8 @@ class Model(nn.Module, ABC):
         # 5. Contract enforcement (Output)
         missing_outputs = self.out_keys - outputs.keys()
         if missing_outputs:
-            raise KeyError(
-                f"missing {missing_outputs} arguments for "
-                f"{self.__class__.__name__}'s return."
-            )
+            raise KeyError(f"missing {missing_outputs} arguments for "
+                           f"{self.__class__.__name__}'s return.")
 
         # 6. Filtering & return
         if not save_debug:
@@ -285,9 +279,7 @@ class ModelRegisterMixin(ABC):
         # Check for EXPLICIT definition in the subclass (not inherited)
         for attr in ["name", "tasks", "strategies", "model_dir"]:
             if not getattr(cls, attr):
-                raise AttributeError(
-                    f"{cls.__name__} must define '{attr}' attribute."
-                )
+                raise AttributeError(f"{cls.__name__} must define '{attr}' attribute.")
 
 # endregion
 

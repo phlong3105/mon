@@ -45,10 +45,8 @@ def load_config(path: Path | None = None, config: dict | None = None) -> Box:
     if path:
         path: Path = Path(path).normalize()
         if not path.has_ext(".yaml", ".yml", exists=True):
-            raise TypeError(
-                f"expected path to be a valid configuration file path, "
-                f"got {type(path).__name__}.",
-            )
+            raise TypeError(f"expected path to be a valid configuration file path, "
+                            f"got {type(path).__name__}.")
         file_config = Box.from_yaml(filename=path)
     else:
         file_config = {}

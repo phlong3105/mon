@@ -531,9 +531,8 @@ class PromptBase(Generic[PromptType]):
         try:
             return self.response_type(value)
         except (ValueError, TypeError):
-            raise ValueError(
-                f"cannot convert {value} to {self.response_type.__name__}."
-            )
+            raise ValueError(f"cannot convert {value} to "
+                             f"{self.response_type.__name__}.")
 
     # --- Visualization ---
     def _make_prompt(self) -> Layout:

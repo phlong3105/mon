@@ -121,9 +121,8 @@ class Size:
             return cls(height=size[0], width=size[1])
         elif fmt.lower() == "wh":
             return cls(height=size[1], width=size[0])
-        raise ValueError(
-            f"unsupported format {fmt.lower()}, must be one of ['hw', 'wh']."
-        )
+        raise ValueError(f"unsupported format {fmt.lower()}, "
+                         f"must be one of ['hw', 'wh'].")
 
     @classmethod
     def from_any(cls, value: Any, divisor: int | None = None) -> "Size":

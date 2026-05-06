@@ -111,10 +111,8 @@ class CosineAnnealingRestartLR(LRScheduler):
         """
         # Validate inputs
         if len(periods) != len(restart_weights):
-            raise ValueError(
-                f"periods and restart_weights must have the same length, "
-                f"got {len(periods)} != {len(restart_weights)}."
-            )
+            raise ValueError(f"periods and restart_weights must have the same length, "
+                             f"got {len(periods)} != {len(restart_weights)}.")
 
         # Assign attributes
         self.periods = periods
@@ -180,10 +178,8 @@ class CosineAnnealingRestartCyclicLR(LRScheduler):
         """
         # Validate inputs
         if len(periods) != len(restart_weights):
-            raise ValueError(
-                f"periods and restart_weights must have the same length, "
-                f"got {len(periods)} != {len(restart_weights)}."
-            )
+            raise ValueError(f"periods and restart_weights must have the same length, "
+                             f"got {len(periods)} != {len(restart_weights)}.")
 
         # Assign attributes
         self.periods = periods

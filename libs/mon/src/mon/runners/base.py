@@ -105,10 +105,8 @@ class Runner(ABC):
                 Defaults to None, which means using the default size.
         """
         if self.model is None:
-            raise RuntimeError(
-                "model has not been initialized, please call self._init_model() "
-                "before benchmarking."
-            )
+            raise RuntimeError("model has not been initialized, please call "
+                               "'self._init_model()' before benchmarking.")
 
         imgsz = Size.from_any(imgsz or self.config.imgsz)
         self.model.benchmark(imgsz=imgsz, verbose=self.verbose)

@@ -156,9 +156,8 @@ def tv_denoise(
     elif isinstance(image, ndarray):
         return _tv_denoise_numpy(image, weight, num_iter)
     else:
-        raise TypeError(
-            f"expected image to be a tensor or an array, got {type(image).__name__}."
-        )
+        raise TypeError(f"expected image to be a tensor or an array, "
+                        f"got {type(image).__name__}.")
 
 # endregion
 

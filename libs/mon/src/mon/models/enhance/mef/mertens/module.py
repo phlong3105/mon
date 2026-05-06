@@ -250,10 +250,8 @@ def mertens(
             n_levels=n_levels
         )
     else:
-        raise TypeError(
-            f"expected all images to be either tensor or array, "
-            f"got {type(images).__name__}."
-        )
+        raise TypeError(f"expected all images to be either tensor or array, "
+                        f"got {type(images).__name__}.")
 
 # endregion
 

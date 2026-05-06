@@ -100,10 +100,8 @@ def pair_downsample(image: Tensor) -> tuple[Tensor, Tensor]:
             -------------      -------------
     """
     if not isinstance(image, Tensor) or image.ndim != 4:
-        raise TypeError(
-            f"expected image to be a 4D tensor, "
-            f"got {image.ndim}D {type(image).__name__},"
-        )
+        raise TypeError(f"expected image to be a 4D tensor, "
+                        f"got {image.ndim}D {type(image).__name__}.")
 
     b, c, h, w  = image.shape
     device, dtype = image.device, image.dtype
@@ -231,10 +229,8 @@ class InterpolationUpsample(ImageUpsampler):
 
         # 3. Error: Unsupported backend
         else:
-            raise ValueError(
-                f"expected x_lr to be a tensor or ndarray, "
-                f"got {type(x_lr).__name__}."
-            )
+            raise ValueError(f"expected x_lr to be a tensor or ndarray, "
+                             f"got {type(x_lr).__name__}.")
 
         return x_hr
 

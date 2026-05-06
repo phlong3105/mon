@@ -76,9 +76,8 @@ class Weights:
                 and not self.path.is_dir()
             ):
                 # We only care about the validity of the path, not its existence
-                raise ValueError(
-                    f"weights file/directory not found at {self.path.as_posix()}"
-                )
+                raise ValueError(f"weights file/directory not found at "
+                                 f"{self.path.as_posix()}")
         if is_valid_str(self.url):
             self.url: Path = Path(self.url)
 

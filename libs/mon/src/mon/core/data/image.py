@@ -58,13 +58,11 @@ class Image(Data):
         """
         # Validate inputs
         if not isinstance(self.image, ndarray):
-            raise TypeError(
-                f"expected image to be a 3D array, got {type(self.image).__name__}."
-            )
+            raise TypeError(f"expected image to be a 3D array, "
+                            f"got {type(self.image).__name__}.")
         if self.image.ndim != 3:
-            raise ValueError(
-                f"expected image to be a 3D array, got {self.image.ndim}D."
-            )
+            raise ValueError(f"expected image to be a 3D array, "
+                             f"got {self.image.ndim}D.")
         if is_valid_str(self.path):
             self.path: Path = Path(self.path).normalize()
             if not self.path.is_image_file(exists=True):
@@ -163,10 +161,8 @@ class Image(Data):
         """
         # Validate inputs
         if image.ndim != 4 or image.shape[0] != 1 or image.shape[1] not in [1, 3, 4]:
-            raise ValueError(
-                f"expected image to be a 4D tensor of shape (1, C, H, W), "
-                f"got {image.shape}."
-            )
+            raise ValueError(f"expected image to be a 4D tensor of shape (1, C, H, W), "
+                             f"got {image.shape}.")
 
         image = image[0].detach().cpu()
         # [C, H, W] -> [H, W, C]

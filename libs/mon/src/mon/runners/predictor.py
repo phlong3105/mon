@@ -323,9 +323,8 @@ class Predictor(Runner, ABC):
                 if isinstance(image, Tensor):
                     image = to_image_array(image)
                 if not isinstance(image, ndarray):
-                    raise TypeError(
-                        f"expected image to be an array, got {type(image).__name__}."
-                    )
+                    raise TypeError(f"expected image to be an array, "
+                                    f"got {type(image).__name__}.")
 
                 # Use the key as the stem only if requested (for debug)
                 stem = k if use_stem else ""

@@ -211,10 +211,8 @@ def to_image_array(image: Tensor) -> ndarray:
         or image.shape[0] != 1
         or image.shape[1] not in [1, 3, 4]
     ):
-        raise TypeError(
-            f"expected image to be a 4D tensor, "
-            f"got {image.ndim}D {type(image).__name__}."
-        )
+        raise TypeError(f"expected image to be a 4D tensor, "
+                        f"got {image.ndim}D {type(image).__name__}.")
 
     # If 4D, select the first image in the batch
     # We avoid squeeze() to prevent accidentally removing C=1
@@ -243,10 +241,8 @@ def to_image_tensor(image: ndarray, normalize: bool = False) -> Tensor:
         image = torch.from_numpy(image).permute(2, 0, 1).contiguous().float().div(255.0).unsqueeze(0).to(device)
     """
     if not isinstance(image, ndarray) or image.ndim != 3:
-        raise TypeError(
-            f"expected image to be a 4D tensor, "
-            f"got {image.ndim}D {type(image).__name__}."
-        )
+        raise TypeError(f"expected image to be a 4D tensor, "
+                        f"got {image.ndim}D {type(image).__name__}.")
 
     # Convert to tensor and permute: [H, W, C] -> [C, H, W]
     tensor = torch.from_numpy(image).permute(2, 0, 1).float()

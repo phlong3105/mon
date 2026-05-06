@@ -145,10 +145,8 @@ class SAMBoxSegmentor(Segmentor):
             list[ndarray]: A list of binary masks for each bounding box.
         """
         if bbox.ndim != 2 or bbox.shape[-1] < 4:
-            raise ValueError(
-                f"expected bbox to be a 2D array of shape (N, 4), "
-                f"got: {bbox.shape}."
-            )
+            raise ValueError(f"expected bbox to be a 2D array of shape (N, 4), "
+                             f"got {bbox.shape}.")
 
         # Convert bbox to XYXY format if necessary
         imgsz = Size.from_any(image)

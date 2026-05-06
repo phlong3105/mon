@@ -437,9 +437,8 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
         """
         # Validate inputs
         if not self.exists():
-            raise FileNotFoundError(
-                f"expected a valid copying destination, got {self.as_posix()}"
-            )
+            raise FileNotFoundError(f"expected a valid copying destination, "
+                                    f"got {self.as_posix()}")
 
         # Normalize inputs
         dst = Path(dst)

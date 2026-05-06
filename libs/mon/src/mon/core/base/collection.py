@@ -130,14 +130,10 @@ class IndexList(UserList, Generic[T]):
             try:
                 return self.item_type(**item)
             except TypeError as e:
-                raise TypeError(
-                    f"cannot cast dict to {self.item_type.__name__}: {e}."
-                )
+                raise TypeError(f"cannot cast dict to {self.item_type.__name__}: {e}.")
 
-        raise TypeError(
-            f"expected item of type {self.item_type.__name__} or a compatible "
-            f"dict, got {type(item).__name__}."
-        )
+        raise TypeError(f"expected item of type {self.item_type.__name__} or "
+                        f"a compatible dict, got {type(item).__name__}.")
 
     def _rebuild_indices(self):
         """Sync the O(1) lookup map with the list data."""
@@ -448,14 +444,10 @@ class DictList(UserDict, Generic[K, V]):
             try:
                 return self.item_type(**item)
             except TypeError as e:
-                raise TypeError(
-                    f"cannot to cast dict to {self.item_type.__name__}: {e}."
-                )
+                raise TypeError(f"cannot to cast dict to {self.item_type.__name__}: {e}.")
 
-        raise TypeError(
-            f"expected item of type {self.item_type.__name__}, a compatible "
-            f"dict, or None, got {type(item).__name__}."
-        )
+        raise TypeError(f"expected item of type {self.item_type.__name__}, a "
+                        f"compatible dict, or None, got {type(item).__name__}.")
 
     # --- Mathematical Operators ---
     def __add__(self, other) -> DictList[K, V]:

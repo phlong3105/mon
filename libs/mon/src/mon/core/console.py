@@ -256,9 +256,8 @@ def rprint_list_dicts(values: list[dict]):
 
     for d in values:
         if set(d.keys()) != header_set:
-            raise ValueError(
-                f"expected dict to have keys {header_set}, got: {set(d.keys())}."
-            )
+            raise ValueError(f"expected dict to have keys {header_set}, "
+                             f"got: {set(d.keys())}.")
         # Let rich handle rendering of values for better formatting.
         table.add_row(*(d[k] for k in headers))
 

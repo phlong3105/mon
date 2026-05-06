@@ -377,10 +377,8 @@ class ImageOnlyDataset(StandardDataset, AlbumentationsDataset):
             # If is a directory, list all files recursively
             paths = list(src.rglob("*"))
         else:
-            raise ValueError(
-                f"expected a directory, a glob pattern, or an image file for "
-                f"the primary modality {pk}, got {src.as_posix()}."
-            )
+            raise ValueError(f"expected a directory, a glob pattern, or an image file "
+                             f"for the primary modality {pk}, got {src.as_posix()}.")
 
         # List primary modality metadata files
         name = pm.name

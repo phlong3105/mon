@@ -59,9 +59,8 @@ try:
     # Now we can safely import from the original repository
     from depth_anything_v2 import dpt
 except ImportError:
-    raise ImportError(
-        f"failed to import 'depth_anything_v2' from the 'extern/dav2' directory."
-    )
+    raise ImportError(f"failed to import 'depth_anything_v2' from the "
+                      f"'extern/dav2' directory.")
 
 
 # ==============================================================================
@@ -195,9 +194,8 @@ class DAV2(ModelRegisterMixin, Model):
         elif isinstance(x, ndarray):
             depth = self.model.infer_image(x, *args, **kwargs)
         else:
-            raise TypeError(
-                f"expected input to be a tensor or array, got: {type(x).__name__}."
-            )
+            raise TypeError(f"expected input to be a tensor or array, "
+                            f"got {type(x).__name__}.")
         depth = normalize_minmax(depth) * 255.0
         depth = depth.astype(np.uint8)
 

@@ -73,14 +73,10 @@ class VideoWriter(ABC):
         # Validate inputs
         path = Path(path).normalize()
         if not path.video_file():
-            raise ValueError(
-                f"expected path to be a video file, got {path.as_posix()}."
-            )
+            raise ValueError(f"expected path to be a video file, got {path.as_posix()}")
 
         if frame_rate <= 0:
-            raise ValueError(
-                f"expected frame_rate to be positive, got {frame_rate}."
-            )
+            raise ValueError(f"expected frame_rate to be positive, got {frame_rate}.")
 
         # Assign attributes
         self.verbose = verbose
@@ -129,10 +125,8 @@ class VideoWriter(ABC):
             TypeError: If ``frame`` is not an array or tensor.
         """
         if not isinstance(frame, (ndarray, Tensor)):
-            raise TypeError(
-                f"expected frame to be an array or tensor, "
-                f"got {type(frame).__name__}."
-            )
+            raise TypeError(f"expected frame to be an array or tensor, "
+                            f"got {type(frame).__name__}.")
         self.write(frame)
 
     def __enter__(self):
@@ -182,9 +176,7 @@ class VideoWriterCV(VideoWriter):
         """
         # Validate inputs
         if not isinstance(fourcc, str):
-            raise TypeError(
-                f"expected fourcc to be a str, got {type(fourcc).__name__}."
-            )
+            raise TypeError(f"expected fourcc to be a str, got {type(fourcc).__name__}.")
 
         # Assign attributes
         self.fourcc = fourcc

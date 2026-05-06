@@ -117,9 +117,8 @@ class Compose(Compose_):
 
         # Validate inputs
         if not isinstance(transforms_, list):
-            raise TypeError(
-                f"expected a list of transformations, got {type(transforms_).__name__}."
-            )
+            raise TypeError(f"expected a list of transformations, "
+                            f"got {type(transforms_).__name__}.")
 
         # Build the objects
         for i, t in enumerate(transforms_):

@@ -45,13 +45,10 @@ class Prob(Data):
         """
         # Validate inputs
         if not isinstance(self.prob, ndarray):
-            raise TypeError(
-                f"expected prob to be an array, got {type(self.prob).__name__}."
-            )
+            raise TypeError(f"expected prob to be an array, "
+                            f"got {type(self.prob).__name__}.")
         if self.prob.ndim != 1:
-            raise ValueError(
-                f"expected prob to be a 1D array, got {self.prob.ndim}D."
-            )
+            raise ValueError(f"expected prob to be a 1D array, got {self.prob.ndim}D.")
 
     # --- Representation ---
     def __len__(self) -> int:
@@ -132,13 +129,11 @@ class Prob(Data):
         """
         # Validate inputs
         if num_classes <= 0:
-            raise ValueError(
-                f"expected num_classes to be a positive integer, got {num_classes}."
-            )
+            raise ValueError(f"expected num_classes to be a positive integer, "
+                             f"got {num_classes}.")
         if not (0 <= class_id < num_classes):
-            raise ValueError(
-                f"expected class_id in range [0, {num_classes}), got {class_id}."
-            )
+            raise ValueError(f"expected class_id in range [0, {num_classes}), "
+                             f"got {class_id}.")
 
         prob = np.zeros(num_classes, dtype=np.float32)
         prob[class_id] = 1.0
