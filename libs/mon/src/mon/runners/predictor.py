@@ -304,7 +304,7 @@ class Predictor(Runner, ABC):
         batch_images_dict = {k: outputs[k] for k in keys if k in outputs}
 
         for i, meta in enumerate(batch_metas):
-            path = Path(meta["path"])
+            path = meta["path"]
             y_hr = batch_y_hr[i:i + 1]
             size = Size.from_any(meta["imgsz"])
 
@@ -386,6 +386,7 @@ class Predictor(Runner, ABC):
         outputs: TensorDict,
         dirname: str = K.ANN_DIR,
         subdirname: str = "",
+        use_stem: bool = False,
     ):
         """Save a batch of bounding box outputs.
 
@@ -400,6 +401,9 @@ class Predictor(Runner, ABC):
                 Defaults to K.ANN_DIR.
             subdirname (str, optional): Subdirectory name to append to the
                 output path (e.g., 'debug'/'mask'). Defaults to "".
+            use_stem (bool, optional): Whether to use the source file name stem
+                for the output file name. If False, the output file name will
+                be the same as the source file name. Defaults to False.
         """
         # Pre-extract the batches for the requested keys to avoid dict lookups
         # in the loop
@@ -407,14 +411,17 @@ class Predictor(Runner, ABC):
 
         # Process each item in the batch
         for i, meta in enumerate(batch_metas):
-            path = Path(meta["path"])
+            path = meta["path"]
             bboxes = bboxes[i]
+            stem = "bbox" if use_stem else ""
+
             self._save_bboxes(
                 bboxes=bboxes,
                 fmt=fmt,
                 src_path=path,
                 dirname=dirname,
                 subdirname=subdirname,
+                stem=stem,
             )
 
     def _save_bboxes(
@@ -451,9 +458,9 @@ class Predictor(Runner, ABC):
             src_path=src_path,
         )
         if stem:
-            save_path = save_dir / f"{src_path.stem}_{stem}{K.LABEL_EXT}"
+            save_path = save_dir / f"{src_path.stem}_{stem}{K.ANN_EXT}"
         else:
-            save_path = save_dir / f"{src_path.stem}{K.LABEL_EXT}"
+            save_path = save_dir / f"{src_path.stem}{K.ANN_EXT}"
 
         # Save the bbox
         write_bbox(bbox=bboxes, path=save_path, fmt=fmt)

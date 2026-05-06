@@ -100,7 +100,7 @@ def predict(config: Config):
                 # 7.2.1. Preprocess
                 timers.preprocess.tick()
                 meta = datapoint["meta"]
-                path = Path(meta["path"])
+                path = meta["path"]
                 image = datapoint["image"]
                 timers.preprocess.tock()
 

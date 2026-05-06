@@ -37,7 +37,7 @@ from .base.enum import MultiStrEnum
 class MemoryUnit(MultiStrEnum):
     """Enum for memory units."""
 
-    B = "B"
+    B  = "B"
     KB = "KB"
     MB = "MB"
     GB = "GB", "default"
@@ -63,45 +63,45 @@ class ConfigExtension(MultiStrEnum):
     """Enum for configuration file extensions."""
 
     YAML = ".yaml", ".yml", "default"
-    CFG =  ".cfg", ".config"
+    CFG  =  ".cfg", ".config"
     JSON = ".json"
-    TXT = ".txt"
+    TXT  = ".txt"
 
 
 class ImageExtension(MultiStrEnum):
     """Enum for common image file extensions."""
 
-    ARW = ".arw"
-    BMP = ".bmp"
-    DNG = ".dng"
-    JPG = ".jpg", ".jpeg", "default"
-    PNG = ".png"
-    PPM = ".ppm"
-    RAF = ".raf"
-    TIF = ".tif"
+    ARW  = ".arw"
+    BMP  = ".bmp"
+    DNG  = ".dng"
+    JPG  = ".jpg", ".jpeg", "default"
+    PNG  = ".png"
+    PPM  = ".ppm"
+    RAF  = ".raf"
+    TIF  = ".tif"
     TIFF = ".tiff"
 
 
 class VideoExtension(MultiStrEnum):
     """Enum for common video file extensions."""
 
-    AVI = ".avi"
-    M4V = ".m4v"
-    MKV = ".mkv"
-    MOV = ".mov"
-    MP4 = ".mp4", "default"
+    AVI  = ".avi"
+    M4V  = ".m4v"
+    MKV  = ".mkv"
+    MOV  = ".mov"
+    MP4  = ".mp4", "default"
     MPEG = ".mpeg"
-    MPG = ".mpg"
-    WMV = ".wmv"
+    MPG  = ".mpg"
+    WMV  = ".wmv"
 
 
 class WeightExtension(MultiStrEnum):
     """Enum for common model weight file extensions."""
 
-    CKPT = ".ckpt"
-    ONNX = ".onnx"
-    PT = ".pt", ".pth", "default"
-    TAR = ".tar"
+    CKPT    = ".ckpt"
+    ONNX    = ".onnx"
+    PT      = ".pt", ".pth", "default"
+    TAR     = ".tar"
     WEIGHTS = ".weights"
 
 
@@ -112,12 +112,12 @@ class BBoxFormat(MultiStrEnum):
 
     # Formats
     CXCYWHN = "cxcywhn", "yolo", "default"            # YOLO format: [cx, cy, w, h] normalized
-    XYWH = "xywh", "coco"                             # COCO format: [x, y, w, h]
-    XYXY = "xyxy", "voc"                              # VOC format: [x1, y1, x2, y2]
+    XYWH    = "xywh", "coco"                          # COCO format: [x, y, w, h]
+    XYXY    = "xyxy", "voc"                           # VOC format: [x1, y1, x2, y2]
     # Conversion Codes
-    XYWH2XYXY = "xywh_to_xyxy", "coco_to_voc"         # Convert from COCO to VOC
+    XYWH2XYXY    = "xywh_to_xyxy", "coco_to_voc"      # Convert from COCO to VOC
     XYWH2CXCYWHN = "xywh_to_cxcywhn", "coco_to_yolo"  # Convert from COCO to YOLO
-    XYXY2XYWH = "xyxy_to_xywh", "voc_to_coco"         # Convert from VOC to COCO
+    XYXY2XYWH    = "xyxy_to_xywh", "voc_to_coco"      # Convert from VOC to COCO
     XYXY2CXCYWHN = "xyxy_to_cxcywhn", "voc_to_yolo"   # Convert from VOC to YOLO
     CXCYWHN2XYXY = "cxcywhn_to_xyxy", "yolo_to_voc"   # Convert from YOLO to VOC
     CXCYWHN2XYWH = "cxcywhn_to_xywh", "yolo_to_coco"  # Convert from YOLO to COCO
@@ -135,24 +135,24 @@ class BBoxFormat(MultiStrEnum):
 class DeviceType(MultiStrEnum):
     """Enum for device types."""
 
-    CPU = "cpu", "default"
+    CPU  = "cpu", "default"
     CUDA = "cuda"
-    MPS = "mps"
+    MPS  = "mps"
     AUTO = "auto"
 
 
 class AlbumTargetType(MultiStrEnum):
     """Enum for albumentations target types."""
 
-    IMAGE = "image"          # The primary input image(s) (e.g., (H, W, C)). Receives geometric, color, and intensity transforms. Uses standard interpolation for geometric transforms.
-    BBOXES = "bboxes"        # Bounding boxes. Processed according to bbox_params. Requires bbox_params to be set.
+    IMAGE     = "image"      # The primary input image(s) (e.g., (H, W, C)). Receives geometric, color, and intensity transforms. Uses standard interpolation for geometric transforms.
+    BBOXES    = "bboxes"     # Bounding boxes. Processed according to bbox_params. Requires bbox_params to be set.
     KEYPOINTS = "keypoints"  # Keypoints. Processed according to keypoint_params. Requires keypoint_params to be set.
-    MASK = "mask"            # Segmentation mask(s) (e.g., (H, W)). Receives geometric transforms using nearest-neighbor interpolation. Does not receive color/intensity transforms.
-    MASKS = "masks"          # Multiple segmentation masks passed together (e.g., (N, H, W)). Processed like mask.
-    MASK3D = "mask3d"        # A 3D mask (e.g., (D, H, W)). Receives 3D geometric transforms using nearest-neighbor interpolation. Does not receive color/intensity transforms.
-    MASKS3D = "masks3d"      # Multiple 3D masks (e.g., (N, D, H, W)). Processed like mask3d across the first dimension.
-    VOLUME = "volume"        # A 3D volume (e.g., (D, H, W, C)). Receives 3D geometric transforms, and applicable 2D transforms slice-wise. Color/intensity transforms applied if treated as 'image'.
-    VOLUMES = "volumes"      # Multiple 3D volumes (e.g., (N, D, H, W, C)). Processed like volume across the first dimension.
+    MASK      = "mask"       # Segmentation mask(s) (e.g., (H, W)). Receives geometric transforms using nearest-neighbor interpolation. Does not receive color/intensity transforms.
+    MASKS     = "masks"      # Multiple segmentation masks passed together (e.g., (N, H, W)). Processed like mask.
+    MASK3D    = "mask3d"     # A 3D mask (e.g., (D, H, W)). Receives 3D geometric transforms using nearest-neighbor interpolation. Does not receive color/intensity transforms.
+    MASKS3D   = "masks3d"    # Multiple 3D masks (e.g., (N, D, H, W)). Processed like mask3d across the first dimension.
+    VOLUME    = "volume"     # A 3D volume (e.g., (D, H, W, C)). Receives 3D geometric transforms, and applicable 2D transforms slice-wise. Color/intensity transforms applied if treated as 'image'.
+    VOLUMES   = "volumes"    # Multiple 3D volumes (e.g., (N, D, H, W, C)). Processed like volume across the first dimension.
 
 
 # --- Operations ---
@@ -160,8 +160,8 @@ class AlbumTargetType(MultiStrEnum):
 class Backend(MultiStrEnum):
     """Enum for common backends."""
 
-    CV2 = "cv2", "opencv", "default"
-    TORCH = "torch"
+    CV2         = "cv2", "opencv", "default"
+    TORCH       = "torch"
     TORCHVISION = "torchvision"
 
 
@@ -170,7 +170,7 @@ class Precision(MultiStrEnum):
 
     FP32 = "fp32", "default"  # 32-bit floating point
     FP16 = "fp16"             # 16-bit floating point
-    FP8 = "fp8"               # 8-bit floating point
+    FP8  = "fp8"              # 8-bit floating point
     INT8 = "int8"             # 8-bit integer
     INT4 = "int4"             # 4-bit integer
 
@@ -178,17 +178,17 @@ class Precision(MultiStrEnum):
 class RunMode(MultiStrEnum):
     """Enum for common ML run modes."""
 
-    TRAIN = "train", "default"
+    TRAIN   = "train", "default"
     PREDICT = "predict"
-    METRIC = "metric"
+    METRIC  = "metric"
 
 
 class Split(MultiStrEnum):
     """Enum for common dataset splits."""
 
-    TRAIN = "train", "default"
-    VAL = "val"
-    TEST = "test"
+    TRAIN   = "train", "default"
+    VAL     = "val"
+    TEST    = "test"
     PREDICT = "predict"
 
 
@@ -197,7 +197,7 @@ class Strategy(MultiStrEnum):
 
     NATIVE = "native"
     RESIZE = "resize", "resizing", "default"
-    PATCH = "patch", "patching"
+    PATCH  = "patch", "patching"
 
 
 class Task(MultiStrEnum):
@@ -212,14 +212,14 @@ class Task(MultiStrEnum):
     # --- Computer Vision ---
     # -- Low-Level --
     # Restoration
-    DEBLUR = "deblur", "deblurring"
-    DENOISE = "denoise", "denoising"
-    DEHAZE = "dehaze", "dehazing"
-    DERAIN = "derain", "deraining"
-    DESNOW = "desnow", "desnowing"
-    DEMOIRE = "demoire", "demoireing"
-    DEMOSAIC = "demosaic", "demosaicing"
-    INPAINT = "inpaint", "inpainting"
+    DEBLUR    = "deblur", "deblurring"
+    DENOISE   = "denoise", "denoising"
+    DEHAZE    = "dehaze", "dehazing"
+    DERAIN    = "derain", "deraining"
+    DESNOW    = "desnow", "desnowing"
+    DEMOIRE   = "demoire", "demoireing"
+    DEMOSAIC  = "demosaic", "demosaicing"
+    INPAINT   = "inpaint", "inpainting"
     SUPER_RES = "super_res", "super_resolution"
 
     # Enhancement
@@ -240,16 +240,16 @@ class Task(MultiStrEnum):
     MONODEPTH = "monodepth", "monocular_depth_estimation"
 
     # Motion
-    BGSUBTRACT = "bgsubtract", "background_subtraction"
+    BGSUBTRACT   = "bgsubtract", "background_subtraction"
     OPTICAL_FLOW = "optical_flow"
-    TRACK = "track", "object_tracking"
+    TRACK        = "track", "object_tracking"
 
     # Keypoint
     POSE = "pose", "pose_estimation"
 
     # -- High-Level --
     CLASSIFY = "classify", "classification"
-    DETECT = "detect", "object_detection"
+    DETECT   = "detect", "object_detection"
 
 # endregion
 

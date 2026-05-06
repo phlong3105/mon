@@ -17,8 +17,6 @@ File Structure:
 
 from __future__ import annotations
 
-from typing import Any
-
 # noinspection PyUnusedImports
 from albumentations.core.composition import (
     BaseCompose,
@@ -42,6 +40,7 @@ from albumentations.core.transforms_interface import (
     NoOp,
     Transform3D,
 )
+from typing import Any
 
 from mon.core import is_list_of
 from .base import *

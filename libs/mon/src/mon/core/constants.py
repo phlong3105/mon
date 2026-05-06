@@ -15,9 +15,8 @@ __all__ = [
 
 from types import SimpleNamespace
 
-from .dtype import ImageExtension, WeightExtension
+from .dtype import ConfigExtension, ImageExtension, WeightExtension
 from .path import Path
-
 
 # ==============================================================================
 # region PATHS
@@ -132,35 +131,34 @@ class K(SimpleNamespace):
     """Class for constants."""
 
     # --- Paths ---
-    ROOT = root
-    MONO_ROOT = mono_root
+    ROOT        = root
+    MONO_ROOT   = mono_root
     ASSETS_ROOT = assets_root
-    ZOO_ROOT = zoo_root
+    ZOO_ROOT    = zoo_root
 
     # --- Directories ---
-    ANN_DIR = "ann"
-    DEBUG_DIR = "debug"
-    DEPTH_DIR = "depth"
-    IMAGE_DIR = "image"
-    LABEL_DIR = "label"
-    VIS_DIR = "vis"
+    ANN_DIR     = "ann"
+    DEBUG_DIR   = "debug"
+    DEPTH_DIR   = "depth"
+    IMAGE_DIR   = "image"
+    VIS_DIR     = "vis"
 
     # --- Extensions ---
-    CKPT_EXT = WeightExtension.CKPT
-    IMAGE_EXT = ImageExtension.JPG
-    LABEL_EXT = ".txt"
+    ANN_EXT     = ConfigExtension.TXT
+    CKPT_EXT    = WeightExtension.CKPT
+    IMAGE_EXT   = ImageExtension.JPG
     WEIGHTS_EXT = WeightExtension.PT
 
     # --- Values ---
+    DUMMY_IMAGE = STI.LENNA
     EPS = 1e-8
     INF = 1e8
     NAN = float("nan")
-    PI = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679
-    DUMMY_IMAGE = STI.LENNA
+    PI  = 3.1415926535897932384626433832795028841971693993751058209749445923078164062862089986280348253421170679
 
     # --- Strings ---
     INCLUDE_KEY = "__include__"
-    ORIGINAL = "orig"
+    ORIGINAL    = "orig"
 
     # --- Logging ---
     VERBOSE = True

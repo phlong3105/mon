@@ -139,7 +139,7 @@ class DAV2_Predictor(Predictor):
 
         meta = datapoint["meta"]
         meta = meta[0] if isinstance(meta, (list, tuple)) else meta
-        path = Path(meta["path"])
+        path = meta["path"]
         size = Size.from_any(meta["imgsz"])
 
         depth = outputs["depth"]
@@ -171,7 +171,7 @@ class DAV2_Predictor(Predictor):
 
         meta = datapoint["meta"]
         meta = meta[0] if isinstance(meta, (list, tuple)) else meta
-        path = Path(meta["path"])
+        path = meta["path"]
         size = Size.from_any(meta["imgsz"])
 
         depth_c = vis_heatmap(outputs["depth"], colormap="Spectral_r")
