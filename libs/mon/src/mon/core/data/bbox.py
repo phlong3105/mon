@@ -20,7 +20,7 @@ import cv2
 import numpy as np
 from numpy import ndarray
 
-from mon import BBoxFormat
+from mon.core.dtype import BBoxFormat
 from mon.core.path import Path
 from mon.core.typing import Int2, Int3
 from mon.core.utils import is_valid_str
@@ -72,9 +72,9 @@ class BBox(Data):
         if len(self.bbox) < 8:
             raise ValueError(f"expected bbox to be a 1D array of shape (8+), "
                              f"got {len(self.bbox)}.")
-        if any(self.bbox[4:] < 0):
+        if any(self.bbox[0:4] < 0):
             raise ValueError(f"expected bbox to be non-negative, "
-                             f"got {list(self.bbox[4:])}.")
+                             f"got {list(self.bbox[:4])}.")
         if not isinstance(self.imgsz, Size):
             self.imgsz = Size.from_any(self.imgsz)
         if is_valid_str(self.path):
@@ -151,6 +151,7 @@ class BBox(Data):
 
         Args:
             bbox (ndarray): Bounding box array of shape (4+,) in XYXY format.
+                The data format is: [cx, cy, w, h, angle, class_id, score, track_id].
             imgsz (Size): Size of the corresponding image as (H, W).
             index (int, optional): Index of the bounding box in the image.
                 Defaults to -1.
@@ -182,6 +183,7 @@ class BBox(Data):
 
         Args:
             bbox (ndarray): Bounding box array of shape (4+,) in XYWH format.
+                The data format is: [cx, cy, w, h, angle, class_id, score, track_id].
             imgsz (Size): Size of the corresponding image as (H, W).
             index (int, optional): Index of the bounding box in the image.
                 Defaults to -1.
@@ -419,7 +421,7 @@ class BBoxes(Data):
         if self.bbox.ndim != 2 or self.bbox.shape[1] < 8:
             raise ValueError(f"expected bbox to be a 2D array of shape (N, 8+), "
                              f"got {self.bbox.shape}.")
-        if (self.bbox[:, 4:] < 0).any():
+        if (self.bbox[:, 0:4] < 0).any():
             raise ValueError(f"expected bbox to be non-negative.")
         if not isinstance(self.imgsz, Size):
             self.imgsz = Size.from_any(self.imgsz)
@@ -531,6 +533,7 @@ class BBoxes(Data):
 
         Args:
             bbox (ndarray): Bounding box array of shape (N, 4+) in XYXY format.
+                The data format is: [cx, cy, w, h, angle, class_id, score, track_id].
             imgsz (Size): Size of the corresponding image as (H, W).
             path (Path | None, optional): Path to the label file. Defaults to None.
             base_dir (Path | None, optional): Base directory for relative paths.
@@ -538,10 +541,10 @@ class BBoxes(Data):
         """
         imgsz = Size.from_any(imgsz)
         eps = 1e-7  # Avoid division by zero
-        cx = ((bbox[:, 0] + bbox[:, 2]) / 2.0) / (imgsz[1] + eps)
-        cy = ((bbox[:, 1] + bbox[:, 3]) / 2.0) / (imgsz[0] + eps)
-        w = (bbox[:, 2] - bbox[:, 0]) / (imgsz[1] + eps)
-        h = (bbox[:, 3] - bbox[:, 1]) / (imgsz[0] + eps)
+        cx = ((bbox[:, 0] + bbox[:, 2]) / 2.0) / (imgsz.w + eps)
+        cy = ((bbox[:, 1] + bbox[:, 3]) / 2.0) / (imgsz.h + eps)
+        w = (bbox[:, 2] - bbox[:, 0]) / (imgsz.w + eps)
+        h = (bbox[:, 3] - bbox[:, 1]) / (imgsz.h + eps)
         return cls(
             bbox=np.array([cx, cy, w, h, *bbox[:, 4:].T], dtype=np.float32).T,
             imgsz=imgsz, path=path, base_dir=base_dir
@@ -559,6 +562,7 @@ class BBoxes(Data):
 
         Args:
             bbox (ndarray): Bounding box array of shape (N, 4+) in XYWH format.
+                The data format is: [cx, cy, w, h, angle, class_id, score, track_id].
             imgsz (Size): Size of the corresponding image as (H, W).
             path (Path | None, optional): Path to the label file. Defaults to None.
             base_dir (Path | None, optional): Base directory for relative paths.
@@ -566,10 +570,10 @@ class BBoxes(Data):
         """
         imgsz = Size.from_any(imgsz)
         eps = 1e-7  # Avoid division by zero
-        cx = (bbox[:, 0] + bbox[:, 2] / 2.0) / (imgsz[1] + eps)
-        cy = (bbox[:, 1] + bbox[:, 3] / 2.0) / (imgsz[0] + eps)
-        w = bbox[:, 2] / (imgsz[1] + eps)
-        h = bbox[:, 3] / (imgsz[0] + eps)
+        cx = (bbox[:, 0] + bbox[:, 2] / 2.0) / (imgsz.w + eps)
+        cy = (bbox[:, 1] + bbox[:, 3] / 2.0) / (imgsz.h + eps)
+        w = bbox[:, 2] / (imgsz.w + eps)
+        h = bbox[:, 3] / (imgsz.h + eps)
         return cls(
             bbox=np.array([cx, cy, w, h, *bbox[:, 4:].T], dtype=np.float32).T,
             imgsz=imgsz, path=path, base_dir=base_dir

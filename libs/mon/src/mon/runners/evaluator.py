@@ -10,13 +10,15 @@ from __future__ import annotations
 
 __all__ = [
     "DQAEvaluator",
+    "Evaluator",
     "IQAEvaluator",
     "InstanceIQAEvaluator",
 ]
 
 import argparse
 import logging
-from typing import override
+from abc import ABC, abstractmethod
+from typing import Any, override
 
 import cv2
 import matplotlib
@@ -26,6 +28,8 @@ import pyiqa.default_model_configs
 import pyiqa.models.inference_model
 import torch
 from torch import Tensor
+from pycocotools.coco import COCO
+from pycocotools.cocoeval import COCOeval
 
 from mon.core import (
     console,
@@ -34,13 +38,91 @@ from mon.core import (
     METRICS,
     Path,
     Size,
+    sys_ctx,
 )
 from mon.dataset import DataLoader, IQADataset, transform as T
 from mon.metrics import compute_depth_metrics
-from .base import Evaluator
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
+
+
+# ==============================================================================
+# region BASE CLASSES
+# ==============================================================================
+
+class Evaluator(ABC):
+    """Base class for all evaluators."""
+
+    # --- Lifecycle & Initialization ---
+    def __init__(
+        self,
+        metrics: list[str],
+        device: torch.device | str | int = torch.device("cpu"),
+        verbose: bool = True,
+    ):
+        """Initialize a new instance.
+
+        Args:
+            metrics (list[str]): The list of metrics to evaluate.
+            device (torch.device | str | int): Running device. Defaults to "cpu".
+            verbose (bool, optional): Verbosity mode. Defaults to True.
+        """
+        # Assign attributes
+        self.verbose = verbose
+        self.device = device
+
+        # Allocate resources
+        self._metrics: dict[str, dict] = []
+        self._init_metrics(metrics)
+
+    @abstractmethod
+    def _init_metrics(self, metrics: list[str]):
+        """Initialize ``self._metrics`` attributes."""
+        pass
+
+    # --- Properties ---
+    @property
+    def device(self) -> torch.device:
+        """Return the device to use."""
+        return self._device
+
+    @device.setter
+    def device(self, device: torch.device | str | int):
+        """Set the device to use."""
+        self._device = sys_ctx.get_torch_device(device)
+
+    # --- Measure ---
+    @abstractmethod
+    def measure(self) -> dict[str, Any]:
+        """Run the evaluation.
+
+        Returns:
+            dict[str, Any]: A dictionary containing the evaluation results.
+        """
+        pass
+
+    @abstractmethod
+    def _build_dataloader(self) -> DataLoader:
+        """Build a dataloader for the given dataset."""
+        pass
+
+    # --- Logging ---
+    @abstractmethod
+    def _log_summary(self):
+        """Log a summary of the current run."""
+        pass
+
+    @abstractmethod
+    def _log_results(self, results: dict[str, Any]):
+        """Log the evaluation results.
+
+        Args:
+            results (dict[str, Any]): The evaluation results to log.
+        """
+        pass
+
+# endregion
 
 
 # ==============================================================================
@@ -55,12 +137,11 @@ class IQAEvaluator(Evaluator):
         self,
         input_dir: Path,
         target_dir: Path | None,
-        result_file: Path | None,
         arch: str,
         model: str,
         data: str,
         metrics: list[str],
-        device: torch.device | str | int,
+        device: torch.device | str | int = torch.device("cpu"),
         imgsz: Size = (512, 512),
         resize: bool = False,
         use_gt_mean: bool = False,
@@ -70,15 +151,13 @@ class IQAEvaluator(Evaluator):
 
         Args:
             input_dir (Path): Input image directory.
-            target_dir (Path | None): Ground-truth image directory. If None,
-                it will be inferred from ``input_dir``.
-            result_file (Path | None): Result file. If None, results will
-                not be saved.
+            target_dir (Path | None): Ground-truth image directory.
+                If None, it will be inferred from ``input_dir``.
             arch (str): Model's architecture.
             model (str): Model's fullname.
             data (str): Source data name.
             metrics (list[str]): List of metrics to measure.
-            device (torch.device | str | int): Running device.
+            device (torch.device | str | int): Running device. Defaults to "cpu".
             imgsz (Size, optional): Image size for resizing. If resize is False,
                 this will be ignored. Defaults to 512.
             resize (bool, optional): Whether to resize images to ``imgsz``
@@ -87,25 +166,18 @@ class IQAEvaluator(Evaluator):
                 images as the reference for NR metrics. Defaults to False.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
-        super().__init__(
-            input_dir=input_dir,
-            target_dir=target_dir,
-            result_file=result_file,
-            metrics=metrics,
-            device=device,
-            verbose=verbose,
-        )
+        super().__init__(metrics=metrics, device=device, verbose=verbose)
 
         # Assign attributes
-        self.arch = arch
-        self.model = model
-        self.data = data
-        self.imgsz = imgsz
-        self.resize = resize
-        self.use_gt_mean = use_gt_mean
+        self._input_dir = Path(input_dir).normalize()
+        self._target_dir = Path(target_dir).normalize() if target_dir else None
 
-        # Allocate resources
-        self._results_gt_mean = {}
+        self._arch = arch
+        self._model = model
+        self._data = data
+        self._imgsz = Size.from_any(imgsz)
+        self._resize = resize
+        self._use_gt_mean = use_gt_mean
 
     @override
     def _init_metrics(self, metrics: list[str]):
@@ -130,22 +202,6 @@ class IQAEvaluator(Evaluator):
 
         self._metrics = _metrics
 
-    # --- Properties ---
-    @property
-    def imgsz(self) -> Size:
-        """Return the image size for resizing."""
-        return self._imgsz
-
-    @imgsz.setter
-    def imgsz(self, value: Size):
-        """Set the image size for resizing."""
-        self._imgsz = Size.from_any(value)
-
-    @property
-    def results_gt_mean(self) -> dict[str, float]:
-        """Return the dictionary of measured results with ground-truth mean."""
-        return self._results_gt_mean
-
     # --- Creation ---
     @classmethod
     def from_cli(cls, **kwargs) -> "IQAEvaluator":
@@ -164,10 +220,8 @@ class IQAEvaluator(Evaluator):
         parser.add_argument("--use-gt-mean", action="store_true")
         parser.add_argument("--verbose",     action="store_true")
         args = vars(parser.parse_args())
-
         args["metrics"] = args.pop("metric")  # Rename "metric" to "metrics"
         args |= kwargs  # Override with additional kwargs
-
         return cls(**args)
 
     # --- Measure ---
@@ -186,15 +240,17 @@ class IQAEvaluator(Evaluator):
         dataloader = self._build_dataloader()
 
         # Processing
-        self._results = self._measure(dataloader=dataloader, use_gt_mean=False)
-        if self.use_gt_mean:
-            self._results_gt_mean = self._measure(dataloader=dataloader, use_gt_mean=True)
+        results = self._measure(dataloader=dataloader, use_gt_mean=False)
+
+        results_gt_mean = None
+        if self._use_gt_mean:
+            results_gt_mean = self._measure(dataloader=dataloader, use_gt_mean=True)
 
         # Print results
-        self._log_results()
+        self._log_results(results=results, results_gt_mean=results_gt_mean)
 
         # Return results
-        return self._results
+        return results
 
     def _measure(self, dataloader: DataLoader, use_gt_mean: bool = False) -> dict[str, float]:
         """Measure IQA metrics based on the configuration.
@@ -208,10 +264,10 @@ class IQAEvaluator(Evaluator):
             dict[str, float]: The dictionary of measured results.
         """
         # Resolve attributes
-        model = self.model
-        data = self.data
+        model = self._model
+        data = self._data
+        metrics = self._metrics
         device = self.device
-        metrics = self.metrics
         verbose = self.verbose
 
         # Processing loop
@@ -267,14 +323,14 @@ class IQAEvaluator(Evaluator):
             T.Normalize(normalization="min_max"),
             T.ToTensorV2(transpose_mask=True),
         ])
-        if self.resize:
-            h, w = self.imgsz.hw
+        if self._resize:
+            h, w = self._imgsz.hw
             transforms = T.Resize(height=h, width=w) + transforms
 
         return DataLoader(
             dataset=IQADataset(
-                input_dir=self.input_dir,
-                target_dir=self.target_dir,
+                input_dir=self._input_dir,
+                target_dir=self._target_dir,
                 transforms=transforms,
                 verbose=False,
             ),
@@ -289,16 +345,25 @@ class IQAEvaluator(Evaluator):
             logger = logging.getLogger()
             logger.disabled = True
 
-        console.rule(f"[bold red] {self.model}")
-        console.log(f"[bold green]Model : {self.model}")
-        console.log(f"[bold red]Data  : {self.data}")
-        console.log(f"[bold]Device: {self.device}")
+        console.rule(f"[bold red] {self._model}")
+        console.log(f"[bold green]Model : {self._model}")
+        console.log(f"[bold red]Data  : {self._data}")
+        console.log(f"[bold]Device: {self._device}")
 
     @override
-    def _log_results(self):
-        """Print the measured results."""
-        results = self.results
-        results_gt_mean = self.results_gt_mean
+    def _log_results(
+        self,
+        results: dict[str, float],
+        results_gt_mean: dict[str, float] | None = None,
+    ):
+        """Log the evaluation results.
+
+        Args:
+            results (dict[str, float]): The evaluation results to log.
+            results_gt_mean (dict[str, float] | None, optional): The evaluation
+                results using GT mean as reference. If None, it will not be logged.
+                Defaults to None.
+        """
         pad = 10
 
         # Headers
@@ -327,8 +392,8 @@ class IQAEvaluator(Evaluator):
 
 
 class InstanceIQAEvaluator(Evaluator):
-    """A runner for measuring image quality evaluation (IQA) metrics of a single
-    image.
+    """A runner for measuring image quality evaluation (IQA) metrics of a
+    single image.
     """
 
     all_metrics = pyiqa.default_model_configs.DEFAULT_CONFIGS
@@ -339,9 +404,8 @@ class InstanceIQAEvaluator(Evaluator):
     def __init__(
         self,
         input_dir: Path,
-        result_file: Path | None,
         metrics: list[str],
-        device: torch.device | str | int,
+        device: torch.device | str | int = torch.device("cpu"),
         imgsz: Size = (512, 512),
         resize: bool = False,
         verbose: bool = True,
@@ -350,28 +414,20 @@ class InstanceIQAEvaluator(Evaluator):
 
         Args:
             input_dir (Path): Input image directory.
-            result_file (Path | None): Result file. If None, results will
-                not be saved.
             metrics (list[str]): List of metrics to measure.
-            device (torch.device | str | int): Running device.
+            device (torch.device | str | int): Running device. Defaults to "cpu".
             imgsz (Size, optional): Image size for resizing. If resize is False,
                 this will be ignored. Defaults to 512.
             resize (bool, optional): Whether to resize images to ``imgsz``
                 before measuring metrics. Defaults to False.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
-        super().__init__(
-            input_dir=input_dir,
-            target_dir=None,
-            result_file=result_file,
-            metrics=metrics,
-            device=device,
-            verbose=verbose
-        )
+        super().__init__(metrics=metrics, device=device, verbose=verbose)
 
         # Assign attributes
-        self.imgsz = imgsz
-        self.resize = resize
+        self._input_dir = Path(input_dir).normalize()
+        self._imgsz = Size.from_any(imgsz)
+        self._resize = resize
 
     @override
     def _init_metrics(self, metrics: list[str]):
@@ -396,17 +452,6 @@ class InstanceIQAEvaluator(Evaluator):
 
         self._metrics = _metrics
 
-    # --- Properties ---
-    @property
-    def imgsz(self) -> Size:
-        """Return the image size for resizing."""
-        return self._imgsz
-
-    @imgsz.setter
-    def imgsz(self, value: Size):
-        """Set the image size for resizing."""
-        self._imgsz = Size.from_any(value)
-
     # --- Creation ---
     @classmethod
     def from_cli(cls, **kwargs) -> "IQAEvaluator":
@@ -420,10 +465,8 @@ class InstanceIQAEvaluator(Evaluator):
         parser.add_argument("--resize",      action="store_true")
         parser.add_argument("--verbose",     action="store_true")
         args = vars(parser.parse_args())
-
         args["metrics"] = args.pop("metric")  # Rename "metric" to "metrics"
         args |= kwargs  # Override with additional kwargs
-
         return cls(**args)
 
     # --- Measure ---
@@ -438,13 +481,13 @@ class InstanceIQAEvaluator(Evaluator):
         self._log_summary()
 
         # Processing
-        self._results = self._measure()
+        results = self._measure()
 
         # Print results
-        self._log_results()
+        self._log_results(results=results)
 
         # Return results
-        return self._results
+        return results
 
     @torch.inference_mode()
     def _measure(self) -> dict[str, float]:
@@ -454,16 +497,16 @@ class InstanceIQAEvaluator(Evaluator):
             dict[str, float]: The dictionary of measured results.
         """
         # Resolve attributes
+        metrics = self._metrics
         device = self.device
-        metrics = self.metrics
         verbose = self.verbose
 
         # Define images and target
-        image_files = sorted(list(self.input_dir.rglob(f"*")))
+        image_files = sorted(list(self._input_dir.rglob(f"*")))
         image_files = [i for i in image_files if i.stem not in self.excluded_stems]
         image_files = [i for i in image_files if i.is_image_file(exists=True)]
 
-        target_file = self.input_dir / self.target_stem
+        target_file = self._input_dir / self.target_stem
         target_file = target_file.image_file
         if target_file.is_image_file(exists=True):
             target = cv2.imread(str(target_file))
@@ -522,8 +565,8 @@ class InstanceIQAEvaluator(Evaluator):
             T.Normalize(normalization="min_max"),
             T.ToTensorV2(transpose_mask=True),
         ], additional_targets={"target": "image"})
-        if self.resize:
-            h, w = self.imgsz.hw
+        if self._resize:
+            h, w = self._imgsz.hw
             transforms = T.Resize(height=h, width=w) + transforms
 
         return transforms
@@ -542,17 +585,20 @@ class InstanceIQAEvaluator(Evaluator):
             logger.disabled = True
 
         console.rule(f"[bold red] IQA Metric")
-        console.log(f"[bold]Data  : {self.input_dir.name}")
-        console.log(f"[bold]Device: {self.device}")
+        console.log(f"[bold]Data  : {self._input_dir.name}")
+        console.log(f"[bold]Device: {self._device}")
 
     @override
-    def _log_results(self):
-        """Print the measured results."""
-        results = self.results
+    def _log_results(self, results: dict[str, Any]):
+        """Print the measured results.
+
+        Args:
+            results (dict[str, float]): The evaluation results to log.
+        """
         pad = 7
 
         # Headers
-        first_item = list(results.values())[0]
+        first_item: dict = list(results.values())[0]
         header = f"{f'Model':<{pad * 4}}\t"
         for m, v in first_item.items():
             header += f"{f'{m}':<{pad}}\t"
@@ -590,12 +636,10 @@ class DQAEvaluator(Evaluator):
         self,
         input_dir: Path,
         target_dir: Path,
-        result_file: Path | None,
         arch: str,
         model: str,
         data: str,
-        metrics: list[str],
-        device: torch.device | str | int,
+        device: torch.device | str | int = torch.device("cpu"),
         imgsz: Size = (512, 512),
         resize: bool = False,
         normalize: bool = False,
@@ -607,13 +651,10 @@ class DQAEvaluator(Evaluator):
         Args:
             input_dir (Path): Input image directory.
             target_dir (Path): Ground-truth image directory.
-            result_file (Path | None): Result file. If None, results will not
-                be saved.
             arch (str): Model's architecture.
             model (str): Model's fullname.
             data (str): Source data name.
-            metrics (list[str]): List of metrics to measure.
-            device (torch.device | str | int): Running device.
+            device (torch.device | str | int): Running device. Defaults to "cpu".
             imgsz (Size, optional): Image size for resizing. If resize is False,
                 this will be ignored. Defaults to 512.
             resize (bool, optional): Whether to resize images to ``imgsz``
@@ -624,23 +665,18 @@ class DQAEvaluator(Evaluator):
                 images before measuring metrics. Defaults to False.
             verbose (bool, optional): Verbosity mode. Defaults to True.
         """
-        super().__init__(
-            input_dir=input_dir,
-            target_dir=target_dir,
-            result_file=result_file,
-            metrics=metrics,
-            device=device,
-            verbose=verbose
-        )
+        super().__init__(metrics=[], device=device, verbose=verbose)
 
         # Assign attributes
-        self.arch = arch
-        self.model = model
-        self.data = data
-        self.imgsz = imgsz
-        self.resize = resize
-        self.normalize = normalize
-        self.use_color = use_color
+        self._input_dir = Path(input_dir).normalize()
+        self._target_dir = Path(target_dir).normalize() if target_dir else None
+        self._arch = arch
+        self._model = model
+        self._data = data
+        self._imgsz = Size.from_any(imgsz)
+        self._resize = resize
+        self._normalize = normalize
+        self._use_color = use_color
 
         # Allocate resources
         self._cmap = matplotlib.colormaps.get_cmap("Spectral_r")
@@ -650,17 +686,6 @@ class DQAEvaluator(Evaluator):
         """Initialize ``self._metrics`` and ``self._metrics_func`` attributes.``"""
         self._metrics = [m.lower() for m in self.all_metrics]
         self._metrics_func = {}
-
-    # --- Properties ---
-    @property
-    def imgsz(self) -> Size:
-        """Return the image size for resizing."""
-        return self._imgsz
-
-    @imgsz.setter
-    def imgsz(self, value: Size):
-        """Set the image size for resizing."""
-        self._imgsz = Size.from_any(value)
 
     # --- Creation ---
     @classmethod
@@ -680,9 +705,7 @@ class DQAEvaluator(Evaluator):
         parser.add_argument("--use-color",   action="store_true")
         parser.add_argument("--verbose",     action="store_true")
         args = vars(parser.parse_args())
-
         args |= kwargs  # Override with additional kwargs
-
         return cls(**args)
 
     # --- Measure ---
@@ -701,13 +724,13 @@ class DQAEvaluator(Evaluator):
         dataloader = self._build_dataloader()
 
         # Processing
-        self._results = self._measure(dataloader=dataloader)
+        results = self._measure(dataloader=dataloader)
 
         # Print results
-        self._log_results()
+        self._log_results(results=results)
 
         # Return results
-        return self._results
+        return results
 
     def _measure(self, dataloader: DataLoader) -> dict[str, float]:
         """Measure IQA metrics based on the configuration.
@@ -719,11 +742,11 @@ class DQAEvaluator(Evaluator):
             dict[str, float]: The dictionary of measured results.
         """
         # Resolve attributes
-        model = self.model
-        data = self.data
-        metrics = self.metrics
+        model = self._model
+        data = self._data
+        metrics = self._metrics
         cmap = self._cmap
-        use_color = self.use_color
+        use_color = self._use_color
         verbose = self.verbose
 
         # Processing loop
@@ -769,16 +792,16 @@ class DQAEvaluator(Evaluator):
     @override
     def _build_dataloader(self) -> DataLoader:
         """Build a dataloader for the given dataset."""
-        if self.resize:
-            h, w = self.imgsz.hw
+        if self._resize:
+            h, w = self._imgsz.hw
             transforms = T.Compose([T.Resize(height=h, width=w)])
         else:
             transforms = None
 
         return DataLoader(
             dataset=IQADataset(
-                input_dir=self.input_dir,
-                target_dir=self.target_dir,
+                input_dir=self._input_dir,
+                target_dir=self._target_dir,
                 transforms=transforms,
                 verbose=False,
             ),
@@ -793,18 +816,21 @@ class DQAEvaluator(Evaluator):
             logger = logging.getLogger()
             logger.disabled = True
 
-        console.rule(f"[bold red] {self.model}")
-        console.log(f"[bold green]Model : {self.model}")
-        console.log(f"[bold red]Data  : {self.data}")
-        console.log(f"[bold]Device: {self.device}")
+        console.rule(f"[bold red] {self._model}")
+        console.log(f"[bold green]Model : {self._model}")
+        console.log(f"[bold red]Data  : {self._data}")
+        console.log(f"[bold]Device: {self._device}")
 
     @override
-    def _log_results(self):
-        """Print the measured results."""
-        results = self.results
+    def _log_results(self, results: dict[str, Any]):
+        """Print the measured results.
 
+        Args:
+            results (dict[str, float]): The evaluation results to log.
+        """
         pad = 10
         message = ""
+
         # Headers
         for m, v in results.items():
             if v:
@@ -818,6 +844,180 @@ class DQAEvaluator(Evaluator):
                 else:
                     message += f"{v:.{pad}f}\t"
         print(f"{message}\n")
+
+# endregion
+
+
+# ==============================================================================
+# region COCO
+# ==============================================================================
+
+class COCOEvaluator(Evaluator):
+    """A runner for measuring COCO metrics."""
+
+    # --- Lifecycle & Initialization ---
+    def __init__(
+        self,
+        image_dir: Path | None,
+        input_dir: Path | None,
+        target_dir: Path | None,
+        input_json: Path | None,
+        target_json: Path | None,
+        remap: Path | None,
+        arch: str,
+        model: str,
+        data: str,
+        device: torch.device | str | int = torch.device("cpu"),
+        exist_ok: bool = False,
+        verbose: bool = True,
+    ):
+        """Initialize a new instance.
+
+        Args:
+            image_dir (Path): Input image directory.
+            input_dir (Path | None): Input annotation directory.
+                If None, ``input_json`` must be provided.
+            target_dir (Path | None): Ground-truth annotation directory.
+                If None, ``target_json`` must be provided.
+            input_json (Path | None): Input JSON file.
+                If None, ``input_ann_dir`` must be provided.
+            target_json (Path | None): Ground-truth JSON file.
+                If None, ``target_ann_dir`` must be provided.
+            remap (Path | None): Classes re-map definition file.
+                If None, no re-mapping will be applied.
+            arch (str): Model's architecture.
+            model (str): Model's fullname.
+            data (str): Source data name.
+            device (torch.device | str | int): Running device.
+            exist_ok (bool, optional): Whether to overwrite the existing JSON files.
+                Defaults to False.
+            verbose (bool, optional): Verbosity mode. Defaults to True.
+        """
+        super().__init__(metrics=[], device=device, verbose=verbose)
+
+        # Assign attributes
+        
+
+        self._arch = arch
+        self._model = model
+        self._data = data
+
+    @override
+    def _init_metrics(self, metrics: list[str]):
+        """Initialize ``self._metrics`` attributes."""
+        _metrics: dict[str, dict] = {}
+
+        for i, m in enumerate(metrics):
+            if m in pyiqa.default_model_configs.DEFAULT_CONFIGS:
+                func = pyiqa.create_metric(metric_name=m, as_loss=False, device=self.device)
+            elif m in METRICS:
+                func = METRICS.build(name=m, device=self.device)
+            else:
+                log_error(f"unsupported metric {m}, skipping...")
+                func = None
+
+            _metrics[m] = {
+                "func": func,
+                "metric_mode": METRICS[m]["metric_mode"],
+                "lower_better": METRICS[m]["lower_better"],
+                "score_range": METRICS[m]["score_range"],
+            }
+
+        self._metrics = _metrics
+
+    # --- Creation ---
+    @classmethod
+    def from_cli(cls, **kwargs) -> "IQAEvaluator":
+        """Create an instance of IQAEvaluator from command-line arguments."""
+        parser = argparse.ArgumentParser(description="metric_coco")
+        parser.add_argument("--image-dir",   type=str, help="Input image directory.")
+        parser.add_argument("--input-dir",   type=str, help="Input annotation directory.")
+        parser.add_argument("--target-dir",  type=str, help="Ground-truth annotation directory.")
+        parser.add_argument("--input-json",  type=str, help="Input JSON file.")
+        parser.add_argument("--target-json", type=str, help="Ground-truth JSON file.")
+        parser.add_argument("--remap",       type=str, help="Classes re-map definition file.")
+        parser.add_argument("--arch",        type=str, help="Model's architecture.")
+        parser.add_argument("--model",       type=str, help="Model's fullname.")
+        parser.add_argument("--data",        type=str, help="Source data name.")
+        parser.add_argument("--device",      type=str, help="Running devices.")
+        parser.add_argument("--exist-ok",    action="store_true")
+        parser.add_argument("--verbose",     action="store_true")
+        args = vars(parser.parse_args())
+        args |= kwargs  # Override with additional kwargs
+        return cls(**args)
+
+    # --- Measure ---
+    @override
+    def measure(self) -> dict[str, float]:
+        """Run the metric measurement process.
+
+        Returns:
+            dict[str, Any]: A dictionary containing the evaluation results.
+        """
+        # Summarize the current run
+        self._log_summary()
+
+        # Resolve dataloader
+        # We don't persist the dataset to avoid memory consumption
+        dataloader = self._build_dataloader()
+
+        # Processing
+        results = self._measure(dataloader=dataloader, use_gt_mean=False)
+
+        # Print results
+        self._log_results()
+
+        # Return results
+        return results
+
+    @override
+    def _build_dataloader(self) -> DataLoader:
+        """Build a dataloader for the given dataset."""
+        pass
+
+    # --- Logging ---
+    @override
+    def _log_summary(self):
+        """Log a summary of the current run."""
+        if not self.verbose:
+            logger = logging.getLogger()
+            logger.disabled = True
+
+        console.rule(f"[bold red] {self._model}")
+        console.log(f"[bold green]Model : {self._model}")
+        console.log(f"[bold red]Data  : {self._data}")
+        console.log(f"[bold]Device: {self.device}")
+
+    @override
+    def _log_results(self):
+        """Print the measured results."""
+        results = self.results
+        results_gt_mean = self.results_gt_mean
+        pad = 10
+
+        # Headers
+        header = ""
+        for m, v in results.items():
+            if v:
+                header += f"{f'{m}':<{pad}}\t"
+
+        # Values
+        message = ""
+        for i, (m, v) in enumerate(results.items()):
+            if v:
+                if i == len(results) - 1:
+                    message += f"{v:.{pad}f}\n"
+                else:
+                    message += f"{v:.{pad}f}\t"
+        for i, (m, v) in enumerate(results_gt_mean.items()):
+            if v:
+                if i == len(results) - 1:
+                    message += f"{v:.{pad}f}\n"
+                else:
+                    message += f"{v:.{pad}f}\t"
+
+        print(f"{header}")
+        print(f"{message}")
 
 # endregion
 

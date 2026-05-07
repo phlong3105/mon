@@ -472,7 +472,7 @@ class Config:
         return self._config
 
     @property
-    def config_file(self) -> Path | None:
+    def config_file(self) -> Path:
         """Return the path to the configuration file."""
         return self._config.config_file
 
@@ -549,7 +549,7 @@ class Config:
             self._config.output_dir = output_dir
 
     @property
-    def task(self) -> Task | None:
+    def task(self) -> Task:
         """Return the task type."""
         return self._config.task
 
@@ -560,7 +560,7 @@ class Config:
             self._config.task = Task(value)
 
     @property
-    def mode(self) -> RunMode | None:
+    def mode(self) -> RunMode:
         """Return the run mode."""
         return self._config.mode
 
@@ -593,7 +593,7 @@ class Config:
             self._config.model.name = value
 
     @property
-    def weights(self) -> Weights | None:
+    def weights(self) -> Weights:
         """Return the model weights."""
         return self._config.model.weights
 
@@ -610,9 +610,13 @@ class Config:
             # If the value is a valid string, treat it as a path and create a
             # Weights object
             self._config.model.weights = Weights(path=Path(value))
+        else:
+            # If the value is None, set weights to an empty Weights object
+            # self._config.model.weights = Weights()
+            self._config.model.weights = None
 
     @property
-    def finetune(self) -> Weights | None:
+    def finetune(self) -> Weights:
         """Return the model weights."""
         return self._config.model.finetune
 
@@ -629,6 +633,10 @@ class Config:
             # If the value is a valid string, treat it as a path and create a
             # Weights object
             self._config.model.finetune = Weights(path=Path(value))
+        else:
+            # If the value is None, set finetune to an empty Weights object
+            # self._config.model.finetune = Weights()
+            self._config.model.finetune = None
 
     @property
     def device(self) -> torch.device:
@@ -1113,7 +1121,11 @@ class Config:
             "config_file", "task", "mode", "arch", "model", "eval_imgsz"
         )
 
-        # 1.5. Resolve device
+        # 1.3. Check config_file
+        if not self.config_file:
+            raise RuntimeError(f"expected config_file.")
+
+        # 1.4. Resolve device
         if not isinstance(self.device, torch.device):
             self.device = sys_ctx.get_torch_device(self.device)
 
@@ -1159,12 +1171,8 @@ class Config:
 
         # 2.4. Resolve weights
         if self.weights:
-            # weights = resolve_weights_file(self.root, self.weights.path)
-            # self.weights = create_weights(weights)
             self.weights.rectify_path(root=self.root)
         if self.finetune:
-            # finetune = resolve_weights_file(self.root, self.finetune.path)
-            # self.finetune = create_weights(finetune)
             self.finetune.rectify_path(root=self.root)
 
     def prepare_for_predict(self):
@@ -1191,7 +1199,11 @@ class Config:
             "config_file", "task", "mode", "arch", "model", "eval_imgsz"
         )
 
-        # 1.5. Resolve device
+        # 1.3. Check config_file
+        if not self.config_file:
+            raise RuntimeError(f"expected config_file.")
+
+        # 1.4. Resolve device
         if not isinstance(self.device, torch.device):
             self.device = sys_ctx.get_torch_device(self.device)
 

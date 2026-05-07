@@ -13,12 +13,16 @@ __all__ = [
     "write_bbox",
 ]
 
+import xml.etree.ElementTree as ET
+
 import numpy as np
 from box import Box
 from numpy import ndarray
 
 from mon.core import BBoxes, BBoxFormat, load_yaml, Path, Size
 from mon.ops.image import read_imgsz
+from .bbox import to_2d_bbox
+
 
 # ==============================================================================
 # region CONSTANTS
@@ -53,6 +57,7 @@ def _load_bbox_yolo(
     """Load all bounding boxes in a YOLO-format .txt file.
 
     Each line in the label file should contain:
+       0       1   2  3  4    5      6       7
     class_id, cx, cy, w, h, angle, score, track_id
     where:
         - class_id: is the class index (0-based).
@@ -81,7 +86,7 @@ def _load_bbox_yolo(
     path = Path(path).normalize()
 
     # 1. Handle invalid or empty label file
-    if not path.is_txt_file(exist=True):
+    if not path.has_ext(".txt", exists=True):
         return np.empty((0, 8), dtype=np.float32)
 
     # Using np.loadtxt is significantly faster for large label files. It handles
@@ -156,6 +161,78 @@ def _load_bbox_yolo(
     return bbox
 
 
+def _load_bbox_voc(
+    path: Path,
+    remap: dict | Path | None = None,
+    *args, **kwargs
+) -> ndarray:
+    """Load bounding boxes from a VOC-format XML file.
+
+    Args:
+        path (Path): Path to the VOC XML label file.
+        remap (dict | Path, optional): Mapping to remap class IDs. Can be a
+            dictionary or a path to a YAML file containing the mapping.
+            Defaults to None.
+
+    Returns:
+        ndarray: An array of shape (N, 8+) where each row represents a bounding
+            box in the format [cx, cy, w, h, angle, class_id, score, track_id].
+    """
+    path = Path(path).normalize()
+
+    # 1. Handle invalid or empty label file
+    if not path.has_ext(".xml", exists=True):
+        return np.empty((0, 8), dtype=np.float32)
+
+    try:
+        tree = ET.parse(path.as_posix())
+        root = tree.getroot()
+        if root is None:
+            return np.empty((0, 8), dtype=np.float32)
+    except Exception as e:
+        return np.empty((0, 8), dtype=np.float32)
+
+    # 2. Handle remapping class ids
+    if remap:
+        if isinstance(remap, (Path, str)):
+            remap = load_yaml(path=remap)
+        remap = getattr(remap, "remap", remap)
+        if not isinstance(remap, (Box, dict)):
+            raise TypeError(f"expected remap to be a dict, got {type(remap).__name__}.")
+
+    # 3. Parse raw data
+    # size = root.find("size")
+    # width = int(size.find("width").text)
+    # height = int(size.find("height").text)
+    # depth = int(size.find("height").text)
+
+    bbox = []
+    for obj in root.findall("object"):
+        label = obj.find("name").text
+        class_id = remap.get(label, 0) if remap else 0
+
+        # Extract coordinates as integers
+        bndbox = obj.find("bndbox")
+        x1 = int(bndbox.find("xmin").text)
+        y1 = int(bndbox.find("ymin").text)
+        x2 = int(bndbox.find("xmax").text)
+        y2 = int(bndbox.find("ymax").text)
+        bbox.append([x1, y1, x2, y2, class_id, _DEFAULT_ANGLE, _DEFAULT_SCORE, _DEFAULT_TRACK_ID])
+
+    # 4. Convert to numpy array
+    if len(bbox) == 0:
+        bbox = np.empty((0, 8), dtype=np.float32)
+    else:
+        bbox = np.array(bbox, dtype=np.float32)
+        bbox = to_2d_bbox(bbox)
+
+    # 5. Validate
+    if bbox[:, 0:4].any() < 0:
+        raise ValueError("bbox coordinates must be non-negative.")
+
+    return bbox
+
+
 def load_bbox(
     path: Path,
     fmt: BBoxFormat,
@@ -185,6 +262,8 @@ def load_bbox(
     # Load bounding boxes array
     if fmt == BBoxFormat.CXCYWHN:
         bbox = _load_bbox_yolo(path=path, remap=remap, *args, **kwargs)
+    elif fmt == BBoxFormat.XYXY:
+        bbox = _load_bbox_voc(path=path, remap=remap, *args, **kwargs)
     else:
         raise ValueError(f"the loading method for '{fmt}' format has not been "
                          f"supported yet.")
@@ -200,10 +279,11 @@ def load_bbox(
             image_file = Path(image_file).normalize()
             if image_file.is_image_file(exists=True):
                 imgsz = read_imgsz(image_file)
-        else:
+
+        if not isinstance(imgsz, Size):
             raise ValueError(
                 f"expected either imgsz or image_file to be provided when "
-                f"'as_array=False', got imgsz={imgsz} and image_file={image_file}."
+                f"'as_array=False', got imgsz={imgsz} and image_file={image_file}"
             )
 
         return BBoxes.from_any(bbox=bbox, imgsz=imgsz, fmt=fmt, path=path)
@@ -224,6 +304,7 @@ def _write_bbox_yolo(
     """Write bounding boxes to a YOLO-format .txt file.
 
     Each line in the label file should contain:
+       0       1   2  3  4    5      6       7
     class_id, cx, cy, w, h, angle, score, track_id
     where:
         - class_id: is the class index (0-based).
@@ -234,7 +315,8 @@ def _write_bbox_yolo(
         - track_id: is an optional value representing the tracking ID.
 
     Args:
-        bbox (BBoxes): The bounding boxes to be written.
+        bbox (BBoxes): The bounding boxes to be written. The data format is:
+            [cx, cy, w, h, angle, class_id, score, track_id].
         path (Path): The file path to write the bounding boxes to.
         imgsz (Size | None, optional): The image size (width, height) to use for
             normalization if needed. Required if ``fmt`` is a normalized format.
@@ -247,15 +329,18 @@ def _write_bbox_yolo(
         path.parent.mkdir(parents=True, exist_ok=True)
 
     # Convert bbox to the desired output format
+    #   0   1  2  3    4        5       6        7
+    # [cx, cy, w, h, angle, class_id, score, track_id]
     bbox_ = bbox.cxcywhn(imgsz=imgsz)
 
     # Write bboxes to label file
     with open(path.as_posix(), "w", encoding="utf-8") as f:
         for b in bbox_:
+            # [class_id, cx, cy, w, h, angle, score, track_id]
             f.write(
-                f"{int(b[0])} "
-                f"{float(b[1])} {float(b[2])} {float(b[3])} {float(b[4])} "
-                f"{float(b[5])} "
+                f"{int(b[5])} "  # class_id
+                f"{float(b[0])} {float(b[1])} {float(b[2])} {float(b[3])} "  # x1, y1, x2, y2
+                f"{float(b[4])} "  # angle
                 f"{float(b[6])} "
                 f"{int(b[7])} "
                 f"\n"

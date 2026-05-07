@@ -233,7 +233,7 @@ class Path(type(Path_())):  # Dynamic inheritance based on OS
             exists (bool, optional): If True, also check if the file exists.
                 Defaults to True.
         """
-        return self.has_ext(ImageExtension.values(), exists=exists)
+        return self.has_ext(ImageExtension.all_values(), exists=exists)
 
     def is_raw_image_file(self, exists: bool = True) -> bool:
         """Check if the path is a raw image format.

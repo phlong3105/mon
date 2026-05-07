@@ -141,6 +141,7 @@ class K(SimpleNamespace):
     DEBUG_DIR   = "debug"
     DEPTH_DIR   = "depth"
     IMAGE_DIR   = "image"
+    LABEL_DIR   = "label"
     VIS_DIR     = "vis"
 
     # --- Extensions ---

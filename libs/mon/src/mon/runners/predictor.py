@@ -384,7 +384,7 @@ class Predictor(Runner, ABC):
         fmt: BBoxFormat,
         datapoint: TensorDict,
         outputs: TensorDict,
-        dirname: str = K.ANN_DIR,
+        dirname: str = K.LABEL_DIR,
         subdirname: str = "",
         use_stem: bool = False,
     ):
@@ -413,7 +413,7 @@ class Predictor(Runner, ABC):
         for i, meta in enumerate(batch_metas):
             path = meta["path"]
             bboxes = bboxes[i]
-            stem = "bbox" if use_stem else ""
+            stem = "label" if use_stem else ""
 
             self._save_bboxes(
                 bboxes=bboxes,
@@ -429,7 +429,7 @@ class Predictor(Runner, ABC):
         bboxes: BBoxes,
         fmt: BBoxFormat,
         src_path: Path,
-        dirname: str = K.ANN_DIR,
+        dirname: str = K.LABEL_DIR,
         subdirname: str = "",
         stem: str = "",
     ):

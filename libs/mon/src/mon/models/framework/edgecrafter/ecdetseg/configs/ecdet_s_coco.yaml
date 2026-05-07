@@ -1,0 +1,78 @@
+# --- General ---
+exp_name: &exp_name "ecdet_s_coco"  # (str) Experiment name.
+
+root: &root ~  # (str) Root path of the project.
+output_dir: &output_dir ~  # (str) Output directory.
+
+task: "detect"  # (str) Task name (e.g., detect, segment, classify).
+mode: ~  # (str) Run mode (e.g., train, predict).
+
+device: &device 0  # (int | str | list) device: 0 or [0,1,2,3] for CUDA, 'cpu'/'mps'
+seed: &seed 0  # (int) Random seed for reproducibility
+
+# --- Model ---
+model:
+  name: "ecdet_s"  # (str) Model name (e.g., resnet50, yolov8n).
+  arch: "ecdet"  # (str) Model architecture (e.g., resnet, yolo8).
+  weights: "framework/edgecrafter/ecdet/ecdet_s/coco/ecdet_s_coco.pt"  # (str) Path to model weights.
+  finetune: ~  # (str) Path to fine-tuning weights.
+
+# --- Data ---
+train_dataloader: ~
+
+val_dataloader: ~
+
+# --- Training ---
+epochs: &epochs 74  # (int) Number of epochs to train.
+
+optimizer: ~
+
+lr_scheduler: ~
+
+lr_warmup_scheduler: ~
+
+loss: ~
+
+tensorboard_logger: True
+
+# --- Prediction ---
+predict:
+  data: ~  # (list[str]) List of data names or paths for prediction.
+  strategy: "resize"  # (str) Prediction strategy (e.g., default, resize, patch).
+
+  # Resizing strategy: Downsampling -> Inference -> Upsampling.
+  imgsz: &imgsz 640  # (int | list[int]) Image size for prediction.
+  upscale: True  # (bool) Whether to upscale the image after inference.
+  upsampler:
+    name: "interpolation"  # (str) Upsampler name.
+
+  # Patching strategy: Split the image into patches -> Inference on each patch -> Blend the patches.
+  patcher:
+    name: "uniform"
+    size: 640  # (int) Patch size for patch-based prediction.
+    stride: 320  # (int) The step size between patches.
+
+# --- Evaluation ---
+benchmark: False  # (bool) Benchmark the model.
+
+# --- Saving & Visualization ---
+save: True  # (bool) Save the results.
+save_debug: False  # (bool) Save the debug information.
+keep_subdirs: False  # (bool) Maintain the subdirectories of the data source in the saving directory.
+near_src: False  # (bool) Save the results near the source directory.
+exist_ok: True  # (bool) If ``False``, delete the existing saving directory.
+verbose: True  # (bool) Verbosity mode.
+
+# --- Extra Config ---
+# This is useful for third-party frameworks that support their own configuration scheme.
+extra:
+  cfg_path: "./ecdet/ecdet_s.yml"
+
+  __include__: [
+    "./dataset/coco.yml",
+    "./ecdet.yml",
+  ]
+
+  epoches: *epochs  # Training epochs.
+
+  eval_spatial_size: [ *imgsz, *imgsz ]  # H, W

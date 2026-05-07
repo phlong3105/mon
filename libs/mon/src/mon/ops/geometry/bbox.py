@@ -120,9 +120,9 @@ def to_2d_bbox(bbox: ndarray | list | tuple) -> ndarray:
 
     # Handle various shapes
     if bbox.ndim == 1:
-        return bbox[np.newaxis, :]   # [5+] -> [1, 5+]
+        return bbox[np.newaxis, :]   # [4+] -> [1, 4+]
     elif bbox.ndim == 3:
-        return np.squeeze(bbox)      # [1, N, 5+] -> [N, 5+]
+        return np.squeeze(bbox)      # [1, N, 4+] -> [N, 4+]
 
     return bbox
 

@@ -203,7 +203,7 @@ def metric(args: argparse.Namespace):
         # 3.2. Loop through the architectures and models
         for arch, models in archs_models.items():
             for model in models:
-                input_dir = run_dir / arch / model / data / "pred"
+                input_dir = run_dir / arch / model / data / "image"
                 iqa = IQAEvaluator.from_cli(
                     input_dir=input_dir,
                     target_dir=target_dir,
