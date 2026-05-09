@@ -137,6 +137,11 @@ class BBox(Data):
             "imgsz": self.imgsz,
         }
 
+    @property
+    def is_empty(self) -> bool:
+        """Return True if the bounding box is empty."""
+        return len(self.bbox) == 0
+
     # --- Creation ---
     @classmethod
     def from_xyxy(
@@ -495,6 +500,11 @@ class BBoxes(Data):
             "imgsz": self.imgsz,
             "hash": self.hash,
         }
+
+    @property
+    def is_empty(self) -> bool:
+        """Return True if the bounding boxes are empty."""
+        return len(self.bbox) == 0
 
     # --- Creation ---
     @classmethod

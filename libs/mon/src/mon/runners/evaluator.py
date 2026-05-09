@@ -9,6 +9,7 @@ This module provides several metric evaluators.
 from __future__ import annotations
 
 __all__ = [
+    "COCOEvaluator",
     "DQAEvaluator",
     "Evaluator",
     "IQAEvaluator",
@@ -27,10 +28,11 @@ import pyiqa
 import pyiqa.default_model_configs
 import pyiqa.models.inference_model
 import torch
-from torch import Tensor
 from pycocotools.coco import COCO
 from pycocotools.cocoeval import COCOeval
+from torch import Tensor
 
+from mon import BBoxFormat
 from mon.core import (
     console,
     create_progress_bar,
@@ -42,6 +44,7 @@ from mon.core import (
 )
 from mon.dataset import DataLoader, IQADataset, transform as T
 from mon.metrics import compute_depth_metrics
+from mon.ops import convert_labels_to_json
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -843,6 +846,7 @@ class DQAEvaluator(Evaluator):
                     message += f"{v:.{pad}f}\n"
                 else:
                     message += f"{v:.{pad}f}\t"
+
         print(f"{message}\n")
 
 # endregion
@@ -867,6 +871,7 @@ class COCOEvaluator(Evaluator):
         arch: str,
         model: str,
         data: str,
+        fmt: BBoxFormat = BBoxFormat.CXCYWHN,
         device: torch.device | str | int = torch.device("cpu"),
         exist_ok: bool = False,
         verbose: bool = True,
@@ -888,6 +893,7 @@ class COCOEvaluator(Evaluator):
             arch (str): Model's architecture.
             model (str): Model's fullname.
             data (str): Source data name.
+            fmt (BBoxFormat, optional): Bounding box format. Defaults to BBoxFormat.CXCYWHN.
             device (torch.device | str | int): Running device.
             exist_ok (bool, optional): Whether to overwrite the existing JSON files.
                 Defaults to False.
@@ -896,38 +902,55 @@ class COCOEvaluator(Evaluator):
         super().__init__(metrics=[], device=device, verbose=verbose)
 
         # Assign attributes
-        
-
         self._arch = arch
         self._model = model
         self._data = data
+        self._fmt = BBoxFormat(fmt)
+        self._remap = Path(remap).normalize() if remap else None
+        self._exist_ok = exist_ok
+
+        # Resolve paths
+        if input_json and exist_ok:
+            input_json = Path(input_json).normalize()
+        elif image_dir and input_dir:
+            image_dir = Path(image_dir).normalize()
+            input_dir = Path(input_dir).normalize()
+            input_json = input_dir.parent / f"{input_dir.stem}.json"
+        else:
+            raise RuntimeError(
+                f"Either input_json or (image_dir and input_dir) must be provided, got "
+                f"input_json={input_json}\n"
+                f"image_dir={image_dir}\n"
+                f"input_dir={input_dir}"
+            )
+
+        if target_json and exist_ok:
+            target_json = Path(target_json).normalize()
+        elif image_dir and target_dir:
+            target_dir = Path(target_dir).normalize()
+            target_json = target_dir.parent / f"{target_dir.stem}.json"
+        else:
+            raise RuntimeError(
+                f"Either target_json or (image_dir and target_dir) must be provided, got "
+                f"target_json={target_json}\n"
+                f"image_dir={image_dir}\n"
+                f"target_dir={target_dir}"
+            )
+
+        self._image_dir = image_dir
+        self._input_dir = input_dir
+        self._target_dir = target_dir
+        self._input_json = input_json
+        self._target_json = target_json
 
     @override
     def _init_metrics(self, metrics: list[str]):
         """Initialize ``self._metrics`` attributes."""
-        _metrics: dict[str, dict] = {}
-
-        for i, m in enumerate(metrics):
-            if m in pyiqa.default_model_configs.DEFAULT_CONFIGS:
-                func = pyiqa.create_metric(metric_name=m, as_loss=False, device=self.device)
-            elif m in METRICS:
-                func = METRICS.build(name=m, device=self.device)
-            else:
-                log_error(f"unsupported metric {m}, skipping...")
-                func = None
-
-            _metrics[m] = {
-                "func": func,
-                "metric_mode": METRICS[m]["metric_mode"],
-                "lower_better": METRICS[m]["lower_better"],
-                "score_range": METRICS[m]["score_range"],
-            }
-
-        self._metrics = _metrics
+        pass
 
     # --- Creation ---
     @classmethod
-    def from_cli(cls, **kwargs) -> "IQAEvaluator":
+    def from_cli(cls, **kwargs) -> "COCOEvaluator":
         """Create an instance of IQAEvaluator from command-line arguments."""
         parser = argparse.ArgumentParser(description="metric_coco")
         parser.add_argument("--image-dir",   type=str, help="Input image directory.")
@@ -939,6 +962,7 @@ class COCOEvaluator(Evaluator):
         parser.add_argument("--arch",        type=str, help="Model's architecture.")
         parser.add_argument("--model",       type=str, help="Model's fullname.")
         parser.add_argument("--data",        type=str, help="Source data name.")
+        parser.add_argument("--fmt",         choices=["coco", "voc", "yolo"], default="yolo")
         parser.add_argument("--device",      type=str, help="Running devices.")
         parser.add_argument("--exist-ok",    action="store_true")
         parser.add_argument("--verbose",     action="store_true")
@@ -959,21 +983,66 @@ class COCOEvaluator(Evaluator):
 
         # Resolve dataloader
         # We don't persist the dataset to avoid memory consumption
-        dataloader = self._build_dataloader()
+        self._build_dataloader()
 
         # Processing
-        results = self._measure(dataloader=dataloader, use_gt_mean=False)
+        coco_gt = COCO(self._target_json.as_posix())
+        coco_dt = coco_gt.loadRes(self._input_json.as_posix())
+
+        coco_eval = COCOeval(coco_gt, coco_dt, "bbox")
+        coco_eval.params.imgIds = sorted(coco_gt.getImgIds())
+        # coco_eval.params.catIds = [1]
+        coco_eval.evaluate()
+        coco_eval.accumulate()
+        coco_eval.summarize()
+
+        results = {
+            "AP"    : coco_eval.stats[0],
+            "AP50"  : coco_eval.stats[1],
+            "AP75"  : coco_eval.stats[2],
+            "APs"   : coco_eval.stats[3],
+            "APm"   : coco_eval.stats[4],
+            "APl"   : coco_eval.stats[5],
+            "AR@1"  : coco_eval.stats[6],
+            "AR@10" : coco_eval.stats[7],
+            "AR@100": coco_eval.stats[8],
+            "ARs"   : coco_eval.stats[9],
+            "ARm"   : coco_eval.stats[10],
+            "ARl"   : coco_eval.stats[11],
+        }
 
         # Print results
-        self._log_results()
+        self._log_results(results=results)
 
         # Return results
         return results
 
     @override
-    def _build_dataloader(self) -> DataLoader:
+    def _build_dataloader(self):
         """Build a dataloader for the given dataset."""
-        pass
+        # Convert label files to a COCO JSON file
+        if not self._exist_ok:
+            if self._input_json:
+                self._input_json.unlink(missing_ok=True)
+            if self._target_json:
+                self._target_json.unlink(missing_ok=True)
+
+        if not self._input_json.exists():
+            convert_labels_to_json(
+                image_dir=self._image_dir,
+                label_dir=self._input_dir,
+                output_json=self._input_json,
+                fmt=self._fmt,
+                remap=self._remap,
+            )
+        if not self._target_json.exists():
+            convert_labels_to_json(
+                image_dir=self._image_dir,
+                label_dir=self._target_dir,
+                output_json=self._target_json,
+                fmt=self._fmt,
+                remap=self._remap,
+            )
 
     # --- Logging ---
     @override
@@ -986,38 +1055,28 @@ class COCOEvaluator(Evaluator):
         console.rule(f"[bold red] {self._model}")
         console.log(f"[bold green]Model : {self._model}")
         console.log(f"[bold red]Data  : {self._data}")
-        console.log(f"[bold]Device: {self.device}")
+        console.log(f"[bold]Device: {self._device}")
 
     @override
-    def _log_results(self):
+    def _log_results(self, results: dict[str, Any]):
         """Print the measured results."""
-        results = self.results
-        results_gt_mean = self.results_gt_mean
         pad = 10
+        message = ""
 
         # Headers
-        header = ""
         for m, v in results.items():
             if v:
-                header += f"{f'{m}':<{pad}}\t"
-
+                message += f"{f'{m}':<{pad}}\t"
+        message += "\n"
         # Values
-        message = ""
         for i, (m, v) in enumerate(results.items()):
             if v:
                 if i == len(results) - 1:
                     message += f"{v:.{pad}f}\n"
                 else:
                     message += f"{v:.{pad}f}\t"
-        for i, (m, v) in enumerate(results_gt_mean.items()):
-            if v:
-                if i == len(results) - 1:
-                    message += f"{v:.{pad}f}\n"
-                else:
-                    message += f"{v:.{pad}f}\t"
 
-        print(f"{header}")
-        print(f"{message}")
+        print(f"{message}\n")
 
 # endregion
 

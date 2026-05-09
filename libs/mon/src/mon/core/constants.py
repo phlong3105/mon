@@ -145,9 +145,9 @@ class K(SimpleNamespace):
     VIS_DIR     = "vis"
 
     # --- Extensions ---
-    ANN_EXT     = ConfigExtension.TXT
     CKPT_EXT    = WeightExtension.CKPT
     IMAGE_EXT   = ImageExtension.JPG
+    LABEL_EXT   = ConfigExtension.TXT
     WEIGHTS_EXT = WeightExtension.PT
 
     # --- Values ---

@@ -9,20 +9,29 @@ This module provides input and output operations for label files.
 from __future__ import annotations
 
 __all__ = [
+    "convert_labels_to_json",
     "load_bbox",
     "write_bbox",
 ]
 
+import json
 import xml.etree.ElementTree as ET
 
 import numpy as np
 from box import Box
 from numpy import ndarray
 
-from mon.core import BBoxes, BBoxFormat, load_yaml, Path, Size
+from mon.core import (
+    BBoxes,
+    BBoxFormat,
+    create_progress_bar,
+    K,
+    load_yaml,
+    Path,
+    Size,
+)
 from mon.ops.image import read_imgsz
 from .bbox import to_2d_bbox
-
 
 # ==============================================================================
 # region CONSTANTS
@@ -382,6 +391,72 @@ def write_bbox(
     else:
         raise ValueError(f"the writing method for '{fmt}' format has not been "
                          f"supported yet.")
+
+
+# ==============================================================================
+# region INPUT-OUTPUT
+# ==============================================================================
+
+def convert_labels_to_json(
+    image_dir: Path,
+    label_dir: Path,
+    output_json: Path,
+    fmt: BBoxFormat = BBoxFormat.CXCYWHN,
+    remap: dict | Path | None = None,
+):
+    """Convert all labels from a directory to a JSON file.
+
+    Args:
+        image_dir (Path): Directory containing the image files.
+        label_dir (Path): Directory containing the label files.
+        output_json (Path): Path to save the output JSON file.
+        fmt (BBoxFormat, optional): Format of the bounding boxes in the label files.
+            Defaults to BBoxFormat.CXCYWHN.
+        remap (dict | Path, optional): Class ID remapping. Defaults to None.
+    """
+    # Normalize inputs
+    image_dir = Path(image_dir).normalize()
+    label_dir = Path(label_dir).normalize()
+    output_json = Path(output_json).normalize()
+    output_json.parent.mkdir(parents=True, exist_ok=True)
+
+    # Loop through each pair of image-label files
+    image_files = [f for f in image_dir.glob("*") if f.is_image_file()]
+    image_files = sorted(image_files)
+
+    # Create remap dictionary
+    if remap and isinstance(remap, (Path, str)):
+        remap = load_yaml(path=remap)
+
+    labels = []
+    with create_progress_bar() as pbar:
+        for i, image_file in pbar.track(
+            sequence=enumerate(image_files),
+            total=len(image_files),
+            description=f"[bright_yellow]Processing",
+        ):
+            image_id = i
+            imgsz = read_imgsz(image_file)
+
+            # Load and convert bounding boxes to YOLO format
+            label_file = label_dir / f"{image_file.stem}{K.LABEL_EXT}"
+            bbox: BBoxes = load_bbox(path=label_file, fmt=fmt, remap=remap, imgsz=imgsz)
+
+            # Append labels
+            if bbox.is_empty:
+                continue
+
+            for b in bbox.xywh(imgsz=imgsz):
+                labels.append({
+                    "image_id": image_id,
+                    "category_id": int(b[5]),
+                    "bbox": [round(float(v), 32) for v in b[0:4]],
+                    "score": float(b[6]),
+                })
+
+    # Write to JSON file
+    with open(output_json.as_posix(), "w") as f:
+        json.dump(labels, f, indent=None)
 
 # endregion
 

@@ -458,9 +458,9 @@ class Predictor(Runner, ABC):
             src_path=src_path,
         )
         if stem:
-            save_path = save_dir / f"{src_path.stem}_{stem}{K.ANN_EXT}"
+            save_path = save_dir / f"{src_path.stem}_{stem}{K.LABEL_EXT}"
         else:
-            save_path = save_dir / f"{src_path.stem}{K.ANN_EXT}"
+            save_path = save_dir / f"{src_path.stem}{K.LABEL_EXT}"
 
         # Save the bbox
         write_bbox(bbox=bboxes, path=save_path, fmt=fmt)
