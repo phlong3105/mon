@@ -90,7 +90,7 @@ def _load_bbox_yolo(
 
     Returns:
         ndarray: An array of shape (N, 8+) where each row represents a bounding
-            box in the format [cx, cy, w, h, angle, class_id, score, track_id].
+            box in the format [class_id, cx, cy, w, h, angle, score, track_id].
     """
     path = Path(path).normalize()
 
@@ -128,43 +128,43 @@ def _load_bbox_yolo(
 
     # 4. Construct the final bounding box array
     bbox = np.zeros((num_rows, 8), dtype=np.float32)
-    bbox[:, 0:4] = raw_data[:, 1:5]  # cx, cy, w, h
-    bbox[:, 5] = raw_data[:, 0]  # class_id
+    bbox[:, 0] = raw_data[:, 0]  # class_id
+    bbox[:, 1:5] = raw_data[:, 1:5]  # cx, cy, w, h
     if has_angle and has_score and has_track_id:
-        bbox[:, 4] = raw_data[:, 5]  # angle
+        bbox[:, 5] = raw_data[:, 5]  # angle
         bbox[:, 6] = raw_data[:, 6]  # score
         bbox[:, 7] = raw_data[:, 7]  # track_id
     elif (not has_angle) and has_score and has_track_id:
-        bbox[:, 4] = np.full(num_rows, _DEFAULT_ANGLE)
+        bbox[:, 5] = np.full(num_rows, _DEFAULT_ANGLE)
         bbox[:, 6] = raw_data[:, 5]  # score
         bbox[:, 7] = raw_data[:, 6]  # track_id
     elif has_angle and (not has_score) and has_track_id:
-        bbox[:, 4] = raw_data[:, 5]  # angle
+        bbox[:, 5] = raw_data[:, 5]  # angle
         bbox[:, 6] = np.full(num_rows, _DEFAULT_SCORE)
         bbox[:, 7] = raw_data[:, 6]  # track_id
     elif has_angle and has_score and (not has_track_id):
-        bbox[:, 4] = raw_data[:, 5]  # angle
+        bbox[:, 5] = raw_data[:, 5]  # angle
         bbox[:, 6] = raw_data[:, 6]  # score
         bbox[:, 7] = np.full(num_rows, _DEFAULT_TRACK_ID)
     elif (not has_angle) and (not has_score) and has_track_id:
-        bbox[:, 4] = np.full(num_rows, _DEFAULT_ANGLE)
+        bbox[:, 5] = np.full(num_rows, _DEFAULT_ANGLE)
         bbox[:, 6] = np.full(num_rows, _DEFAULT_SCORE)
         bbox[:, 7] = raw_data[:, 5]  # track_id
     elif (not has_angle) and has_score and (not has_track_id):
-        bbox[:, 4] = np.full(num_rows, _DEFAULT_ANGLE)
+        bbox[:, 5] = np.full(num_rows, _DEFAULT_ANGLE)
         bbox[:, 6] = raw_data[:, 5]  # score
         bbox[:, 7] = np.full(num_rows, _DEFAULT_TRACK_ID)
     elif has_angle and (not has_score) and (not has_track_id):
-        bbox[:, 4] = raw_data[:, 5]  # angle
+        bbox[:, 5] = raw_data[:, 5]  # angle
         bbox[:, 6] = np.full(num_rows, _DEFAULT_SCORE)
         bbox[:, 7] = np.full(num_rows, _DEFAULT_TRACK_ID)
     else:  # not has_angle and not has_score and not has_track_id:
-        bbox[:, 4] = np.full(num_rows, _DEFAULT_ANGLE)
+        bbox[:, 5] = np.full(num_rows, _DEFAULT_ANGLE)
         bbox[:, 6] = np.full(num_rows, _DEFAULT_SCORE)
         bbox[:, 7] = np.full(num_rows, _DEFAULT_TRACK_ID)
 
     # 5. Validate
-    if bbox[:, 0:4].any() < 0:
+    if bbox[:, 1:5].any() < 0:
         raise ValueError("bbox coordinates must be non-negative.")
 
     return bbox
@@ -185,7 +185,7 @@ def _load_bbox_voc(
 
     Returns:
         ndarray: An array of shape (N, 8+) where each row represents a bounding
-            box in the format [cx, cy, w, h, angle, class_id, score, track_id].
+            box in the format [class_id, x1, y1, x2, y2, angle, score, track_id].
     """
     path = Path(path).normalize()
 
@@ -226,9 +226,9 @@ def _load_bbox_voc(
         y1 = int(bndbox.find("ymin").text)
         x2 = int(bndbox.find("xmax").text)
         y2 = int(bndbox.find("ymax").text)
-        bbox.append([x1, y1, x2, y2, class_id, _DEFAULT_ANGLE, _DEFAULT_SCORE, _DEFAULT_TRACK_ID])
+        bbox.append([class_id, x1, y1, x2, y2, _DEFAULT_ANGLE, _DEFAULT_SCORE, _DEFAULT_TRACK_ID])
 
-    # 4. Convert to numpy array
+    # 4. Convert to a numpy array
     if len(bbox) == 0:
         bbox = np.empty((0, 8), dtype=np.float32)
     else:
@@ -236,7 +236,7 @@ def _load_bbox_voc(
         bbox = to_2d_bbox(bbox)
 
     # 5. Validate
-    if bbox[:, 0:4].any() < 0:
+    if bbox[:, 1:5].any() < 0:
         raise ValueError("bbox coordinates must be non-negative.")
 
     return bbox
@@ -324,8 +324,7 @@ def _write_bbox_yolo(
         - track_id: is an optional value representing the tracking ID.
 
     Args:
-        bbox (BBoxes): The bounding boxes to be written. The data format is:
-            [cx, cy, w, h, angle, class_id, score, track_id].
+        bbox (BBoxes): The bounding boxes to be written.
         path (Path): The file path to write the bounding boxes to.
         imgsz (Size | None, optional): The image size (width, height) to use for
             normalization if needed. Required if ``fmt`` is a normalized format.
@@ -337,21 +336,20 @@ def _write_bbox_yolo(
     if not path.exists():
         path.parent.mkdir(parents=True, exist_ok=True)
 
-    # Convert bbox to the desired output format
-    #   0   1  2  3    4        5       6        7
-    # [cx, cy, w, h, angle, class_id, score, track_id]
-    bbox_ = bbox.cxcywhn(imgsz=imgsz)
-
     # Write bboxes to label file
     with open(path.as_posix(), "w", encoding="utf-8") as f:
-        for b in bbox_:
+        for i, b in enumerate(bbox):
             # [class_id, cx, cy, w, h, angle, score, track_id]
+            b_ = b.cxcywhn(imgsz=imgsz)
             f.write(
-                f"{int(b[5])} "  # class_id
-                f"{float(b[0])} {float(b[1])} {float(b[2])} {float(b[3])} "  # x1, y1, x2, y2
-                f"{float(b[4])} "  # angle
-                f"{float(b[6])} "
-                f"{int(b[7])} "
+                f"{b.class_id} "  # class_id
+                f"{range(float(b_[0]), 30)} "  # cx
+                f"{range(float(b_[1]), 30)} "  # cy
+                f"{range(float(b_[2]), 30)} "  # w  
+                f"{range(float(b_[3]), 30)} "  # h  
+                f"{b[4]} "  # angle
+                f"{b[6]} "
+                f"{b[7]} "
                 f"\n"
             )
 
@@ -366,6 +364,7 @@ def write_bbox(
     """Write bounding boxes to a YOLO-format .txt file.
 
     Each line in the label file should contain:
+       0       1   2  3  4    5      6       7
     class_id, cx, cy, w, h, angle, score, track_id
     where:
         - class_id: is the class index (0-based).
@@ -440,18 +439,18 @@ def convert_labels_to_json(
 
             # Load and convert bounding boxes to YOLO format
             label_file = label_dir / f"{image_file.stem}{K.LABEL_EXT}"
-            bbox: BBoxes = load_bbox(path=label_file, fmt=fmt, remap=remap, imgsz=imgsz)
+            bboxes: BBoxes = load_bbox(path=label_file, fmt=fmt, remap=remap, imgsz=imgsz)
 
             # Append labels
-            if bbox.is_empty:
+            if bboxes.is_empty:
                 continue
 
-            for b in bbox.xywh(imgsz=imgsz):
+            for b in bboxes:
                 labels.append({
                     "image_id": image_id,
-                    "category_id": int(b[5]),
-                    "bbox": [round(float(v), 32) for v in b[0:4]],
-                    "score": float(b[6]),
+                    "category_id": b.class_id,
+                    "bbox": [round(float(v), 32) for v in b.xywh(imgsz)],
+                    "score": b.score,
                 })
 
     # Write to JSON file

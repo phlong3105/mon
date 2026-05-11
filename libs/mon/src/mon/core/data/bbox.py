@@ -23,7 +23,7 @@ from numpy import ndarray
 from mon.core.dtype import BBoxFormat
 from mon.core.path import Path
 from mon.core.typing import Int2, Int3
-from mon.core.utils import is_valid_str
+from mon.core.utils import is_list_of, is_valid_str
 from .data import Data
 from .size import Size
 
@@ -37,9 +37,12 @@ class BBox(Data):
     """Data structure for handling a single bounding box.
 
     Attributes:
-        bbox (ndarray): Bounding box array of shape (8+) and in CXCYWHN format
-            (i.e., YOLO). The data format is: [cx, cy, w, h, angle, class_id,
-            score, track_id].
+        class_id (int): Class ID of the object.
+        bbox (ndarray): Bounding box array of shape (4,) and in CXCYWHN format
+            (i.e., YOLO). The data format is: [cx, cy, w, h].
+        angle (float): Rotation angle in degrees.
+        score (float): Confidence score of the detection.
+        track_id (int): Tracking ID for multi-object tracking.
         imgsz (Size): Size of the corresponding image as (H, W).
         index (int, optional): Index of the bounding box in the image.
             Defaults to -1.
@@ -49,7 +52,11 @@ class BBox(Data):
             Defaults to None.
     """
 
+    class_id: int
     bbox: ndarray
+    angle: float
+    score: float
+    track_id: int
     imgsz: Size
     index: int = -1
     path: Path | None = None
@@ -61,20 +68,17 @@ class BBox(Data):
 
         Raises:
             TypeError: If ``bbox`` is not a ndarray.
-            ValueError: If ``bbox`` does not have at least 8 elements.
-            ValueError: If any element in ``bbox[4:]`` is negative.
-            ValueError: If ``imgsz`` is not a tuple of length 2.
         """
         # Validate inputs
-        if not isinstance(self.bbox, ndarray):
-            raise TypeError(f"expected bbox to be a 1D array, "
-                            f"got {type(self.bbox).__name__}.")
-        if len(self.bbox) < 8:
-            raise ValueError(f"expected bbox to be a 1D array of shape (8+), "
-                             f"got {len(self.bbox)}.")
-        if any(self.bbox[0:4] < 0):
-            raise ValueError(f"expected bbox to be non-negative, "
-                             f"got {list(self.bbox[:4])}.")
+        if (
+            not isinstance(self.bbox, ndarray)
+            or len(self.bbox) < 4
+            or any(self.bbox < 0)
+        ):
+            raise TypeError(
+                f"expected bbox to be a non-negative 1D array of shape (4,), "
+                f"got {type(self.bbox).__name__} and {self.bbox.shape}."
+            )
         if not isinstance(self.imgsz, Size):
             self.imgsz = Size.from_any(self.imgsz)
         if is_valid_str(self.path):
@@ -87,45 +91,26 @@ class BBox(Data):
         """Return the length of the container."""
         return 1
 
-    def __getitem__(self, index: int) -> ndarray:
+    def __getitem__(self, index: int) -> BBox:
         """Return the element at the given ``index``."""
-        return self.bbox
+        return self
 
     # --- Properties ---
     @property
     def data(self) -> ndarray:
-        """Return the underlying data."""
-        return self.bbox
+        """Return the underlying data as a single array of shape (8,).
+        The data format is: [class_id, cx, cy, w, h, angle, score, track_id].
+        """
+        return np.array([
+            self.class_id,
+            self.bbox[0], self.bbox[1], self.bbox[2], self.bbox[3],
+            self.angle, self.score, self.track_id
+        ], dtype=np.float32)
 
     @property
     def shape(self) -> int:
         """Return the data shape."""
-        return len(self.bbox)
-
-    @property
-    def coords(self) -> ndarray:
-        """Return the bounding box coordinates of shape (4,) in CXCYWHN format."""
-        return self.bbox[0:4]
-
-    @property
-    def angle(self) -> float:
-        """Return the rotation angle."""
-        return self.bbox[4]
-
-    @property
-    def class_id(self) -> int:
-        """Return the class ID."""
-        return int(self.bbox[5])
-
-    @property
-    def conf(self) -> float:
-        """Return the confidence score."""
-        return self.bbox[6]
-
-    @property
-    def track_id(self) -> int:
-        """Return the tracking ID."""
-        return int(self.bbox[7])
+        return self.bbox.shape
 
     @property
     def meta(self) -> dict[str, Any]:
@@ -155,8 +140,8 @@ class BBox(Data):
         """Create a bounding box from XYXY format.
 
         Args:
-            bbox (ndarray): Bounding box array of shape (4+,) in XYXY format.
-                The data format is: [cx, cy, w, h, angle, class_id, score, track_id].
+            bbox (ndarray): Bounding box array of shape (8+,) in XYXY format.
+                The data format is: [class_id, x1, y1, x2, y2, angle, score, track_id].
             imgsz (Size): Size of the corresponding image as (H, W).
             index (int, optional): Index of the bounding box in the image.
                 Defaults to -1.
@@ -166,13 +151,20 @@ class BBox(Data):
         """
         imgsz = Size.from_any(imgsz)
         eps = 1e-7  # Avoid division by zero
-        cx = ((bbox[0] + bbox[2]) / 2.0) / (imgsz.w + eps)
-        cy = ((bbox[1] + bbox[3]) / 2.0) / (imgsz.h + eps)
-        w = (bbox[2] - bbox[0]) / (imgsz.w + eps)
-        h = (bbox[3] - bbox[1]) / (imgsz.h + eps)
+        cx = ((bbox[1] + bbox[3]) / 2.0) / (imgsz.w + eps)
+        cy = ((bbox[2] + bbox[4]) / 2.0) / (imgsz.h + eps)
+        w = (bbox[3] - bbox[1]) / (imgsz.w + eps)
+        h = (bbox[4] - bbox[2]) / (imgsz.h + eps)
         return cls(
-            bbox=np.array([cx, cy, w, h, *bbox[4:]], dtype=np.float32),
-            imgsz=imgsz, index=index, path=path, base_dir=base_dir
+            class_id=int(bbox[0]),
+            bbox=np.array([cx, cy, w, h], dtype=np.float32),
+            angle=float(bbox[5]),
+            score=float(bbox[6]),
+            track_id=int(bbox[7]),
+            imgsz=imgsz,
+            index=index,
+            path=path,
+            base_dir=base_dir,
         )
 
     @classmethod
@@ -187,8 +179,8 @@ class BBox(Data):
         """Create a bounding box from XYWH format.
 
         Args:
-            bbox (ndarray): Bounding box array of shape (4+,) in XYWH format.
-                The data format is: [cx, cy, w, h, angle, class_id, score, track_id].
+            bbox (ndarray): Bounding box array of shape (8+,) in XYWH format.
+                The data format is: [class_id, x, y, w, h, angle, score, track_id].
             imgsz (Size): Size of the corresponding image as (H, W).
             index (int, optional): Index of the bounding box in the image.
                 Defaults to -1.
@@ -198,12 +190,16 @@ class BBox(Data):
         """
         imgsz = Size.from_any(imgsz)
         eps = 1e-7  # Avoid division by zero
-        cx = (bbox[0] + bbox[2] / 2.0) / (imgsz.w + eps)
-        cy = (bbox[1] + bbox[3] / 2.0) / (imgsz.h + eps)
-        w = bbox[2] / (imgsz.w + eps)
-        h = bbox[3] / (imgsz.h + eps)
+        cx = (bbox[1] + bbox[3] / 2.0) / (imgsz.w + eps)
+        cy = (bbox[2] + bbox[4] / 2.0) / (imgsz.h + eps)
+        w = bbox[3] / (imgsz.w + eps)
+        h = bbox[4] / (imgsz.h + eps)
         return cls(
-            bbox=np.array([cx, cy, w, h, *bbox[4:]], dtype=np.float32),
+            class_id=int(bbox[0]),
+            bbox=np.array([cx, cy, w, h], dtype=np.float32),
+            angle=float(bbox[5]),
+            score=float(bbox[6]),
+            track_id=int(bbox[7]),
             imgsz=imgsz,
             index=index,
             path=path,
@@ -218,7 +214,7 @@ class BBox(Data):
             imgsz (Size | None, optional): Image size as (H, W). If None, use
                 the stored ``self.imgsz``. Defaults to None.
         """
-        _, _, w, h = self.coords
+        _, _, w, h = self.bbox
         imgsz: Size = imgsz or self.imgsz
         h = h * imgsz.h
         w = w * imgsz.w
@@ -232,7 +228,7 @@ class BBox(Data):
                 the stored ``self.imgsz``. Defaults to None.
         """
         imgsz: Size = imgsz or self.imgsz
-        cx, cy = self.coords[0:2]
+        cx, cy = self.bbox[0:2]
         cx = cx * imgsz.w
         cy = cy * imgsz.h
         return np.array([cx, cy], dtype=np.float32)
@@ -277,13 +273,13 @@ class BBox(Data):
             imgsz (Size | None, optional): Image size as (H, W). If None, use
                 the stored ``self.imgsz``. Defaults to None.
         """
-        cx, cy, w, h = self.coords
+        cx, cy, w, h = self.bbox
         imgsz: Size = imgsz or self.imgsz
         cx = cx * imgsz.w
         cy = cy * imgsz.h
         w = w * imgsz.w
         h = h * imgsz.h
-        return np.array([cx, cy, w, h, *self.bbox[4:]], dtype=np.float32)
+        return np.array([cx, cy, w, h], dtype=np.float32)
 
     def xyxy(self, imgsz: Size | None = None) -> ndarray:
         """Return the bounding box array of shape (8,) in XYXY format.
@@ -292,13 +288,13 @@ class BBox(Data):
             imgsz (Size | None, optional): Image size as (H, W). If None, use
                 the stored ``self.imgsz``. Defaults to None.
         """
-        cx, cy, w, h = self.coords
+        cx, cy, w, h = self.bbox
         imgsz: Size = imgsz or self.imgsz
         x1 = (cx - w / 2.0) * imgsz.w
         y1 = (cy - h / 2.0) * imgsz.h
         x2 = (cx + w / 2.0) * imgsz.w
         y2 = (cy + h / 2.0) * imgsz.h
-        return np.array([x1, y1, x2, y2, *self.bbox[4:]], dtype=np.float32)
+        return np.array([x1, y1, x2, y2], dtype=np.float32)
 
     def xywh(self, imgsz: Size | None = None) -> ndarray:
         """Return the bounding box array of shape (8,) in XYWH format.
@@ -307,13 +303,13 @@ class BBox(Data):
             imgsz (Size | None, optional): Image size as (H, W). If None, use
                 the stored ``self.imgsz``. Defaults to None.
         """
-        cx, cy, w, h = self.coords
+        cx, cy, w, h = self.bbox
         imgsz: Size = imgsz or self.imgsz
         x = (cx - w / 2.0) * imgsz.w
         y = (cy - h / 2.0) * imgsz.h
         w = w * imgsz.w
         h = h * imgsz.h
-        return np.array([x, y, w, h, *self.bbox[4:]], dtype=np.float32)
+        return np.array([x, y, w, h], dtype=np.float32)
 
     # --- Visualization ---
     def draw(
@@ -394,9 +390,7 @@ class BBoxes(Data):
     """Data structure for handling multiple bounding boxes.
 
     Attributes:
-        bbox (ndarray): Bounding box array of shape (N, 8+) and in CXCYWHN format.
-           (i.e., YOLO). The data format is: [cx, cy, w, h, angle, class_id,
-            score, track_id].
+        bboxes (list[BBox]): List of BBox instances representing the bounding boxes.
         imgsz (Size): Size of the corresponding image as (H, W).
         path (Path | None, optional): Path to the label file. Defaults to None.
         base_dir (Path | None, optional): Base directory for relative paths.
@@ -404,7 +398,7 @@ class BBoxes(Data):
             Defaults to None.
     """
 
-    bbox: ndarray
+    bboxes: list[BBox]
     imgsz: Size
     path: Path | None = None
     base_dir: Path | None = None
@@ -414,20 +408,15 @@ class BBoxes(Data):
         """Perform post-initialization tasks.
 
         Raises:
-            TypeError: If ``bbox`` is not a ndarray.
-            ValueError: If ``bbox`` does not have at least 8 elements.
-            ValueError: If any element in ``bbox[4:]`` is negative.
-            ValueError: If ``imgsz`` is not a tuple of length 2.
+            TypeError: If ``bbox`` is not a list of BBox instances.
         """
         # Validate inputs
-        if not isinstance(self.bbox, ndarray):
-            raise TypeError(f"expected bbox to be a 2D array, "
-                            f"got {type(self.bbox).__name__}.")
-        if self.bbox.ndim != 2 or self.bbox.shape[1] < 8:
-            raise ValueError(f"expected bbox to be a 2D array of shape (N, 8+), "
-                             f"got {self.bbox.shape}.")
-        if (self.bbox[:, 0:4] < 0).any():
-            raise ValueError(f"expected bbox to be non-negative.")
+        if not is_list_of(self.bboxes, BBox):
+            raise TypeError(
+                f"expected bboxes to be a list of BBox instances, "
+                f"got {type(self.bboxes).__name__} with elements of type "
+                f"{type(self.bboxes[0]).__name__ if self.bboxes else 'N/A'}."
+            )
         if not isinstance(self.imgsz, Size):
             self.imgsz = Size.from_any(self.imgsz)
         if is_valid_str(self.path):
@@ -438,53 +427,49 @@ class BBoxes(Data):
     # --- Container / Sequence Methods ---
     def __len__(self) -> int:
         """Return the length of the container."""
-        return len(self.bbox)
+        return len(self.bboxes)
 
     def __getitem__(self, index: int) -> BBox:
         """Return the element at the given ``index``."""
-        return BBox(
-            bbox=self.bbox[index],
-            imgsz=self.imgsz,
-            index=index,
-            path=self.path,
-            base_dir=self.base_dir
-        )
+        return self.bboxes[index]
 
     # --- Retrieval ---
     @property
     def data(self) -> ndarray:
         """Return the underlying data."""
-        return self.bbox
+        return np.array([b.data for b in self.bboxes], dtype=np.float32)
 
     @property
     def shape(self) -> Int2:
         """Return the data shape."""
-        return self.bbox.shape
-
-    @property
-    def coords(self) -> ndarray:
-        """Return the bounding box coordinates of shape (N, 4) in CXCYWHN format."""
-        return self.bbox[:, 0:4]
-
-    @property
-    def angle(self) -> ndarray:
-        """Return the rotation angle of shape (N,)."""
-        return self.bbox[:, 4]
+        n = self.__len__()
+        m = self.bboxes[0].shape if self.is_empty else 0
+        return n, m
 
     @property
     def class_id(self) -> ndarray:
         """Return the class ID of shape (N,)."""
-        return self.bbox[:, 5]
+        return np.array([b.class_id for b in self.bboxes], dtype=np.int32)
 
     @property
-    def conf(self) -> ndarray:
+    def coords(self) -> ndarray:
+        """Return the bounding box coordinates of shape (N, 4) in CXCYWHN format."""
+        return np.array([b.bbox for b in self.bboxes], dtype=np.float32)
+
+    @property
+    def angles(self) -> ndarray:
+        """Return the rotation angle of shape (N,)."""
+        return np.array([b.angle for b in self.bboxes], dtype=np.float32)
+
+    @property
+    def scores(self) -> ndarray:
         """Return the confidence score of shape (N,)."""
-        return self.bbox[:, 6]
+        return np.array([b.score for b in self.bboxes], dtype=np.float32)
 
     @property
-    def track_id(self) -> ndarray:
+    def track_ids(self) -> ndarray:
         """Return the tracking ID of shape (N,)."""
-        return self.bbox[:, 7]
+        return np.array([b.track_id for b in self.bboxes], dtype=np.int32)
 
     @property
     def hash(self) -> int | None:
@@ -504,32 +489,44 @@ class BBoxes(Data):
     @property
     def is_empty(self) -> bool:
         """Return True if the bounding boxes are empty."""
-        return len(self.bbox) == 0
+        return len(self.bboxes) == 0
 
     # --- Creation ---
     @classmethod
-    def from_bbox_list(
+    def from_cxcywhn(
         cls,
-        bbox_list: list[BBox],
+        bbox: ndarray,
         imgsz: Size,
         path: Path | None = None,
-        base_dir: Path | None = None,
+        base_dir: Path | None = None
     ) -> "BBoxes":
-        """Create bounding boxes from a list of bounding boxes.
+        """Create bounding boxes from XYXY format.
 
         Args:
-            bbox_list (list[BBox]): List of BBox instances.
+            bbox (ndarray): Bounding box array of shape (N, 8+) in XYXY format.
+                The data format is:
+                [class_id, cx, cy, w, h, angle, score, track_id].
             imgsz (Size): Size of the corresponding image as (H, W).
             path (Path | None, optional): Path to the label file. Defaults to None.
             base_dir (Path | None, optional): Base directory for relative paths.
                 Defaults to None.
         """
-        return cls(
-            bbox=np.array([b.bbox for b in bbox_list], dtype=np.float32),
-            imgsz=imgsz,
-            path=path,
-            base_dir=base_dir,
-        )
+        imgsz = Size.from_any(imgsz)
+        bboxes = [
+            BBox(
+                class_id=int(bbox[i, 0]),
+                bbox=bbox[i, 1:5],
+                angle=float(bbox[i, 5]),
+                score=float(bbox[i, 6]),
+                track_id=int(bbox[i, 7]),
+                imgsz=imgsz,
+                index=i,
+                path=path,
+                base_dir=base_dir,
+            )
+            for i in range(bbox.shape[0])
+        ]
+        return cls(bboxes=bboxes, imgsz=imgsz, path=path, base_dir=base_dir)
 
     @classmethod
     def from_xyxy(
@@ -542,8 +539,9 @@ class BBoxes(Data):
         """Create bounding boxes from XYXY format.
 
         Args:
-            bbox (ndarray): Bounding box array of shape (N, 4+) in XYXY format.
-                The data format is: [cx, cy, w, h, angle, class_id, score, track_id].
+            bbox (ndarray): Bounding box array of shape (N, 8+) in XYXY format.
+                The data format is:
+                [class_id, x1, y1, x2, y2, angle, score, track_id].
             imgsz (Size): Size of the corresponding image as (H, W).
             path (Path | None, optional): Path to the label file. Defaults to None.
             base_dir (Path | None, optional): Base directory for relative paths.
@@ -551,14 +549,25 @@ class BBoxes(Data):
         """
         imgsz = Size.from_any(imgsz)
         eps = 1e-7  # Avoid division by zero
-        cx = ((bbox[:, 0] + bbox[:, 2]) / 2.0) / (imgsz.w + eps)
-        cy = ((bbox[:, 1] + bbox[:, 3]) / 2.0) / (imgsz.h + eps)
-        w = (bbox[:, 2] - bbox[:, 0]) / (imgsz.w + eps)
-        h = (bbox[:, 3] - bbox[:, 1]) / (imgsz.h + eps)
-        return cls(
-            bbox=np.array([cx, cy, w, h, *bbox[:, 4:].T], dtype=np.float32).T,
-            imgsz=imgsz, path=path, base_dir=base_dir
-        )
+        cx = ((bbox[:, 1] + bbox[:, 3]) / 2.0) / (imgsz.w + eps)
+        cy = ((bbox[:, 2] + bbox[:, 4]) / 2.0) / (imgsz.h + eps)
+        w  = (bbox[:, 3] - bbox[:, 1]) / (imgsz.w + eps)
+        h  = (bbox[:, 4] - bbox[:, 2]) / (imgsz.h + eps)
+        bboxes = [
+            BBox(
+                class_id=int(bbox[i, 0]),
+                bbox=np.array([cx[i], cy[i], w[i], h[i]], dtype=np.float32),
+                angle=float(bbox[i, 5]),
+                score=float(bbox[i, 6]),
+                track_id=int(bbox[i, 7]),
+                imgsz=imgsz,
+                index=i,
+                path=path,
+                base_dir=base_dir,
+            )
+            for i in range(bbox.shape[0])
+        ]
+        return cls(bboxes=bboxes, imgsz=imgsz, path=path, base_dir=base_dir)
 
     @classmethod
     def from_xywh(
@@ -571,8 +580,9 @@ class BBoxes(Data):
         """Create bounding boxes from XYWH format.
 
         Args:
-            bbox (ndarray): Bounding box array of shape (N, 4+) in XYWH format.
-                The data format is: [cx, cy, w, h, angle, class_id, score, track_id].
+            bbox (ndarray): Bounding box array of shape (N, 8+) in XYWH format.
+                The data format is:
+                [class_id, x, y, w, h, angle, score, track_id].
             imgsz (Size): Size of the corresponding image as (H, W).
             path (Path | None, optional): Path to the label file. Defaults to None.
             base_dir (Path | None, optional): Base directory for relative paths.
@@ -580,19 +590,30 @@ class BBoxes(Data):
         """
         imgsz = Size.from_any(imgsz)
         eps = 1e-7  # Avoid division by zero
-        cx = (bbox[:, 0] + bbox[:, 2] / 2.0) / (imgsz.w + eps)
-        cy = (bbox[:, 1] + bbox[:, 3] / 2.0) / (imgsz.h + eps)
-        w = bbox[:, 2] / (imgsz.w + eps)
-        h = bbox[:, 3] / (imgsz.h + eps)
-        return cls(
-            bbox=np.array([cx, cy, w, h, *bbox[:, 4:].T], dtype=np.float32).T,
-            imgsz=imgsz, path=path, base_dir=base_dir
-        )
+        cx = (bbox[:, 1] + bbox[:, 3] / 2.0) / (imgsz.w + eps)
+        cy = (bbox[:, 2] + bbox[:, 4] / 2.0) / (imgsz.h + eps)
+        w  = bbox[:, 3] / (imgsz.w + eps)
+        h  = bbox[:, 4] / (imgsz.h + eps)
+        bboxes = [
+            BBox(
+                class_id=int(bbox[i, 0]),
+                bbox=np.array([cx[i], cy[i], w[i], h[i]], dtype=np.float32),
+                angle=float(bbox[i, 5]),
+                score=float(bbox[i, 6]),
+                track_id=int(bbox[i, 7]),
+                imgsz=imgsz,
+                index=i,
+                path=path,
+                base_dir=base_dir,
+            )
+            for i in range(bbox.shape[0])
+        ]
+        return cls(bboxes=bboxes, imgsz=imgsz, path=path, base_dir=base_dir)
 
     @classmethod
     def from_any(
         cls,
-        bbox: ndarray | list[BBox] | list[ndarray],
+        bbox: list[BBox] | ndarray,
         imgsz: Size,
         fmt: BBoxFormat = BBoxFormat.CXCYWHN,
         path: Path | None = None,
@@ -601,17 +622,19 @@ class BBoxes(Data):
         """Create bounding boxes from an arbitrary format.
 
         Args:
-            bbox (ndarray | list[BBox] | list[ndarray]): Bounding box data in
+            bbox (list[BBox] | ndarray): Bounding box data in
                 various formats. Can be a single array of shape (N, 8+),
-                a list of BBox instances, or a list of arrays.
+                a list of BBox instances.
             imgsz (Size): Size of the corresponding image as (H, W).
             fmt (BBoxFormat, optional): Format of the input bounding box data.
                 Defaults to BBoxFormat.CXCYWHN.
             path (Path | None, optional): Path to the label file. Defaults to None.
             base_dir (Path | None, optional): Base directory for relative paths.
         """
-        if fmt == BBoxFormat.CXCYWHN:
-            return cls(bbox=bbox, imgsz=imgsz, path=path, base_dir=base_dir)
+        if is_list_of(bbox, BBox):
+            return cls(bboxes=bbox, imgsz=imgsz, path=path, base_dir=base_dir)
+        elif fmt == BBoxFormat.CXCYWHN:
+            return cls.from_cxcywhn(bbox=bbox, imgsz=imgsz, path=path, base_dir=base_dir)
         elif fmt == BBoxFormat.XYXY:
             return cls.from_xyxy(bbox=bbox, imgsz=imgsz, path=path, base_dir=base_dir)
         elif fmt == BBoxFormat.XYWH:
@@ -620,31 +643,23 @@ class BBoxes(Data):
             raise ValueError(f"unsupported bbox format {fmt}.")
 
     # --- Computation ---
-    def area(self, imgsz: Size | None = None) -> ndarray:
+    def areas(self, imgsz: Size | None = None) -> ndarray:
         """Return the area of the bounding box.
 
         Args:
             imgsz (Size | None, optional): Image size as (H, W). If None, use
                 the stored ``self.imgsz``. Defaults to None.
         """
-        _, _, w, h = self.coords.T
-        imgsz: Size = imgsz or self.imgsz
-        h = h * imgsz.h
-        w = w * imgsz.w
-        return h * w
+        return np.array([b.area(imgsz) for b in self.bboxes], dtype=np.float32)
 
-    def center(self, imgsz: Size | None = None) -> ndarray:
+    def centers(self, imgsz: Size | None = None) -> ndarray:
         """Return the bounding box center of shape (N, 2).
 
         Args:
             imgsz (Size | None, optional): Image size as (H, W). If None, use
                 the stored ``self.imgsz``. Defaults to None.
         """
-        imgsz: Size = imgsz or self.imgsz
-        cx, cy = self.coords[:, 0:2].T
-        cx = cx * imgsz.w
-        cy = cy * imgsz.h
-        return np.array([cx, cy], dtype=np.float32).T
+        return np.array([b.center(imgsz) for b in self.bboxes], dtype=np.float32)
 
     def corners(self, imgsz: Size | None = None) -> ndarray:
         """Return the bounding box corners in [x1, y1, x2, y1, x2, y2, x1, y2]
@@ -654,10 +669,7 @@ class BBoxes(Data):
             imgsz (Size | None, optional): Image size as (H, W). If None, use
                 the stored ``self.imgsz``. Defaults to None.
         """
-        xyxy = self.xyxy(imgsz)
-        x1, y1, x2, y2 = xyxy[:, 0:4].T
-        # Standard order: top-left, top-right, bottom-right, bottom-left
-        return np.array([x1, y1, x2, y1, x2, y2, x1, y2], dtype=np.float32).T
+        return np.array([b.corners(imgsz) for b in self.bboxes], dtype=np.float32)
 
     def corners_pts(self, imgsz: Size | None = None) -> ndarray:
         """Return the bounding box corners as 4 points of shape (N, 4, 2).
@@ -677,7 +689,7 @@ class BBoxes(Data):
             imgsz (Size | None, optional): Image size as (H, W). If None, use
                 the stored ``self.imgsz``. Defaults to None.
         """
-        return self.bbox
+        return np.array([b.cxcywhn(imgsz) for b in self.bboxes], dtype=np.float32)
 
     def cxcywh(self, imgsz: Size | None = None) -> ndarray:
         """Return the bounding box array of shape (N, 8) in CXCYWH format.
@@ -686,14 +698,7 @@ class BBoxes(Data):
             imgsz (Size | None, optional): Image size as (H, W). If None, use
                 the stored ``self.imgsz``. Defaults to None.
         """
-        imgsz: Size = imgsz or self.imgsz
-        cx, cy, w, h = self.coords.T
-        rest = self.bbox[:, 4:]
-        cx = cx * imgsz.w
-        cy = cy * imgsz.h
-        w = w * imgsz.w
-        h = h * imgsz.h
-        return np.column_stack((cx, cy, w, h, rest)).astype(np.float32)
+        return np.array([b.cxcywh(imgsz) for b in self.bboxes], dtype=np.float32)
 
     def xyxy(self, imgsz: Size | None = None) -> ndarray:
         """Return the bounding box array of shape (N, 8) in XYXY format.
@@ -702,14 +707,7 @@ class BBoxes(Data):
             imgsz (Size | None, optional): Image size as (H, W). If None, use
                 the stored ``self.imgsz``. Defaults to None.
         """
-        imgsz: Size = imgsz or self.imgsz
-        cx, cy, w, h = self.coords.T
-        rest = self.bbox[:, 4:]
-        x1 = (cx - w / 2) * imgsz.w
-        y1 = (cy - h / 2) * imgsz.h
-        x2 = (cx + w / 2) * imgsz.w
-        y2 = (cy + h / 2) * imgsz.h
-        return np.column_stack((x1, y1, x2, y2, rest)).astype(np.float32)
+        return np.array([b.xyxy(imgsz) for b in self.bboxes], dtype=np.float32)
 
     def xywh(self, imgsz: Size | None = None) -> ndarray:
         """Return the bounding box array of shape (N, 8) in XYWH format.
@@ -718,14 +716,7 @@ class BBoxes(Data):
             imgsz (Size | None, optional): Image size as (H, W). If None, use
                 the stored ``self.imgsz``. Defaults to None.
         """
-        imgsz: Size = imgsz or self.imgsz
-        cx, cy, w, h = self.coords.T
-        rest = self.bbox[:, 4:]
-        x = (cx - w / 2) * imgsz.w
-        y = (cy - h / 2) * imgsz.h
-        h = h * imgsz.h
-        w = w * imgsz.w
-        return np.column_stack((x, y, w, h, rest)).astype(np.float32)
+        return np.array([b.xywh(imgsz) for b in self.bboxes], dtype=np.float32)
 
 # endregion
 

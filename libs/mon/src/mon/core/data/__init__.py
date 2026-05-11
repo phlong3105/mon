@@ -30,6 +30,7 @@ from .class_def import *
 from .data import *
 from .device import *
 from .image import *
+from .keypoint import *
 from .mask import *
 from .prob import *
 from .size import *

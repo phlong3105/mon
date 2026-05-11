@@ -1,9 +1,9 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""Point Operation.
+"""Keypoints Operation.
 
-This module provides operations for points.
+This module provides operations for keypoints.
 """
 
 from __future__ import annotations
