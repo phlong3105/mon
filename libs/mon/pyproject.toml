@@ -19,7 +19,7 @@
 
 [project]
 name            = "mon"
-version         = "2.11.0"
+version         = "2.12.0"
 description     = "Just a research package."
 license         = "MIT"
 readme          = "README.md"
@@ -56,7 +56,7 @@ dependencies    = [
     "calflops",                         # A library for calculating the number of floating point operations (FLOPs) in a PyTorch model.
     "einops",                           # A new flavor of deep learning operations.
     "filterpy",                         # Kalman filters and other optimal and non-optimal estimation filters in Python.
-    "lightning",                        # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
+    # "lightning",                        # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
     "numpy (==1.26.4)",                 # The fundamental package for scientific computing with Python.
     "protobuf",                         # Protocol Buffers - Google's data interchange format.
     "scikit-image",                     # Image processing in Python.

@@ -36,12 +36,12 @@ from typing_extensions import TypeAlias
 
 T = TypeVar("T")
 _scalar_or_tuple_any_t: TypeAlias = Union[T, tuple[T, ...]]
-_scalar_or_tuple_1_t: TypeAlias = Union[T, tuple[T]]
-_scalar_or_tuple_2_t: TypeAlias = Union[T, tuple[T, T]]
-_scalar_or_tuple_3_t: TypeAlias = Union[T, tuple[T, T, T]]
-_scalar_or_tuple_4_t: TypeAlias = Union[T, tuple[T, T, T, T]]
-_scalar_or_tuple_5_t: TypeAlias = Union[T, tuple[T, T, T, T, T]]
-_scalar_or_tuple_6_t: TypeAlias = Union[T, tuple[T, T, T, T, T, T]]
+_scalar_or_tuple_1_t  : TypeAlias = Union[T, tuple[T]]
+_scalar_or_tuple_2_t  : TypeAlias = Union[T, tuple[T, T]]
+_scalar_or_tuple_3_t  : TypeAlias = Union[T, tuple[T, T, T]]
+_scalar_or_tuple_4_t  : TypeAlias = Union[T, tuple[T, T, T, T]]
+_scalar_or_tuple_5_t  : TypeAlias = Union[T, tuple[T, T, T, T, T]]
+_scalar_or_tuple_6_t  : TypeAlias = Union[T, tuple[T, T, T, T, T, T]]
 
 Int2: TypeAlias = tuple[int, int]
 Int3: TypeAlias = tuple[int, int, int]
@@ -51,12 +51,12 @@ Float2: TypeAlias = tuple[float, float]
 Float3: TypeAlias = tuple[float, float, float]
 Float4: TypeAlias = tuple[float, float, float, float]
 
-IntOrTuple: TypeAlias = _scalar_or_tuple_any_t[int]
+IntOrTuple : TypeAlias = _scalar_or_tuple_any_t[int]
 IntOrTuple2: TypeAlias = _scalar_or_tuple_2_t[int]
 IntOrTuple3: TypeAlias = _scalar_or_tuple_3_t[int]
 IntOrTuple4: TypeAlias = _scalar_or_tuple_4_t[int]
 
-FloatOrTuple: TypeAlias = _scalar_or_tuple_any_t[float]
+FloatOrTuple : TypeAlias = _scalar_or_tuple_any_t[float]
 FloatOrTuple2: TypeAlias = _scalar_or_tuple_2_t[float]
 FloatOrTuple3: TypeAlias = _scalar_or_tuple_3_t[float]
 FloatOrTuple4: TypeAlias = _scalar_or_tuple_4_t[float]

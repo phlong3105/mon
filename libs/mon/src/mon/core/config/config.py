@@ -1123,7 +1123,7 @@ class Config:
 
         # 1.3. Check config_file
         if not self.config_file:
-            raise RuntimeError(f"expected config_file.")
+            raise RuntimeError("expected config_file.")
 
         # 1.4. Resolve device
         if not isinstance(self.device, torch.device):
@@ -1201,7 +1201,7 @@ class Config:
 
         # 1.3. Check config_file
         if not self.config_file:
-            raise RuntimeError(f"expected config_file.")
+            raise RuntimeError("expected config_file.")
 
         # 1.4. Resolve device
         if not isinstance(self.device, torch.device):
@@ -1475,7 +1475,7 @@ class ConfigContext(Config, PromptContextMixin):
         """Display the current prompt."""
         if self._index == 0:
             # clear_terminal()
-            console.rule(f"[bold red]Input Prompts")
+            console.rule("[bold red]Input Prompts")
         else:
             console.rule()
 
