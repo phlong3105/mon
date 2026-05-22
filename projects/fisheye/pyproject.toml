@@ -21,7 +21,7 @@ version         = "0.1.0"
 description     = "Fisheye Surveillance System"
 license         = "MIT"
 readme          = "README.md"
-requires-python = ">=3.12,<3.14"
+requires-python = ">=3.13,<3.14"
 authors         = [{ name = "Long H. Pham", email = "longpham3105@gmail.com" }]
 keywords        = [
     "fisheye lens", "surviellance", "active learning", "data augmentation",

@@ -20,5 +20,5 @@ from __future__ import annotations
 
 from .bbox import *
 from .io import *
+from .keypoint import *
 from .mask import *
-from .point import *
