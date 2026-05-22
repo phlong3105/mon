@@ -21,7 +21,7 @@ version         = "0.1.0"
 description     = "AI City Challenge 2026 - Track 06: Cross-City Object Detection"
 license         = "MIT"
 readme          = "README.md"
-requires-python = ">=3.12,<3.14"
+requires-python = ">=3.14,<3.15"
 authors         = [{ name = "Long H. Pham", email = "longpham3105@gmail.com" }]
 keywords        = ["computer vision", "deep learning", "research"]
 classifiers     = [
