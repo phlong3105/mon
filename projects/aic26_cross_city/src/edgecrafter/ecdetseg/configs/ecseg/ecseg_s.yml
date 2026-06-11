@@ -1,0 +1,13 @@
+__include__: [
+  '../dataset/coco.yml',
+  '../ecdet/ecdet_s.yml',
+  'ecseg.yml',
+]
+
+output_dir: outputs/ecseg_s
+
+ViTAdapter:
+  name: ecseg_vitt
+  weights_path: ecvits/ecseg_vitt.pth
+
+eval_spatial_size: [640, 640] # h w

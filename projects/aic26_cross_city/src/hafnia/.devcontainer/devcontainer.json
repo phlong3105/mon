@@ -1,0 +1,41 @@
+{
+  "name": "Hafnia Tools Container",
+  "image": "mcr.microsoft.com/devcontainers/python:1-3.10-bullseye",
+  "features": {
+    "ghcr.io/jsburckhardt/devcontainer-features/uv:1": {},
+    "ghcr.io/devcontainers-contrib/features/pre-commit": {},
+    "ghcr.io/devcontainers/features/aws-cli:1": {},
+    "ghcr.io/joshuanianji/devcontainer-features/aws-cli-persistence:1": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "moby": true,
+      "dockerDashComposeVersion": "v2",
+      "addNonRootUser": true
+    }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-python.vscode-pylance",
+        "ms-python.mypy-type-checker",
+        "charliermarsh.ruff",
+        "tamasfe.even-better-toml"
+      ],
+      "settings": {
+        "editor.formatOnSave": true,
+        "notebook.formatOnSave.enabled": true,
+        "[json]": {
+          "editor.defaultFormatter": "vscode.json-language-features"
+        }
+      }
+    }
+  },
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind,consistency=cached"
+  ],
+  "remoteEnv": {
+    "DOCKER_BUILDKIT": "1"
+  },
+  "postCreateCommand": "bash .devcontainer/hooks/post_create"
+}

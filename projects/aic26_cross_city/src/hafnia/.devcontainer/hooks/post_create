@@ -1,0 +1,11 @@
+#!/usr/bin/env bash
+
+echo "alias ll='ls -alF'" >> ~/.bashrc
+
+sudo groupadd -f docker
+sudo usermod -aG docker $USER
+
+# Fix permissions on Docker socket
+if [ -S /var/run/docker.sock ]; then
+  sudo chmod 666 /var/run/docker.sock
+fi

@@ -1,0 +1,153 @@
+{
+    "name": "scripts/train.py",
+    "cmd": "python scripts/train.py",
+    "json_schema": {
+        "$defs": {
+            "InferenceConfig": {
+                "properties": {
+                    "compile": {
+                        "default": true,
+                        "title": "Compile",
+                        "type": "boolean"
+                    },
+                    "batch_size": {
+                        "default": 1,
+                        "title": "Batch Size",
+                        "type": "integer"
+                    },
+                    "threshold": {
+                        "default": 0.05,
+                        "title": "Threshold",
+                        "type": "number"
+                    }
+                },
+                "title": "InferenceConfig",
+                "type": "object"
+            }
+        },
+        "description": "Train an RF-DETR object detection model on a Hafnia dataset.\n\nLoads the dataset (the hidden dataset when running on the Hafnia platform, otherwise the\nsmall public sample dataset is used when executing locally), initializes an RF-DETR model from\nthe compressed model archive pointed to by ``model_path`` (optionally with pretrained weights), converts the\ntrain/val splits to COCO format and runs RF-DETR training.\n\nAfter training, every ``checkpoint_*.pth`` produced by RF-DETR is repackaged as a\nstandalone compressed Hafnia model archive (weights + serialized model config bundled into a\nsingle ``.zip``) under the experiment model and checkpoints folders. The checkpoint selected\nby ``inference_model_name`` is then\nloaded as a ``WrappedModel``, optimized for inference (e.g. ``torch.compile`` when enabled\nvia ``inference_config``) and run on the held-out test split. Predictions are written to\nthe experiment artifacts folder. When the test split has ground-truth annotations, detection\nmetrics are computed via ``metric_calculations`` and logged through ``HafniaLogger``; if no\nground truth is present the metric step is skipped with a warning.",
+        "properties": {
+            "project_name": {
+                "default": "Trainer RF-DETR",
+                "description": "Project name for the experiment",
+                "title": "Project Name",
+                "type": "string"
+            },
+            "model_path": {
+                "default": "./pretrained_models/RFDETRNano.zip",
+                "description": "Path to a compressed (zip) pretrained model used as the training starting point. Options: ['pretrained_models/RFDETRNano.zip', 'pretrained_models/RFDETRMedium.zip', 'pretrained_models/RFDETRLarge.zip', 'pretrained_models/RFDETRSegNano.zip']",
+                "title": "Model Path",
+                "type": "string"
+            },
+            "pretrained": {
+                "default": true,
+                "description": "Initialize the model from pretrained weights",
+                "title": "Pretrained",
+                "type": "boolean"
+            },
+            "epochs": {
+                "default": 10,
+                "description": "Number of epochs to train",
+                "title": "Epochs",
+                "type": "integer"
+            },
+            "batch_size": {
+                "default": 8,
+                "description": "Batch size for training",
+                "title": "Batch Size",
+                "type": "integer"
+            },
+            "grad_accumulation_steps": {
+                "default": 1,
+                "description": "Number of gradient accumulation steps (effective batch size = batch_size * grad_accumulation_steps)",
+                "title": "Grad Accumulation Steps",
+                "type": "integer"
+            },
+            "learning_rate": {
+                "default": 0.001,
+                "description": "Learning rate for the optimizer",
+                "title": "Learning Rate",
+                "type": "number"
+            },
+            "resolution": {
+                "anyOf": [
+                    {
+                        "type": "integer",
+                        "title": "Select 'Integer'"
+                    },
+                    {
+                        "type": "null",
+                        "title": "Select None"
+                    }
+                ],
+                "default": null,
+                "description": "Input resolution (square side in pixels). Defaults to each model's built-in value.",
+                "title": "Resolution"
+            },
+            "task_name": {
+                "anyOf": [
+                    {
+                        "type": "string",
+                        "title": "Select 'String'"
+                    },
+                    {
+                        "type": "null",
+                        "title": "Select None"
+                    }
+                ],
+                "default": null,
+                "description": "Dataset task name used for training. Only required when the dataset has multiple tasks matching the model primitive.",
+                "title": "Task Name"
+            },
+            "samples": {
+                "anyOf": [
+                    {
+                        "type": "integer",
+                        "title": "Select 'Integer'"
+                    },
+                    {
+                        "type": "null",
+                        "title": "Select None"
+                    }
+                ],
+                "default": null,
+                "description": "Number of samples to use for training (omit to use all samples). Use for testing purposes.",
+                "title": "Samples"
+            },
+            "stop_early": {
+                "default": false,
+                "description": "Exit before training starts. Can be used to avoid long training times when smoke-testing the pipeline.",
+                "title": "Stop Early",
+                "type": "boolean"
+            },
+            "inference_model_name": {
+                "default": "checkpoint_best_ema",
+                "description": "Checkpoint used for the post-training benchmark on the test split. Options: ['checkpoint_best_ema', 'checkpoint_best_regular', 'checkpoint_best_total']",
+                "title": "Inference Model Name",
+                "type": "string"
+            },
+            "inference_config": {
+                "anyOf": [
+                    {
+                        "$ref": "#/$defs/InferenceConfig"
+                    },
+                    {
+                        "type": "null",
+                        "title": "Select None"
+                    }
+                ],
+                "default": null,
+                "description": "Inference configuration used for the post-training benchmark"
+            }
+        },
+        "title": "mainArgs",
+        "type": "object",
+        "positional_args": []
+    },
+    "case_conversion": "kebab",
+    "parameter_prefix": "--",
+    "nested_parameter_handling": "dot",
+    "assignment_separator": "space",
+    "bool_handling": "flag-negation",
+    "order": 0
+}

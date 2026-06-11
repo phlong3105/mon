@@ -1,0 +1,22 @@
+*_cache/
+
+.data
+.git
+.venv
+.vscode
+
+*.jpg
+*.png
+*.py[cod]
+
+**.egg-info/
+
+__pycache__
+dist/
+tests/
+.github/
+
+# Hafnia files
+trainer.zip
+state.json
+excluded_files/

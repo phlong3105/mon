@@ -1,0 +1,83 @@
+[project]
+name = "hafnia"
+version = "0.7.10"
+description = "Python SDK for communication with Hafnia platform."
+readme = "README.md"
+authors = [
+    { name = "Milestone Systems", email = "hafniaplatform@milestone.dk" },
+]
+requires-python = ">=3.10"
+
+dependencies = [
+    "boto3>=1.35.91",
+    "click>=8.1.8",
+    "emoji>=2.14.1",
+    "flatten-dict>=0.4.2",
+    "keyring>=25.6.0",
+    "more-itertools>=10.7.0",
+    "opencv-python-headless<4.13", # Issues in 4.13.0.90" for small images (hafnia requires opencv-python-headless)
+    "pathspec>=0.12.1",
+    "pillow>=11.1.0",
+    "polars>=1.30.0",
+    "pyarrow>=18.1.0",
+    "pycocotools>=2.0.10",
+    "pydantic>=2.10.4",
+    "rich>=13.9.4",
+    "s5cmd>=0.2.0",
+    "seedir>=0.5.0",
+    "xxhash>=3.5.0",
+    "mlflow>=3.4.0",
+    "mcp>=1.23.0",
+    "docstring-parser>=0.17.0",    # Used to parse docstrings for CommandBuilder
+]
+
+[dependency-groups]
+dev = [
+    "ipykernel>=6.29.5",
+    "torch>=2.6.0",
+    "torchvision>=0.21.0",
+    "flatten-dict>=0.4.2",
+    "pytest-cov>=7.0.0",
+    "cyclopts>=4.5.0",     # Only to test "CommandBuilder" module
+    "typer>=0.21.1",       # Only to test "CommandBuilder" module
+    "ipywidgets>=8.1.8",
+    "encord>=0.1.189",     # Only to test "format_encord" module
+]
+
+test = ["pytest>=8.3.4", "pre-commit>=4.2.0", "ruff>=0.9.1"]
+
+[project.scripts]
+hafnia = 'hafnia_cli.__main__:main'
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hafnia_cli", "src/hafnia"]
+
+[tool.uv]
+default-groups = ["test"]
+
+[tool.ruff]
+lint.select = ["I", "E", "F"]
+lint.ignore = ["E501"]
+line-length = 120
+
+[tool.ruff.lint.isort]
+relative-imports-order = "closest-to-furthest"
+
+[tool.mypy]
+ignore_missing_imports = true
+check_untyped_defs = false
+disallow_untyped_defs = false
+disallow_incomplete_defs = false
+disallow_untyped_calls = false
+warn_unused_ignores = false
+
+[[tool.mypy.overrides]]
+module = "yaml"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+markers = ["slow: marks tests as slow (deselect with '-m \"not slow\"')"]

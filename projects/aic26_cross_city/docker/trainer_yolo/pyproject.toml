@@ -1,0 +1,81 @@
+[project]
+name = "trainer_yolo"
+version = "0.1.0"
+description = "Ultralytics YOLO object detection trainer for the Hafnia Platform"
+readme = "README.md"
+requires-python = ">=3.10"
+
+authors = [
+    { name = "Milestone Systems", email = "hafniaplatform@milestone.dk" },
+]
+
+dependencies = [
+    #"torch==2.5.1+cu121",
+    #"torchvision==0.20.1+cu121",
+    #"torchaudio==2.5.1+cu121",
+    "cyclopts>=4.4.6",
+    "hafnia>=0.7.8",
+    "nvidia-ml-py>=13.595.45", # To log GPU metrics in tracker
+    "docstring-parser>=0.17.0",
+    "lark>=1.2.2",
+    "pydantic>=2.11.10",
+    "pytest>=8.3.5",
+    "sahi>=0.11.0",
+    "ultralytics>=8.3.0",
+    "opencv-python-headless<4.13",
+]
+
+# Specific versions of torch, torchvision, and torchaudio are installed based on the extra feature
+[project.optional-dependencies]
+cpu = ["torch==2.5.1", "torchvision==0.20.1", "torchaudio==2.5.1"]
+cu121 = ["torch==2.5.1", "torchvision==0.20.1", "torchaudio==2.5.1"]
+
+
+[tool.uv]
+# The cpu and cu121 extras are mutually exclusive, you can't use both at the same time
+conflicts = [[{ extra = "cpu" }, { extra = "cu121" }]]
+
+# The package is only installed on Linux systems
+# environments = ["sys_platform == 'linux' and os_name == 'posix'"]
+
+[tool.uv.sources]
+# The torch, torchvision, and torchaudio packages are installed from the pytorch-cpu and pytorch-cu121 indexes
+torch = [
+  { index = "pytorch-cpu", extra = "cpu" },
+  { index = "pytorch-cu121", extra = "cu121" },
+]
+torchvision = [
+  { index = "pytorch-cpu", extra = "cpu" },
+  { index = "pytorch-cu121", extra = "cu121" },
+]
+torchaudio = [
+  { index = "pytorch-cpu", extra = "cpu" },
+  { index = "pytorch-cu121", extra = "cu121" },
+]
+
+
+[[tool.uv.index]]
+# The pytorch-cpu index is used to install the torch, torchvision, and torchaudio packages
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
+[[tool.uv.index]]
+name = "pytorch-cu121"
+url = "https://download.pytorch.org/whl/cu121"
+explicit = true
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/trainer_yolo", "scripts"]
+
+[tool.ruff]
+extend-include = ["*.ipynb"]
+line-length = 120
+lint.select = ["C4", "E", "F", "B", "I", "W", "RUF", "Q"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]

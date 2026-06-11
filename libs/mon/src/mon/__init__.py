@@ -12,7 +12,11 @@ __version__ = "2.12.0"
 
 import os
 import time
+
+import torch
+
 os.environ["KMP_DUPLICATE_LIB_OK"] = "True"
+torch.backends.cudnn.enabled = False  # PyTorch will fall back to using standard CUDA kernels instead of cuDNN-optimized operations
 
 _start_time = time.time()
 
@@ -29,6 +33,3 @@ from . import (
 
 _end_time = time.time()
 log(f"mon loaded in {_end_time - _start_time:.4f} seconds.")
-
-cwd = Path.cwd()
-print(cwd)

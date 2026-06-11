@@ -1,0 +1,24 @@
+__include__: [
+  '../dataset/coco.yml',
+  '../ecdet/ecdet_m.yml',
+  'ecseg.yml'
+]
+
+output_dir: outputs/ecseg_m
+
+ViTAdapter:
+  name: ecseg_vittplus
+  weights_path: ecvits/ecseg_vittplus.pth
+
+epochs: 74  
+
+eval_spatial_size: [640, 640] # h w
+
+train_dataloader:
+  dataset:
+    transforms:
+      mosaic_epoch: 36
+      stop_epoch: 72
+
+  collate_fn:
+    mixup_epoch: 36

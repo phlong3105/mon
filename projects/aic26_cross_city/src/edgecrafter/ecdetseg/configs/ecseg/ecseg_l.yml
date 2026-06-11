@@ -1,0 +1,35 @@
+__include__: [
+  '../dataset/coco.yml',
+  '../ecdet/ecdet_l.yml',
+  'ecseg.yml'
+]
+
+output_dir: outputs/ecseg_l
+
+ViTAdapter:
+  name: ecseg_vits
+  weights_path: ecvits/ecseg_vits.pth
+
+
+optimizer:
+  type: AdamW
+  params: 
+    -
+      # except norm/bn/bias in backbone
+      params: '^(?=.*.backbone)(?!.*(?:norm|bn|bias)).*$'  
+      lr: 0.0000025
+    -
+      # including all norm/bn/bias in backbone
+      params: '^(?=.*.backbone)(?=.*(?:norm|bn|bias)).*$'    
+      lr: 0.0000025
+      weight_decay: 0.
+    - 
+      # including all norm/bn/bias except for the backbone
+      params: '^(?!.*\.backbone)(?=.*(?:norm|bn|bias)).*$'
+      weight_decay: 0.
+
+  lr: 0.0005
+  betas: [0.9, 0.999]
+  weight_decay: 0.000125
+
+eval_spatial_size: [640, 640] # h w

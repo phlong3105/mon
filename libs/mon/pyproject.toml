@@ -38,56 +38,57 @@ dependencies    = [
     "emoji",                            # Emoji for Python.
     "fjson",                            # Python JSON writer with formatted floats
     "loguru",                           # Python logging made (stupidly) simple.
+    "mypy",                             # Optional static typing for Python.
     "omegaconf",                        # Flexible Python configuration system.
     "prompt_toolkit",                   # Library for building powerful interactive command lines in Python.
     "psutil",                           # Cross-platform lib for process and system monitoring in Python.
+    "pytest",                           # Simple powerful testing with Python.
     "python-box",                       # Advanced Python dictionaries with dot notation access.
     "requests",                         # Requests is an elegant and simple HTTP library for Python, built with ♥.
     "rich",                             # Render rich text, tables, progress bars, syntax highlighting, markdown and more to the terminal.
     "tabulate",                         # Pretty-print tabular data in Python, a library and a command-line utility.
     "tqdm",                             # Fast, Extensible Progress Meter.
+    "typing-extensions",                # Backported and Experimental Type Hints for Python 3.7+.
     "validators",                       # Python Data Validation for Humans.
     "xmltodict",                        # Makes working with XML feel like you are working with JSON.
-    # --- Dev ---
-    "mypy",                             # Optional static typing for Python.
-    "pytest",                           # Simple powerful testing with Python.
-    "typing-extensions",                # Backported and Experimental Type Hints for Python 3.7+.
-    # --- NN ---
-    "calflops",                         # A library for calculating the number of floating point operations (FLOPs) in a PyTorch model.
-    "einops",                           # A new flavor of deep learning operations.
+    # --- Scientific Computing ---
     "filterpy",                         # Kalman filters and other optimal and non-optimal estimation filters in Python.
-    # "lightning",                        # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
-    "numpy (==1.26.4)",                 # The fundamental package for scientific computing with Python.
-    "protobuf",                         # Protocol Buffers - Google's data interchange format.
+    "numpy",                            # The fundamental package for scientific computing with Python.
+    # "numpy (==1.26.4)",                 # The fundamental package for scientific computing with Python.
     "scikit-image",                     # Image processing in Python.
     "scikit-learn",                     # A set of python modules for machine learning and data mining.
     "scipy",                            # Scientific Library for Python.
+    # --- Neural Network / Deep Learning ---
+    "calflops",                         # A library for calculating the number of floating point operations (FLOPs) in a PyTorch model.
+    "einops",                           # A new flavor of deep learning operations.
+    # "lightning",                        # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
+    "onnx",                             # Open Neural Network Exchange.
+    "onnxruntime",                      # ONNX Runtime is a performance-focused scoring engine for Open Neural Network Exchange (ONNX) models.
+    "openvino",                         # OpenVINO™ is a toolkit for optimizing and deploying AI inference.
+    "protobuf",                         # Protocol Buffers - Google's data interchange format.
     "tensorboard",                      # TensorFlow's Visualization Toolkit.
     "tensordict",                       # TensorDict is a pytorch dedicated tensor container.
-    "torch (>=2.11.0)",                 # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
+    "torch (>=2.12.0)",                 # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
     "torch-fidelity",                   # High-fidelity performance metrics for generative models in PyTorch
     "torchdiffeq",                      # Differentiable ODE solvers with full GPU support and O(1)-memory backpropagation.
     "torchmetrics",                     # Collection of PyTorch native metrics for easy evaluating machine learning models.
     "torchvision",                      # Image and video datasets and models for Torch deep learning.
-    # --- NN Deployment ---
-    "onnx",                             # Open Neural Network Exchange.
-    "onnxruntime",                      # ONNX Runtime is a performance-focused scoring engine for Open Neural Network Exchange (ONNX) models.
-    "openvino",                         # OpenVINO™ is a toolkit for optimizing and deploying AI inference.
     # --- Computer Vision ---
-    "Pillow",                           # Python Imaging Library (Fork).
     "albumentationsx",                  # Next-generation Albumentations.
     "faster-coco-eval",                 # Faster interpretation of the original COCOEval
     "ffmpeg-python",                    # Python bindings for FFmpeg—with complex filtering support.
     "kornia",                           # Kornia is a differentiable computer vision library for PyTorch.
     "opencv-contrib-python",            # Wrapper package for OpenCV python bindings.
     "opencv-python",                    # Computer vision and machine learning software library.
+    "pillow",                           # Python Imaging Library (Fork).
     "pillow_heif",                      # Python interface for libheif library.
     "pycocotools",                      # COCO dataset and evaluation metrics for object detection, instance segmentation, and person keypoint detection.
     "pyiqa",                            # PyTorch Toolbox for Image Quality Assessment.
     "rawpy",                            # rawpy is an easy-to-use Python wrapper for the LibRaw library. It also contains some extra functionality for finding and repairing hot/dead pixels.
+    "rfdetr",                           # RF-DETR: Real-Time SOTA Detection and Segmentation
     "ultralytics",                      # Ultralytics YOLO 🚀.
     "ultralytics-thop",                 # Profile PyTorch models for FLOPs and parameters, helping to evaluate computational efficiency and memory usage.
-    # --- Fixes ---
+    # --- Temporary Fixes ---
     "bitsandbytes (==0.42.0) ; sys_platform == 'darwin'"
 ]
 
@@ -118,6 +119,7 @@ required-environments = [
 ]
 
 # [tool.uv.sources]
+# rfdetr = { workspace = true }
 # ultralytics = { workspace = true }
 
 # --- POETRY SPECIFIC ---
@@ -128,6 +130,7 @@ include  = []
 exclude  = []
 
 # [tool.poetry.dependencies]
+# ultralytics = { path = "../rfdetr",      develop = true }
 # ultralytics = { path = "../ultralytics", develop = true }
 
 [build-system]

@@ -1,0 +1,93 @@
+name: CI/CD Workflow
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    paths:
+      [
+        "src/**",
+        "tests/**",
+        "pyproject.toml",
+        ".python-version",
+        "uv.lock",
+        ".github/workflows/**",
+      ]
+
+jobs:
+  lint:
+    name: Lint Code
+    uses: ./.github/workflows/lint.yaml
+    with:
+      python-version-file: ".python-version"
+
+  security-scan:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@v0.36.0
+        with:
+          scan-type: "fs"
+          scan-ref: "."
+          format: "table"
+          exit-code: "1"
+          vuln-type: "os,library"
+          severity: "CRITICAL,HIGH"
+
+  test:
+    name: Run Tests
+    needs: lint
+    secrets: inherit
+    uses: ./.github/workflows/tests.yaml
+    with:
+      python-version-file: ".python-version"
+
+  build:
+    name: Build Package
+    needs: [test, security-scan]
+    uses: ./.github/workflows/build.yaml
+    with:
+      python-version-file: ".python-version"
+      pyproject-toml-file: "pyproject.toml"
+
+  publish-docker-staging:
+    name: Publish Docker Image to Staging
+    needs: build
+    secrets: inherit
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/publish_docker.yaml
+    with:
+      python-version-file: ".python-version"
+      package-version: ${{ needs.build.outputs.package-version }}
+      environment: "staging"
+
+  check-release:
+    name: Check if Release Exists
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/check_release.yaml
+    with:
+      package-version: ${{ needs.build.outputs.package-version }}
+
+  publish-pypi:
+    name: Publish Package to PyPI
+    needs: [build, check-release]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && needs.check-release.outputs.make_release == 'true'
+    uses: ./.github/workflows/publish_pypi.yaml
+    with:
+      environment: pypi
+
+  publish-docker-production:
+    name: Publish Docker Image to Production
+    needs: [build, publish-pypi]
+    secrets: inherit
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    uses: ./.github/workflows/publish_docker.yaml
+    with:
+      python-version-file: ".python-version"
+      package-version: ${{ needs.build.outputs.package-version }}
+      environment: "production"

@@ -1,0 +1,16 @@
+repos:
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.11.7
+  hooks:
+    - id: ruff
+      types_or: [python, pyi]
+      args: [--fix]
+      files: ^(src|tests)/
+    - id: ruff-format
+      types_or: [python, pyi]
+      files: ^(src|tests)/
+- repo: https://github.com/astral-sh/uv-pre-commit
+  rev: 0.6.17
+  hooks:
+    # Update the uv lockfile
+    - id: uv-lock

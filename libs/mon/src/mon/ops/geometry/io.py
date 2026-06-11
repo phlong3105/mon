@@ -249,7 +249,7 @@ def load_bbox(
     imgsz: Size | None = None,
     image_file: Path | None = None,
     as_array: bool = False,
-    *args, **kwargs
+    *args: object, **kwargs: object
 ) -> BBoxes | ndarray:
     """Load bounding boxes from a file.
 
@@ -343,13 +343,13 @@ def _write_bbox_yolo(
             b_ = b.cxcywhn(imgsz=imgsz)
             f.write(
                 f"{b.class_id} "  # class_id
-                f"{range(float(b_[0]), 30)} "  # cx
-                f"{range(float(b_[1]), 30)} "  # cy
-                f"{range(float(b_[2]), 30)} "  # w  
-                f"{range(float(b_[3]), 30)} "  # h  
-                f"{b[4]} "  # angle
-                f"{b[6]} "
-                f"{b[7]} "
+                f"{float(b_[0]):.30f} "  # cx
+                f"{float(b_[1]):.30f} "  # cy
+                f"{float(b_[2]):.30f} "  # w  
+                f"{float(b_[3]):.30f} "  # h  
+                f"{b.angle} "  # angle
+                f"{b.score:.6f} "
+                f"{b.track_id} "
                 f"\n"
             )
 

@@ -1,0 +1,56 @@
+name: Build Package
+
+on:
+  workflow_call:
+    inputs:
+      python-version-file:
+        required: true
+        type: string
+      pyproject-toml-file:
+        required: false
+        type: string
+        default: "pyproject.toml"
+    outputs:
+      package-version:
+        description: "The extracted package version"
+        value: ${{ jobs.build.outputs.package-version }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      package-version: ${{ steps.extract-version.outputs.package_version }}
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: actions/setup-python@v6.2.0
+        with:
+          python-version-file: ${{ inputs.python-version-file }}
+
+      - name: Extract package version
+        id: extract-version
+        run: |
+          VERSION=$(grep -m 1 'version = '  ${{ inputs.pyproject-toml-file }} | sed -e 's/version = "\(.*\)"/\1/')
+          echo "package_version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+        with:
+          version: 0.6.8
+
+      - name: Cache dependencies
+        uses: actions/cache@v5
+        with:
+          path: ~/.cache/uv
+          key: ${{ runner.os }}-uv-${{ hashFiles('**/pyproject.toml') }}
+          restore-keys: |
+            ${{ runner.os }}-uv-
+
+      - name: Build the project
+        run: uv build
+
+      - name: Upload package artifact
+        uses: actions/upload-artifact@v7.0.1
+        with:
+          name: python-package
+          path: dist/
+          retention-days: 1

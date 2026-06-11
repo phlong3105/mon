@@ -1,0 +1,79 @@
+name: Build and Push Docker Image
+
+on:
+  workflow_call:
+    inputs:
+      python-version-file:
+        required: true
+        type: string
+      package-version:
+        required: true
+        type: string
+      environment:
+        required: true
+        type: string
+        description: "Target environment (staging or production)"
+        default: "staging"
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: actions/setup-python@v6.2.0
+        id: python
+        with:
+          python-version-file: ${{ inputs.python-version-file }}
+
+      - name: Download package artifact
+        uses: actions/download-artifact@v8.0.1
+        with:
+          name: python-package
+          path: dist/
+
+      - name: Set environment-specific variables
+        id: env-vars
+        run: |
+          if [[ "${{ inputs.environment }}" == "production" ]]; then
+            echo "aws_account_id=${{ secrets.PROD_AWS_ACCOUNT_ID }}" >> $GITHUB_OUTPUT
+            echo "aws_region=${{ secrets.PROD_AWS_REGION }}" >> $GITHUB_OUTPUT
+          else
+            echo "aws_account_id=${{ secrets.STAGE_AWS_ACCOUNT_ID }}" >> $GITHUB_OUTPUT
+            echo "aws_region=${{ secrets.STAGE_AWS_REGION }}" >> $GITHUB_OUTPUT
+          fi
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v6.1.1
+        with:
+          role-to-assume: arn:aws:iam::${{ steps.env-vars.outputs.aws_account_id }}:role/${{ secrets.AWS_ROLE_NAME }}
+          aws-region: ${{ steps.env-vars.outputs.aws_region }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2.1.5
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4.0.0
+
+      - name: Build and push
+        uses: docker/build-push-action@v7.1.0
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: platform_sdk_runtime
+        with:
+          context: .
+          file: .github/workflows/Dockerfile
+          push: true
+          tags: |
+            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:latest
+            ${{ env.ECR_REGISTRY }}/${{ env.ECR_REPOSITORY }}:${{ inputs.package-version }}
+          platforms: linux/amd64
+          provenance: false
+          sbom: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          build-args: |
+            PYTHON_VERSION=${{ steps.python.outputs.python-version }}

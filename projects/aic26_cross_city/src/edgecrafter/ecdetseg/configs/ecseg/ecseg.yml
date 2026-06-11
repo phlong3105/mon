@@ -1,0 +1,42 @@
+task: segmentation
+model: ECSeg
+criterion: ECCriterion
+postprocessor: PostProcessor
+
+
+ECSeg:
+  backbone: ViTAdapter
+  encoder: HybridEncoder
+  decoder: ECTransformer
+
+
+ECTransformer:
+  mask_downsample_ratio: 4
+
+
+ECCriterion:
+  weight_dict: {loss_mal: 2.0, loss_bbox: 1, loss_giou: 1, loss_fgl: 0.15, loss_ddf: 1.5, loss_mask_ce: 5.0, loss_mask_dice: 5.0}
+  losses: ['mal', 'boxes', 'local', 'masks']
+  gamma: 1.5
+  alpha: 0.75
+  reg_max: 32
+  matcher:
+    type: HungarianMatcher
+    weight_dict: {cost_class: 2, cost_bbox: 1, cost_giou: 1, cost_mask_ce: 5, cost_mask_dice: 5 }
+    alpha: 0.25
+    gamma: 2.0
+    mask_point_sample_ratio: 16
+
+evaluator:
+  type: CocoEvaluator
+  iou_types: ['bbox', 'segm']
+  verbose: False
+
+train_dataloader:
+  dataset: 
+    return_masks: True
+
+
+val_dataloader:
+  dataset: 
+    return_masks: True

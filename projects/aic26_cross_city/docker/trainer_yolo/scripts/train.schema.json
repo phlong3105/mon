@@ -1,0 +1,148 @@
+{
+  "name": "scripts/train_my.py",
+  "cmd": "python scripts/train_my.py",
+  "json_schema": {
+    "$defs": {
+      "InferenceConfig": {
+        "properties": {
+          "compile": {
+            "default": true,
+            "title": "Compile",
+            "type": "boolean"
+          },
+          "batch_size": {
+            "default": 1,
+            "title": "Batch Size",
+            "type": "integer"
+          },
+          "threshold": {
+            "default": 0.05,
+            "title": "Threshold",
+            "type": "number"
+          }
+        },
+        "title": "InferenceConfig",
+        "type": "object"
+      }
+    },
+    "description": "Ultralytics YOLO Training for Hafnia object detection datasets",
+    "properties": {
+      "project_name": {
+        "default": "YOLO Detection",
+        "description": "Project name for experiment tracking",
+        "title": "Project Name",
+        "type": "string"
+      },
+      "dataset_name": {
+        "default": "midwest-vehicle-detection",
+        "description": "Local sample dataset name when running outside Hafnia cloud",
+        "title": "Dataset Name",
+        "type": "string"
+      },
+      "dataset_version": {
+        "default": "1.0.1",
+        "description": "Dataset version used for local runs",
+        "title": "Dataset Version",
+        "type": "string"
+      },
+      "task_name": {
+        "anyOf": [
+          {"type": "string", "title": "Select 'String'"},
+          {"type": "null", "title": "Select None"}
+        ],
+        "default": null,
+        "description": "Optional bbox task name if dataset has multiple bbox tasks",
+        "title": "Task Name"
+      },
+      "model": {
+        "default": "yolo26l.pt",
+        "description": "Ultralytics model name (e.g. yolo26l.pt) or path to .zip",
+        "title": "Model",
+        "type": "string"
+      },
+      "epochs": {
+        "default": 20,
+        "description": "Number of training epochs",
+        "title": "Epochs",
+        "type": "integer"
+      },
+      "image_size": {
+        "default": 640,
+        "description": "Training image size",
+        "title": "Image Size",
+        "type": "integer"
+      },
+      "batch_size": {
+        "default": 16,
+        "description": "Training batch size. Use -1 for auto batch",
+        "title": "Batch Size",
+        "type": "integer"
+      },
+      "learning_rate": {
+        "default": 0.01,
+        "description": "Initial learning rate",
+        "title": "Learning Rate",
+        "type": "number"
+      },
+      "num_workers": {
+        "default": 8,
+        "description": "Data loader workers",
+        "title": "Num Workers",
+        "type": "integer"
+      },
+      "patience": {
+        "default": 30,
+        "description": "Early stopping patience in epochs",
+        "title": "Patience",
+        "type": "integer"
+      },
+      "device": {
+        "default": "",
+        "description": "Ultralytics device string, example: cpu, 0, 0,1",
+        "title": "Device",
+        "type": "string"
+      },
+      "seed": {
+        "default": 42,
+        "description": "Random seed",
+        "title": "Seed",
+        "type": "integer"
+      },
+      "force_reexport": {
+        "default": false,
+        "description": "Rebuild exported YOLO dataset before training",
+        "title": "Force Reexport",
+        "type": "boolean"
+      },
+      "stop_early": {
+        "default": false,
+        "description": "Break script before launching training; useful for testing trainer package plumbing",
+        "title": "Stop Early",
+        "type": "boolean"
+      },
+      "inference_model_name": {
+        "default": "checkpoint_best",
+        "description": "Checkpoint used for post-training benchmark",
+        "title": "Inference Model Name",
+        "type": "string"
+      },
+      "inference_config": {
+        "anyOf": [
+          {"$ref": "#/$defs/InferenceConfig"},
+          {"type": "null", "title": "Select None"}
+        ],
+        "default": null,
+        "description": "Inference configuration used for the post-training benchmark"
+      }
+    },
+    "title": "mainArgs",
+    "type": "object",
+    "positional_args": []
+  },
+  "case_conversion": "kebab",
+  "parameter_prefix": "--",
+  "nested_parameter_handling": "dot",
+  "assignment_separator": "space",
+  "bool_handling": "flag-negation",
+  "order": 0
+}

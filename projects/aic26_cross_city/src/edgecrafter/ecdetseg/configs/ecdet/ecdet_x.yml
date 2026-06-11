@@ -1,0 +1,74 @@
+__include__: [
+  '../dataset/coco.yml',
+  'ecdet.yml',
+]
+
+output_dir: outputs/ecdet_x
+
+
+ViTAdapter:
+  name: ecvitsplus
+  embed_dim: 384
+  num_heads: 6
+  proj_dim: 256
+  interaction_indexes: [10, 11]
+  ffn_ratio: 6  
+  weights_path: ecvits/ecvitsplus.pth
+
+HybridEncoder:
+  in_channels: [256, 256, 256]
+  hidden_dim: 256
+  depth_mult: 1
+  expansion: 1.5
+  dim_feedforward: 2048
+
+ECTransformer:
+  feat_channels: [256, 256, 256]
+  hidden_dim: 256
+  num_layers: 4
+  eval_idx: -1
+  dim_feedforward: 2048
+
+
+optimizer:
+  type: AdamW
+  params: 
+    -
+      # except norm/bn/bias in backbone
+      params: '^(?=.*.backbone)(?!.*(?:norm|bn|bias)).*$'  
+      lr: 0.0000025
+    -
+      # including all norm/bn/bias in backbone
+      params: '^(?=.*.backbone)(?=.*(?:norm|bn|bias)).*$'    
+      lr: 0.0000025
+      weight_decay: 0.
+    - 
+      # including all norm/bn/bias except for the backbone
+      params: '^(?!.*\.backbone)(?=.*(?:norm|bn|bias)).*$'
+      weight_decay: 0.
+
+  lr: 0.0005
+  betas: [0.9, 0.999]
+  weight_decay: 0.000125
+
+epochs: 50
+warmup_iter: 2000
+lr_gamma: 0.5
+
+
+eval_spatial_size: [640, 640] # h w
+
+
+train_dataloader:
+  dataset: 
+    transforms:
+      mosaic_epoch: 24
+      mosaic_prob: 1
+      stop_epoch: 48
+
+  collate_fn:
+    mixup_prob: 1
+    mixup_epoch: 24
+
+
+

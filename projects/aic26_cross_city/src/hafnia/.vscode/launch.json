@@ -1,0 +1,122 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python Debugger: Current File",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "debug (list profiles)",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/hafnia_cli/__main__.py",
+            "args": [
+                "profile",
+                "ls"
+            ],
+        },
+        {
+            "name": "cmd: hafnia runc launch-local",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/hafnia_cli/__main__.py",
+            "args": [
+                "runc",
+                "launch-local",
+                "--dataset",
+                "midwest-vehicle-detection-tiny",
+                "train --config-name yolov4-hafnia.yaml"
+            ],
+        },
+        {
+            "name": "cmd: hafnia runc build-local",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/hafnia_cli/__main__.py",
+            "args": [
+                "runc",
+                "build-local",
+                "train",
+                "--dataset",
+                "mnist",
+            ],
+        },
+        {
+            "name": "cmd: 'hafnia dataset [X]'",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/hafnia_cli/__main__.py",
+            "args": [
+                "dataset",
+                //"ls",
+                "download",
+                "mnist",
+                "--force"
+            ]
+        },
+        {
+            "name": "cmd: 'hafnia recipe [X]'",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/hafnia_cli/__main__.py",
+            "args": [
+                "recipe",
+                "ls"
+            ]
+        },
+        {
+            "name": "cmd: 'hafnia experiment [X]'",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/hafnia_cli/__main__.py",
+            "args": [
+                "experiment",
+                "create",
+                // "--trainer-path",
+                // "${workspaceFolder}/../trainer-classification",
+                //"--trainer-id",
+                //"e47d701d-c5ed-4014-9480-434f04e9459b",
+                "--trainer-path",
+                "${workspaceFolder}/../trainer-classification",
+                "--dataset",
+                "mnist",
+            ]
+        },
+        {
+            "name": "cmd: 'hafnia trainer create [X]'",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/hafnia_cli/__main__.py",
+            "args": [
+                "trainer",
+                "create",
+                // "${workspaceFolder}/../trainer-classification",
+                // "--name",
+                // "Classification Trainer Package Launched in debug mode from vc-code",
+                // "--description",
+                // "A trainer package for image classification tasks launched in debug mode."
+                "${workspaceFolder}/../trainer-object-detection",
+                "--name",
+                "Object Detection Trainer Package Launched in debug mode from vc-code",
+                "--description",
+                "A trainer package for object detection tasks launched in debug mode."
+            ]
+        },
+        {
+            "name": "cmd: 'hafnia trainer [X]'",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "${workspaceFolder}/src/hafnia_cli/__main__.py",
+            "args": [
+                "trainer",
+                "ls"
+            ]
+        }
+    ]
+}
