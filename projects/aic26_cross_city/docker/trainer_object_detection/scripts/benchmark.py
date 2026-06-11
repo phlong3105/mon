@@ -1,9 +1,15 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from pathlib import Path
 from typing import Annotated
 
 import polars as pl
 from cyclopts import App, Parameter
-from hafnia.dataset.benchmark.benchmark import metric_calculations, run_inference_on_dataset
+from hafnia.dataset.benchmark.benchmark import (
+    metric_calculations,
+    run_inference_on_dataset,
+)
 from hafnia.dataset.dataset_names import SampleField, SplitName
 from hafnia.dataset.hafnia_dataset import HafniaDataset, Optional
 from hafnia.experiment import HafniaLogger

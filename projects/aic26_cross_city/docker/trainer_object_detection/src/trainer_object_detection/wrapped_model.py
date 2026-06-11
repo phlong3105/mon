@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import tempfile
 import zipfile
 from dataclasses import dataclass
@@ -18,6 +21,7 @@ MODEL_CONFIG_NAME = "model_config.json"
 
 @dataclass
 class ModelOption:
+
     name: str
     pretrained: bool
     supported: bool
@@ -34,6 +38,7 @@ PATH_PRETRAINED_MODELS = Path(__file__).parent.parent.parent / "pretrained_model
 
 
 class InitModelConfig(BaseModel):
+
     name: str
     task: TaskInfo
     model_weight_path: Optional[str]
@@ -85,12 +90,14 @@ class InitModelConfig(BaseModel):
 
 
 class InferenceConfig(BaseModel):
+
     compile: bool = True
     batch_size: int = 1
-    threshold: float = 0.05
+    threshold: float = 0.001  # 0.05
 
 
 class WrappedModel(InferenceModel):
+
     def __init__(self, model: detr.RFDETR, task: TaskInfo, inference_config: InferenceConfig):
         self.model = model
         self.task = task

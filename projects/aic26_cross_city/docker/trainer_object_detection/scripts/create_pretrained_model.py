@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 """Populate the local pretrained-model cache used by the other scripts.
 
 Iterates over every entry in ``MODEL_OPTIONS``, downloads the corresponding RF-DETR pretrained

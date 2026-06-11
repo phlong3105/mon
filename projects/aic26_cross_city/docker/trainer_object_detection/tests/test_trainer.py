@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 import hashlib
 import subprocess
 import tempfile
@@ -7,9 +10,9 @@ from pathlib import Path
 import pytest
 import torch
 from hafnia.experiment.command_builder import (
-    DEFAULT_ORDER,
-    CommandBuilderSchema,
     auto_save_command_builder_schema,
+    CommandBuilderSchema,
+    DEFAULT_ORDER,
     path_of_function,
     simulate_form_data,
 )

@@ -61,7 +61,7 @@ dependencies    = [
     # --- Neural Network / Deep Learning ---
     "calflops",                         # A library for calculating the number of floating point operations (FLOPs) in a PyTorch model.
     "einops",                           # A new flavor of deep learning operations.
-    # "lightning",                        # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
+    "lightning",                        # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
     "onnx",                             # Open Neural Network Exchange.
     "onnxruntime",                      # ONNX Runtime is a performance-focused scoring engine for Open Neural Network Exchange (ONNX) models.
     "openvino",                         # OpenVINO™ is a toolkit for optimizing and deploying AI inference.
