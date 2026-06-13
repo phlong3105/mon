@@ -1,5 +1,5 @@
 # --- General ---
-exp_name: &exp_name "slice_dopri5_sice_me_v3"  # (str) Experiment name.
+exp_name: &exp_name "sdce_iter8_sice_me_v3"  # (str) Experiment name.
 
 root: &root ~  # (str) Root path of the project.
 output_dir: &output_dir ~  # (str) Output directory.
@@ -12,23 +12,23 @@ seed: 100  # (int) Random seed for reproducibility
 
 # --- Model ---
 model:
-  name: "slice"  # (str) Model name (e.g., resnet50, yolov8n).
-  arch: "slice"  # (str) Model architecture (e.g., resnet, yolo8).
+  name: "sdce"  # (str) Model name (e.g., resnet50, yolov8n).
+  arch: "sdce"  # (str) Model architecture (e.g., resnet, yolo8).
   in_channels: 3
   hidden_dim: 32
   imgsz: 256
-  method: "dopri5"
+  method: "iter8"
   # "iter8", "iter5", "iter4", "dopri8", "dopri5", "bosh3", "fehlberg2",
   # "adaptive_heun", "euler", "midpoint", "heun2", "heun3", "rk4",
   # "explicit_adams", "implicit_adams", "fixed_adams", "scipy_solver"
   tol: 0.00001  # 1e-5
   ode_options:
-    # step_size: 0.1
+    step_size: 0.1
     max_num_steps: 1000
   noise_level: ~
   use_depth: True
   use_anscombe: False
-  weights: "cv/enhance/slice/slice_dopri5/sice_me/slice_dopri5_sice_me.pt"  # (str) Path to model weights.
+  weights: "cv/enhance/sdce/sdce/sice_me/sdce_sice_me.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---
@@ -86,8 +86,8 @@ T: 3.0
 
 optimizer:
   name: "Adam"  # (str) Optimizer name.
-  lr: 0.00001  # 0.0001 (float) Learning rate.
-  # weight_decay: 0.0001
+  lr: 0.00001  # 0.00001 (float) Learning rate.
+  weight_decay: 0.00001
 
 lr_scheduler: ~
 
@@ -95,7 +95,7 @@ lr_warmup_scheduler: ~
 
 loss:
   E: 0.6  # (float) Default is 0.6, but the author suggests 0.5 or 0.45
-  W_tv_A: 200
+  W_tv_A: 1600
   W_spa: 1
   W_col: 20  # 0.8
   W_col_pre: 10
@@ -111,7 +111,7 @@ tensorboard_logger: True
 # --- Prediction ---
 predict:
   data: ~  # (list[str]) List of data names or paths for prediction.
-  T: 3.0
+  T: ~
   strategy: "default"  # (str) Prediction strategy (e.g., default, resize, patch).
 
   # Resizing strategy: Downsampling -> Inference -> Upsampling.

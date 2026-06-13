@@ -1,6 +1,17 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# Fix mlflow connection errors
+import os
+os.environ["MLFLOW_SQLALCHEMYSTORE_POOL_SIZE"] = "300"
+os.environ["MLFLOW_SQLALCHEMYSTORE_MAX_OVERFLOW"] = "500"
+os.environ["MLFLOW_SQLALCHEMYSTORE_POOL_TIMEOUT"] = "600"
+os.environ["MLFLOW_SQLALCHEMYSTORE_POOL_RECYCLE"] = "18000"
+os.environ["MLFLOW_SQLALCHEMYSTORE_ECHO"] = "False"
+# noinspection PyUnusedImports
+import mlflow
+
+import time
 from pathlib import Path
 from typing import Annotated, Optional, Type
 
@@ -30,6 +41,7 @@ from trainer_object_detection.wrapped_model import (
 )
 
 detr = utils.patch_to_support_experiment_tracker_with_hafnia(detr)
+
 app = App(name="train", help="PyTorch Training")
 MODEL_NAME_OPTIONS = [f"pretrained_models/{d.name}.zip" for d in trainer_object_detection.wrapped_model.MODEL_OPTIONS]
 DEFAULT_INFERENCE_MODEL = "checkpoint_best_ema"
@@ -110,15 +122,13 @@ def main(
                 f"Options: {MODEL_NAME_OPTIONS}"
             )
         ),
-    ] = "./pretrained_models/RFDETRLarge.zip",  # "./pretrained_models/RFDETRNano.zip",
+    ] = "pretrained_models/RFDETRNano.zip",  # "./pretrained_models/RFDETRNano.zip",
     pretrained: Annotated[bool, Parameter(help="Initialize the model from pretrained weights")] = True,
     epochs: Annotated[int, Parameter(help="Number of epochs to train")] = 10,
-    batch_size: Annotated[int, Parameter(help="Batch size for training")] = 8,
+    batch_size: Annotated[int, Parameter(help="Batch size for training")] = 4,
     grad_accumulation_steps: Annotated[
         int,
-        Parameter(
-            help="Number of gradient accumulation steps (effective batch size = batch_size * grad_accumulation_steps)"
-        ),
+        Parameter(help="Number of gradient accumulation steps (effective batch size = batch_size * grad_accumulation_steps)"),
     ] = 1,
     learning_rate: Annotated[float, Parameter(help="Learning rate for the optimizer")] = 0.001,
     resolution: Annotated[
@@ -127,12 +137,7 @@ def main(
     ] = None,
     task_name: Annotated[
         Optional[str],
-        Parameter(
-            help=(
-                "Dataset task name used for training. Only required when the dataset has multiple tasks "
-                "matching the model primitive."
-            )
-        ),
+        Parameter(help="Dataset task name used for training. Only required when the dataset has multiple tasks matching the model primitive."),
     ] = None,
     samples: Annotated[
         Optional[int],
@@ -140,19 +145,13 @@ def main(
     ] = None,
     stop_early: Annotated[
         bool,
-        Parameter(
-            help=(
-                "Exit before training starts. Can be used to avoid long training times when smoke-testing the pipeline."
-            )
-        ),
+        Parameter(help="Exit before training starts. Can be used to avoid long training times when smoke-testing the pipeline."),
     ] = False,
+    run_train: Annotated[bool, Parameter(help="Run training.")] = True,
+    run_test: Annotated[bool, Parameter(help="Run testing.")] = True,
     inference_model_name: Annotated[
         str,
-        Parameter(
-            help=(
-                f"Checkpoint used for the post-training benchmark on the test split. Options: {INFERENCE_MODEL_OPTIONS}"
-            )
-        ),
+        Parameter(help=f"Checkpoint used for the post-training benchmark on the test split. Options: {INFERENCE_MODEL_OPTIONS}"),
     ] = DEFAULT_INFERENCE_MODEL,
     inference_config: Annotated[
         Optional[InferenceConfig], Parameter(help="Inference configuration used for the post-training benchmark")
@@ -196,7 +195,7 @@ def main(
     if samples is not None:
         dataset = dataset.select_samples(n_samples=samples)
 
-    # Define pretrained weigths
+    # Define pretrained weights
     checkpoint_model_path = utils.get_checkpoint_if_available(logger)
     if checkpoint_model_path is not None:
         user_logger.info(f"Using checkpoint '{checkpoint_model_path.name}' as pretrained model")
@@ -247,61 +246,68 @@ def main(
         user_logger.info("Early stopping before training was activated with '--stop_early' flag.")
         return None
 
-    model_trainer.train(
-        dataset_dir=dataset_path.as_posix(),
-        epochs=epochs,
-        batch_size=batch_size,
-        lr=learning_rate,
-        grad_accum_steps=grad_accumulation_steps,
-        output_dir=path_experiment.as_posix(),
-        resolution=resolution,
-    )
+    if run_train:
+        model_trainer.train(
+            dataset_dir=dataset_path.as_posix(),
+            epochs=epochs,
+            batch_size=batch_size,
+            lr=learning_rate,
+            grad_accum_steps=grad_accumulation_steps,
+            output_dir=path_experiment.as_posix(),
+            resolution=resolution,
+        )
 
-    # 3. Save weights
-    model_folder_path = logger.path_model()
-    # Repackage each final checkpoint as a single compressed model archive in the model folder
-    # (e.g. "checkpoint_best_regular.zip" and "checkpoint_best_total.zip").
-    final_models = list(path_experiment.glob("checkpoint_*.pth"))
-    model_path = {}
-    for checkpoint_path in final_models:
-        model_name = checkpoint_path.stem  # e.g. "checkpoint_best_regular"
-        model_checkpoint_path = model_folder_path / f"{model_name}.zip"
-        model_config = InitModelConfig(name=model_config.name, task=task_info, model_weight_path=str(checkpoint_path))
-        model_config.save_model(model_checkpoint_path)
-        model_path[model_name] = model_checkpoint_path
+        # 3. Save weights
+        model_folder_path = logger.path_model()
+        # Repackage each final checkpoint as a single compressed model archive in the model folder
+        # (e.g. "checkpoint_best_regular.zip" and "checkpoint_best_total.zip").
+        final_models = list(path_experiment.glob("checkpoint_*.pth"))
+        model_path = {}
+        for checkpoint_path in final_models:
+            model_name = checkpoint_path.stem  # e.g. "checkpoint_best_regular"
+            model_checkpoint_path = model_folder_path / f"{model_name}.zip"
+            model_config = InitModelConfig(name=model_config.name, task=task_info, model_weight_path=str(checkpoint_path))
+            model_config.save_model(model_checkpoint_path)
+            model_path[model_name] = model_checkpoint_path
 
-    checkpoints_folder_path = logger.path_model_checkpoints()
-    checkpoint_model_paths = final_models  # For now we simply add final models as checkpoints
-    for ckpt_path in checkpoint_model_paths:
-        model_config = InitModelConfig(name=model_config.name, task=task_info, model_weight_path=str(ckpt_path))
-        model_config.save_model(checkpoints_folder_path / f"{ckpt_path.stem}.zip")
+        checkpoints_folder_path = logger.path_model_checkpoints()
+        checkpoint_model_paths = final_models  # For now we simply add final models as checkpoints
+        for ckpt_path in checkpoint_model_paths:
+            model_config = InitModelConfig(name=model_config.name, task=task_info, model_weight_path=str(ckpt_path))
+            model_config.save_model(checkpoints_folder_path / f"{ckpt_path.stem}.zip")
 
-    # 4. Infer
+    # 4. Test
     #### 'TEST' split inference/benchmarking ####
-    inference_config = inference_config or InferenceConfig()
+    if run_test:
+        inference_config = inference_config or InferenceConfig(compile=True, batch_size=1, threshold=0.01)
+        inference_model = WrappedModel.load_model(
+            path_archive=model_path[inference_model_name],
+            inference_config=inference_config
+        )
+        inference_model.optimize_for_inference()
+        dataset_with_predictions = run_inference_on_dataset(
+            dataset=dataset_test,
+            model=inference_model
+        )
 
-    inference_model = WrappedModel.load_model(model_path[inference_model_name], inference_config=inference_config)
-    inference_model.optimize_for_inference()
+        # Experiment output folder
+        path_experiment_output_folder = logger._path_artifacts()
+        # Save predictions to experiment output folder (drops unneeded columns)
+        drop_columns = [SampleField.FILE_PATH, SampleField.VIDEO_INFO, SampleField.CAMERA_INFO, SampleField.META]
+        dataset_with_predictions.samples = dataset_with_predictions.samples.drop(drop_columns, strict=False)
+        dataset_with_predictions.write_annotations(path_experiment_output_folder)
 
-    dataset_with_predictions = run_inference_on_dataset(dataset=dataset_test, model=inference_model)
+        no_gt_data = dataset_test.samples.select(pl.col(task_info.primitive.column_name()).list.len()).sum().item() == 0
+        if no_gt_data:  # Skip metric calculation for test sets without ground-truth annotations
+            user_logger.warning("No ground-truth annotations found in the test set. Skipping metric calculation.")
+            return logger
+        else:
+            metrics = metric_calculations(prediction_dataset=dataset_with_predictions)
+            for metric_name, metric_value in metrics.items():
+                logger.log_metric(metric_name, metric_value, step=0)
+            return logger
 
-    # Experiment output folder
-    path_experiment_output_folder = logger._path_artifacts()
-    # Save predictions to experiment output folder (drops unneeded columns)
-    drop_columns = [SampleField.FILE_PATH, SampleField.VIDEO_INFO, SampleField.CAMERA_INFO, SampleField.META]
-    dataset_with_predictions.samples = dataset_with_predictions.samples.drop(drop_columns, strict=False)
-    dataset_with_predictions.write_annotations(path_experiment_output_folder)
-
-    no_gt_data = dataset_test.samples.select(pl.col(task_info.primitive.column_name()).list.len()).sum().item() == 0
-    if no_gt_data:  # Skip metric calculation for test sets without ground-truth annotations
-        user_logger.warning("No ground-truth annotations found in the test set. Skipping metric calculation.")
-        return logger
-
-    metrics = metric_calculations(prediction_dataset=dataset_with_predictions)
-    for metric_name, metric_value in metrics.items():
-        logger.log_metric(metric_name, metric_value, step=0)
-
-    return logger
+    return None
 
 
 if __name__ == "__main__":
@@ -309,5 +315,8 @@ if __name__ == "__main__":
     path_launch_schema = auto_save_command_builder_schema(main, cli_tool=utils.CLI_TOOL, order=0)
     user_logger.info(f"Launch schema saved to: {path_launch_schema}")
     app()
+
+    # Pause for debugging
+    time.sleep(600)
 
 # endregion

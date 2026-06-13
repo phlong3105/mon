@@ -14,7 +14,7 @@ import argparse
 import sys
 
 # noinspection PyUnusedImports
-import slice
+import sdce
 from mon.core import (
     ConfigContext,
     Path,
@@ -149,15 +149,15 @@ def metric(args: argparse.Namespace):
             "zero_ig_lol_4k",
             "zero_ig_lol_patch",
         ],
-        "slice": [
-            "slice_dopri5_sice_me_v4_128",
-            "slice_dopri5_sice_me_v4_256",
-            "slice_dopri5_sice_me_v4_512",
-            "slice_dopri5_sice_me_v4_480p",
-            "slice_dopri5_sice_me_v4_720p",
-            "slice_dopri5_sice_me_v4_1080p",
-            "slice_dopri5_sice_me_v4_2k",
-            "slice_dopri5_sice_me_v4_4k",
+        "sdce": [
+            "sdce_dopri5_sice_me_v4_128",
+            "sdce_dopri5_sice_me_v4_256",
+            "sdce_dopri5_sice_me_v4_512",
+            "sdce_dopri5_sice_me_v4_480p",
+            "sdce_dopri5_sice_me_v4_720p",
+            "sdce_dopri5_sice_me_v4_1080p",
+            "sdce_dopri5_sice_me_v4_2k",
+            "sdce_dopri5_sice_me_v4_4k",
         ],
     }
     datasets = [
@@ -228,7 +228,7 @@ def benchmark(args: argparse.Namespace):
         # "sci++",
         # "zero_dce",
         # "zero_ig",
-        # "slice",
+        # "sdce",
     ]
     resolutions = [
         (128, 128),

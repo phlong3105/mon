@@ -1,5 +1,5 @@
 # --- General ---
-exp_name: &exp_name "slice_dopri5_sice_me_v4"  # (str) Experiment name.
+exp_name: &exp_name "sdce_dopri5_sice_me_v4"  # (str) Experiment name.
 
 root: &root ~  # (str) Root path of the project.
 output_dir: &output_dir ~  # (str) Output directory.
@@ -12,8 +12,8 @@ seed: 100  # (int) Random seed for reproducibility
 
 # --- Model ---
 model:
-  name: "slice"  # (str) Model name (e.g., resnet50, yolov8n).
-  arch: "slice"  # (str) Model architecture (e.g., resnet, yolo8).
+  name: "sdce"  # (str) Model name (e.g., resnet50, yolov8n).
+  arch: "sdce"  # (str) Model architecture (e.g., resnet, yolo8).
   in_channels: 3
   hidden_dim: 32
   imgsz: 256
@@ -28,7 +28,7 @@ model:
   noise_level: ~
   use_depth: True
   use_anscombe: True
-  weights: "cv/enhance/slice/slice_dopri5/sice_me/slice_dopri5_sice_me.pt"  # (str) Path to model weights.
+  weights: "cv/enhance/sdce/sdce_dopri5/sice_me/sdce_dopri5_sice_me.pt"  # (str) Path to model weights.
   finetune: ~  # (str) Path to fine-tuning weights.
 
 # --- Data ---

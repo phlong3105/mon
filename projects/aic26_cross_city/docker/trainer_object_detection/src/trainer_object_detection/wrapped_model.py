@@ -21,7 +21,6 @@ MODEL_CONFIG_NAME = "model_config.json"
 
 @dataclass
 class ModelOption:
-
     name: str
     pretrained: bool
     supported: bool
@@ -93,7 +92,7 @@ class InferenceConfig(BaseModel):
 
     compile: bool = True
     batch_size: int = 1
-    threshold: float = 0.001  # 0.05
+    threshold: float = 0.01  # 0.05
 
 
 class WrappedModel(InferenceModel):
@@ -113,8 +112,15 @@ class WrappedModel(InferenceModel):
             dtype=torch.float32,
         )
 
-    def predict(self, images: Union[ImageType, List[ImageType]], sample_dict: Optional[dict] = None) -> List[Primitive]:
-        predictions = self.model.predict(images, threshold=self.inference_config.threshold)
+    def predict(
+        self,
+        images: Union[ImageType, List[ImageType]],
+        sample_dict: Optional[dict] = None
+    ) -> List[Primitive]:
+        predictions = self.model.predict(
+            images=images,
+            threshold=self.inference_config.threshold
+        )
         bboxes: List[Bbox] = to_bbox_primitives(predictions, images.shape[:2], bbox_task=self.task)
         return bboxes
 
@@ -154,32 +160,25 @@ def _load_config_and_weights(path_archive: Path, extract_dir: Path) -> InitModel
 
 
 def primitive_and_model_from_name(
-    model_name: str, model_weights: Optional[str] = "pretrained"
-) -> Tuple[
-    Type[Primitive],
-    detr.RFDETR,
-]:
-
+    model_name: str,
+    model_weights: Optional[str] = "pretrained"
+) -> Tuple[Type[Primitive], detr.RFDETR]:
     if model_name == "RFDETRNano":
         primitive = Bbox
         model_class = detr.RFDETRNano
         model_config: config.RFDETRBaseConfig = config.RFDETRNanoConfig()
-
     elif model_name == "RFDETRSmall":
         primitive = Bbox
         model_class = detr.RFDETRSmall
         model_config: config.RFDETRBaseConfig = config.RFDETRSmallConfig()
-
     elif model_name == "RFDETRMedium":
         primitive = Bbox
         model_class = detr.RFDETRMedium
         model_config: config.RFDETRBaseConfig = config.RFDETRMediumConfig()
-
     elif model_name == "RFDETRLarge":
         primitive = Bbox
         model_class = detr.RFDETRLarge
         model_config: config.RFDETRBaseConfig = config.RFDETRLargeConfig()
-
     elif model_name == "RFDETRSegNano":
         primitive = Bitmask
         model_class = detr.RFDETRSegNano
@@ -199,7 +198,11 @@ def primitive_and_model_from_name(
     return primitive, model
 
 
-def to_bbox_primitives(predictions, image_shape: Tuple[int, int], bbox_task: TaskInfo) -> list[Bbox]:
+def to_bbox_primitives(
+    predictions,
+    image_shape: Tuple[int, int],
+    bbox_task: TaskInfo
+) -> list[Bbox]:
     predictions_bboxes = []
     for bbox, class_idx, confidence in zip(predictions.xyxy, predictions.class_id, predictions.confidence, strict=True):
         # Model creates n+1 class indices, where the last index is "no object" or "__background__" class

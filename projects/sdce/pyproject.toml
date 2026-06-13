@@ -16,7 +16,7 @@
 #   - uv            : https://docs.astral.sh/uv/
 
 [project]
-name            = "dev"
+name            = "sdce"
 version         = "1.3.0"
 description     = "Development project"
 license         = "MIT"
@@ -52,7 +52,7 @@ mon = { workspace = true }
 # package-mode = false                    # If you want to use Poetry only for dependency management but not for packaging.
 packages = [
     { include = "saleo", from = "src" },
-    { include = "slice", from = "src" }
+    { include = "sdce",  from = "src" }
 ]
 include  = []
 exclude  = []

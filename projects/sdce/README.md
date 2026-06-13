@@ -10,7 +10,7 @@ This project serves as the development environment for experimenting with new id
   <summary>Directory Structure</summary>
 
   ```text
-  dev/                     # Project root.
+  sdce/                    # Project root.
   |__ archive
   |__ config               # Configuration files for experiments.
   |__ data                 # Data-related files.

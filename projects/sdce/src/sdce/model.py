@@ -1,21 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-"""SLICE Models.
+"""SDCE Models.
 
-This module provides the SLICE definition and pre-trained weights.
+This module provides the SDCE definition and pre-trained weights.
 
 References:
-    - Paper: "SLICE: Scale-Arbitrary Low-Light Enhancement via Depth-Aware
-      Implicit Curve Estimation"
-    - Code: https://github.com/phlong3105/slice
+    - Paper: "Spatio-Dynamically Continuous Exposure Network for Ultra-High-Definition
+      Low-Light Image Enhancement"
+    - Code: https://github.com/phlong3105/sdce
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "SLICE",
-    "slice",
+    "SDCE",
+    "sdce",
 ]
 
 from typing import override
@@ -49,32 +49,17 @@ current_dir = current_file.parents[0]
 # region BASE CLASSES
 # ==============================================================================
 
-class SLICE(ModelRegisterMixin, Model):
-    r"""SLICE model.
-
-    "What exactly is SLICE?":
-
-    - Self-Supervised Frontend: Takes the noisy raw tensor and extracts a
-      mathematically pristine, structurally sound image (bypassing the Anscombe
-      clipping trap and structure leakage).
-    - Contextual Encoding: Downsamples the clean image and its corresponding
-      depth map to generate a rich, globally aware feature latent space.
-    - Scale-Arbitrary Decoding: Uses a Fourier-encoded SIREN MLP to map
-      continuous high-resolution spatial coordinates $(x, y)$ against the global
-      features, instantly generating the spatial curve parameters $\mathcal{A}$
-      in memory-safe chunks.
-    - Iterative/Continuous Enhancement: Applies the predicted curve to the
-      pristine image using either discrete iterations or a continuous ODE solver,
-      yielding a 4K/8K image with perfect contrast and zero noise amplification.
+class SDCE(ModelRegisterMixin, Model):
+    r"""SDCE model.
 
     References:
-        - Paper: "SLICE: Scale-Arbitrary Low-Light Enhancement via Depth-Aware
-          Implicit Curve Estimation"
-        - Code: https://github.com/phlong3105/slice
+        - Paper: "Spatio-Dynamically Continuous Exposure Network for Ultra-High-Definition
+          Low-Light Image Enhancement"
+        - Code: https://github.com/phlong3105/sdce
     """
 
-    arch: str = "slice"
-    name: str = "slice"
+    arch: str = "sdce"
+    name: str = "sdce"
     tasks: list[Task] = [Task.LLE]
     strategies: list[Strategy] = [Strategy.NATIVE]
     model_dir: Path = current_dir
@@ -506,10 +491,10 @@ class SLICE(ModelRegisterMixin, Model):
 
 # --- Model Variants ---
 
-@MODELS.register(name="slice", metaclass=SLICE)
-def slice(*args, **kwargs):
-    """Create a SLICE model."""
-    _ = kwargs.pop("name", "slice")
+@MODELS.register(name="sdce", metaclass=SDCE)
+def sdce(*args, **kwargs):
+    """Create a SDCE model."""
+    _ = kwargs.pop("name", "sdce")
     in_channels = kwargs.pop("in_channels", 3)
     hidden_dim = kwargs.pop("hidden_dim", 32)
     imgsz = kwargs.pop("imgsz", 256)
@@ -519,8 +504,8 @@ def slice(*args, **kwargs):
     noise_level = kwargs.pop("noise_level", None)
     use_depth = kwargs.pop("use_depth", False)
     use_anscombe = kwargs.pop("use_anscombe", False)
-    return SLICE(
-        name="slice",
+    return SDCE(
+        name="sdce",
         in_channels=in_channels,
         hidden_dim=hidden_dim,
         imgsz=imgsz,

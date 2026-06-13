@@ -3,13 +3,13 @@
 
 """Training Runners.
 
-This module provides training runner classes for SLICE models.
+This module provides training runner classes for SDCE models.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "SLICE_Trainer",
+    "SDCE_Trainer",
 ]
 
 import pyiqa
@@ -30,7 +30,7 @@ from mon.core import (
 from mon.ops import normalize_minmax
 from mon.runners import Trainer
 from . import loss as L
-from .model import slice
+from .model import sdce
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -40,9 +40,9 @@ current_dir = current_file.parents[0]
 # region TRAINER
 # ==============================================================================
 
-@TRAINERS.register(name="slice")
-class SLICE_Trainer(Trainer):
-    """Trainer for SLICE models."""
+@TRAINERS.register(name="sdce")
+class SDCE_Trainer(Trainer):
+    """Trainer for SDCE models."""
 
     # --- Lifecycle & Initialization ---
     @override
@@ -52,7 +52,7 @@ class SLICE_Trainer(Trainer):
         device = self.device
         weights = config.finetune
 
-        model = slice(**config.model | {"weights": weights})
+        model = sdce(**config.model | {"weights": weights})
         model = model.to(device)
         model.train()
         self._model = model
@@ -269,14 +269,14 @@ class SLICE_Trainer(Trainer):
 # ==============================================================================
 
 def main():
-    """Unit test for SLICE_Trainer."""
-    trainer = SLICE_Trainer.from_cli(
+    """Unit test for SDCE_Trainer."""
+    trainer = SDCE_Trainer.from_cli(
         root=resolve_project_root(current_dir),
-        config_file="slice_sice_me.yaml",
+        config_file="sdce_sice_me.yaml",
         task=Task.LLE,
         mode=RunMode.TRAIN,
-        arch="slice",
-        model="slice",
+        arch="sdce",
+        model="sdce",
         device="auto",
         save=True,
         save_debug=True,

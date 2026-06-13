@@ -3,13 +3,13 @@
 
 """Prediction Runners.
 
-This module provides prediction runner classes for SLICE models.
+This module provides prediction runner classes for SDCE models.
 """
 
 from __future__ import annotations
 
 __all__ = [
-    "SLICE_Predictor",
+    "SDCE_Predictor",
 ]
 
 import torch
@@ -28,7 +28,7 @@ from mon.core import (
 from mon.dataset import transform as T
 from mon.runners import Predictor
 # noinspection PyUnusedImports
-from .model import slice
+from .model import sdce
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
@@ -38,9 +38,9 @@ current_dir = current_file.parents[0]
 # region PREDICTOR
 # ==============================================================================
 
-@PREDICTORS.register(name="slice")
-class SLICE_Predictor(Predictor):
-    """Predictor for SLICE models."""
+@PREDICTORS.register(name="sdce")
+class SDCE_Predictor(Predictor):
+    """Predictor for SDCE models."""
 
     # --- Lifecycle & Initialization ---
     @override
@@ -50,7 +50,7 @@ class SLICE_Predictor(Predictor):
         device = self.device
         weights = config.weights or config.finetune
 
-        model = slice(**config.model | {"weights": weights})
+        model = sdce(**config.model | {"weights": weights})
         model = model.to(device)
         model.eval()
         self._model = model
@@ -147,15 +147,15 @@ class SLICE_Predictor(Predictor):
 # ==============================================================================
 
 def main():
-    """Unit test for SLICE_Predictor."""
-    predictor = SLICE_Predictor.from_cli(
+    """Unit test for SDCE_Predictor."""
+    predictor = SDCE_Predictor.from_cli(
         prompt=True,
         root=resolve_project_root(current_dir),
-        config_file="slice_sice_me.yaml",
+        config_file="sdce_sice_me.yaml",
         task=Task.LLE,
         mode=RunMode.PREDICT,
-        arch="slice",
-        model="slice",
+        arch="sdce",
+        model="sdce",
         device="auto",
         save=True,
         save_debug=True,

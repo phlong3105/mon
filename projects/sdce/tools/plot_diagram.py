@@ -91,7 +91,7 @@ def plot_02():
         "SCI++":      [0.0005, 0.0022, 0.0088, 0.0103, 0.0309, 0.0703, 0.1236, 0.2781, 1.1133],
         "Zero-DCE":   [0.0173, 0.0685, 0.2736, 0.3245, 0.9625, 2.1682, 3.8454, 8.6529, -1.0],
         "ZERO-IG":    [0.0121, 0.0483, 0.1935, 0.2295, 0.6827, 1.5299, 2.7193, 6.1209, -1.0],
-        "SLICE":      [0.1209, 0.1758, 0.1821, 0.1823, 0.3526, 0.7781, 1.3732, 3.0710, 12.2508],
+        "sdce":      [0.1209, 0.1758, 0.1821, 0.1823, 0.3526, 0.7781, 1.3732, 3.0710, 12.2508],
     }
     ciqs = {
         "CLODE":      [0.5216, 0.5351, 0.5727, 0.5797, 0.6225, 0.6567, 0.6786, -1.0, -1.0],
@@ -100,23 +100,23 @@ def plot_02():
         "SCI++":      [0.4533, 0.4646, 0.5012, 0.5086, 0.5519, 0.5901, 0.6141, 0.6404, -1.0],
         "Zero-DCE":   [0.5319, 0.5483, 0.5994, 0.5906, 0.6326, 0.6716, 0.6954, 0.7158, -1.0],
         "ZERO-IG":    [0.4102, 0.4103, 0.4529, 0.4420, 0.4838, 0.5228, 0.5476, 0.5669, -1.0],
-        "SLICE":      [0.5190, 0.5335, 0.5712, 0.5786, 0.6221, 0.6615, 0.6867, 0.7193, -1.0],
+        "sdce":      [0.5190, 0.5335, 0.5712, 0.5786, 0.6221, 0.6615, 0.6867, 0.7193, -1.0],
     }
 
     # VRAM in GB (Now on Left Axis, Lower is better)
-    vram_slice = [1.5, 2.2, 3.5]
+    vram_sdce = [1.5, 2.2, 3.5]
     vram_cnn = [4.0, 9.5, 24.5] # Hits OOM at 4K
     vram_patch = [2.5, 4.5, 8.0]
 
     # Composite Scores (Now on Right Axis, Higher is better)
-    comp_slice = [1.45, 1.42, 1.38]
+    comp_sdce = [1.45, 1.42, 1.38]
     comp_cnn = [1.38, 1.25, 0.95]
     comp_patch = [1.30, 1.15, 0.85]
 
     # 2. Setup Figure
     fig, ax1 = plt.subplots(figsize=(9, 6))
     plt.style.use('seaborn-v0_8-whitegrid')
-    colors = {'SLICE': '#5cb85c', 'CNN': '#d9534f', 'Patch': '#f0ad4e'}
+    colors = {'sdce': '#5cb85c', 'CNN': '#d9534f', 'Patch': '#f0ad4e'}
 
     # 3. Plot VRAM (Left Axis - Solid Lines)
     ax1.set_xlabel('Inference Resolution', fontsize=12, fontweight='bold')
@@ -124,7 +124,7 @@ def plot_02():
     ax1.tick_params(axis='y', labelcolor='black')
     ax1.set_ylim(0, 28)
 
-    l1 = ax1.plot(resolutions, vram_slice, color=colors['SLICE'], linestyle='-', marker='D', linewidth=3, markersize=8, label='SLICE (VRAM)')
+    l1 = ax1.plot(resolutions, vram_sdce, color=colors['sdce'], linestyle='-', marker='D', linewidth=3, markersize=8, label='sdce (VRAM)')
     l2 = ax1.plot(resolutions, vram_cnn, color=colors['CNN'], linestyle='-', marker='s', linewidth=2.5, markersize=8, label='Heavy CNN (VRAM)')
     l3 = ax1.plot(resolutions, vram_patch, color=colors['Patch'], linestyle='-', marker='^', linewidth=2.5, markersize=8, label='Patch-Based (VRAM)')
 
@@ -138,7 +138,7 @@ def plot_02():
     ax2.tick_params(axis='y', labelcolor='#444444')
     ax2.set_ylim(0.5, 1.6)
 
-    l4 = ax2.plot(resolutions, comp_slice, color=colors['SLICE'], linestyle='--', marker='o', linewidth=2.5, markersize=7, markerfacecolor='white', label='SLICE (Composite)')
+    l4 = ax2.plot(resolutions, comp_sdce, color=colors['sdce'], linestyle='--', marker='o', linewidth=2.5, markersize=7, markerfacecolor='white', label='sdce (Composite)')
     l5 = ax2.plot(resolutions, comp_cnn, color=colors['CNN'], linestyle='--', marker='o', linewidth=2.5, markersize=7, markerfacecolor='white', label='Heavy CNN (Composite)')
     l6 = ax2.plot(resolutions, comp_patch, color=colors['Patch'], linestyle='--', marker='o', linewidth=2.5, markersize=7, markerfacecolor='white', label='Patch-Based (Composite)')
 
@@ -163,7 +163,7 @@ if __name__ == "__main__":
     # plot_01(metrics={"PSNR": 19.0478, "SSIM": 0.6982, "LPIPS": 0.5716})  # Zero-DCE
     # plot_01(metrics={"PSNR": 20.7204, "SSIM": 0.7147, "LPIPS": 0.5348})  # CLODE
     # plot_01(metrics={"PSNR": 17.5335, "SSIM": 0.8501, "LPIPS": 0.1795})  # CoLIE
-    # plot_01(metrics={"PSNR": 21.2499, "SSIM": 0.8940, "LPIPS": 0.1573})  # SLICE
+    # plot_01(metrics={"PSNR": 21.2499, "SSIM": 0.8940, "LPIPS": 0.1573})  # sdce
 
     plot_02()
 

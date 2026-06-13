@@ -3,7 +3,7 @@
 
 """Utilities.
 
-This module provides various utilities for SLICE.
+This module provides various utilities for SDCE.
 """
 
 from __future__ import annotations

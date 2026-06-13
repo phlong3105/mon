@@ -16,7 +16,7 @@
                         "type": "integer"
                     },
                     "threshold": {
-                        "default": 0.05,
+                        "default": 0.01,
                         "title": "Threshold",
                         "type": "number"
                     }

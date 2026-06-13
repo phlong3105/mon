@@ -26,7 +26,7 @@ CLASS_MAPPING_OPTIONS = [None, *utils.CLASS_MAPPINGS.keys()]
 
 """ Benchmarking examples
 # Example: Benchmark pretrained model (RFDETRNano) for a vehicle detection task.
-# The tricky part for this benchmark is that RFDETRNano is pretrained on coco datasets lables while the
+# The tricky part for this benchmark is that RFDETRNano is pretrained on coco datasets labels while the
 # dataset have different labels. To solve this we needs to remap both the dataset and model predictions to
 # a common label space. In this example we remap both to a common "vehicle detection"
 # label space, but other remapping strategies are also possible.
@@ -42,7 +42,7 @@ hafnia experiment create --recipe-id 8618234d-b4da-4aa9-bb3e-3be86bb50369 --trai
 def main(
     model_path: Annotated[
         str, Parameter(help="Path to the trained model archive (.zip)")
-    ] = "./pretrained_models/RFDETRNano.zip",
+    ] = "./pretrained_models/RFDETRLarge.zip",
     inference: Annotated[Optional[InferenceConfig], Parameter(help="Inference configuration for the model")] = None,
     model_class_mapping: Annotated[
         Optional[str],
@@ -179,5 +179,4 @@ if __name__ == "__main__":
     # Creates launch schema file for the CLI function 'main'
     path_launch_schema = auto_save_command_builder_schema(main, cli_tool=utils.CLI_TOOL)
     user_logger.info(f"Launch schema saved to: {path_launch_schema}")
-
     app()
