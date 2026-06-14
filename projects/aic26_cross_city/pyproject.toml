@@ -17,7 +17,7 @@
 
 [project]
 name            = "aic26_cross_city"
-version         = "0.1.0"
+version         = "1.0.0"
 description     = "AI City Challenge 2026 - Track 06: Cross-City Object Detection"
 license         = "MIT"
 readme          = "README.md"

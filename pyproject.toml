@@ -33,7 +33,7 @@ classifiers     = [
 ]
 dependencies = [
     "mon",
-    "dev",
+    "sdce",
     "aic26_cross_city",
 ]
 
@@ -79,8 +79,8 @@ include      = []
 exclude      = []
 
 [tool.poetry.dependencies]
-mon = { path = "libs/mon"    , develop = true }
-dev = { path = "projects/dev", develop = true }
+mon  = { path = "libs/mon"     , develop = true }
+sdce = { path = "projects/sdce", develop = true }
 aic26_cross_city = { path = "projects/aic26_cross_city", develop = true }
 
 [build-system]

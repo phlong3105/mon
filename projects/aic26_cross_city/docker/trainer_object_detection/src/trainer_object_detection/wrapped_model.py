@@ -93,6 +93,7 @@ class InferenceConfig(BaseModel):
     compile: bool = True
     batch_size: int = 1
     threshold: float = 0.01  # 0.05
+    # Note: threshold = 0.001 -> file too large, error
 
 
 class WrappedModel(InferenceModel):

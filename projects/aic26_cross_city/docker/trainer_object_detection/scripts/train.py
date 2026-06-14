@@ -19,17 +19,21 @@ import polars as pl
 import torch
 from cyclopts import App, Parameter
 from hafnia import utils as hafnia_utils
-from hafnia.dataset.benchmark.benchmark import (
-    metric_calculations,
-    run_inference_on_dataset,
+from hafnia.dataset.benchmark.benchmark import (metric_calculations)
+from hafnia.dataset.benchmark.inference_model import InferenceModel
+from hafnia.dataset.benchmark.metrics_calculator import metric_calculations
+from hafnia.dataset.dataset_names import (
+    SampleField,
+    SplitName,
+    TASK_NAME_PREDICTIONS_POSTFIX,
 )
-from hafnia.dataset.dataset_names import SampleField, SplitName
 from hafnia.dataset.hafnia_dataset import HafniaDataset
-from hafnia.dataset.hafnia_dataset_types import TaskInfo
+from hafnia.dataset.hafnia_dataset_types import Sample, TaskInfo
 from hafnia.dataset.primitives import Primitive
 from hafnia.experiment import HafniaLogger
 from hafnia.experiment.command_builder import auto_save_command_builder_schema
 from hafnia.log import user_logger
+from hafnia.utils import progress_bar
 from rfdetr import detr
 
 import trainer_object_detection.wrapped_model
@@ -53,7 +57,7 @@ INFERENCE_MODEL_OPTIONS = [
 
 
 # ==============================================================================
-# region UTILS
+# region PREDICTION
 # ==============================================================================
 
 def remove_images_with_no_bboxes(
@@ -104,6 +108,43 @@ def get_dataset_task_from_model_primitive(
 
     return model_task_info
 
+
+def run_inference_on_dataset(
+    dataset: HafniaDataset,
+    model: InferenceModel,
+    task_name_prediction_postfix: str = TASK_NAME_PREDICTIONS_POSTFIX,
+) -> HafniaDataset:
+    model_tasks = [m.model_copy() for m in model.get_model_info().tasks]
+
+    new_task_names = [f"{task.name}{task_name_prediction_postfix}" for task in model_tasks]
+    user_logger.info(
+        f"Running inference on dataset '{dataset.info.dataset_name}'\n"
+        f"- Number of samples: {len(dataset)}\n"
+        f"- Model tasks: {[task.name for task in model_tasks]}\n"
+        f"- Predictions will be appended to the dataset with new task names:\n"
+        f"- Prediction task names: {new_task_names}"
+    )
+
+    for model_task in model_tasks:
+        model_task.name = f"{model_task.name}{task_name_prediction_postfix}"
+
+    prediction_samples = []
+    for dict_sample in progress_bar(dataset, description="Running inference on dataset"):
+        sample = Sample(**dict_sample)
+        image = sample.read_image()
+
+        predictions = model.predict(image, sample_dict=dict_sample)
+        for prediction in predictions:
+            prediction.task_name = f"{prediction.task_name}{task_name_prediction_postfix}"
+        sample.append_primitives(predictions)
+        prediction_samples.append(sample)
+
+    prediction_dataset_info = dataset.info.model_copy(deep=True)
+    prediction_dataset_info.tasks.extend(model_tasks)
+
+    dataset_predictions = HafniaDataset.from_samples_list(prediction_samples, info=prediction_dataset_info)
+    return dataset_predictions
+
 # endregion
 
 
@@ -125,7 +166,7 @@ def main(
     ] = "pretrained_models/RFDETRNano.zip",  # "./pretrained_models/RFDETRNano.zip",
     pretrained: Annotated[bool, Parameter(help="Initialize the model from pretrained weights")] = True,
     epochs: Annotated[int, Parameter(help="Number of epochs to train")] = 10,
-    batch_size: Annotated[int, Parameter(help="Batch size for training")] = 4,
+    batch_size: Annotated[int, Parameter(help="Batch size for training")] = 8,
     grad_accumulation_steps: Annotated[
         int,
         Parameter(help="Number of gradient accumulation steps (effective batch size = batch_size * grad_accumulation_steps)"),
@@ -147,15 +188,15 @@ def main(
         bool,
         Parameter(help="Exit before training starts. Can be used to avoid long training times when smoke-testing the pipeline."),
     ] = False,
-    run_train: Annotated[bool, Parameter(help="Run training.")] = True,
-    run_test: Annotated[bool, Parameter(help="Run testing.")] = True,
+    run_train: Annotated[bool, Parameter(help="Run training")] = True,
+    run_test: Annotated[bool, Parameter(help="Run testing")] = True,
     inference_model_name: Annotated[
         str,
         Parameter(help=f"Checkpoint used for the post-training benchmark on the test split. Options: {INFERENCE_MODEL_OPTIONS}"),
     ] = DEFAULT_INFERENCE_MODEL,
     inference_config: Annotated[
         Optional[InferenceConfig], Parameter(help="Inference configuration used for the post-training benchmark")
-    ] = None,
+    ] = InferenceConfig(compile=True, batch_size=1, threshold=0.01),
 ):
     """Train an RF-DETR object detection model on a Hafnia dataset.
 
@@ -190,7 +231,7 @@ def main(
         path_dataset = hafnia_utils.get_dataset_path_in_hafnia_cloud()  # The path to hidden dataset
         dataset = HafniaDataset.from_path(path_dataset)
     else:
-        dataset = HafniaDataset.from_name("eccv-cross-city", version="1.0.0")
+        dataset = HafniaDataset.from_name("eccv-cross-city", version="latest")
 
     if samples is not None:
         dataset = dataset.select_samples(n_samples=samples)
@@ -229,8 +270,7 @@ def main(
 
     task_info = get_dataset_task_from_model_primitive(dataset, model_primitive, task_name)
 
-    # Prepare Train/Val/Test datasets
-    dataset_test = dataset.create_split_dataset(split_name=SplitName.TEST)
+    # Prepare Train/Val datasets
     dataset_train_val = dataset.create_split_dataset(split_name=[SplitName.TRAIN, SplitName.VAL])
     dataset_train_val = remove_images_with_no_bboxes(dataset_train_val, model_primitive=model_primitive)
 
@@ -279,16 +319,13 @@ def main(
     # 4. Test
     #### 'TEST' split inference/benchmarking ####
     if run_test:
-        inference_config = inference_config or InferenceConfig(compile=True, batch_size=1, threshold=0.01)
-        inference_model = WrappedModel.load_model(
-            path_archive=model_path[inference_model_name],
-            inference_config=inference_config
-        )
+        # Prepare Test datasets
+        dataset_test = dataset.create_split_dataset(split_name=SplitName.TEST)
+        inference_config = inference_config or InferenceConfig()
+        inference_model = WrappedModel.load_model(model_path[inference_model_name], inference_config=inference_config)
         inference_model.optimize_for_inference()
-        dataset_with_predictions = run_inference_on_dataset(
-            dataset=dataset_test,
-            model=inference_model
-        )
+
+        dataset_with_predictions = run_inference_on_dataset(dataset=dataset_test, model=inference_model)
 
         # Experiment output folder
         path_experiment_output_folder = logger._path_artifacts()
@@ -300,14 +337,12 @@ def main(
         no_gt_data = dataset_test.samples.select(pl.col(task_info.primitive.column_name()).list.len()).sum().item() == 0
         if no_gt_data:  # Skip metric calculation for test sets without ground-truth annotations
             user_logger.warning("No ground-truth annotations found in the test set. Skipping metric calculation.")
-            return logger
-        else:
-            metrics = metric_calculations(prediction_dataset=dataset_with_predictions)
-            for metric_name, metric_value in metrics.items():
-                logger.log_metric(metric_name, metric_value, step=0)
-            return logger
 
-    return None
+        metrics = metric_calculations(prediction_dataset=dataset_with_predictions)
+        for metric_name, metric_value in metrics.items():
+            logger.log_metric(metric_name, metric_value, step=0)
+
+    return logger
 
 
 if __name__ == "__main__":
@@ -317,6 +352,6 @@ if __name__ == "__main__":
     app()
 
     # Pause for debugging
-    time.sleep(600)
+    time.sleep(60)
 
 # endregion
