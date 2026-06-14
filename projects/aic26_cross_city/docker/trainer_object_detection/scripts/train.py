@@ -1,13 +1,19 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""Run local:
+hafnia trainer create-zip . ; ^
+hafnia runc build-local trainer.zip ; ^
+hafnia runc launch-local --dataset eccv-cross-city  "python scripts/train.py --epochs 1 --batch_size 1 --inference_sahi"
+"""
+
 # Fix mlflow connection errors
 import os
-os.environ["MLFLOW_SQLALCHEMYSTORE_POOL_SIZE"] = "300"
+os.environ["MLFLOW_SQLALCHEMYSTORE_POOL_SIZE"]    = "300"
 os.environ["MLFLOW_SQLALCHEMYSTORE_MAX_OVERFLOW"] = "500"
 os.environ["MLFLOW_SQLALCHEMYSTORE_POOL_TIMEOUT"] = "600"
 os.environ["MLFLOW_SQLALCHEMYSTORE_POOL_RECYCLE"] = "18000"
-os.environ["MLFLOW_SQLALCHEMYSTORE_ECHO"] = "False"
+os.environ["MLFLOW_SQLALCHEMYSTORE_ECHO"]         = "False"
 # noinspection PyUnusedImports
 import mlflow
 
@@ -19,9 +25,8 @@ import polars as pl
 import torch
 from cyclopts import App, Parameter
 from hafnia import utils as hafnia_utils
-from hafnia.dataset.benchmark.benchmark import (metric_calculations)
+from hafnia.dataset.benchmark.benchmark import metric_calculations
 from hafnia.dataset.benchmark.inference_model import InferenceModel
-from hafnia.dataset.benchmark.metrics_calculator import metric_calculations
 from hafnia.dataset.dataset_names import (
     SampleField,
     SplitName,
@@ -44,6 +49,10 @@ from trainer_object_detection.wrapped_model import (
     WrappedModel,
 )
 
+# ==============================================================================
+# region CONSTANTS
+# ==============================================================================
+
 detr = utils.patch_to_support_experiment_tracker_with_hafnia(detr)
 
 app = App(name="train", help="PyTorch Training")
@@ -54,6 +63,11 @@ INFERENCE_MODEL_OPTIONS = [
     "checkpoint_best_regular",
     "checkpoint_best_total"
 ]
+
+CKPT_DIR = Path("/opt/recipe/checkpoints")
+CKPT_FILE = CKPT_DIR / f"{DEFAULT_INFERENCE_MODEL}.zip"
+
+# endregion
 
 
 # ==============================================================================
@@ -196,7 +210,8 @@ def main(
     ] = DEFAULT_INFERENCE_MODEL,
     inference_config: Annotated[
         Optional[InferenceConfig], Parameter(help="Inference configuration used for the post-training benchmark")
-    ] = InferenceConfig(compile=True, batch_size=1, threshold=0.01),
+    ] = InferenceConfig(compile=True, batch_size=1, threshold=0.001),
+    inference_sahi: Annotated[bool, Parameter(help="Use SAHI for inference")] = False,
 ):
     """Train an RF-DETR object detection model on a Hafnia dataset.
 
@@ -237,7 +252,8 @@ def main(
         dataset = dataset.select_samples(n_samples=samples)
 
     # Define pretrained weights
-    checkpoint_model_path = utils.get_checkpoint_if_available(logger)
+    print(CKPT_FILE)
+    checkpoint_model_path = utils.get_checkpoint_if_available(logger, checkpoints_folder_path=CKPT_DIR)
     if checkpoint_model_path is not None:
         user_logger.info(f"Using checkpoint '{checkpoint_model_path.name}' as pretrained model")
         model_path = checkpoint_model_path.as_posix()
@@ -262,8 +278,8 @@ def main(
     }
 
     if has_cuda:
-        configuration["device"] = "cuda"
-        configuration["num_gpus"] = torch.cuda.device_count()
+        configuration["device"]    = "cuda"
+        configuration["num_gpus"]  = torch.cuda.device_count()
         configuration["gpu_names"] = [torch.cuda.get_device_name(i) for i in range(torch.cuda.device_count())]
 
     logger.log_configuration(configuration)
@@ -320,10 +336,15 @@ def main(
     #### 'TEST' split inference/benchmarking ####
     if run_test:
         # Prepare Test datasets
+        # dataset_test = dataset.create_split_dataset(split_name=SplitName.VAL)
         dataset_test = dataset.create_split_dataset(split_name=SplitName.TEST)
         inference_config = inference_config or InferenceConfig()
-        inference_model = WrappedModel.load_model(model_path[inference_model_name], inference_config=inference_config)
-        inference_model.optimize_for_inference()
+        inference_model = WrappedModel.load_model(
+            path_archive=model_path[inference_model_name],
+            inference_config=inference_config,
+            use_sahi=inference_sahi,
+        )
+        # inference_model.optimize_for_inference()  # Perform inside WrappedModel
 
         dataset_with_predictions = run_inference_on_dataset(dataset=dataset_test, model=inference_model)
 
@@ -337,10 +358,10 @@ def main(
         no_gt_data = dataset_test.samples.select(pl.col(task_info.primitive.column_name()).list.len()).sum().item() == 0
         if no_gt_data:  # Skip metric calculation for test sets without ground-truth annotations
             user_logger.warning("No ground-truth annotations found in the test set. Skipping metric calculation.")
-
-        metrics = metric_calculations(prediction_dataset=dataset_with_predictions)
-        for metric_name, metric_value in metrics.items():
-            logger.log_metric(metric_name, metric_value, step=0)
+        else:
+            metrics = metric_calculations(prediction_dataset=dataset_with_predictions)
+            for metric_name, metric_value in metrics.items():
+                logger.log_metric(metric_name, metric_value, step=0)
 
     return logger
 

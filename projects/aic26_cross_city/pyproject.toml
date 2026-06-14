@@ -36,6 +36,7 @@ dependencies    = [
     "lightning",                        # The Deep Learning framework to train, deploy, and ship AI products Lightning fast.
     "nvidia-ml-py (>=13.595.45)",       # To log GPU metrics in tracker
     "rfdetr",                           # RF-DETR: Real-Time SOTA Detection and Segmentation
+    "sahi",                             # A vision library for performing sliced inference on large images/small objects
 ]
 
 # [project.urls]

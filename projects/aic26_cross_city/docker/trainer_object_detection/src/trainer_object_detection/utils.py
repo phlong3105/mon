@@ -61,16 +61,19 @@ def patch_to_support_experiment_tracker_with_hafnia(detr: types.ModuleType):
     return detr
 
 
-def get_checkpoint_if_available(logger: HafniaLogger) -> Optional[Path]:
+def get_checkpoint_if_available(
+    logger: HafniaLogger,
+    checkpoints_folder_path: Optional[Path] = None,
+) -> Optional[Path]:
     """Return the path to a user-selected checkpoint archive, or ``None`` if none is available.
 
     On the Hafnia platform a checkpoint selected for an experiment is placed in the checkpoints
     directory (see ``HafniaLogger.path_model_checkpoints``). A checkpoint is a single compressed
     model archive (see ``InitModelConfig.save_model``), so only ``*.zip`` files are considered.
     """
-    checkpoints_folder_path = logger.path_model_checkpoints()
+    checkpoints_folder_path = checkpoints_folder_path or logger.path_model_checkpoints()
 
-    msg_no_checkpoint = "No checkpoint was found. Using pretrained model."
+    msg_no_checkpoint = f"No checkpoint was found at {checkpoints_folder_path}. Using pretrained model."
     if not checkpoints_folder_path.exists():
         user_logger.info(msg_no_checkpoint)
         return None
@@ -87,4 +90,6 @@ def get_checkpoint_if_available(logger: HafniaLogger) -> Optional[Path]:
             f"Using '{checkpoint_files[0].name}'."
         )
 
+    msg_checkpoint = f"Resume from the checkpoint: {checkpoints_folder_path}"
+    user_logger.info(msg_checkpoint)
     return checkpoint_files[0]

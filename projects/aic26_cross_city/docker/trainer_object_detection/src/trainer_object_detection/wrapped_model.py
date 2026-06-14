@@ -5,8 +5,10 @@ import tempfile
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, List, Optional, Tuple, Type, Union
+from typing import Any, Type
 
+import numpy as np
+import supervision as sv
 import torch
 from hafnia.dataset.benchmark.inference_model import ImageType, InferenceModel
 from hafnia.dataset.hafnia_dataset_types import Bitmask, ModelInfo, TaskInfo
@@ -15,9 +17,14 @@ from hafnia.log import user_logger
 from pydantic import BaseModel
 from rfdetr import config, detr
 from rfdetr.assets.model_weights import download_pretrain_weights
+from rfdetr.config import RFDETRBaseConfig
+
+
+# ==============================================================================
+# region CONSTANTS
+# ==============================================================================
 
 MODEL_CONFIG_NAME = "model_config.json"
-
 
 @dataclass
 class ModelOption:
@@ -35,18 +42,24 @@ MODEL_OPTIONS = [
 ]
 PATH_PRETRAINED_MODELS = Path(__file__).parent.parent.parent / "pretrained_models"
 
+# endregion
+
+
+# ==============================================================================
+# region BASE CLASSES
+# ==============================================================================
 
 class InitModelConfig(BaseModel):
 
     name: str
     task: TaskInfo
-    model_weight_path: Optional[str]
+    model_weight_path: str
 
     def get_trainer(self):
-        _, model_trainer = primitive_and_model_from_name(self.name, model_weights=self.model_weight_path)
+        _, model_trainer, _ = primitive_and_model_from_name(self.name, model_weights=self.model_weight_path)
         return model_trainer
 
-    def save_model(self, path_archive: Union[str, Path]):
+    def save_model(self, path_archive: str | Path):
         """Save the model as a single compressed (zip) archive at ``path_archive``.
 
         The archive bundles the serialized model config (with a relative weight path) together
@@ -67,7 +80,7 @@ class InitModelConfig(BaseModel):
                 archive.write(self.model_weight_path, arcname=weight_name)
 
     @staticmethod
-    def load_model(path_archive: Union[str, Path], use_weights: bool) -> "InitModelConfig":
+    def load_model(path_archive: str | Path, use_weights: bool) -> "InitModelConfig":
         path_archive = Path(path_archive)
         # The weights are extracted to a temporary directory that persists for the lifetime of
         # the process, so they remain on disk when the trainer loads them via ``get_trainer``.
@@ -95,13 +108,34 @@ class InferenceConfig(BaseModel):
     threshold: float = 0.01  # 0.05
     # Note: threshold = 0.001 -> file too large, error
 
+# endregion
+
+
+# ==============================================================================
+# region CONCRETE IMPLEMENTATIONS
+# ==============================================================================
 
 class WrappedModel(InferenceModel):
 
-    def __init__(self, model: detr.RFDETR, task: TaskInfo, inference_config: InferenceConfig):
+    # --- Lifecycle & Initialization ---
+    def __init__(
+        self,
+        model: detr.RFDETR,
+        task: TaskInfo,
+        model_config: RFDETRBaseConfig,
+        inference_config: InferenceConfig,
+        use_sahi: bool = False
+    ):
         self.model = model
         self.task = task
+        self.model_config = model_config
         self.inference_config = inference_config
+        self.use_sahi = use_sahi
+        self.slicer: sv.InferenceSlicer = None
+
+        self.optimize_for_inference()
+        if self.use_sahi:
+            self.optimize_for_sahi()
 
     def get_model_info(self) -> ModelInfo:
         return ModelInfo(name=self.model.__class__.__name__, tasks=[self.task])
@@ -113,27 +147,85 @@ class WrappedModel(InferenceModel):
             dtype=torch.float32,
         )
 
+    def optimize_for_sahi(self):
+        # 1. Define the callback for the Inference Slicer
+        # This function tells supervision how to run your specific model on a
+        # single grid patch
+        def slice_callback(image_patch: np.ndarray) -> sv.Detections:
+            # Get predictions for the single patch
+            detections = self.model.predict(
+                image_patch,
+                threshold=self.inference_config.threshold
+            )
+            detections.metadata = {}
+            return detections
+
+        # 2. Initialize the Native Supervision Slicer
+        # Assuming RF-DETR-N (384x384). If using the Large variant, change to
+        # (640, 640)
+        resolution = self.model_config.resolution
+        self.slicer = sv.InferenceSlicer(
+            callback=slice_callback,
+            slice_wh=resolution,
+            overlap_wh=int(resolution * 0.2),  # 20% overlap between slices
+            overlap_filter=sv.OverlapFilter.NON_MAX_SUPPRESSION,
+            iou_threshold=0.5,
+        )
+
+    # --- Callable & Context Manager ---
     def predict(
         self,
-        images: Union[ImageType, List[ImageType]],
-        sample_dict: Optional[dict] = None
-    ) -> List[Primitive]:
-        predictions = self.model.predict(
-            images=images,
-            threshold=self.inference_config.threshold
-        )
-        bboxes: List[Bbox] = to_bbox_primitives(predictions, images.shape[:2], bbox_task=self.task)
+        images: ImageType | list[ImageType],
+        sample_dict: dict = None
+    ) -> list[Primitive]:
+        if self.use_sahi and self.slicer is not None:
+            return self.predict_sahi(images, sample_dict)
+        else:
+            return self.predict_rfdetr(images, sample_dict)
+
+    def predict_rfdetr(
+        self,
+        images: ImageType | list[ImageType],
+        sample_dict: dict = None
+    ) -> list[Primitive]:
+        threshold = self.inference_config.threshold
+        predictions = self.model.predict(images=images, threshold=threshold)
+        bboxes: list[Bbox] = to_bbox_primitives(predictions, images.shape[:2], bbox_task=self.task)
         return bboxes
 
+    def predict_sahi(
+        self,
+        images: ImageType | list[ImageType],
+        sample_dict: dict = None
+    ) -> list[Primitive]:
+        # Standardize input to handle both single images and batches
+        image_list = images if isinstance(images, list) else [images]
+        all_bboxes: list[Bbox] = []
+
+        for img in image_list:
+            # Execute the Slicer!
+            # This automatically handles chopping, predicting, clamping negative coords, and NMS merging
+            predictions = self.slicer(img)
+            bboxes: list[Bbox] = to_bbox_primitives(predictions, images.shape[:2], bbox_task=self.task)
+            all_bboxes.extend(bboxes)
+
+        return all_bboxes
+
+    # --- Creation ---
     @staticmethod
-    def load_model(path_archive: Union[str, Path], inference_config: InferenceConfig) -> "WrappedModel":
+    def load_model(
+        path_archive: str | Path,
+        inference_config: InferenceConfig,
+        use_sahi: bool = False,
+    ) -> "WrappedModel":
         path_archive = Path(path_archive)
         # Weights are extracted into a temporary directory and loaded into the model while the
         # directory is still alive; the extracted file is no longer needed once the model is built.
         with tempfile.TemporaryDirectory(prefix="trainer_model_") as extract_dir:
             model_config = _load_config_and_weights(path_archive, Path(extract_dir))
-            primitive, model = primitive_and_model_from_name(
-                model_config.name, model_weights=str(model_config.model_weight_path)
+            primitive, model, model_config_ = primitive_and_model_from_name(
+                model_name=model_config.name,
+                model_weights=str(model_config.model_weight_path)
             )
 
         if primitive != model_config.task.primitive:
@@ -142,8 +234,20 @@ class WrappedModel(InferenceModel):
                 f"but the task in the config file requires primitive '{model_config.task.primitive.__name__}'."
             )
 
-        return WrappedModel(model=model, task=model_config.task, inference_config=inference_config)
+        return WrappedModel(
+            model=model,
+            task=model_config.task,
+            model_config=model_config_,
+            inference_config=inference_config,
+            use_sahi=use_sahi,
+        )
 
+# endregion
+
+
+# ==============================================================================
+# region UTILS
+# ==============================================================================
 
 def _load_config_and_weights(path_archive: Path, extract_dir: Path) -> InitModelConfig:
     """Read the model config from a zipped model archive and extract its weights into ``extract_dir``.
@@ -162,8 +266,8 @@ def _load_config_and_weights(path_archive: Path, extract_dir: Path) -> InitModel
 
 def primitive_and_model_from_name(
     model_name: str,
-    model_weights: Optional[str] = "pretrained"
-) -> Tuple[Type[Primitive], detr.RFDETR]:
+    model_weights: str = "pretrained"
+) -> tuple[Type[Primitive], detr.RFDETR, RFDETRBaseConfig]:
     if model_name == "RFDETRNano":
         primitive = Bbox
         model_class = detr.RFDETRNano
@@ -196,12 +300,12 @@ def primitive_and_model_from_name(
     else:
         kwargs["pretrain_weights"] = model_weights
     model = model_class(**kwargs)
-    return primitive, model
+    return primitive, model, model_config
 
 
 def to_bbox_primitives(
     predictions,
-    image_shape: Tuple[int, int],
+    image_shape: tuple[int, int],
     bbox_task: TaskInfo
 ) -> list[Bbox]:
     predictions_bboxes = []
@@ -222,3 +326,5 @@ def to_bbox_primitives(
         )
         predictions_bboxes.append(bbox)
     return predictions_bboxes
+
+# endregion

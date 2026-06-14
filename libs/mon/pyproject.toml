@@ -86,6 +86,7 @@ dependencies    = [
     "pyiqa",                            # PyTorch Toolbox for Image Quality Assessment.
     "rawpy",                            # rawpy is an easy-to-use Python wrapper for the LibRaw library. It also contains some extra functionality for finding and repairing hot/dead pixels.
     "rfdetr",                           # RF-DETR: Real-Time SOTA Detection and Segmentation
+    "sahi",                             # A vision library for performing sliced inference on large images/small objects
     "ultralytics",                      # Ultralytics YOLO 🚀.
     "ultralytics-thop",                 # Profile PyTorch models for FLOPs and parameters, helping to evaluate computational efficiency and memory usage.
     # --- Temporary Fixes ---
