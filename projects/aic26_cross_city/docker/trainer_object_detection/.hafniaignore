@@ -18,9 +18,9 @@
 
 __pycache__
 dist/
-tests/
 mlruns/
-
+pretrained_models_all/
+tests/
 
 # Hafnia files
 mlflow.db

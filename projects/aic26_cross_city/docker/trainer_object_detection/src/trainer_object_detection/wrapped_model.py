@@ -18,7 +18,12 @@ from pydantic import BaseModel
 from rfdetr import config, detr
 from rfdetr.assets.model_weights import download_pretrain_weights
 from rfdetr.config import RFDETRBaseConfig
-
+from rfdetr_plus.models import (
+    RFDETR2XLarge,
+    RFDETR2XLargeConfig,
+    RFDETRXLarge,
+    RFDETRXLargeConfig,
+)
 
 # ==============================================================================
 # region CONSTANTS
@@ -34,10 +39,10 @@ class ModelOption:
 
 
 MODEL_OPTIONS = [
-    ModelOption(name="RFDETRNano", pretrained=True, supported=True),
-    # ModelOption(name="RFDETRSmall", pretrained=True, supported=True),
-    ModelOption(name="RFDETRMedium", pretrained=True, supported=True),
-    ModelOption(name="RFDETRLarge", pretrained=True, supported=True),
+    ModelOption(name="RFDETRNano",    pretrained=True, supported=True),
+    ModelOption(name="RFDETRSmall",   pretrained=True, supported=True),
+    ModelOption(name="RFDETRMedium",  pretrained=True, supported=True),
+    ModelOption(name="RFDETRLarge",   pretrained=True, supported=True),
     ModelOption(name="RFDETRSegNano", pretrained=True, supported=True),
 ]
 PATH_PRETRAINED_MODELS = Path(__file__).parent.parent.parent / "pretrained_models"
@@ -105,7 +110,7 @@ class InferenceConfig(BaseModel):
 
     compile: bool = True
     batch_size: int = 1
-    threshold: float = 0.01  # 0.05
+    threshold: float = 0.05
     # Note: threshold = 0.001 -> file too large, error
 
 # endregion
@@ -149,8 +154,7 @@ class WrappedModel(InferenceModel):
 
     def optimize_for_sahi(self):
         # 1. Define the callback for the Inference Slicer
-        # This function tells supervision how to run your specific model on a
-        # single grid patch
+        # This function tells supervision how to run your specific model on a single grid patch
         def slice_callback(image_patch: np.ndarray) -> sv.Detections:
             # Get predictions for the single patch
             detections = self.model.predict(
@@ -161,15 +165,13 @@ class WrappedModel(InferenceModel):
             return detections
 
         # 2. Initialize the Native Supervision Slicer
-        # Assuming RF-DETR-N (384x384). If using the Large variant, change to
-        # (640, 640)
         resolution = self.model_config.resolution
         self.slicer = sv.InferenceSlicer(
             callback=slice_callback,
             slice_wh=resolution,
-            overlap_wh=int(resolution * 0.2),  # 20% overlap between slices
+            overlap_wh=int(resolution * 0.25),  # 20% overlap between slices
             overlap_filter=sv.OverlapFilter.NON_MAX_SUPPRESSION,
-            iou_threshold=0.5,
+            iou_threshold=0.3,
         )
 
     # --- Callable & Context Manager ---
@@ -283,7 +285,15 @@ def primitive_and_model_from_name(
     elif model_name == "RFDETRLarge":
         primitive = Bbox
         model_class = detr.RFDETRLarge
-        model_config: config.RFDETRBaseConfig = config.RFDETRLargeConfig()
+        model_config: RFDETRBaseConfig = config.RFDETRLargeConfig()
+    elif model_name == "RFDETRXLarge":
+        primitive = Bbox
+        model_class = RFDETRXLarge
+        model_config: config.RFDETRBaseConfig = RFDETRXLargeConfig
+    elif model_name == "RFDETR2XLarge":
+        primitive = Bbox
+        model_class = RFDETR2XLarge
+        model_config: config.RFDETRBaseConfig = RFDETR2XLargeConfig
     elif model_name == "RFDETRSegNano":
         primitive = Bitmask
         model_class = detr.RFDETRSegNano

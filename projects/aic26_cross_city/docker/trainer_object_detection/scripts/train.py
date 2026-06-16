@@ -56,7 +56,10 @@ from trainer_object_detection.wrapped_model import (
 detr = utils.patch_to_support_experiment_tracker_with_hafnia(detr)
 
 app = App(name="train", help="PyTorch Training")
-MODEL_NAME_OPTIONS = [f"pretrained_models/{d.name}.zip" for d in trainer_object_detection.wrapped_model.MODEL_OPTIONS]
+MODEL_NAME_OPTIONS = [
+    f"pretrained_models/{d.name}.zip"
+    for d in trainer_object_detection.wrapped_model.MODEL_OPTIONS
+]
 DEFAULT_INFERENCE_MODEL = "checkpoint_best_ema"
 INFERENCE_MODEL_OPTIONS = [
     DEFAULT_INFERENCE_MODEL,
@@ -64,8 +67,39 @@ INFERENCE_MODEL_OPTIONS = [
     "checkpoint_best_total"
 ]
 
+# Checkpoints
 CKPT_DIR = Path("/opt/recipe/checkpoints")
-CKPT_FILE = CKPT_DIR / f"{DEFAULT_INFERENCE_MODEL}.zip"
+CHECKPOINTS: dict[str, Path] = {
+    DEFAULT_INFERENCE_MODEL  : CKPT_DIR / f"{DEFAULT_INFERENCE_MODEL}.zip",
+    "checkpoint_best_regular": CKPT_DIR / "checkpoint_best_regular.zip",
+    "checkpoint_best_total"  : CKPT_DIR / "checkpoint_best_total.zip",
+}
+
+# Augmentations
+AUG_CONFIG = {  #: Aggressive augmentations — for larger datasets (2000+ images).
+    "HorizontalFlip": {"p": 0.5},
+    "VerticalFlip": {"p": 0.5},
+    "Rotate": {"limit": 45, "p": 0.5},
+    "Affine": {
+        "scale": (0.8, 1.2),
+        "translate_percent": (-0.1, 0.1),
+        "rotate": (-15, 15),
+        "shear": (-5, 5),
+        "p": 0.5,
+    },
+    "ColorJitter": {
+        "brightness": 0.2,
+        "contrast": 0.2,
+        "saturation": 0.2,
+        "hue": 0.1,
+        "p": 0.5,
+    },
+    "RandomBrightnessContrast": {
+        "brightness_limit": 0.15,
+        "contrast_limit": 0.15,
+        "p": 0.4,
+    },
+}
 
 # endregion
 
@@ -177,15 +211,15 @@ def main(
                 f"Options: {MODEL_NAME_OPTIONS}"
             )
         ),
-    ] = "pretrained_models/RFDETRNano.zip",  # "./pretrained_models/RFDETRNano.zip",
+    ] = "pretrained_models/RFDETR2XLarge.zip",  # "/pretrained_models/RFDETRNano.zip",
     pretrained: Annotated[bool, Parameter(help="Initialize the model from pretrained weights")] = True,
     epochs: Annotated[int, Parameter(help="Number of epochs to train")] = 10,
-    batch_size: Annotated[int, Parameter(help="Batch size for training")] = 8,
-    grad_accumulation_steps: Annotated[
+    batch_size: Annotated[int, Parameter(help="Batch size for training")] = 2,
+    grad_accum_steps: Annotated[
         int,
         Parameter(help="Number of gradient accumulation steps (effective batch size = batch_size * grad_accumulation_steps)"),
-    ] = 1,
-    learning_rate: Annotated[float, Parameter(help="Learning rate for the optimizer")] = 0.001,
+    ] = 8,
+    lr: Annotated[float, Parameter(help="Learning rate for the optimizer")] = 0.001,
     resolution: Annotated[
         Optional[int],
         Parameter(help="Input resolution (square side in pixels). Defaults to each model's built-in value."),
@@ -210,7 +244,7 @@ def main(
     ] = DEFAULT_INFERENCE_MODEL,
     inference_config: Annotated[
         Optional[InferenceConfig], Parameter(help="Inference configuration used for the post-training benchmark")
-    ] = InferenceConfig(compile=True, batch_size=1, threshold=0.001),
+    ] = InferenceConfig(compile=True, batch_size=1, threshold=0.05),
     inference_sahi: Annotated[bool, Parameter(help="Use SAHI for inference")] = False,
 ):
     """Train an RF-DETR object detection model on a Hafnia dataset.
@@ -252,8 +286,8 @@ def main(
         dataset = dataset.select_samples(n_samples=samples)
 
     # Define pretrained weights
-    print(CKPT_FILE)
-    checkpoint_model_path = utils.get_checkpoint_if_available(logger, checkpoints_folder_path=CKPT_DIR)
+    checkpoints_folder_path = CKPT_DIR if CHECKPOINTS[inference_model_name].exists() else None
+    checkpoint_model_path   = utils.get_checkpoint_if_available(logger, checkpoints_folder_path)
     if checkpoint_model_path is not None:
         user_logger.info(f"Using checkpoint '{checkpoint_model_path.name}' as pretrained model")
         model_path = checkpoint_model_path.as_posix()
@@ -261,7 +295,7 @@ def main(
         pretrained = True
 
     # Define model and trainer
-    model_config = InitModelConfig.load_model(model_path, use_weights=pretrained)
+    model_config    = InitModelConfig.load_model(model_path, use_weights=pretrained)
     model_primitive = model_config.task.primitive
 
     model_trainer = model_config.get_trainer()
@@ -270,8 +304,8 @@ def main(
         "pretrained": pretrained,
         "epochs": epochs,
         "batch_size": batch_size,
-        "grad_accumulation_steps": grad_accumulation_steps,
-        "learning_rate": learning_rate,
+        "grad_accum_steps": grad_accum_steps,
+        "lr": lr,
         "resolution": resolution,
         "dataset": dataset.info.dataset_name,
         "has_cuda": has_cuda,
@@ -307,10 +341,11 @@ def main(
             dataset_dir=dataset_path.as_posix(),
             epochs=epochs,
             batch_size=batch_size,
-            lr=learning_rate,
-            grad_accum_steps=grad_accumulation_steps,
+            lr=lr,
+            grad_accum_steps=grad_accum_steps,
             output_dir=path_experiment.as_posix(),
             resolution=resolution,
+            aug_config=AUG_CONFIG,
         )
 
         # 3. Save weights
@@ -318,7 +353,7 @@ def main(
         # Repackage each final checkpoint as a single compressed model archive in the model folder
         # (e.g. "checkpoint_best_regular.zip" and "checkpoint_best_total.zip").
         final_models = list(path_experiment.glob("checkpoint_*.pth"))
-        model_path = {}
+        model_path   = {}
         for checkpoint_path in final_models:
             model_name = checkpoint_path.stem  # e.g. "checkpoint_best_regular"
             model_checkpoint_path = model_folder_path / f"{model_name}.zip"
@@ -327,19 +362,24 @@ def main(
             model_path[model_name] = model_checkpoint_path
 
         checkpoints_folder_path = logger.path_model_checkpoints()
-        checkpoint_model_paths = final_models  # For now we simply add final models as checkpoints
+        checkpoint_model_paths  = final_models  # For now we simply add final models as checkpoints
         for ckpt_path in checkpoint_model_paths:
             model_config = InitModelConfig(name=model_config.name, task=task_info, model_weight_path=str(ckpt_path))
             model_config.save_model(checkpoints_folder_path / f"{ckpt_path.stem}.zip")
 
-    # 4. Test
-    #### 'TEST' split inference/benchmarking ####
+    # 3. Test
     if run_test:
+        if not run_train:
+            # If training was not run in this execution, attempt to find a checkpoint
+            # in the checkpoints folder to use for inference.
+            if CHECKPOINTS[inference_model_name].exists():
+                model_path = CHECKPOINTS
+
         # Prepare Test datasets
-        # dataset_test = dataset.create_split_dataset(split_name=SplitName.VAL)
+        # dataset_test = dataset.create_split_dataset(split_name=SplitName.VAL)  # For local testing only
         dataset_test = dataset.create_split_dataset(split_name=SplitName.TEST)
         inference_config = inference_config or InferenceConfig()
-        inference_model = WrappedModel.load_model(
+        inference_model  = WrappedModel.load_model(
             path_archive=model_path[inference_model_name],
             inference_config=inference_config,
             use_sahi=inference_sahi,

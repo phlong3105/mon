@@ -128,6 +128,7 @@ def _parse_pose_outputs(outputs):
 
 
 class ECPoseInferencer:
+
     def __init__(self, model, device, size, thresh):
         self.model = model
         self.device = device
@@ -164,6 +165,7 @@ class ECPoseInferencer:
 
 
 class VideoReader(threading.Thread):
+
     def __init__(self, cap, queue_size=32):
         super().__init__()
         self.cap = cap
