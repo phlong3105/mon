@@ -137,11 +137,11 @@ class K(SimpleNamespace):
     ZOO_ROOT    = zoo_root
 
     # --- Directories ---
-    ANN_DIR     = "ann"
+    ANNS_DIR    = "anns"
     DEBUG_DIR   = "debug"
     DEPTH_DIR   = "depth"
-    IMAGE_DIR   = "image"
-    LABEL_DIR   = "label"
+    IMAGES_DIR  = "images"
+    LABELS_DIR  = "labels"
     VIS_DIR     = "vis"
 
     # --- Extensions ---

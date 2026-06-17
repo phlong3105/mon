@@ -36,7 +36,7 @@ class NightCity(ImageDataset, DatasetRegisterMixin):
     subdir: str = "nightcity"
     splits: list[Split] = [Split.TRAIN, Split.VAL]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
     ])
     classes: ClassList = ClassList([

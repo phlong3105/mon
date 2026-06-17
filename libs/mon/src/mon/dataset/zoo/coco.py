@@ -36,7 +36,7 @@ class COCO(ImageDataset, DatasetRegisterMixin):
     subdir: str = ""
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
     ])
     classes: ClassList = ClassList([
         Class(name="background",    id=0,  category="background",  color=(  0,   0,   0)),

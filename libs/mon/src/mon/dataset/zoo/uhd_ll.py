@@ -36,9 +36,9 @@ class UHD_LL(ImageDataset, DatasetRegisterMixin):
     subdir: str = ""
     splits: list[Split] = [Split.TRAIN, Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
-        ImageModality(name="target", dirname="target"),
+        ImageModality(name="target", dirname="targets"),
     ])
     classes: ClassList = ClassList()
 

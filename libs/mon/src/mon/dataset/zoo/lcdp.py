@@ -41,9 +41,9 @@ class LCDP(ImageDataset, DatasetRegisterMixin):
     subdir: str = "lcdp"
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
-        ImageModality(name="target", dirname="target"),
+        ImageModality(name="target", dirname="targets"),
     ])
     classes: ClassList = ClassList()
 

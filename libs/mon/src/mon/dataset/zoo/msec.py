@@ -41,14 +41,14 @@ class MSEC(ImageDataset, DatasetRegisterMixin):
     subdir: str = "msec"
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
-        ImageModality(name="target", dirname="target", train=True, val=True, test=False),
-        ImageModality(name="target_a", dirname="target_a", train=False, val=False, test=True),
-        ImageModality(name="target_b", dirname="target_b", train=False, val=False, test=True),
-        ImageModality(name="target_c", dirname="target_c", train=False, val=False, test=True),
-        ImageModality(name="target_d", dirname="target_d", train=False, val=False, test=True),
-        ImageModality(name="target_e", dirname="target_e", train=False, val=False, test=True),
+        ImageModality(name="target", dirname="targets", train=True, val=True, test=False),
+        ImageModality(name="target_a", dirname="targets_a", train=False, val=False, test=True),
+        ImageModality(name="target_b", dirname="targets_b", train=False, val=False, test=True),
+        ImageModality(name="target_c", dirname="targets_c", train=False, val=False, test=True),
+        ImageModality(name="target_d", dirname="targets_d", train=False, val=False, test=True),
+        ImageModality(name="target_e", dirname="targets_e", train=False, val=False, test=True),
     ])
     classes: ClassList = ClassList()
 

@@ -38,7 +38,7 @@ class Speed10(ImageDataset, DatasetRegisterMixin):
     subdir: str = ""
     splits: list[Split] = [Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
     ])
     classes: ClassList = ClassList()
@@ -54,7 +54,7 @@ class Speed1K(ImageDataset, DatasetRegisterMixin):
     subdir: str = ""
     splits: list[Split] = [Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
     ])
     classes: ClassList = ClassList()

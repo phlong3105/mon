@@ -43,7 +43,7 @@ class DICM(ImageDataset, DatasetRegisterMixin):
     subdir: str = "dicm"
     splits: list[Split] = [Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
     ])
     classes: ClassList = ClassList()
@@ -59,7 +59,7 @@ class Fusion(ImageDataset, DatasetRegisterMixin):
     subdir: str = "fusion"
     splits: list[Split] = [Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
     ])
     classes: ClassList = ClassList()
@@ -75,7 +75,7 @@ class LIME(ImageDataset, DatasetRegisterMixin):
     subdir: str = "lime"
     splits: list[Split] = [Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
     ])
     classes: ClassList = ClassList()
@@ -91,7 +91,7 @@ class MEF(ImageDataset, DatasetRegisterMixin):
     subdir: str = "mef"
     splits: list[Split] = [Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
     ])
     classes: ClassList = ClassList()
@@ -107,7 +107,7 @@ class NPE(ImageDataset, DatasetRegisterMixin):
     subdir: str = "npe"
     splits: list[Split] = [Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
     ])
     classes: ClassList = ClassList()
@@ -123,7 +123,7 @@ class VV(ImageDataset, DatasetRegisterMixin):
     subdir: str = "vv"
     splits: list[Split] = [Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
     ])
     classes: ClassList = ClassList()

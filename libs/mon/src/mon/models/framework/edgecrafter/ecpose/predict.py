@@ -167,7 +167,7 @@ class ECPose_Predictor(Predictor):
             fmt=BBoxFormat.CXCYWHN,
             datapoint=datapoint,
             outputs=outputs,
-            dirname=K.LABEL_DIR,
+            dirname=K.LABELS_DIR,
             subdirname="",
         )
 

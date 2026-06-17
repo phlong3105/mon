@@ -4,7 +4,7 @@
 """Run local:
 hafnia trainer create-zip . ; ^
 hafnia runc build-local trainer.zip ; ^
-hafnia runc launch-local --dataset eccv-cross-city  "python scripts/train.py --epochs 1 --batch_size 1 --inference_sahi"
+hafnia runc launch-local --dataset eccv-cross-city  "python scripts/train.py --epochs 1 --batch_size 1 --aug_config heavy --inference_sahi"
 """
 
 # Fix mlflow connection errors
@@ -40,6 +40,7 @@ from hafnia.experiment.command_builder import auto_save_command_builder_schema
 from hafnia.log import user_logger
 from hafnia.utils import progress_bar
 from rfdetr import detr
+from rfdetr.datasets.aug_config import AUG_CONSERVATIVE
 
 import trainer_object_detection.wrapped_model
 from trainer_object_detection import utils
@@ -76,28 +77,64 @@ CHECKPOINTS: dict[str, Path] = {
 }
 
 # Augmentations
-AUG_CONFIG = {  #: Aggressive augmentations — for larger datasets (2000+ images).
-    "HorizontalFlip": {"p": 0.5},
-    "VerticalFlip": {"p": 0.5},
-    "Rotate": {"limit": 45, "p": 0.5},
-    "Affine": {
-        "scale": (0.8, 1.2),
-        "translate_percent": (-0.1, 0.1),
-        "rotate": (-15, 15),
-        "shear": (-5, 5),
-        "p": 0.5,
+AUG_CONFIGS = {
+    "no_aug": {},
+    "heavy": {
+        # Step 1: Size Normalization
+        # Step 2: Basic Geometric Invariance
+        "HorizontalFlip": {"p": 0.5},
+        # Step 3: Dropout / Occlusion
+        "ConstrainedCoarseDropout": {
+            "num_holes_range": (1, 3),
+            "hole_height_range": (0.3, 0.5),
+            "hole_width_range": (0.3, 0.5),
+            "bbox_labels": [0, 1, 2, 3, 4, 5, 6, 7, 8, 9],
+            "fill": 0,
+            "p": 0.3,
+        },
+        # Step 4: Introduce Affine Transformations (Scale, Rotate, etc.)
+        "Rotate": {"limit": 45, "p": 0.5},
+        "Affine": {
+            "scale": (0.8, 1.2),
+            "translate_percent": (-0.1, 0.1),
+            "rotate": (-15, 15),
+            "shear": (-5, 5),
+            "p": 0.5,
+        },
+        # Step 5: Domain-Specific and Advanced Augmentations
+        # Lighting / exposure
+        "ColorJitter": {
+            "brightness": 0.2,
+            "contrast": 0.2,
+            "saturation": 0.2,
+            "hue": 0.1,
+            "p": 0.4,
+        },
+        # Color temperature
+        "PlanckianJitter": {"p": 0.4},
+        # Noise
+        "GaussNoise": {"p": 0.20},
+        # Compression
+        "ImageCompression": {"quality_range": (40, 80), "p": 0.25},
+        # Step 6: Reduce Reliance on Color Features
+        "ToGray": {"p": 0.15},
     },
-    "ColorJitter": {
-        "brightness": 0.2,
-        "contrast": 0.2,
-        "saturation": 0.2,
-        "hue": 0.1,
-        "p": 0.5,
-    },
-    "RandomBrightnessContrast": {
-        "brightness_limit": 0.15,
-        "contrast_limit": 0.15,
-        "p": 0.4,
+    "stable": {
+        "HorizontalFlip": {"p": 0.5},
+        "Affine": {
+            "scale": (0.8, 1.2),
+            "translate_percent": (-0.1, 0.1),
+            "rotate": (-15, 15),
+            "shear": (-5, 5),
+            "p": 0.5,
+        },
+        "ColorJitter": {
+            "brightness": 0.2,
+            "contrast": 0.2,
+            "saturation": 0.2,
+            "hue": 0.1,
+            "p": 0.4,
+        },
     },
 }
 
@@ -211,9 +248,10 @@ def main(
                 f"Options: {MODEL_NAME_OPTIONS}"
             )
         ),
-    ] = "pretrained_models/RFDETR2XLarge.zip",  # "/pretrained_models/RFDETRNano.zip",
+    ] = "pretrained_models/RFDETRXLarge.zip",  # "/pretrained_models/RFDETRXLarge.zip",
     pretrained: Annotated[bool, Parameter(help="Initialize the model from pretrained weights")] = True,
-    epochs: Annotated[int, Parameter(help="Number of epochs to train")] = 10,
+    resume: Annotated[bool, Parameter(help="Resume training from checkpoint")] = False,
+    epochs: Annotated[int, Parameter(help="Number of epochs to train")] = 15,
     batch_size: Annotated[int, Parameter(help="Batch size for training")] = 2,
     grad_accum_steps: Annotated[
         int,
@@ -224,6 +262,10 @@ def main(
         Optional[int],
         Parameter(help="Input resolution (square side in pixels). Defaults to each model's built-in value."),
     ] = None,
+    aug_config: Annotated[
+        str,
+        Parameter(help="Augmentation strategy. Options: ['no_aug', 'heavy', 'stable']")
+    ] = "no_aug",
     task_name: Annotated[
         Optional[str],
         Parameter(help="Dataset task name used for training. Only required when the dataset has multiple tasks matching the model primitive."),
@@ -291,22 +333,28 @@ def main(
     if checkpoint_model_path is not None:
         user_logger.info(f"Using checkpoint '{checkpoint_model_path.name}' as pretrained model")
         model_path = checkpoint_model_path.as_posix()
-        # Resuming from a checkpoint always uses its weights, regardless of the '--pretrained' flag.
-        pretrained = True
+        pretrained = True  # Resuming from a checkpoint always uses its weights, regardless of the '--pretrained' flag.
+    if not resume:
+        checkpoint_model_path = None
 
     # Define model and trainer
-    model_config    = InitModelConfig.load_model(model_path, use_weights=pretrained)
-    model_primitive = model_config.task.primitive
+    model_config     = InitModelConfig.load_model(model_path, use_weights=pretrained)
+    model_primitive  = model_config.task.primitive
+    inference_config = inference_config or InferenceConfig()
 
     model_trainer = model_config.get_trainer()
     configuration = {
         "model": model_path,
         "pretrained": pretrained,
+        "resume": resume,
+        "resume_ckpt": checkpoint_model_path,
         "epochs": epochs,
         "batch_size": batch_size,
         "grad_accum_steps": grad_accum_steps,
         "lr": lr,
         "resolution": resolution,
+        "aug_config": aug_config,
+        "conf_threshold": inference_config.threshold,
         "dataset": dataset.info.dataset_name,
         "has_cuda": has_cuda,
     }
@@ -345,7 +393,8 @@ def main(
             grad_accum_steps=grad_accum_steps,
             output_dir=path_experiment.as_posix(),
             resolution=resolution,
-            aug_config=AUG_CONFIG,
+            aug_config=AUG_CONFIGS[aug_config],
+            resume=checkpoint_model_path,
         )
 
         # 3. Save weights
@@ -378,7 +427,6 @@ def main(
         # Prepare Test datasets
         # dataset_test = dataset.create_split_dataset(split_name=SplitName.VAL)  # For local testing only
         dataset_test = dataset.create_split_dataset(split_name=SplitName.TEST)
-        inference_config = inference_config or InferenceConfig()
         inference_model  = WrappedModel.load_model(
             path_archive=model_path[inference_model_name],
             inference_config=inference_config,

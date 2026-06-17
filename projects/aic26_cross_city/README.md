@@ -1,5 +1,5 @@
 <div align="center">
-	<h1 align="center">Development Project</h1>
+	<h1 align="center">AI City Challenge 2026 - Cross-City</h1>
 </div>
 
 This project serves as the development environment for experimenting with new ideas, algorithms, and models. It is structured to facilitate rapid prototyping and testing.
@@ -12,7 +12,7 @@ This project serves as the development environment for experimenting with new id
   ```text
   dev/                     # Project root.
   |__ archive
-  |__ config               # Configuration files for experiments.
+  |__ configs              # Configuration files for experiments.
   |__ data                 # Data-related files.
   |__ docker               # Docker files for deployment.
   |__ notebook             # Notebooks for experiments.

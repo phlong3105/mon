@@ -36,9 +36,9 @@ class NTIRE2025LLIE(ImageDataset, DatasetRegisterMixin):
     subdir: str = ""
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
-        ImageModality(name="target", dirname="target", val=False, test=False),
+        ImageModality(name="target", dirname="targets", val=False, test=False),
     ])
     classes: ClassList = ClassList()
 

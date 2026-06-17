@@ -91,14 +91,14 @@ def relabel_yolo_world(args: argparse.Namespace):
     """
     # Resolve paths
     root: Path = resolve_project_root(current_dir)
-    data_dir = root / "data" / "aic26_cross_city" / args.src
-    image_dir = data_dir / "image"
+    data_dir = root / "data" / "aic26_cross_city" / args.data
+    images_dir = data_dir / "images"
 
-    output_dir = data_dir / f"{args.label}"
+    output_dir = data_dir / f"{args.label_dir}"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Retrieve images
-    image_files: list[Path] = sorted(image_dir.glob("*"))
+    image_files: list[Path] = sorted(images_dir.glob("*"))
     image_files = [f for f in image_files if f.is_image_file(exists=True)]
 
     # Initialize YOLO-World model (using the large or extra-large variant for
@@ -145,14 +145,14 @@ def relabel_qwen(args: argparse.Namespace):
     """Uses Qwen3-VL to perform instruction-guided open-vocabulary grounding."""
     # Resolve paths
     root: Path = resolve_project_root(current_dir)
-    data_dir = root / "data" / "aic26_cross_city" / args.src
-    image_dir = data_dir / "image"
+    data_dir = root / "data" / "aic26_cross_city" / args.data
+    images_dir = data_dir / "images"
 
-    output_dir = data_dir / f"{args.label}"
+    output_dir = data_dir / f"{args.label_dir}"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Retrieve images
-    image_files: list[Path] = sorted(image_dir.glob("*"))
+    image_files: list[Path] = sorted(images_dir.glob("*"))
     image_files = [f for f in image_files if f.is_image_file(exists=True)]
 
     # Initialize Qwen3-VL
@@ -278,11 +278,11 @@ def main(args: argparse.Namespace):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser("main")
-    parser.add_argument("--src",   type=str,   default="x/eccv_cross_city", help="Data source directory.")
-    parser.add_argument("--label", type=str,   default="relabel",           help="Relabel directory.")
-    parser.add_argument("--conf",  type=float, default=0.10,                help="Confidence threshold.")
-    parser.add_argument("--yolo",  action="store_true",                     help="Use YOLO-World for relabeling.")
-    parser.add_argument("--qwen",  action="store_true",                     help="Use Qwen for relabeling.")
+    parser.add_argument("--data", type=str, default="x/eccv_cross_city", help="Data source directory.")
+    parser.add_argument("--label-dir", type=str, default="relabel", help="Relabel directory.")
+    parser.add_argument("--conf", type=float, default=0.10, help="Confidence threshold.")
+    parser.add_argument("--yolo", action="store_true", help="Use YOLO-World for relabeling.")
+    parser.add_argument("--qwen", action="store_true", help="Use Qwen for relabeling.")
     args, remaining = parser.parse_known_args()
     sys.argv = [sys.argv[0]] + remaining
     return args

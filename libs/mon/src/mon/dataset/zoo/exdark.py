@@ -40,7 +40,7 @@ class ExDark(ImageDataset, DatasetRegisterMixin):
     subdir: str = "exdark"
     splits: list[Split] = [Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
     ])
     classes: ClassList = ClassList([

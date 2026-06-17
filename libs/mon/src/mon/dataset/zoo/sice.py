@@ -62,11 +62,11 @@ class SICE(ImageDataset, DatasetRegisterMixin):
     subdir: str = "sice"
     splits: list[Split] = [Split.TRAIN, Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image_under"),
-        ImageModality(name="image_under", dirname="image_under"),
-        ImageModality(name="image_over", dirname="image_over"),
+        ImageModality(name="image", dirname="images_under"),
+        ImageModality(name="image_under", dirname="images_under"),
+        ImageModality(name="image_over", dirname="images_over"),
         DepthModality(name="depth", dirname="depth"),
-        ImageModality(name="target", dirname="target"),
+        ImageModality(name="target", dirname="targets"),
     ])
     classes: ClassList = ClassList()
 
@@ -81,11 +81,11 @@ class SICE_LR(ImageDataset, DatasetRegisterMixin):
     subdir: str = "sice_lr"
     splits: list[Split] = [Split.TRAIN, Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image_under"),
-        ImageModality(name="image_under", dirname="image_under"),
-        ImageModality(name="image_over", dirname="image_over"),
+        ImageModality(name="image", dirname="images_under"),
+        ImageModality(name="image_under", dirname="images_under"),
+        ImageModality(name="image_over", dirname="images_over"),
         DepthModality(name="depth", dirname="depth"),
-        ImageModality(name="target", dirname="target"),
+        ImageModality(name="target", dirname="targets"),
     ])
     classes: ClassList = ClassList()
 
@@ -104,9 +104,9 @@ class SICE_ME(ImageDataset, DatasetRegisterMixin):
     subdir: str = "me"
     splits: list[Split] = [Split.TRAIN, Split.VAL]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
-        ImageModality(name="target", dirname="target", train=False, val=True, test=False),
+        ImageModality(name="target", dirname="targets", train=False, val=True, test=False),
     ])
     classes: ClassList = ClassList()
 

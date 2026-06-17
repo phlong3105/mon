@@ -12,7 +12,7 @@ This project serves as the development environment for experimenting with new id
   ```text
   sdce/                    # Project root.
   |__ archive
-  |__ config               # Configuration files for experiments.
+  |__ configs              # Configuration files for experiments.
   |__ data                 # Data-related files.
   |__ docker               # Docker files for deployment.
   |__ notebook             # Notebooks for experiments.

@@ -274,7 +274,7 @@ class Predictor(Runner, ABC):
         keys: list[str],
         datapoint: TensorDict,
         outputs: TensorDict,
-        dirname: str = K.IMAGE_DIR,
+        dirname: str = K.IMAGES_DIR,
         subdirname: str = "",
         use_stem: bool = False
     ):
@@ -338,7 +338,7 @@ class Predictor(Runner, ABC):
         self,
         image: TensorOrArray,
         src_path: Path,
-        dirname: str = K.IMAGE_DIR,
+        dirname: str = K.IMAGES_DIR,
         subdirname: str = "",
         stem: str = "",
     ):
@@ -384,7 +384,7 @@ class Predictor(Runner, ABC):
         fmt: BBoxFormat,
         datapoint: TensorDict,
         outputs: TensorDict,
-        dirname: str = K.LABEL_DIR,
+        dirname: str = K.LABELS_DIR,
         subdirname: str = "",
         use_stem: bool = False,
     ):
@@ -429,7 +429,7 @@ class Predictor(Runner, ABC):
         bboxes: BBoxes,
         fmt: BBoxFormat,
         src_path: Path,
-        dirname: str = K.LABEL_DIR,
+        dirname: str = K.LABELS_DIR,
         subdirname: str = "",
         stem: str = "",
     ):

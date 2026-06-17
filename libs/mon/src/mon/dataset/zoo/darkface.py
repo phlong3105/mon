@@ -37,7 +37,7 @@ class DarkFace(ImageDataset, DatasetRegisterMixin):
     subdir: str = "darkface"
     splits: list[Split] = [Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
     ])
     classes: ClassList = ClassList([

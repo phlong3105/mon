@@ -37,7 +37,7 @@ class YDLD(ImageDataset, DatasetRegisterMixin):
     subdir: str = "ydld"
     splits: list[Split] = [Split.TRAIN, Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
     ])
     classes: ClassList = ClassList([

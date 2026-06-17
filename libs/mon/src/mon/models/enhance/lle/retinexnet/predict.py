@@ -119,7 +119,7 @@ class RetinexNet_Predictor(Predictor):
             keys=["enhanced"],
             datapoint=datapoint,
             outputs=outputs,
-            dirname=K.IMAGE_DIR,
+            dirname=K.IMAGES_DIR,
             subdirname="",
             use_stem=False,
         )

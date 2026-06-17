@@ -642,6 +642,43 @@ class BBoxes(Data):
         else:
             raise ValueError(f"unsupported bbox format {fmt}.")
 
+    # --- Mutation ---
+    def filter(
+        self,
+        class_id: int | list[int] = None,
+        conf_thres: float = None,
+        area_thres: float = None,
+    ) -> "BBoxes":
+        """Filter bounding boxes by class ID, confidence score, and/or area.
+
+        Args:
+            class_id (int | list[int], optional): Class ID(s) to filter by.
+                If None, do not filter by class ID. Defaults to None.
+            conf_thres (float, optional): Confidence score threshold. If None,
+                do not filter by confidence score. Defaults to None.
+            area_thres (float, optional): Area threshold. If None, do not filter
+                by area. Defaults to None.
+
+        Returns:
+            BBoxes: A new BBoxes instance containing only the filtered bounding boxes.
+        """
+        filtered = self.bboxes
+
+        # Filter by class ID
+        if class_id is not None:
+            class_id = [class_id] if isinstance(class_id, int) else class_id
+            filtered = [b for b in filtered if b.class_id in class_id]
+
+        # Filter by confidence score
+        if conf_thres is not None:
+            filtered = [b for b in filtered if b.score >= conf_thres]
+
+        # Filter by area
+        if area_thres is not None:
+            filtered = [b for b in filtered if b.area() >= area_thres]
+
+        return BBoxes(bboxes=filtered, imgsz=self.imgsz, path=self.path, base_dir=self.base_dir)
+
     # --- Computation ---
     def areas(self, imgsz: Size | None = None) -> ndarray:
         """Return the area of the bounding box.

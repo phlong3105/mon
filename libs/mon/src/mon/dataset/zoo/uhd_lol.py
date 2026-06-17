@@ -41,9 +41,9 @@ class UHD_LOL_4K(ImageDataset, DatasetRegisterMixin):
     subdir: str = "4k"
     splits: list[Split] = [Split.TRAIN, Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
-        ImageModality(name="target", dirname="target"),
+        ImageModality(name="target", dirname="targets"),
     ])
     classes: ClassList = ClassList()
 
@@ -58,9 +58,9 @@ class UHD_LOL_8K(ImageDataset, DatasetRegisterMixin):
     subdir: str = "8k"
     splits: list[Split] = [Split.TRAIN, Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
-        ImageModality(name="target", dirname="target"),
+        ImageModality(name="target", dirname="targets"),
     ])
     classes: ClassList = ClassList()
 
@@ -75,9 +75,9 @@ class UHD_LOL_4x4K(ImageDataset, DatasetRegisterMixin):
     subdir: str = "4x4k"
     splits: list[Split] = [Split.TRAIN, Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
-        ImageModality(name="target", dirname="target"),
+        ImageModality(name="target", dirname="targets"),
     ])
     classes: ClassList = ClassList()
 # endregion

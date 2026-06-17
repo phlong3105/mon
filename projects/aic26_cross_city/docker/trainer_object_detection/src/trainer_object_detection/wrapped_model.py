@@ -25,6 +25,7 @@ from rfdetr_plus.models import (
     RFDETRXLargeConfig,
 )
 
+
 # ==============================================================================
 # region CONSTANTS
 # ==============================================================================
@@ -111,7 +112,7 @@ class InferenceConfig(BaseModel):
     compile: bool = True
     batch_size: int = 1
     threshold: float = 0.05
-    # Note: threshold = 0.001 -> file too large, error
+    # Note: threshold = 0.01 -> file too large, error
 
 # endregion
 
@@ -285,15 +286,15 @@ def primitive_and_model_from_name(
     elif model_name == "RFDETRLarge":
         primitive = Bbox
         model_class = detr.RFDETRLarge
-        model_config: RFDETRBaseConfig = config.RFDETRLargeConfig()
+        model_config: config.RFDETRBaseConfig = config.RFDETRLargeConfig()
     elif model_name == "RFDETRXLarge":
         primitive = Bbox
         model_class = RFDETRXLarge
-        model_config: config.RFDETRBaseConfig = RFDETRXLargeConfig
+        model_config: config.RFDETRBaseConfig = RFDETRXLargeConfig()
     elif model_name == "RFDETR2XLarge":
         primitive = Bbox
         model_class = RFDETR2XLarge
-        model_config: config.RFDETRBaseConfig = RFDETR2XLargeConfig
+        model_config: config.RFDETRBaseConfig = RFDETR2XLargeConfig()
     elif model_name == "RFDETRSegNano":
         primitive = Bitmask
         model_class = detr.RFDETRSegNano

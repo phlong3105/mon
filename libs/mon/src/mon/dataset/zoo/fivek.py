@@ -41,14 +41,14 @@ class FiveK(ImageDataset, DatasetRegisterMixin):
     subdir: str = ""
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
-        ImageModality(name="target", dirname="target_c"),
-        ImageModality(name="target_a", dirname="target_a"),
-        ImageModality(name="target_b", dirname="target_b"),
-        ImageModality(name="target_c", dirname="target_c"),
-        ImageModality(name="target_d", dirname="target_d"),
-        ImageModality(name="target_e", dirname="target_e"),
+        ImageModality(name="target", dirname="targets_c"),
+        ImageModality(name="target_a", dirname="targets_a"),
+        ImageModality(name="target_b", dirname="targets_b"),
+        ImageModality(name="target_c", dirname="targets_c"),
+        ImageModality(name="target_d", dirname="targets_d"),
+        ImageModality(name="target_e", dirname="targets_e"),
     ])
     classes: ClassList = ClassList()
 
@@ -63,9 +63,9 @@ class FiveK_A(ImageDataset, DatasetRegisterMixin):
     subdir: str = ""
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
-        ImageModality(name="target", dirname="target_a"),
+        ImageModality(name="target", dirname="targets_a"),
     ])
     classes: ClassList = ClassList()
 
@@ -80,9 +80,9 @@ class FiveK_B(ImageDataset, DatasetRegisterMixin):
     subdir: str = ""
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
-        ImageModality(name="target", dirname="target_b"),
+        ImageModality(name="target", dirname="targets_b"),
     ])
     classes: ClassList = ClassList()
 
@@ -97,9 +97,9 @@ class FiveK_C(ImageDataset, DatasetRegisterMixin):
     subdir: str = ""
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
-        ImageModality(name="target", dirname="target_c"),
+        ImageModality(name="target", dirname="targets_c"),
     ])
     classes: ClassList = ClassList()
 
@@ -114,9 +114,9 @@ class FiveK_D(ImageDataset, DatasetRegisterMixin):
     subdir: str = ""
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
-        ImageModality(name="target", dirname="target_d"),
+        ImageModality(name="target", dirname="targets_d"),
     ])
     classes: ClassList = ClassList()
 
@@ -131,9 +131,9 @@ class FiveK_E(ImageDataset, DatasetRegisterMixin):
     subdir: str = ""
     splits: list[Split] = [Split.TRAIN, Split.VAL, Split.TEST]
     modalities: ModalityList = ModalityList([
-        ImageModality(name="image", dirname="image"),
+        ImageModality(name="image", dirname="images"),
         DepthModality(name="depth", dirname="depth"),
-        ImageModality(name="target", dirname="target_e"),
+        ImageModality(name="target", dirname="targets_e"),
     ])
     classes: ClassList = ClassList()
 

@@ -118,7 +118,7 @@ class ZS_N2N_Predictor(Predictor):
             keys=["restored"],
             datapoint=datapoint,
             outputs=outputs,
-            dirname=K.IMAGE_DIR,
+            dirname=K.IMAGES_DIR,
             subdirname="",
             use_stem=False,
         )
