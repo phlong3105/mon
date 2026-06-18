@@ -34,7 +34,6 @@ classifiers     = [
 dependencies = [
     "mon",
     "sdce",
-    "aic26_cross_city",
 ]
 
 [project.urls]

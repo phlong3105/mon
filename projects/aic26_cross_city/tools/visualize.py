@@ -28,6 +28,7 @@ from mon.ops import load_bbox, read_image, write_image
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
 project_root: Path = resolve_project_root(current_dir)
+data_dir = project_root / "data" / "aic26_cross_city"
 
 
 # ==============================================================================
@@ -36,12 +37,11 @@ project_root: Path = resolve_project_root(current_dir)
 
 def visualize(args: argparse.Namespace):
     # Resolve paths
-    data_dir = project_root / "data" / "aic26_cross_city" / args.data
-    images_dir = data_dir / "images"
-    labels_dir = data_dir / args.labels_dir
-    classes_file = data_dir / "classes.yaml"
+    images_dir = data_dir / args.data / "images"
+    labels_dir = data_dir / args.data / args.labels_dir
+    classes_file = data_dir / args.data / "classes.yaml"
 
-    vis_dir = data_dir / f"vis_{args.labels_dir}"
+    vis_dir = data_dir / args.data / f"vis_{args.labels_dir}"
     vis_dir.mkdir(parents=True, exist_ok=True)
 
     # Load class-labels

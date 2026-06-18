@@ -40,7 +40,6 @@ from hafnia.experiment.command_builder import auto_save_command_builder_schema
 from hafnia.log import user_logger
 from hafnia.utils import progress_bar
 from rfdetr import detr
-from rfdetr.datasets.aug_config import AUG_CONSERVATIVE
 
 import trainer_object_detection.wrapped_model
 from trainer_object_detection import utils
@@ -79,6 +78,23 @@ CHECKPOINTS: dict[str, Path] = {
 # Augmentations
 AUG_CONFIGS = {
     "no_aug": {},
+    "simple": {
+        "HorizontalFlip": {"p": 0.5},
+        "Affine": {
+            "scale": (0.8, 1.2),
+            "translate_percent": (-0.1, 0.1),
+            "rotate": (-15, 15),
+            "shear": (-5, 5),
+            "p": 0.5,
+        },
+        "ColorJitter": {
+            "brightness": 0.2,
+            "contrast": 0.2,
+            "saturation": 0.2,
+            "hue": 0.1,
+            "p": 0.4,
+        },
+    },
     "heavy": {
         # Step 1: Size Normalization
         # Step 2: Basic Geometric Invariance
@@ -118,23 +134,6 @@ AUG_CONFIGS = {
         "ImageCompression": {"quality_range": (40, 80), "p": 0.25},
         # Step 6: Reduce Reliance on Color Features
         "ToGray": {"p": 0.15},
-    },
-    "stable": {
-        "HorizontalFlip": {"p": 0.5},
-        "Affine": {
-            "scale": (0.8, 1.2),
-            "translate_percent": (-0.1, 0.1),
-            "rotate": (-15, 15),
-            "shear": (-5, 5),
-            "p": 0.5,
-        },
-        "ColorJitter": {
-            "brightness": 0.2,
-            "contrast": 0.2,
-            "saturation": 0.2,
-            "hue": 0.1,
-            "p": 0.4,
-        },
     },
 }
 
@@ -248,23 +247,23 @@ def main(
                 f"Options: {MODEL_NAME_OPTIONS}"
             )
         ),
-    ] = "pretrained_models/RFDETRXLarge.zip",  # "/pretrained_models/RFDETRXLarge.zip",
+    ] = "pretrained_models/RFDETRLarge.zip",  # "/pretrained_models/RFDETRXLarge.zip",
     pretrained: Annotated[bool, Parameter(help="Initialize the model from pretrained weights")] = True,
-    resume: Annotated[bool, Parameter(help="Resume training from checkpoint")] = False,
+    resume: Annotated[bool, Parameter(help="Resume training from the checkpoint")] = False,
     epochs: Annotated[int, Parameter(help="Number of epochs to train")] = 15,
     batch_size: Annotated[int, Parameter(help="Batch size for training")] = 2,
     grad_accum_steps: Annotated[
         int,
         Parameter(help="Number of gradient accumulation steps (effective batch size = batch_size * grad_accumulation_steps)"),
     ] = 8,
-    lr: Annotated[float, Parameter(help="Learning rate for the optimizer")] = 0.001,
+    lr: Annotated[float, Parameter(help="Learning rate for the optimizer")] = 0.0001,
     resolution: Annotated[
         Optional[int],
         Parameter(help="Input resolution (square side in pixels). Defaults to each model's built-in value."),
     ] = None,
     aug_config: Annotated[
         str,
-        Parameter(help="Augmentation strategy. Options: ['no_aug', 'heavy', 'stable']")
+        Parameter(help="Augmentation strategy. Options: ['no_aug', 'simple', 'heavy']")
     ] = "no_aug",
     task_name: Annotated[
         Optional[str],
@@ -280,6 +279,7 @@ def main(
     ] = False,
     run_train: Annotated[bool, Parameter(help="Run training")] = True,
     run_test: Annotated[bool, Parameter(help="Run testing")] = True,
+    run_local: Annotated[bool, Parameter(help="Run local")] = False,
     inference_model_name: Annotated[
         str,
         Parameter(help=f"Checkpoint used for the post-training benchmark on the test split. Options: {INFERENCE_MODEL_OPTIONS}"),
@@ -387,11 +387,11 @@ def main(
     if run_train:
         model_trainer.train(
             dataset_dir=dataset_path.as_posix(),
+            output_dir=path_experiment.as_posix(),
             epochs=epochs,
             batch_size=batch_size,
-            lr=lr,
             grad_accum_steps=grad_accum_steps,
-            output_dir=path_experiment.as_posix(),
+            lr=lr,
             resolution=resolution,
             aug_config=AUG_CONFIGS[aug_config],
             resume=checkpoint_model_path,
@@ -425,8 +425,10 @@ def main(
                 model_path = CHECKPOINTS
 
         # Prepare Test datasets
-        # dataset_test = dataset.create_split_dataset(split_name=SplitName.VAL)  # For local testing only
-        dataset_test = dataset.create_split_dataset(split_name=SplitName.TEST)
+        if run_local:
+            dataset_test = dataset.create_split_dataset(split_name=SplitName.VAL)  # For local testing only
+        else:
+            dataset_test = dataset.create_split_dataset(split_name=SplitName.TEST)
         inference_model  = WrappedModel.load_model(
             path_archive=model_path[inference_model_name],
             inference_config=inference_config,

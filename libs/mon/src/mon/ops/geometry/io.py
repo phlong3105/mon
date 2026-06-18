@@ -308,6 +308,7 @@ def _write_bbox_yolo(
     bbox: BBoxes,
     path: Path,
     imgsz: Size | None = None,
+    full: bool = False,
     *args, **kwargs
 ):
     """Write bounding boxes to a YOLO-format .txt file.
@@ -328,6 +329,8 @@ def _write_bbox_yolo(
         path (Path): The file path to write the bounding boxes to.
         imgsz (Size | None, optional): The image size (width, height) to use for
             normalization if needed. Required if ``fmt`` is a normalized format.
+        full (bool, optional): If True, write the full bounding box data (i.e., 7 fields).
+            If False, write only the class_id and bbox coordinates (i.e., 5 fields).
     """
     # Normalize inputs
     path = Path(path).normalize()
@@ -341,24 +344,34 @@ def _write_bbox_yolo(
         for i, b in enumerate(bbox):
             # [class_id, cx, cy, w, h, angle, score, track_id]
             b_ = b.cxcywhn(imgsz=imgsz)
-            f.write(
-                f"{b.class_id} "  # class_id
-                f"{float(b_[0]):.30f} "  # cx
-                f"{float(b_[1]):.30f} "  # cy
-                f"{float(b_[2]):.30f} "  # w  
-                f"{float(b_[3]):.30f} "  # h  
-                f"{b.angle} "  # angle
-                f"{b.score:.6f} "
-                f"{b.track_id} "
-                f"\n"
-            )
-
+            if full:
+                f.write(
+                    f"{b.class_id} "         # class_id
+                    f"{float(b_[0]):.30f} "  # cx
+                    f"{float(b_[1]):.30f} "  # cy
+                    f"{float(b_[2]):.30f} "  # w  
+                    f"{float(b_[3]):.30f} "  # h  
+                    f"{b.angle} "  # angle
+                    f"{b.score:.6f} "
+                    f"{b.track_id} "
+                    f"\n"
+                )
+            else:
+                f.write(
+                    f"{b.class_id} "         # class_id
+                    f"{float(b_[0]):.30f} "  # cx
+                    f"{float(b_[1]):.30f} "  # cy
+                    f"{float(b_[2]):.30f} "  # w  
+                    f"{float(b_[3]):.30f} "  # h  
+                    f"\n"
+                )
 
 def write_bbox(
     bbox: BBoxes,
     path: Path,
     fmt: BBoxFormat,
     imgsz: Size | None = None,
+    full: bool = False,
     *args, **kwargs
 ):
     """Write bounding boxes to a YOLO-format .txt file.
@@ -380,13 +393,15 @@ def write_bbox(
         fmt (BBoxFormat): The format to write the bounding boxes in.
         imgsz (Size, optional): The image size (width, height) to use for
             normalization if needed. Required if ``fmt`` is a normalized format.
+        full (bool, optional): If True, write the full bounding box data (i.e., 7 fields).
+            If False, write only the class_id and bbox coordinates (i.e., 5 fields
     """
     # Normalize inputs
     fmt = BBoxFormat(fmt)
 
     # Write bounding boxes in the desired format
     if fmt == BBoxFormat.CXCYWHN:
-        _write_bbox_yolo(bbox=bbox, path=path, imgsz=imgsz, *args, **kwargs)
+        _write_bbox_yolo(bbox=bbox, path=path, imgsz=imgsz, full=full *args, **kwargs)
     else:
         raise ValueError(f"the writing method for '{fmt}' format has not been "
                          f"supported yet.")

@@ -32,6 +32,8 @@ from mon.ops import read_imgsz, write_bbox
 
 current_file = Path(__file__).normalize()
 current_dir = current_file.parents[0]
+project_root: Path = resolve_project_root(current_dir)
+data_dir = project_root / "data" / "aic26_cross_city"
 
 DEVICE = "cuda"
 CLASSES = [
@@ -90,11 +92,9 @@ def relabel_yolo_world(args: argparse.Namespace):
     image streams.
     """
     # Resolve paths
-    root: Path = resolve_project_root(current_dir)
-    data_dir = root / "data" / "aic26_cross_city" / args.data
-    images_dir = data_dir / "images"
+    images_dir = data_dir / args.data / "images"
 
-    output_dir = data_dir / f"{args.label_dir}"
+    output_dir = data_dir / args.data / f"{args.label_dir}"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Retrieve images
@@ -144,11 +144,9 @@ def relabel_yolo_world(args: argparse.Namespace):
 def relabel_qwen(args: argparse.Namespace):
     """Uses Qwen3-VL to perform instruction-guided open-vocabulary grounding."""
     # Resolve paths
-    root: Path = resolve_project_root(current_dir)
-    data_dir = root / "data" / "aic26_cross_city" / args.data
-    images_dir = data_dir / "images"
+    images_dir = data_dir / args.data / "images"
 
-    output_dir = data_dir / f"{args.label_dir}"
+    output_dir = data_dir / args.data / f"{args.label_dir}"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Retrieve images
