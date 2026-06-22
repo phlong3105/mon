@@ -11,6 +11,7 @@ dependencies = [
     "pytest>=9.0.1",
     "rfdetr[train,loggers]>=1.6.5",
     "rfdetr-plus",
+    "ensemble-boxes",
 ]
 
 # Using hafnia:

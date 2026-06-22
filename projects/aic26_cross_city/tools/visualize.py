@@ -100,7 +100,7 @@ def main(args: argparse.Namespace):
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser("main")
-    parser.add_argument("--data",       type=str, default="pretrain", help="Data source directory.")
+    parser.add_argument("--data",       type=str, default="x/trafficcam/train", help="Data source directory.")
     parser.add_argument("--labels-dir", type=str, default="labels",   help="Label directory.")
     args, remaining = parser.parse_known_args()
     sys.argv = [sys.argv[0]] + remaining

@@ -39,6 +39,7 @@ dependencies    = [
     "nvidia-ml-py (>=13.595.45)",       # To log GPU metrics in tracker
     "rfdetr",                           # RF-DETR: Real-Time SOTA Detection and Segmentation
     "rfdetr-plus",                      # An extension of RF-DETR that unlocks larger, more powerful detection models for when you need the highest possible accuracy.
+    "ensemble-boxes",                   # Python implementation of several methods for ensembling boxes from object detection models: Non-maximum Suppression (NMS), Soft-NMS, Non-maximum weighted (NMW), Weighted boxes fusion (WBF)
 ]
 
 # [project.urls]

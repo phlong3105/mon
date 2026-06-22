@@ -17,6 +17,7 @@
 .claude/
 
 __pycache__
+checkpoints_all/
 dist/
 mlruns/
 pretrained_models_all/

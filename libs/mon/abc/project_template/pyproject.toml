@@ -16,7 +16,7 @@
 #   - uv            : https://docs.astral.sh/uv/
 
 [project]
-name            = "abc_project"
+name            = "project_template"
 version         = "0.0.0"
 description     = "Project template."
 license         = "MIT"
@@ -49,4 +49,3 @@ mon = { path = "../../libs/mon", develop = true }
 [build-system]
 requires      = ["poetry-core>=2.0.0,<3.0.0"]
 build-backend = "poetry.core.masonry.api"
-
