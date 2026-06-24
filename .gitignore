@@ -23,5 +23,6 @@ archive/
 build/
 dist/
 /projects/
+/projects/fisheye/
 /tools/xanylabeling/
 /zoo/*/
