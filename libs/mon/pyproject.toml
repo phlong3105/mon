@@ -19,7 +19,7 @@
 
 [project]
 name            = "mon"
-version         = "2.12.0"
+version         = "2.13.0"
 description     = "Just a research package."
 license         = "MIT"
 readme          = "README.md"
@@ -69,7 +69,7 @@ dependencies    = [
     "protobuf",                         # Protocol Buffers - Google's data interchange format.
     "tensorboard",                      # TensorFlow's Visualization Toolkit.
     "tensordict",                       # TensorDict is a pytorch dedicated tensor container.
-    "torch (>=2.12.0)",                 # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
+    "torch (>=2.13.0)",                 # PyTorch is an optimized tensor library for deep learning using GPUs and CPUs.
     "torch-fidelity",                   # High-fidelity performance metrics for generative models in PyTorch
     "torchdiffeq",                      # Differentiable ODE solvers with full GPU support and O(1)-memory backpropagation.
     "torchmetrics",                     # Collection of PyTorch native metrics for easy evaluating machine learning models.

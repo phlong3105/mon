@@ -8,7 +8,7 @@ covers computer vision and artificial intelligence.
 """
 
 __author__ = "Long H. Pham"
-__version__ = "2.12.0"
+__version__ = "2.13.0"
 
 import os
 import time
