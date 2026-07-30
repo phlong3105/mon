@@ -17,6 +17,7 @@ File Structure:
     ├── device.py       # Hardware auto-detection & management
     ├── image.py        #
     ├── mask.py         #
+    ├── palette.py      # Color palettes
     ├── prob.py         #
     ├── size.py         #
     ├── timer.py        #
@@ -32,6 +33,7 @@ from .device import *
 from .image import *
 from .keypoint import *
 from .mask import *
+from .palette import *
 from .prob import *
 from .size import *
 from .timer import *

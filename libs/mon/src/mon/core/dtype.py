@@ -44,6 +44,7 @@ class MemoryUnit(MultiStrEnum):
     TB = "TB"
     PB = "PB"
 
+    # --- Retrieval ---
     @classmethod
     def names_to_bytes(cls) -> dict:
         """Return mapping of this enum to byte multipliers."""
@@ -122,6 +123,7 @@ class BBoxFormat(MultiStrEnum):
     CXCYWHN2XYXY = "cxcywhn_to_xyxy", "yolo_to_voc"   # Convert from YOLO to VOC
     CXCYWHN2XYWH = "cxcywhn_to_xywh", "yolo_to_coco"  # Convert from YOLO to COCO
 
+    # --- Retrieval ---
     @classmethod
     def formats(cls) -> list:
         """Return a list of standard bounding box formats."""

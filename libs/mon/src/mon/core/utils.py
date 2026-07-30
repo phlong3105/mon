@@ -55,6 +55,7 @@ from numpy import ndarray
 from tensordict import NonTensorData, TensorDict
 from torch import Tensor
 
+
 # ==============================================================================
 # region CONSTANTS
 # ==============================================================================
@@ -66,6 +67,7 @@ _KEBAB_RE = re.compile(r"^[a-z0-9]+(-[a-z0-9]+)*$")
 _SNAKE_RE = re.compile(r"^[a-z0-9]+(_[a-z0-9]+)*$")
 _WORD_RE = re.compile(r"[A-Z]{2,}(?=[A-Z][a-z]+[0-9]*|\b)|[A-Z]?[a-z]+[0-9]*|[A-Z]|[0-9]+")
 _WHITESPACE_RE = re.compile(r"\s+")
+_HEX_COLOR_RE = re.compile(r"^#[0-9a-fA-F]{3}$|^#[0-9a-fA-F]{6}$")
 
 # endregion
 
@@ -174,8 +176,11 @@ def is_snakecase(value: Any) -> bool:
 
 # --- Collections ---
 
-def is_list_of(value: Any, type_: type) -> bool:
-    """Check if the input value is a list of a specific type."""
+def is_list_of(value: Any, type_: type | tuple[type, ...]) -> bool:
+    """Check if the input value is a list of a specific type(s)."""
+    if not isinstance(type_, tuple):
+        type_ = tuple([type_])
+
     return (
         isinstance(value, list) and
         (

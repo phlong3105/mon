@@ -11,21 +11,21 @@ This repository contains the template for a project.
 
   ```text
   project/                 # Project root.
-  |__ archive
-  |__ configs              # Configuration files for experiments.
-  |__ data                 # Data-related files.
-  |__ docker               # Docker files for deployment.
-  |__ notebook             # Notebooks for experiments.
-  |__ run
-  |__ src/                 # Adopt src/ layout.
-  |   |__ project/         # Project's source code.
-  |       |__ __init__.py
-  |       |__ ...
-  |__ tests                # Unit tests.
-  |__ tools                # Useful scripts.
-  |__ .dockerignore
-  |__ .gitignore
-  |__ pyproject.toml
-  |__ README.md
+  ├── archive
+  ├── configs              # Configuration files for experiments.
+  ├── data                 # Data-related files.
+  ├── docker               # Docker files for deployment.
+  ├── notebook             # Notebooks for experiments.
+  ├── run
+  ├── src/                 # Adopt src/ layout.
+  │   └── project/         # Project's source code.
+  │       ├── __init__.py
+  │       └── ...
+  ├── tests                # Unit tests.
+  ├── tools                # Useful scripts.
+  ├── .dockerignore
+  ├── .gitignore
+  ├── pyproject.toml
+  └── README.md
   ```
 </details>

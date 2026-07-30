@@ -37,6 +37,7 @@ dependencies    = [
     "aenum",                            # Advanced Enumerations for Python
     "emoji",                            # Emoji for Python.
     "fjson",                            # Python JSON writer with formatted floats
+    "kontrasto",                        # Automated color contrast for text over images.
     "loguru",                           # Python logging made (stupidly) simple.
     "mypy",                             # Optional static typing for Python.
     "omegaconf",                        # Flexible Python configuration system.

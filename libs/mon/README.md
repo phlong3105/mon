@@ -16,28 +16,29 @@
 
   ```text
   mon                       # Package root
-  |__ adapters              # Adapters for integrating other packages into ``mon``.
-  |__ src
-  |   |__ mon
-  |       |__ core          # Base functionality for other packages.
-  |       |__ cv            # Computer vision package.
-  |       |__ datasets      # Dataset package.
-  |       |__ genai         # Generative AI package.
-  |       |__ nn            # Neural network package.
-  |       |__ training      # Training utilities package.
-  |       |__ __init__.py      
-  |__ tools                 # Tools for various utilities.
-  |__ pyproject.toml        # For both packaging and dependency management.    
-  |__ README.md
+  ├── assets                # Assets for the package, such as images, icons, etc.
+  ├── src
+  │   └── mon
+  │       ├── core          # Base functionality for other packages.
+  │       ├── cv            # Computer vision package.
+  │       ├── datasets      # Dataset package.
+  │       ├── genai         # Generative AI package.
+  │       ├── nn            # Neural network package.
+  │       ├── training      # Training utilities package.
+  │       └── __init__.py
+  ├── test                  # Unit tests for the package.
+  ├── tools                 # Tools for various utilities.
+  ├── pyproject.toml        # For both packaging and dependency management.
+  └── README.md
   ```
 </details>
 
 ## Cite
 If you find our work useful, please consider citing the following:
 ```text
-@misc{Pham2022,  
-    author       = {Long Hoang Pham, Duong Nguyen-Ngoc Tran, Quoc Pham-Nam Ho},  
-    title        = {🐈 mon},  
+@misc{Pham2022,
+    author       = {Long Hoang Pham, Duong Nguyen-Ngoc Tran, Quoc Pham-Nam Ho},
+    title        = {🐈 mon},
     publisher    = {GitHub},
     journal      = {GitHub repository},
     howpublished = {https://github.com/phlong3105/mon},

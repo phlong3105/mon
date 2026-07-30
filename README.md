@@ -2,7 +2,7 @@
 	<h1 align="center">🐈 MON</h1>
 </div>
 
-`🐈 mon` is a research **[Monorepo](https://github.com/matakanobu/python-monorepo/tree/main)** for computer vision, built using [Python](https://www.python.org/) and [PyTorch](https://pytorch.org/). 
+`🐈 mon` is a research **[Monorepo](https://github.com/matakanobu/python-monorepo/tree/main)** for computer vision, built using [Python](https://www.python.org/) and [PyTorch](https://pytorch.org/).
 
 <details>
   <summary></summary>
@@ -28,36 +28,36 @@ The code is fully compatible with [PyTorch](https://pytorch.org/) >= 2.0.
   <summary>Directory Structure</summary>
 
   ```text
-  mon 
-  |__ docs                      # Documentation.
-  |__ libs                      # Common code shared across multiple projects is located.
-  |   |__ mon                   # My lib package.
-  |   |   |__ src/              # Adopt src/ layout.
-  |   |   |__ pyproject.toml               
-  |   |__ ...                   # Other 3rd-party packages.
-  |__ projects                  # Projects.
-  |   |__ project_A             # Adopt src/ layout.
-  |   |__ project_B             # Adopt src/ layout.
-  |   |__ ...                   
-  |__ scripts                   # General-purpose scripts, CI/CD helpers, local environment setup, testing runners.
-  |   |__ bootstrap.sh          # Bootstrap script for local development.
-  |   |__ ...                    
-  |__ tools                     # Custom CLI tools, internal automation systems, scaffolding utilities.
-  |__ zoo                       # Model zoo (i.e., pre-trained weights).
-  |__ .gitignore                 
-  |__ .gitmodules               
-  |__ LICENSE                   
-  |__ pyproject.toml            # Root configuration file. 
-  |__ README.md                 # Readme file.
+  mon
+  ├── docs                      # Documentation.
+  ├── libs                      # Common code shared across multiple projects is located.
+  │   ├── mon                   # My lib package.
+  │   │   ├── src/              # Adopt src/ layout.
+  │   │   └── pyproject.toml
+  │   └── ...                   # Other 3rd-party packages.
+  ├── projects                  # Projects.
+  │   ├── project_A             # Adopt src/ layout.
+  │   ├── project_B             # Adopt src/ layout.
+  │   └── ...
+  ├── scripts                   # General-purpose scripts, CI/CD helpers, local environment setup, testing runners.
+  │   ├── bootstrap.sh          # Bootstrap script for local development.
+  │   └── ...
+  ├── tools                     # Custom CLI tools, internal automation systems, scaffolding utilities.
+  ├── zoo                       # Model zoo (i.e., pre-trained weights).
+  ├── .gitignore
+  ├── .gitmodules
+  ├── LICENSE
+  ├── pyproject.toml            # Root configuration file.
+  └── README.md                 # Readme file.
   ```
 </details>
 
 ## Cite
 If you find our work useful, please consider citing the following:
 ```text
-@misc{Pham2022,  
-    author       = {Long Hoang Pham, Duong Nguyen-Ngoc Tran, Quoc Pham-Nam Ho},  
-    title        = {🐈 mon},  
+@misc{Pham2022,
+    author       = {Long Hoang Pham, Duong Nguyen-Ngoc Tran, Quoc Pham-Nam Ho},
+    title        = {🐈 mon},
     publisher    = {GitHub},
     journal      = {GitHub repository},
     howpublished = {https://github.com/phlong3105/mon},

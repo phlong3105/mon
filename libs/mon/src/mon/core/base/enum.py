@@ -87,7 +87,7 @@ from aenum import (
     NoAliasEnum,
     NonMember,
     nonmember,
-    OrderedEnum,
+    OrderedEnum as OrderedEnum_,
     property,
     remove_stdlib_integration,
     ReprEnum,
@@ -105,6 +105,39 @@ from aenum import (
 # ==============================================================================
 
 class Enum(Enum_):
+
+    # --- Lifecycle & Initialization ---
+    @classmethod
+    def _missing_(cls, value):
+        # 1. If no value is passed (None), return the first member
+        if value is None:
+            value = "default"
+
+        # 2. If the user explicitly passes the string "default",
+        # return the first member if "DEFAULT" is not defined, otherwise return
+        # the "DEFAULT" member
+        if value == "default":
+            if "DEFAULT" in cls.__members__:
+                return cls.DEFAULT
+            else:
+                return list(cls)[0]
+
+        # 3. Otherwise, it's an invalid extension
+        raise ValueError(f"{value} is not a valid {cls.__name__} extension.")
+
+    # --- Retrieval ---
+    @classmethod
+    def names(cls):
+        """Returns a list of all enum member names."""
+        return [member.name for member in cls]
+
+    @classmethod
+    def values(cls):
+        """Returns a list of all enum member values."""
+        return [member.value for member in cls]
+
+
+class OrderedEnum(OrderedEnum_):
 
     # --- Lifecycle & Initialization ---
     @classmethod

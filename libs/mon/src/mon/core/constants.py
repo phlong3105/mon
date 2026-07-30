@@ -18,6 +18,7 @@ from types import SimpleNamespace
 from .dtype import ConfigExtension, ImageExtension, WeightExtension
 from .path import Path
 
+
 # ==============================================================================
 # region PATHS
 # ==============================================================================
@@ -160,6 +161,11 @@ class K(SimpleNamespace):
     # --- Strings ---
     INCLUDE_KEY = "__include__"
     ORIGINAL    = "orig"
+
+    # --- Plotting ---
+    FONT_FAMILY = "sans-serif"
+    FONT_SIZE = 7
+    PALETTE = "tol_light"
 
     # --- Logging ---
     VERBOSE = True
