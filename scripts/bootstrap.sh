@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# Command:
 # sudo chmod +x bootstrap.sh
 # ./bootstrap.sh
 

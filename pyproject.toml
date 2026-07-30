@@ -23,7 +23,7 @@ version         = "2.13.0"
 description     = "A monorepo centralizing multiple projects and sharing code."
 license         = "MIT"
 readme          = "README.md"
-requires-python = ">=3.13,<3.14"
+requires-python = ">=3.13,<3.14.1 || >3.14.1,<3.15"
 authors         = [{ name = "Long H. Pham", email = "longpham3105@gmail.com" }]
 keywords        = ["computer vision", "deep learning", "research"]
 classifiers     = [
@@ -31,9 +31,7 @@ classifiers     = [
     "Intended Audience :: Developers",
     "Programming Language :: Python",
 ]
-dependencies = [
-    "mon",
-]
+dependencies = ["mon"]
 
 [project.urls]
 Homepage      = "https://github.com/longph3105/mon"
@@ -77,9 +75,7 @@ include      = []
 exclude      = []
 
 [tool.poetry.dependencies]
-mon  = { path = "libs/mon", develop = true }
-# sdce = { path = "projects/sdce", develop = true }
-# aic26_cross_city = { path = "projects/aic26_cross_city", develop = true }
+mon = { path = "libs/mon", develop = true }
 
 [build-system]
 requires      = ["poetry-core>=2.3.2,<3.0.0"]
