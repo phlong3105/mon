@@ -22,9 +22,5 @@ _gsdata_/
 archive/
 build/
 dist/
-/projects/
-/projects/aic26_cross_city/
-/projects/fisheye/
-/projects/sdce/
 /tools/xanylabeling/
 /zoo/*/

@@ -1,0 +1,3 @@
+[submodule "projects/sdce"]
+	path = projects/sdce
+	url = git@github.com:longph3105/sdce.git
