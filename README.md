@@ -12,7 +12,7 @@
 ## Installation
 
 ```shell
-git clone https://phlong3105@github.com/phlong3105/mon
+git clone https://github.com/longph3105/mon
 cd mon/scripts
 sudo chmod +x bootstrap.sh
 ./bootstrap.sh

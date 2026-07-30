@@ -1,6 +1,9 @@
 [submodule "projects/aic26_cross_city"]
 	path = projects/aic26_cross_city
 	url = git@github.com:longph3105/aic26_cross_city.git
+[submodule "projects/augmentlib"]
+	path = projects/augmentlib
+	url = git@github.com:longph3105/augmentlib.git
 [submodule "projects/sdce"]
 	path = projects/sdce
 	url = git@github.com:longph3105/sdce.git
