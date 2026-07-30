@@ -33,14 +33,13 @@ classifiers     = [
 ]
 dependencies = [
     "mon",
-    "sdce",
 ]
 
 [project.urls]
-Homepage      = "https://github.com/phlong3105/mon"
-Documentation = "https://github.com/phlong3105/mon/docs"
-Repository    = "https://github.com/phlong3105/mon.git"
-Issues        = "https://github.com/phlong3105/mon/issues"
+Homepage      = "https://github.com/longph3105/mon"
+Documentation = "https://github.com/longph3105/mon/docs"
+Repository    = "https://github.com/longph3105/mon.git"
+Issues        = "https://github.com/longph3105/mon/issues"
 
 [project.optional-dependencies]
 docs = [                                # Documentation
@@ -78,9 +77,9 @@ include      = []
 exclude      = []
 
 [tool.poetry.dependencies]
-mon  = { path = "libs/mon"     , develop = true }
-sdce = { path = "projects/sdce", develop = true }
-aic26_cross_city = { path = "projects/aic26_cross_city", develop = true }
+mon  = { path = "libs/mon", develop = true }
+# sdce = { path = "projects/sdce", develop = true }
+# aic26_cross_city = { path = "projects/aic26_cross_city", develop = true }
 
 [build-system]
 requires      = ["poetry-core>=2.3.2,<3.0.0"]

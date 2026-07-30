@@ -96,10 +96,10 @@ dependencies    = [
 ]
 
 [project.urls]
-Homepage        = "https://github.com/phlong3105/mon"
-Documentation   = "https://github.com/phlong3105/mon/docs"
-Repository      = "https://github.com/phlong3105/mon.git"
-Issues          = "https://github.com/phlong3105/mon/issues"
+Homepage        = "https://github.com/longph3105/mon"
+Documentation   = "https://github.com/longph3105/mon/docs"
+Repository      = "https://github.com/longph3105/mon.git"
+Issues          = "https://github.com/longph3105/mon/issues"
 
 [project.optional-dependencies]
 docs = [                                # Documentation
