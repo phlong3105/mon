@@ -7,3 +7,6 @@
 [submodule "projects/sdce"]
 	path = projects/sdce
 	url = git@github.com:longph3105/sdce.git
+[submodule "projects/longph3105.github.io"]
+	path = projects/longph3105.github.io
+	url = https://github.com/longph3105/longph3105.github.io

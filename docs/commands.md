@@ -17,28 +17,6 @@
     sudo systemctl status ssh
     ```
 
-- Install `claude` + `gemini` + `openclaw`:
-    ```commandline
-    sudo apt install nodejs npm
-    npm install -g acpx@latest
-
-    curl -fsSL https://claude.ai/install.sh | bash
-    claude
-
-    npm install -g @google/gemini-cli
-    gemini
-    ```
-
----
-
-## AutoResearchClaw
-
-- Running CLI:
-    ```commandline
-    researchclaw run --config config.yaml --auto-approve
-    researchclaw run --config config.yaml --output artifacts/<folder-name> --auto-approve --resume
-    ```
-
 ---
 
 ## GitHub
