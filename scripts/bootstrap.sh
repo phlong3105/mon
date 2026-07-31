@@ -7,28 +7,28 @@
 clear
 echo "${HOSTNAME}"
 
-# ----- Input -----
-declare -a options=("mon" "update" "cuda" "docker" "tensorrt" "rlsync" "xanylabeling")
-option="${1:-0}"
+# --- Input ---
+declare -a OPTIONS=("mon" "update" "cuda" "docker" "tensorrt" "rlsync" "xanylabeling")
+OPTION="${1:-0}"
 
-echo -e "\nAvailable options:"
-for i in "${!options[@]}"; do
-    printf "  [%d] %s\n" "$i" "${options[i]}"
+echo -e "\nAvailable OPTIONS:"
+for i in "${!OPTIONS[@]}"; do
+    printf "  [%d] %s\n" "$i" "${OPTIONS[i]}"
 done
 
-read -p "Option: " -e -i "$option" option
-option="${options[option]}"
+read -p "Option: " -e -i "$OPTION" OPTION
+OPTION="${OPTIONS[OPTION]}"
 
-# ----- Directory & File -----
-current_file=$(readlink -f "${0}")
-current_dir=$(dirname "${current_file}")
-if [ $(basename "${current_dir}") == "scripts" ]; then
-    root_dir=$(dirname "${current_dir}")
+# --- Directory & File ---
+CURRENT_FILE=$(readlink -f "${0}")
+CURRENT_DIR=$(dirname "${CURRENT_FILE}")
+if [ $(basename "${CURRENT_DIR}") == "scripts" ]; then
+    ROOT_DIR=$(dirname "${CURRENT_DIR}")
 else
-    root_dir="${current_dir}"
+    ROOT_DIR="${CURRENT_DIR}"
 fi
 
-# ----- Utils -----
+# --- Utils ---
 check_gui_support() {
     if [ -n "$DISPLAY" ]; then
         # echo "GUI supported: X11 display server detected (DISPLAY=$DISPLAY)" >&2
@@ -61,9 +61,9 @@ check_cuda() {
 get_env_yaml_path() {
     # echo -e "\nGetting environment YAML path"
     if check_cuda; then
-        echo "${root_dir}/scripts/cuda.yaml"
+        echo "${ROOT_DIR}/scripts/cuda.yaml"
     else
-        echo "${root_dir}/scripts/cpu.yaml"
+        echo "${ROOT_DIR}/scripts/cpu.yaml"
     fi
 }
 
@@ -105,7 +105,7 @@ add_bash_profile_lines() {
     done
 }
 
-# ----- OS System -----
+# --- OS System ---
 install_ffmpeg() {
     echo -e "\nInstalling ffmpeg"
     case "$OSTYPE" in
@@ -292,9 +292,9 @@ install_tensorrt() {
 
 setup_rlsync() {
     echo -e "\nSetting up Resilio Sync (rlsync)"
-    rsync_dir="${root_dir}/.sync"
+    rsync_dir="${ROOT_DIR}/.sync"
     mkdir -p "${rsync_dir}"
-    cp "${root_dir}/scripts/IgnoreList" "${rsync_dir}/IgnoreList"
+    cp "${ROOT_DIR}/scripts/IgnoreList" "${rsync_dir}/IgnoreList"
 }
 
 setup_system() {
@@ -304,7 +304,7 @@ setup_system() {
     setup_rlsync
 }
 
-# ----- CUDA (System-wise) -----
+# --- CUDA (System-wise) ---
 install_nvidia_driver() {
     echo -e "\nInstalling NVIDIA driver"
     sudo apt update
@@ -337,7 +337,7 @@ install_cuda_toolkit() {
     # sudo reboot now
 }
 
-# ----- Conda -----
+# --- Conda ---
 update_conda() {
     echo -e "\nAdding 'conda' channels"
     conda config --append channels conda-forge
@@ -363,7 +363,7 @@ create_mon_env_linux() {
     conda env create -f "${env_yaml_path}"
     # Modify .bashrc
     bashrc_lines=(
-        # "cd '${root_dir}'"
+        # "cd '${ROOT_DIR}'"
         "conda activate mon"
     )
     add_bashrc_lines "${bashrc_lines[@]}"
@@ -383,7 +383,7 @@ create_mon_env_darwin() {
     conda env create -f "${env_yaml_path}"
     # Modify .bash_profile
     bash_profile_lines=(
-        # "cd '${root_dir}'"
+        # "cd '${ROOT_DIR}'"
         "conda activate mon"
     )
     add_bash_profile_lines "${bash_profile_lines[@]}"
@@ -437,10 +437,10 @@ install_mon_env() {
     conda clean  --a --y
 }
 
-# ----- Tool -----
+# --- Tool ---
 install_xanylabeling() {
     echo -e "\nInstall X-AnyLabeling"
-    xanylabeling_dir="${current_dir}/tools/xanylabeling"
+    xanylabeling_dir="${CURRENT_DIR}/tools/xanylabeling"
 
     # Download repo
     if [ ! -d "$xanylabeling_dir" ]; then
@@ -476,9 +476,9 @@ install_xanylabeling() {
     esac
 }
 
-# ----- Main -----
+# --- Main ---
 main() {
-    case "${option}" in
+    case "${OPTION}" in
         mon)
             echo -e "\nOption: mon"
             setup_system
@@ -513,13 +513,13 @@ main() {
             install_xanylabeling
             ;;
         *)
-            echo -e "\nInvalid option: $option"
+            echo -e "\nInvalid OPTION: $OPTION"
             exit 1
             ;;
     esac
 }
 
-# ----- Done -----
+# --- Done ---
 main
-cd "${current_dir}" || exit
+cd "${CURRENT_DIR}" || exit
 exit 0

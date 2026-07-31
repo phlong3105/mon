@@ -3,24 +3,24 @@
 clear
 echo "${HOSTNAME}"
 
-# ----- Input -----
-option=${1:-"install"}
-read -p "Option [install, enable, disable, stop, start]: " -i "$option" -e option
+# --- Input ---
+OPTION=${1:-"install"}
+read -p "Option [install, enable, disable, stop, start]: " -i "$OPTION" -e OPTION
 
-# ----- Directory & File -----
-current_file=$(readlink -f "${0}")
-current_dir=$(dirname "${current_file}")
-root_dir=$current_dir
+# --- Directory & File ---
+CURRENT_FILE=$(readlink -f "${0}")
+CURRENT_DIR=$(dirname "${CURRENT_FILE}")
+ROOT_DIR=$CURRENT_DIR
 
-# ----- Setup -----
+# --- Setup ---
 install() {
-    service_file="${root_dir}/resilio-sync.service"
+    service_file="${ROOT_DIR}/resilio-sync.service"
     target_file="/usr/lib/systemd/user/resilio-sync.service"
     cp "${service_file}" "${target_file}"
 }
 
-# ----- Main -----
-case "${option}" in
+# --- Main ---
+case "${OPTION}" in
     install)
         install
         ;;
@@ -37,11 +37,11 @@ case "${option}" in
         systemctl --user start resilio-sync
         ;;
     *)
-        echo "Invalid option: $option"
+        echo "Invalid OPTION: $OPTION"
         exit 1
         ;;
 esac
 
-# ----- Done -----
-cd "${current_dir}" || exit
+# --- Done ---
+cd "${CURRENT_DIR}" || exit
 exit 0

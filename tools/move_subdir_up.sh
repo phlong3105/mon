@@ -38,7 +38,7 @@
 clear
 echo "${HOSTNAME}"
 
-# ----- Input -----
+# --- Input ---
 # Check if correct number of arguments is provided
 if [ $# -ne 2 ]; then
     echo "Usage: $0 <parent_dir> <suffix>"

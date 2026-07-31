@@ -7,17 +7,17 @@
 clear
 echo "${HOSTNAME}"
 
-# ----- Input -----
-directory="/home/longpham/Downloads"
+# --- Input ---
+DIRECTORY="/home/longpham/Downloads"
 
-# ----- Directory & File -----
-current_file=$(readlink -f "${0}")
-current_dir=$(dirname "${current_file}")  # mon/tool/
-root_dir=$(dirname "${current_dir}")      # mon/
+# --- Directory & File ---
+CURRENT_FILE=$(readlink -f "${0}")
+CURRENT_DIR=$(dirname "${CURRENT_FILE}")  # mon/tool/
+ROOT_DIR=$(dirname "${CURRENT_DIR}")      # mon/
 
-# ----- Functions -----
+# --- Functions ---
 run_on_linux() {
-    cd "${directory}" || exit
+    cd "${DIRECTORY}" || exit
     for i in $(find . -type f -regex ".*\.\(mp4\|MP4\|avi\|m4v\|mkv\|mov\|mpeg\|mpg\|wmv\)" | sort -h); do
         echo "Processing file: ${i}"
         ffmpeg \
@@ -32,7 +32,7 @@ run_on_linux() {
 }
 
 run_on_darwin() {
-    cd "${directory}" || exit
+    cd "${DIRECTORY}" || exit
     for i in $(find . -type f \( -iname "*.mp4" -o -iname "*.mkv" -o -iname "*.mov" -o -iname "*.avi" -o -iname "*.flv" -o -iname "*.wmv" -o -iname "*.webm" -o -iname "*.mpeg" -o -iname "*.mpg" -o -iname "*.3gp" -o -iname "*.m4v" \) | sort -h); do
         echo "Processing file: ${i}"
         ffmpeg \
@@ -75,8 +75,8 @@ run() {
 esac
 }
 
-# ----- Main -----
+# --- Main ---
 run
 
-# ----- Done -----
+# --- Done ---
 exit 0

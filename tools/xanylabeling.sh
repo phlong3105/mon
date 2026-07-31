@@ -3,29 +3,29 @@
 clear
 echo "${HOSTNAME}"
 
-# ----- Input -----
-declare -a options=("install" "start")
-option="${1:-1}"
+# --- Input ---
+declare -a OPTIONS=("install" "start")
+OPTION="${1:-1}"
 
-echo -e "\nAvailable options:"
-for i in "${!options[@]}"; do
-    printf "  [%d] %s\n" "$i" "${options[i]}"
+echo -e "\nAvailable OPTIONS:"
+for i in "${!OPTIONS[@]}"; do
+    printf "  [%d] %s\n" "$i" "${OPTIONS[i]}"
 done
 
-read -p "Option: " -e -i "$option" option
-option="${options[option]}"
+read -p "Option: " -e -i "$OPTION" OPTION
+OPTION="${OPTIONS[OPTION]}"
 
-# ----- Directory & File -----
-current_file=$(readlink -f "${0}")
-current_dir=$(dirname "${current_file}")
-if [ $(basename "${current_file}") == "tool" ]; then
-    root_dir=$(dirname "${current_dir}")
+# --- Directory & File ---
+CURRENT_FILE=$(readlink -f "${0}")
+CURRENT_DIR=$(dirname "${CURRENT_FILE}")
+if [ $(basename "${CURRENT_FILE}") == "tool" ]; then
+    ROOT_DIR=$(dirname "${CURRENT_DIR}")
 else
-    root_dir="${current_dir}"
+    ROOT_DIR="${CURRENT_DIR}"
 fi
-xanylabeling_dir="${current_dir}/xanylabeling"
+XANYLABELING_DIR="${CURRENT_DIR}/xanylabeling"
 
-# ----- Utils -----
+# --- Utils ---
 check_cuda() {
     if command -v nvcc >/dev/null 2>&1; then
         # echo "CUDA is installed. Version: $(nvcc --version | grep release | awk '{print $6}' | cut -c 2-)"
@@ -39,15 +39,15 @@ check_cuda() {
     fi
 }
 
-# ----- Setup -----
+# --- Setup ---
 install_xanylabeling() {
   echo -e "\nInstall X-AnyLabeling"
 
   # Download repo
-  if [ ! -d "$xanylabeling_dir" ]; then
+  if [ ! -d "$XANYLABELING_DIR" ]; then
     git clone https://github.com/CVHub520/X-AnyLabeling.git
   fi
-  cd "${xanylabeling_dir}" || exit
+  cd "${XANYLABELING_DIR}" || exit
 
   # Create conda environment
   conda create --name xanylabeling python=3.9 --y
@@ -76,8 +76,8 @@ install_xanylabeling() {
   esac
 }
 
-# ----- Main -----
-case "${option}" in
+# --- Main ---
+case "${OPTION}" in
     install)
         echo -e "\nOption: install"
         install_xanylabeling
@@ -86,14 +86,14 @@ case "${option}" in
         echo -e "\nOption: start"
         eval "$(conda shell.bash hook)"
         conda activate xanylabeling
-        cd "${xanylabeling_dir}" || exit
+        cd "${XANYLABELING_DIR}" || exit
         python anylabeling/app.py
         ;;
     *)
-        echo -e "\nInvalid option: ${option}"
+        echo -e "\nInvalid OPTION: ${OPTION}"
         exit 1
         ;;
 esac
 
-# ----- Done -----
+# --- Done ---
 exit 0
