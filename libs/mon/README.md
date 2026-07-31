@@ -15,19 +15,20 @@
   <summary>Directory Structure</summary>
 
   ```text
-  mon                       # Package root
-  ├── assets                # Assets for the package, such as images, icons, etc.
-  ├── src
-  │   └── mon
-  │       ├── core          # Base functionality for other packages.
-  │       ├── cv            # Computer vision package.
-  │       ├── datasets      # Dataset package.
-  │       ├── genai         # Generative AI package.
-  │       ├── nn            # Neural network package.
-  │       ├── training      # Training utilities package.
+  mon/                      # Package root
+  ├── assets/               # Assets for the package, such as images, icons, etc.
+  ├── src/
+  │   └── mon/
+  │       ├── core/         # Base functionality for other packages.
+  │       ├── datasets/     # Dataset package.
+  │       ├── metrics/      # Metrics package.
+  │       ├── models/       # Deep learning models package.
+  │       ├── nn/           # Neural network package.
+  │       ├── ops/          # Operations package.
+  │       ├── plots/        # Plotting package.
+  │       ├── runners/      # Runner package.
   │       └── __init__.py
-  ├── test                  # Unit tests for the package.
-  ├── tools                 # Tools for various utilities.
+  ├── test/                 # Unit tests for the package.
   ├── pyproject.toml        # For both packaging and dependency management.
   └── README.md
   ```

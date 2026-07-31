@@ -28,22 +28,22 @@ The code is fully compatible with [PyTorch](https://pytorch.org/) >= 2.0.
   <summary>Directory Structure</summary>
 
   ```text
-  mon
-  ├── docs                      # Documentation.
-  ├── libs                      # Common code shared across multiple projects is located.
-  │   ├── mon                   # My lib package.
+  mon/
+  ├── docs/                     # Documentation.
+  ├── libs/                     # Common code shared across multiple projects is located.
+  │   ├── mon/                  # My lib package.
   │   │   ├── src/              # Adopt src/ layout.
   │   │   └── pyproject.toml
   │   └── ...                   # Other 3rd-party packages.
-  ├── projects                  # Projects.
-  │   ├── project_A             # Adopt src/ layout.
-  │   ├── project_B             # Adopt src/ layout.
+  ├── projects/                 # Projects.
+  │   ├── project_A/            # Adopt src/ layout.
+  │   ├── project_B/            # Adopt src/ layout.
   │   └── ...
-  ├── scripts                   # General-purpose scripts, CI/CD helpers, local environment setup, testing runners.
+  ├── scripts/                  # General-purpose scripts, CI/CD helpers, local environment setup, testing runners.
   │   ├── bootstrap.sh          # Bootstrap script for local development.
   │   └── ...
-  ├── tools                     # Custom CLI tools, internal automation systems, scaffolding utilities.
-  ├── zoo                       # Model zoo (i.e., pre-trained weights).
+  ├── tools/                    # Custom CLI tools, internal automation systems, scaffolding utilities.
+  ├── zoo/                      # Model zoo (i.e., pre-trained weights).
   ├── .gitignore
   ├── .gitmodules
   ├── LICENSE
