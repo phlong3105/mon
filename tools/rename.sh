@@ -8,12 +8,14 @@ clear
 echo "${HOSTNAME}"
 
 # --- Input ---
-DIRECTORY="/home/longpham/10_workspace/11_code/mon"
+DIRECTORY="/Users/longpham/Downloads/assets/images/raw"
 
 # --- Functions ---
 normalize_name() {
+    # Function to normalize names (replace ' ' and '-' with '_', and reduce '__' to '_')
+    echo "$1" | tr ' ' '_' | tr '-' '_' | sed 's/__\+/_/g'
     # Function to normalize names (lowercase, replace ' ' and '-' with '_', and reduce '__' to '_')
-    echo "$1" | tr '[:upper:]' '[:lower:]' | tr ' ' '_' | tr '-' '_' | sed 's/__\+/_/g'
+    # echo "$1" | tr '[:upper:]' '[:lower:]' | tr ' ' '_' | tr '-' '_' | sed 's/__\+/_/g'
 }
 
 # --- Main ---

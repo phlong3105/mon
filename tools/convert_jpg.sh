@@ -8,7 +8,7 @@ clear
 echo "${HOSTNAME}"
 
 # --- Input ---
-DIRECTORY="/home/longpham/00_inbox/mon/projects/aic26_cross_city/data/aic26_cross_city/x/bmd45/val"
+DIRECTORY="/Users/longpham/Downloads/assets/images/raw"
 
 # --- Directory & File ---
 CURRENT_FILE=$(readlink -f "${0}")
