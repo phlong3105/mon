@@ -23,5 +23,6 @@ archive/
 archives/
 build/
 dist/
+/projects/shelf.nu/
 /tools/xanylabeling/
 /zoo/*/
