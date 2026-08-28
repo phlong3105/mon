@@ -54,4 +54,9 @@ install_docker() {
     esac
 }
 
-#--- Entry Point ---
+# --- Entry Point ---
+# Only execute if the script is run directly (not sourced)
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    cd "${CURRENT_DIR}" || exit
+    exit 0
+fi

@@ -123,3 +123,9 @@ manage_xanylabeling() {
 }
 
 # --- Entry Point ---
+# Only execute if the script is run directly (not sourced)
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    manage_xanylabeling
+    cd "${CURRENT_DIR}" || exit
+    exit 0
+fi

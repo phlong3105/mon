@@ -70,3 +70,10 @@ install_cuda_toolkit() {
     add_shell_lines "$HOME/.bashrc" "${bashrc_lines[@]}"
     echo -e "${GREEN}CUDA installation completed. Remember to run: source ~/.bashrc${NC}"
 }
+
+# --- Entry Point ---
+# Only execute if the script is run directly (not sourced)
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    cd "${CURRENT_DIR}" || exit
+    exit 0
+fi

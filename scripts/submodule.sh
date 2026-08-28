@@ -163,6 +163,9 @@ manage_submodule() {
 }
 
 # --- Entry Point ---
-# manage_submodule
-# cd "${CURRENT_DIR}" || exit
-# exit 0
+# Only execute if the script is run directly (not sourced)
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    manage_submodule
+    cd "${CURRENT_DIR}" || exit
+    exit 0
+fi
