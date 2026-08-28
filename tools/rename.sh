@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Rename files and directories in a specified directory to a snake_case format
 # (lowercase, replace spaces and hyphens with underscores, and reduce multiple

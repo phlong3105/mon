@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Remember to install ffmpeg first:
 # sudo apt-get install ffmpeg

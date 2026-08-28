@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Remember to install ImageMagick first:
 # sudo apt-get install imagemagick
