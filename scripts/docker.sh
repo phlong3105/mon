@@ -20,9 +20,13 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# --- Installation ---
+# --- Lifecycle Management ---
 install_docker() {
-    echo -e "\n${BLUE}==> Installing Docker Engine & NVIDIA Container Toolkit...${NC}"
+    if command -v docker &> /dev/null; then
+        echo -e "${GREEN}Docker is already installed: $(docker --version).${NC}"
+    fi
+
+    echo -e "\n${YELLOW}Installing Docker Engine & NVIDIA Container Toolkit...${NC}"
     case "$OSTYPE" in
         linux*)
             sudo apt-get update && sudo apt-get install -y curl

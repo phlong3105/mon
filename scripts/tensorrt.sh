@@ -20,7 +20,7 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# --- Installation ---
+# --- Utils ---
 check_cuda() {
     if command -v nvcc >/dev/null 2>&1 || command -v nvidia-smi >/dev/null 2>&1; then
         return 0
@@ -28,8 +28,14 @@ check_cuda() {
     return 1
 }
 
+# --- Lifecycle Management ---
 install_tensorrt() {
-    echo -e "\n${BLUE}==> Installing TensorRT & Building trtexec...${NC}"
+    if command -v trtexec &> /dev/null; then
+        echo -e "${GREEN}TensorRT is already installed: $(trtexec --help | head -n 1).${NC}"
+        return 0
+    fi
+
+    echo -e "\n${YELLOW}Installing TensorRT & Building trtexec...${NC}"
     if ! check_cuda; then
         echo -e "${RED}Error: CUDA is not detected. Please install CUDA first.${NC}"
         return 1

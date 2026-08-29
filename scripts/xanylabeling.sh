@@ -28,9 +28,9 @@ check_cuda() {
     return 1
 }
 
-# --- Installation ---
+# --- Lifecycle Management ---
 install_xanylabeling() {
-    echo -e "\n${BLUE}==> Installing X-AnyLabeling Tool...${NC}"
+    echo -e "\n${YELLOW}Installing X-AnyLabeling Tool...${NC}"
     local xanylabeling_dir="${ROOT_DIR}/tools/xanylabeling"
 
     if [[ ! -d "$xanylabeling_dir" ]]; then
@@ -53,6 +53,7 @@ install_xanylabeling() {
     case "$OSTYPE" in
         linux*)
             pip install -r requirements-dev.txt
+            echo -e "${YELLOW}Installing system dependencies...${NC}"
             sudo apt-get install -y libxcb-xinerama0 || true
             ;;
         darwin*)
@@ -64,7 +65,7 @@ install_xanylabeling() {
     echo -e "${GREEN}X-AnyLabeling installation complete.${NC}"
 }
 
-# --- Management ---
+# --- Service Control ---
 start_xanylabeling() {
     local xanylabeling_dir="${ROOT_DIR}/tools/xanylabeling"
     if [[ ! -d "$xanylabeling_dir" ]]; then
@@ -89,11 +90,11 @@ manage_xanylabeling() {
         echo -e "${BLUE}Root: ${ROOT_DIR}${NC}"
 
         local SUB_OPTIONS=(
-            "Start X-AnyLabeling"
-            "Install X-AnyLabeling"
-            "Back to Main Menu"
+            "Install"
+            "Start"
+            "Exit"
         )
-        local DEFAULT_SUB_IDX="0"
+        local DEFAULT_SUB_IDX="1"
 
         echo -e "\nSelect an OPTION:"
         for i in "${!SUB_OPTIONS[@]}"; do
@@ -106,13 +107,15 @@ manage_xanylabeling() {
         echo ""
 
         case "${ACTION}" in
-            "Start X-AnyLabeling")
-                start_xanylabeling
-                ;;
-            "Install X-AnyLabeling")
+            "Install")
                 install_xanylabeling
+                read -p "Press Enter to continue..."
                 ;;
-            "Back to Main Menu")
+            "Start")
+                start_xanylabeling
+                read -p "Press Enter to continue..."
+                ;;
+            "Exit")
                 break
                 ;;
             *)

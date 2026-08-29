@@ -46,15 +46,15 @@ main() {
         echo -e "${BLUE}Root: ${ROOT_DIR}${NC}"
 
         local OPTIONS=(
-            "mon (Full Stack Development Setup)"
-            "update (Conda & Mon Library)"
-            "submodule (Git Submodule Management)"
-            "cuda (NVIDIA Drivers & CUDA Toolkit)"
-            "docker (Docker & NVIDIA Container Toolkit)"
-            "tensorrt (TensorRT & trtexec)"
-            "rlsync (Resilio Sync Configuration)"
-            "xanylabeling (X-AnyLabeling Tool)"
-            "Quit"
+            "mon (Full Stack)"
+            "mon"
+            "Submodule"
+            "CUDA"
+            "Docker"
+            "TensorRT"
+            "rlsync"
+            "X-AnyLabeling"
+            "Exit"
         )
         local DEFAULT_OPT_IDX="0"
 
@@ -69,41 +69,40 @@ main() {
         echo ""
 
         case "${SELECTED}" in
-            "mon (Full Stack Development Setup)")
-                load_module "system" && setup_system
-                load_module "conda" && update_conda && create_mon_env && install_mon_env
+            "mon (Full Stack)")
+                load_module "system" && quick_setup_system
+                load_module "mon" && quick_setup_mon
                 load_module "rlsync" && setup_rlsync
                 read -p "Press Enter to continue..."
                 ;;
-            "update (Conda & Mon Library)")
-                load_module "conda" && update_conda && install_mon_env
-                read -p "Press Enter to continue..."
+            "mon")
+                load_module "mon" && manage_mon_env
                 ;;
-            "submodule (Git Submodule Management)")
+            "Submodule")
                 load_module "submodule" && manage_submodule
                 ;;
-            "cuda (NVIDIA Drivers & CUDA Toolkit)")
+            "CUDA")
                 load_module "cuda" && install_nvidia_driver && install_cuda_toolkit
                 read -p "Press Enter to continue..."
                 ;;
-            "docker (Docker & NVIDIA Container Toolkit)")
+            "Docker")
                 load_module "docker" && install_docker
                 read -p "Press Enter to continue..."
                 ;;
-            "tensorrt (TensorRT & trtexec)")
+            "TensorRT")
                 load_module "tensorrt" && install_tensorrt
                 read -p "Press Enter to continue..."
                 ;;
-            "rlsync (Resilio Sync Configuration)")
+            "rlsync")
                 load_module "rlsync" && manage_rlsync
                 ;;
-            "xanylabeling (X-AnyLabeling Tool)")
+            "X-AnyLabeling")
                 load_module "xanylabeling" && manage_xanylabeling
                 read -p "Press Enter to continue..."
                 ;;
-            "Quit")
+            "Exit")
                 echo -e "${GREEN}Exiting.${NC}"
-                exit 0
+                break
                 ;;
             *)
                 echo -e "${RED}Invalid option selected: ${USER_CHOICE}.${NC}"

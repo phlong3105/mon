@@ -38,9 +38,14 @@ add_shell_lines() {
     done
 }
 
-# --- Installation ---
+# --- Lifecycle Management ---
 install_nvidia_driver() {
-    echo -e "\n${BLUE}==> Installing NVIDIA Drivers (Linux)...${NC}"
+    if command -v nvidia-smi &> /dev/null; then
+        echo -e "${GREEN}NVIDIA Driver is already installed: $(nvidia-smi --query-gpu=driver_version --format=csv,noheader).${NC}"
+        return 0
+    fi
+
+    echo -e "\n${YELLOW}No NVIDIA Driver found. Installing...${NC}"
     if [[ "$OSTYPE" != linux* ]]; then
         echo -e "${YELLOW}NVIDIA Driver installation is only supported on Linux hosts.${NC}"
         return 0
@@ -52,7 +57,12 @@ install_nvidia_driver() {
 }
 
 install_cuda_toolkit() {
-    echo -e "\n${BLUE}==> Installing CUDA Toolkit 12.6...${NC}"
+    if command -v nvcc &> /dev/null; then
+        echo -e "${GREEN}CUDA Toolkit is already installed: $(nvcc --version | grep release).${NC}"
+        return 0
+    fi
+
+    echo -e "\n${YELLOW}No CUDA Toolkit found. Installing CUDA Toolkit 12.6...${NC}"
     if [[ "$OSTYPE" != linux* ]]; then
         echo -e "${YELLOW}CUDA Toolkit installation is only supported on Linux hosts.${NC}"
         return 0

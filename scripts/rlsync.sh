@@ -38,18 +38,17 @@ detect_distro() {
     fi
 }
 
-# --- Installation ---
+# --- Lifecycle Management ---
 install_rlsync() {
     check_linux
     detect_distro
 
     if command -v rslsync &> /dev/null; then
-        echo -e "${GREEN}==> Resilio Sync is already installed ($(rslsync --help | head -n 1)).${NC}"
+        echo -e "${GREEN}Resilio Sync is already installed ($(rslsync --help | head -n 1)).${NC}"
         return 0
     fi
 
-    echo -e "${BLUE}==> Installing Resilio Sync on ${DISTRO}...${NC}"
-
+    echo -e "${YELLOW}Installing Resilio Sync on ${DISTRO}...${NC}"
     case "$DISTRO" in
         ubuntu|debian|pop|linuxmint)
             echo -e "${GREEN}Configuring official Resilio APT repository...${NC}"
@@ -86,11 +85,11 @@ install_rlsync() {
             ;;
     esac
 
-    echo -e "${GREEN}==> Resilio Sync installed successfully!${NC}"
+    echo -e "${GREEN}Resilio Sync installed successfully!${NC}"
 }
 
 setup_rlsync() {
-    echo -e "\n${BLUE}==> Configuring Resilio Sync metadata & IgnoreList...${NC}"
+    echo -e "\n${BLUE}Configuring Resilio Sync metadata & IgnoreList...${NC}"
     local rsync_dir="${ROOT_DIR}/.sync"
     mkdir -p "${rsync_dir}"
 
@@ -102,34 +101,7 @@ setup_rlsync() {
     fi
 }
 
-# --- Management ---
-enable_user_mode() {
-    echo -e "${BLUE}==> Enabling Resilio Sync as current user ($USER)...${NC}"
-
-    # Enable Resilio Sync under the current user's systemd session
-    systemctl --user enable --now resilio-sync || {
-        echo -e "${YELLOW}User systemd service unavailable. Enabling system-wide service...${NC}"
-        sudo systemctl enable --now resilio-sync
-    }
-
-    # Retrieve local IP
-    LOCAL_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
-    LOCAL_IP="${LOCAL_IP:-localhost}"
-
-    echo -e "\n${GREEN}==========================================${NC}"
-    echo -e "${GREEN}      RESILIO SYNC SERVICE READY!         ${NC}"
-    echo -e "${GREEN}==========================================${NC}"
-    echo -e "Access the Web GUI at: ${BLUE}http://${LOCAL_IP}:8888${NC} or ${BLUE}http://localhost:8888${NC}"
-}
-
-disable_user_mode() {
-    echo -e "${BLUE}==> Disabling Resilio Sync for current user ($USER)...${NC}"
-    systemctl --user disable resilio-sync || {
-        echo -e "${YELLOW}User systemd service unavailable. Disabling system-wide service...${NC}"
-        sudo systemctl disable resilio-sync
-    }
-}
-
+# --- Service Control ---
 start_rlsync() {
     if systemctl --user is-enabled resilio-sync &>/dev/null; then
         systemctl --user start resilio-sync
@@ -148,12 +120,49 @@ stop_rlsync() {
     echo -e "${RED}Resilio Sync stopped.${NC}"
 }
 
+# --- Automation ---
+enable_user_mode() {
+    echo -e "${BLUE}Enabling Resilio Sync as current user ($USER)...${NC}"
+
+    # Enable Resilio Sync under the current user's systemd session
+    systemctl --user enable --now resilio-sync || {
+        echo -e "${YELLOW}User systemd service unavailable. Enabling system-wide service...${NC}"
+        sudo systemctl enable --now resilio-sync
+    }
+
+    # Retrieve local IP
+    LOCAL_IP=$(hostname -I 2>/dev/null | awk '{print $1}')
+    LOCAL_IP="${LOCAL_IP:-localhost}"
+
+    echo -e "\n${GREEN}==========================================${NC}"
+    echo -e "${GREEN}      RESILIO SYNC SERVICE READY!         ${NC}"
+    echo -e "${GREEN}==========================================${NC}"
+    echo -e "Access the Web GUI at: ${BLUE}http://${LOCAL_IP}:8888${NC} or ${BLUE}http://localhost:8888${NC}"
+}
+
+disable_user_mode() {
+    echo -e "${BLUE}Disabling Resilio Sync for current user ($USER)...${NC}"
+    systemctl --user disable resilio-sync || {
+        echo -e "${YELLOW}User systemd service unavailable. Disabling system-wide service...${NC}"
+        sudo systemctl disable resilio-sync
+    }
+}
+
+# --- Information ---
 show_rlsync_status() {
     if systemctl --user is-active resilio-sync &>/dev/null; then
         systemctl --user status resilio-sync
     else
         sudo systemctl status resilio-sync
     fi
+}
+
+# --- Quick Setup ---
+quick_setup_rlsync() {
+    install_rlsync
+    setup_rlsync
+    enable_user_mode
+    start_rlsync
 }
 
 # --- Main Menu ---
@@ -167,13 +176,14 @@ manage_rlsync() {
         echo -e "${BLUE}Root: ${ROOT_DIR}${NC}"
 
         local SUB_OPTIONS=(
-            "Start RLSync"
-            "Stop RLSync"
-            "Install RLSync"
-            "Setup RLSync"
-            "Disable RLSync"
-            "Show Status"
-            "Back to Main Menu"
+            "Install"
+            "Setup"
+            "Enable"
+            "Start"
+            "Status"
+            "Stop"
+            "Disable"
+            "Exit"
         )
         local DEFAULT_SUB_IDX="0"
 
@@ -188,29 +198,36 @@ manage_rlsync() {
         echo ""
 
         case "${ACTION}" in
-            "Start RLSync")
-                start_rlsync
+            "Install")
+                quick_setup_rlsync
+                read -p "Press Enter to continue..."
                 ;;
-            "Stop RLSync")
-                stop_rlsync
-                ;;
-            "Install RLSync")
-                install_rlsync
+            "Setup")
                 setup_rlsync
                 enable_user_mode
-                start_rlsync
+                read -p "Press Enter to continue..."
                 ;;
-            "Setup RLSync")
-                setup_rlsync
+            "Enable")
                 enable_user_mode
+                read -p "Press Enter to continue..."
                 ;;
-            "Disable RLSync")
-                disable_user_mode
+            "Start")
+                start_rlsync
+                read -p "Press Enter to continue..."
                 ;;
-            "Show Status")
+            "Status")
                 show_rlsync_status
+                read -p "Press Enter to continue..."
                 ;;
-            "Back to Main Menu")
+            "Stop")
+                stop_rlsync
+                read -p "Press Enter to continue..."
+                ;;
+            "Disable")
+                disable_user_mode
+                read -p "Press Enter to continue..."
+                ;;
+            "Exit")
                 break
                 ;;
             *)

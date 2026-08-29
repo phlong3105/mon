@@ -20,9 +20,48 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# --- Installation ---
+# --- Lifecycle Management ---
+install_conda() {
+    if command -v conda &> /dev/null; then
+        echo -e "${GREEN}Conda is already installed: $(conda --version).${NC}"
+        return 0
+    fi
+
+    echo -e "\n${YELLOW}Conda not found. Installing Miniconda...${NC}"
+    case "$OSTYPE" in
+        linux*)
+            wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh
+            bash ~/miniconda.sh -b -p $HOME/miniconda
+            rm ~/miniconda.sh
+            export PATH="$HOME/miniconda/bin:$PATH"
+            source ~/.bashrc
+            ;;
+        darwin*)
+            wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh -O ~/miniconda.sh
+            bash ~/miniconda.sh -b -p $HOME/miniconda
+            rm ~/miniconda.sh
+            export PATH="$HOME/miniconda/bin:$PATH"
+            source ~/.bash_profile
+            ;;
+        *)
+            echo -e "${YELLOW}Warning: OS $OSTYPE not supported for automated conda setup.${NC}"
+            ;;
+    esac
+
+    if command -v conda &> /dev/null; then
+        echo -e "${GREEN}Conda installation successful.${NC}"
+    else
+        echo -e "${RED}Conda installation failed. Please install it manually.${NC}"
+    fi
+}
+
 install_ffmpeg() {
-    echo -e "\n${BLUE}==> Installing FFmpeg & Graphics Libraries...${NC}"
+    if command -v ffmpeg &> /dev/null; then
+        echo -e "${GREEN}FFmpeg is already installed.${NC}"
+        return 0
+    fi
+
+    echo -e "\n${YELLOW}FFmpeg not found. Installing FFmpeg...${NC}"
     case "$OSTYPE" in
         linux*)
             sudo apt-get update && sudo apt-get install -y \
@@ -37,10 +76,21 @@ install_ffmpeg() {
             echo -e "${YELLOW}Warning: OS $OSTYPE not supported for automated ffmpeg setup.${NC}"
             ;;
     esac
+
+    if command -v ffmpeg &> /dev/null; then
+        echo -e "${GREEN}FFmpeg installation successful.${NC}"
+    else
+        echo -e "${RED}FFmpeg installation failed. Please install it manually.${NC}"
+    fi
 }
 
 install_imagemagick() {
-    echo -e "\n${BLUE}==> Installing ImageMagick...${NC}"
+    if command -v convert &> /dev/null; then
+        echo -e "${GREEN}ImageMagick is already installed.${NC}"
+        return 0
+    fi
+
+    echo -e "\n${YELLOW}ImageMagick not found. Installing ImageMagick...${NC}"
     case "$OSTYPE" in
         linux*)
             sudo apt-get install -y imagemagick
@@ -52,10 +102,21 @@ install_imagemagick() {
             echo -e "${YELLOW}Warning: OS $OSTYPE not supported for imagemagick.${NC}"
             ;;
     esac
+
+    if command -v convert &> /dev/null; then
+        echo -e "${GREEN}ImageMagick installation successful.${NC}"
+    else
+        echo -e "${RED}ImageMagick installation failed. Please install it manually.${NC}"
+    fi
 }
 
 install_turbojpeg() {
-    echo -e "\n${BLUE}==> Installing TurboJPEG...${NC}"
+    if command -v tjbench &> /dev/null; then
+        echo -e "${GREEN}TurboJPEG is already installed.${NC}"
+        return 0
+    fi
+
+    echo -e "\n${YELLOW}TurboJPEG not found. Installing TurboJPEG...${NC}"
     case "$OSTYPE" in
         linux*)
             sudo apt-get install -y libturbojpeg
@@ -67,9 +128,17 @@ install_turbojpeg() {
             echo -e "${YELLOW}Warning: OS $OSTYPE not supported for turbojpeg.${NC}"
             ;;
     esac
+
+    if command -v tjbench &> /dev/null; then
+        echo -e "${GREEN}TurboJPEG installation successful.${NC}"
+    else
+        echo -e "${RED}TurboJPEG installation failed. Please install it manually.${NC}"
+    fi
 }
 
-setup_system() {
+# --- Quick Setup ---
+quick_setup_system() {
+    install_conda
     install_ffmpeg
     install_imagemagick
     install_turbojpeg
@@ -78,7 +147,7 @@ setup_system() {
 # --- Entry Point ---
 # Only execute if the script is run directly (not sourced)
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    setup_system
+    quick_setup_system
     cd "${CURRENT_DIR}" || exit
     exit 0
 fi

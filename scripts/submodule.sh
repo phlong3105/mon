@@ -26,7 +26,7 @@ YELLOW='\033[1;33m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-# --- Submodule Ops ---
+# --- Utils ---
 verify_git_repo() {
     if ! git -C "${ROOT_DIR}" rev-parse --is-inside-work-tree &>/dev/null; then
         echo -e "${RED}Error: ${ROOT_DIR} is not a valid Git repository.${NC}"
@@ -34,16 +34,7 @@ verify_git_repo() {
     fi
 }
 
-list_submodules() {
-    echo -e "\n${BLUE}--- Current Submodules Status ---${NC}"
-    cd "${ROOT_DIR}"
-    if [[ -f ".gitmodules" ]]; then
-        git submodule status
-    else
-        echo -e "${YELLOW}No .gitmodules file present.${NC}"
-    fi
-}
-
+# --- Creation ---
 add_submodule() {
     echo -e "\n${BLUE}--- Add Git Submodule ---${NC}"
 
@@ -62,15 +53,29 @@ add_submodule() {
     mkdir -p "${PROJECTS_DIR}"
     cd "${ROOT_DIR}"
 
-    echo -e "${GREEN}==> Adding submodule from ${REPO_URL} into ${TARGET_PATH}...${NC}"
+    echo -e "${GREEN}Adding submodule from ${REPO_URL} into ${TARGET_PATH}...${NC}"
     if git submodule add -f "${REPO_URL}" "${TARGET_PATH}"; then
         git submodule update --init --recursive "${TARGET_PATH}"
-        echo -e "${GREEN}==> Successfully added submodule: ${TARGET_PATH}${NC}"
+        echo -e "${GREEN}Successfully added submodule: ${TARGET_PATH}${NC}"
     else
         echo -e "${RED}Error: Failed to add submodule.${NC}"
     fi
 }
 
+# --- Retrieval ---
+list_submodules() {
+    echo -e "\n${BLUE}--- Current Submodules Status ---${NC}"
+    cd "${ROOT_DIR}"
+    if [[ -f ".gitmodules" ]]; then
+        git submodule status
+    else
+        echo -e "${YELLOW}No .gitmodules file present.${NC}"
+    fi
+}
+
+# --- Updating ---
+
+# --- Deletion ---
 remove_submodule() {
     echo -e "\n${BLUE}--- Remove Git Submodule ---${NC}"
 
@@ -98,17 +103,17 @@ remove_submodule() {
         return 1
     fi
 
-    echo -e "${RED}==> De-initializing submodule ${TARGET_PATH}...${NC}"
+    echo -e "${RED}De-initializing submodule ${TARGET_PATH}...${NC}"
     git submodule deinit -f "${TARGET_PATH}" 2>/dev/null || true
 
-    echo -e "${RED}==> Removing from Git tree and .gitmodules...${NC}"
+    echo -e "${RED}Removing from Git tree and .gitmodules...${NC}"
     git rm -f "${TARGET_PATH}" 2>/dev/null || true
 
-    echo -e "${RED}==> Purging internal Git cached modules...${NC}"
+    echo -e "${RED}Purging internal Git cached modules...${NC}"
     rm -rf "${ROOT_DIR}/.git/modules/${TARGET_PATH}"
     rm -rf "${ROOT_DIR}/${TARGET_PATH}"
 
-    echo -e "${GREEN}==> Submodule ${TARGET_PATH} successfully removed.${NC}"
+    echo -e "${GREEN}Submodule ${TARGET_PATH} successfully removed.${NC}"
 }
 
 # --- Main Menu ---
@@ -124,10 +129,11 @@ manage_submodule() {
         echo -e "${BLUE}Root: ${ROOT_DIR}${NC}"
 
         local OPTIONS=(
-            "List Submodules"
-            "Add Submodule"
-            "Remove Submodule"
+            "List"
+            "Add"
+            "Remove"
             "Quit"
+            "Exit"
         )
         local DEFAULT_OPT_IDX="0"
 
@@ -142,18 +148,22 @@ manage_submodule() {
         echo ""
 
         case "${SELECTED}" in
-            "List Submodules")
+            "List")
                 list_submodules
+                read -p "Press Enter to continue..."
                 ;;
-            "Add Submodule")
+            "Add")
                 add_submodule
                 ;;
-            "Remove Submodule")
+            "Remove")
                 remove_submodule
                 ;;
             "Quit")
                 echo -e "${GREEN}Exiting.${NC}"
                 exit 0
+                ;;
+            "Exit")
+                break
                 ;;
             *)
                 echo -e "${RED}Invalid option: ${USER_CHOICE}. Choose a valid number.${NC}"
