@@ -54,6 +54,7 @@ main() {
             "TensorRT"
             "rlsync"
             "X-AnyLabeling"
+            "Alias"
             "Exit"
         )
         local DEFAULT_OPT_IDX="0"
@@ -98,6 +99,10 @@ main() {
                 ;;
             "X-AnyLabeling")
                 load_module "xanylabeling" && manage_xanylabeling
+                read -p "Press Enter to continue..."
+                ;;
+            "Alias")
+                load_module "alias" && create_relative_alias
                 read -p "Press Enter to continue..."
                 ;;
             "Exit")

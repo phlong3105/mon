@@ -132,7 +132,6 @@ manage_submodule() {
             "List"
             "Add"
             "Remove"
-            "Quit"
             "Exit"
         )
         local DEFAULT_OPT_IDX="0"
@@ -157,10 +156,6 @@ manage_submodule() {
                 ;;
             "Remove")
                 remove_submodule
-                ;;
-            "Quit")
-                echo -e "${GREEN}Exiting.${NC}"
-                exit 0
                 ;;
             "Exit")
                 break
